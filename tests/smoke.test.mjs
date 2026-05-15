@@ -140,6 +140,7 @@ describe('project smoke checks', () => {
       assert.ok(translations['home.title'], `${locale}.json should include home.title`);
       assert.ok(translations['nav.main'], `${locale}.json should include nav.main`);
       assert.ok(translations['dashboard.title'], `${locale}.json should include dashboard.title`);
+      assert.ok(translations['dashboard.theme'], `${locale}.json should include dashboard.theme`);
       assert.ok(translations['menu.signInGoogle'], `${locale}.json should include menu.signInGoogle`);
     });
   });
@@ -175,6 +176,8 @@ describe('project smoke checks', () => {
     const dashboardApp = readText('src/components/DashboardApp.astro');
     const dashboardScript = readText('src/scripts/dashboard-app.ts');
     const repository = readText('src/lib/menu/repository.ts');
+    const types = readText('src/lib/menu/types.ts');
+    const styles = readText('src/styles/global.css');
 
     assert.match(siteConfig, /repositoryUrl/);
     assert.match(envExample, /PUBLIC_FIREBASE_API_KEY/);
@@ -185,10 +188,15 @@ describe('project smoke checks', () => {
     assert.match(dashboard, /<DashboardApp/);
     assert.match(authGate, /data-auth-gate/);
     assert.match(dashboardApp, /data-dashboard-app/);
-    assert.match(dashboardScript, /getOrCreateWeekMenu/);
-    assert.match(dashboardScript, /watchDishes/);
-    assert.match(repository, /dishes/);
-    assert.match(repository, /lunchItems/);
+    assert.match(dashboardApp, /data-theme-select/);
+    assert.match(dashboardApp, /data-meal-preference/);
+    assert.match(dashboardScript, /watchUserProfile/);
+    assert.match(dashboardScript, /data-plate-input/);
+    assert.match(dashboardScript, /datalist/);
+    assert.match(repository, /updateUserPreferences/);
+    assert.match(repository, /enabledMeals/);
+    assert.match(types, /MealSlot = 'breakfast' \| 'lunch' \| 'dinner'/);
+    assert.match(styles, /data-theme='dark'/);
     assert.doesNotMatch(home, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
     assert.doesNotMatch(localizedHome, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
   });
@@ -207,8 +215,11 @@ describe('project smoke checks', () => {
 
   it('keeps useful project documentation available', () => {
     const readme = readText('README.md');
+    const firebaseDocs = readText('docs/firebase.md');
 
     assert.match(readme, /Menu Diario/, 'README.md should describe the product');
+    assert.match(firebaseDocs, /enabledMeals/);
+    assert.match(firebaseDocs, /theme/);
     assert.equal(existsSync(join(root, 'agents.md')), true, 'agents.md should exist');
     assert.equal(existsSync(join(root, 'docs/design-system.md')), true, 'docs/design-system.md should exist');
     assert.equal(existsSync(join(root, 'docs/firebase.md')), true, 'docs/firebase.md should exist');
