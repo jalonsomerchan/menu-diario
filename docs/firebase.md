@@ -133,7 +133,10 @@ Catálogo de platos reutilizables. Se alimenta automáticamente cuando se añade
   "createdBy": "uid",
   "members": ["uid"],
   "timesUsed": 3,
+  "favorite": true,
+  "blocked": false,
   "tags": ["legumbre"],
+  "quickTags": ["cheap", "healthy", "batch-cooking"],
   "archived": false,
   "createdAt": "serverTimestamp",
   "lastUsedAt": "serverTimestamp",
@@ -143,11 +146,15 @@ Catálogo de platos reutilizables. Se alimenta automáticamente cuando se añade
 
 `normalizedName` se usa para evitar duplicados por mayúsculas, acentos o espacios repetidos. Los platos creados manualmente empiezan con `timesUsed: 0` y sin `lastUsedAt`. Archivar un plato cambia `archived` a `true`; no borra ni modifica menús históricos que ya guarden ese nombre en `weeklyMenus.days.*.meals.*.items`.
 
+`favorite` prioriza el plato en listados y sugerencias. `blocked` evita que el plato aparezca como sugerencia automática, aunque el usuario puede escribirlo manualmente en un menú. `quickTags` guarda etiquetas rápidas configuradas en `src/data/dish-tags.ts`: `quick`, `cheap`, `healthy`, `vegetarian`, `treat`, `kids`, `batch-cooking` y `freezable`. Las etiquetas visibles están traducidas en `src/i18n/translations/*.json`.
+
 `tags` queda preparado para futuras integraciones con recetas, sugerencias, lista de la compra y estadísticas avanzadas. La primera versión solo muestra etiquetas si ya existen en Firestore.
 
 ## Reglas incluidas
 
 La fuente de verdad está en `firestore.rules`. Copia ese fichero en Firestore Rules si configuras el proyecto desde Firebase Console.
+
+Las reglas actuales permiten a usuarios autenticados actualizar sus documentos de `dishes` siempre que sean miembros del documento. Los campos `favorite`, `blocked`, `quickTags` y `archived` no eliminan referencias históricas porque los menús guardan los nombres de los platos dentro de `weeklyMenus`.
 
 ## Índices
 
@@ -159,7 +166,7 @@ weeklyMenus
   weekStart desc
 ```
 
-La lista de platos reutilizables usa `createdBy == uid` y se ordena en el navegador por `timesUsed`, `lastUsedAt`, `createdAt` o `name`, así que no necesita índices compuestos nuevos.
+La lista de platos reutilizables usa `createdBy == uid` y se ordena en el navegador por favoritos, bloqueados, etiquetas, `timesUsed`, `lastUsedAt`, `createdAt` o `name`, así que no necesita índices compuestos nuevos.
 
 La consulta por código de grupo usa `inviteCode ==`, que normalmente no necesita índice compuesto.
 
@@ -173,6 +180,6 @@ Estas reglas están pensadas para que la app funcione en una primera versión cl
 
 - Mover la unión por código a una Cloud Function para reducir `allow read: if signedIn()` en `weeklyMenus` y `groups`.
 - Enviar invitaciones reales por email desde backend o Cloud Functions.
-- Validar longitudes máximas de `meals.*.items`, `meals.*.note`, `notes`, `skipNote`, `title`, `inviteCode`, `name`, `memberEmails` y `pendingEmails`.
+- Validar longitudes máximas de `meals.*.items`, `meals.*.note`, `notes`, `skipNote`, `title`, `inviteCode`, `name`, `memberEmails`, `pendingEmails`, `quickTags` y `tags`.
 - Impedir que usuarios no propietarios cambien `ownerId` o eliminen miembros arbitrariamente.
 - Usar códigos de invitación más largos o con caducidad.

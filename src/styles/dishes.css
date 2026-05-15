@@ -49,7 +49,8 @@
 
 .dishes-form label,
 .dishes-toolbar label,
-.dish-card__edit label {
+.dish-card__edit label,
+.dish-card__quick-tags {
   display: grid;
   gap: 0.35rem;
   color: var(--color-muted);
@@ -112,6 +113,49 @@
   font-weight: 850;
 }
 
+.dish-card__badges,
+.dish-card__quick-tags div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.dish-badge,
+.dish-card__quick-tags label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 55%);
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-text);
+  padding: 0.38rem 0.62rem;
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.dish-badge--blocked {
+  border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 55%);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.dish-card__quick-tags {
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.dish-card__quick-tags legend {
+  padding: 0;
+}
+
+.dish-card__quick-tags input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--color-primary);
+}
+
 .dish-card__tags {
   margin: 0;
   color: var(--color-muted);
@@ -129,6 +173,11 @@
   gap: 0.55rem;
 }
 
+.dish-card__actions [aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%);
+  background: var(--color-primary-soft);
+}
+
 .dish-card__edit {
   display: grid;
   gap: 0.75rem;
@@ -139,14 +188,14 @@
     max-width: 76rem;
   }
 
-  .dishes-form__row,
-  .dishes-toolbar {
+  .dishes-form__row {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
   }
 
   .dishes-toolbar {
-    grid-template-columns: minmax(0, 1fr) minmax(12rem, 18rem);
+    grid-template-columns: minmax(14rem, 1.4fr) repeat(3, minmax(10rem, 1fr));
+    align-items: end;
   }
 
   .dishes-list {

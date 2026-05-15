@@ -23,6 +23,7 @@ describe('dishes page smoke checks', () => {
       'src/lib/dishes/helpers.mjs',
       'src/lib/dishes/helpers.d.ts',
       'src/lib/dishes/repository.ts',
+      'src/data/dish-tags.ts',
       'src/styles/dishes.css',
     ].forEach((path) => {
       assert.equal(existsSync(join(root, path)), true, `${path} should exist`);
@@ -43,9 +44,17 @@ describe('dishes page smoke checks', () => {
       'dishes.sortRecent',
       'dishes.sortOldest',
       'dishes.sortName',
+      'dishes.filterFavorites',
+      'dishes.filterBlocked',
+      'dishes.quickTags',
+      'dishes.markFavorite',
+      'dishes.block',
       'dishes.empty',
       'dishes.emptySearch',
       'dishes.manageFromSettings',
+      'dishTags.quick',
+      'dishTags.batch-cooking',
+      'dishTags.freezable',
     ].forEach((key) => {
       assert.ok(es[key], `es.json should include ${key}`);
       assert.ok(en[key], `en.json should include ${key}`);
@@ -70,11 +79,17 @@ describe('dishes page smoke checks', () => {
     assert.match(dishesApp, /data-dishes-app/);
     assert.match(dishesApp, /data-dish-form/);
     assert.match(dishesApp, /data-dish-search/);
+    assert.match(dishesApp, /data-dish-filter/);
+    assert.match(dishesApp, /data-dish-tag-filter/);
     assert.match(dishesApp, /data-dish-sort/);
+    assert.match(dishesApp, /quickDishTags/);
     assert.match(dishesApp, /aria-live=\"polite\"/);
     assert.match(dishesScript, /createManualDish/);
     assert.match(dishesScript, /renameDish/);
     assert.match(dishesScript, /archiveDish/);
+    assert.match(dishesScript, /updateDishPreferences/);
+    assert.match(dishesScript, /data-toggle-favorite/);
+    assert.match(dishesScript, /data-toggle-blocked/);
     assert.match(layout, /styles\/dishes\.css/);
   });
 
@@ -82,6 +97,7 @@ describe('dishes page smoke checks', () => {
     const repository = readText('src/lib/dishes/repository.ts');
     const helpers = readText('src/lib/dishes/helpers.mjs');
     const types = readText('src/lib/menu/types.ts');
+    const suggestionHelper = readText('src/lib/menu/dish-suggestions.ts');
     const styles = readText('src/styles/dishes.css');
     const docs = readText('docs/firebase.md');
 
@@ -89,15 +105,22 @@ describe('dishes page smoke checks', () => {
     assert.match(repository, /createManualDish/);
     assert.match(repository, /renameDish/);
     assert.match(repository, /archiveDish/);
-    assert.match(repository, /archived: true/);
+    assert.match(repository, /updateDishPreferences/);
+    assert.match(repository, /favorite/);
+    assert.match(repository, /blocked/);
+    assert.match(repository, /quickTags/);
     assert.match(helpers, /normalizeDishName/);
     assert.match(helpers, /filterDishes/);
-    assert.match(helpers, /sortDishes/);
-    assert.match(types, /archived\?: boolean/);
-    assert.match(types, /tags\?: string\[\]/);
-    assert.match(styles, /dishes-app/);
-    assert.match(styles, /dish-card/);
-    assert.match(docs, /archived/);
+    assert.match(helpers, /getSuggestionDishes/);
+    assert.match(helpers, /isSuggestableDish/);
+    assert.match(types, /favorite\?: boolean/);
+    assert.match(types, /blocked\?: boolean/);
+    assert.match(types, /quickTags\?: string\[\]/);
+    assert.match(suggestionHelper, /getSuggestionDishes/);
+    assert.match(styles, /dish-badge/);
+    assert.match(styles, /dish-card__quick-tags/);
+    assert.match(docs, /quickTags/);
+    assert.match(docs, /blocked/);
     assert.match(docs, /timesUsed: 0/);
   });
 });
