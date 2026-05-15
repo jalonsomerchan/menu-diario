@@ -13,7 +13,6 @@ const configurePath = getLocalizedPath('/configurar', locale);
 
 const labels = {
   configMissing: t('menu.configMissing'),
-  signOut: t('menu.signOut'),
   enableNotifications: t('menu.enableNotifications'),
   notificationsEnabled: t('menu.notificationsEnabled'),
   notificationsDenied: t('menu.notificationsDenied'),
@@ -23,9 +22,12 @@ const labels = {
   todayForLunch: t('dashboard.todayForLunch'),
   todayEmpty: t('dashboard.todayEmpty'),
   nextSeven: t('dashboard.nextSeven'),
-  configure: t('dashboard.configure'),
-  settings: t('dashboard.settings'),
   editDay: t('dashboard.editDay'),
+  quickEdit: t('dashboard.quickEdit'),
+  deleteDay: t('dashboard.deleteDay'),
+  moreActions: t('dashboard.moreActions'),
+  save: t('dashboard.save'),
+  cancel: t('dashboard.cancel'),
   breakfast: t('dashboard.breakfast'),
   lunch: t('dashboard.lunch'),
   dinner: t('dashboard.dinner'),
@@ -36,7 +38,6 @@ const labels = {
   reasonOther: t('dashboard.reasonOther'),
   updated: t('menu.updated'),
   updatedBody: t('menu.updatedBody'),
-  days: t('menu.days'),
   guestSession: t('menu.guestSession'),
   homePath,
   configurePath,
@@ -54,20 +55,27 @@ const labels = {
       <ul data-today-summary></ul>
     </section>
 
-    <nav class="dashboard-actions" aria-label={labels.dashboardTitle}>
-      <a class="button button--secondary" href={`${configurePath}#ajustes`}>{labels.settings}</a>
-      <a class="button button--primary" href={`${configurePath}#configurador`}>{labels.configure}</a>
-      <button class="button button--ghost" type="button" data-notifications>{labels.enableNotifications}</button>
-      <button class="button button--ghost" type="button" data-logout>{labels.signOut}</button>
-    </nav>
-
     <section class="dashboard-section">
       <div class="section-heading section-heading--simple">
         <h2>{labels.nextSeven}</h2>
+        <button class="button button--ghost button--small" type="button" data-notifications>{labels.enableNotifications}</button>
       </div>
       <div class="next-days next-days--timeline" data-next-days></div>
     </section>
   </div>
+
+  <dialog class="quick-edit-modal" data-quick-modal>
+    <form method="dialog" class="quick-edit-modal__box" data-quick-form>
+      <header>
+        <h2>{labels.quickEdit}</h2>
+        <button class="button button--ghost button--small" value="cancel" type="submit">{labels.cancel}</button>
+      </header>
+      <div data-quick-fields></div>
+      <footer>
+        <button class="button button--primary" value="save" type="submit">{labels.save}</button>
+      </footer>
+    </form>
+  </dialog>
 </section>
 
 <script>
