@@ -1,6 +1,7 @@
 export const aiErrorCodes = [
   'disabled',
   'missing-config',
+  'app-check-unavailable',
   'quota-exhausted',
   'timeout',
   'invalid-response',
