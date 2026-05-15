@@ -1,25 +1,39 @@
 # Menu Diario
 
-Menu Diario es una webapp mobile first para apuntar qué vas a comer cada día, planificar comidas y cenas por semanas, guardar histórico, ver próximos menús y compartir la planificación con otras personas para decidir y editar el menú juntos.
+Menu Diario es una webapp mobile first para apuntar qué vas a comer cada día, planificar desayunos, comidas y cenas, guardar histórico, ver próximos menús y reutilizar platos ya escritos.
 
 La aplicación está construida sobre Astro y usa Firebase Authentication y Firestore desde el navegador. Está pensada para funcionar bien en móvil, conservar compatibilidad con GitHub Pages y mantener una base ligera, traducible y modular.
 
+## Flujo principal
+
+- `/`: landing informativa y acceso con Google o sesión invitada.
+- `/dashboard`: pantalla rápida para usuarios autenticados.
+- `/configurar`: pantalla separada para ajustes y configuración de menús.
+
+En móvil, el dashboard muestra una tarjeta principal tipo resumen:
+
+```text
+Hola Jorge
+Hoy para comer:
+- Pasta
+```
+
+Debajo aparecen accesos a **Ajustes** y **Configurar**, y después una lista de los próximos 7 días. Esa lista empieza siempre **mañana**, no el lunes. Cada tarjeta de día incluye un botón para editar ese día en `/configurar`.
+
 ## Características principales
 
-- **Planificación semanal**: cada semana tiene un tablero con los siete días.
-- **Comida, cena y notas**: cada día permite apuntar comida, cena y observaciones.
-- **Guardado automático**: al editar un campo se actualiza Firestore sin botones extra.
-- **Histórico de menús**: las semanas anteriores quedan guardadas y accesibles.
-- **Próximos menús**: las semanas actuales o futuras aparecen separadas del histórico.
-- **Colaboración en tiempo real**: Firestore sincroniza los cambios entre usuarios conectados.
-- **Compartir por código**: cada menú genera un código de invitación para que otras personas puedan unirse.
+- **Dashboard rápido**: resumen de hoy y próximos 7 días.
+- **Configurador separado**: ajustes y edición viven en `/configurar`.
+- **Próximos 7 días desde mañana**: el dashboard y el configurador no dependen de que la semana empiece en lunes.
+- **Preferencias por usuario**: cada usuario elige si quiere configurar desayuno, comida y/o cena.
+- **Tema por usuario**: sistema, claro u oscuro. Por defecto usa la preferencia del navegador.
+- **Varios platos por comida**: cada plato es un input independiente.
+- **Reutilización de platos**: los inputs usan `datalist` con platos ya escritos para mantener nombres consistentes.
+- **Días sin comida**: al marcar que una comida no se apunta, se muestran motivo y nota.
 - **Autenticación flexible**: acceso con Google o como invitado anónimo mediante Firebase Auth.
-- **Notificaciones de cambios**: si el usuario activa avisos, el navegador muestra una notificación cuando otra persona modifica el menú abierto.
-- **Mobile first**: interfaz optimizada para editar rápido desde el móvil.
-- **Modo claro y oscuro**: los estilos se adaptan a la preferencia del sistema.
+- **Firestore en tiempo real**: los cambios se sincronizan con el documento de menú activo.
 - **i18n**: textos preparados en español e inglés (`es/en`).
-- **SEO y despliegue estático**: conserva layout, metadatos, manifest, robots y compatibilidad con subrutas.
-- **Sin secretos en el repositorio**: la configuración real se carga con variables de entorno públicas `PUBLIC_FIREBASE_*`.
+- **GitHub Pages**: rutas y assets preparados para dominio raíz y subruta.
 
 ## Stack técnico
 
@@ -75,38 +89,15 @@ cp .env.example .env
 npm run dev
 ```
 
-5. Abre la URL local que indique Astro.
+## Variables de entorno para GitHub Pages
 
-## Configuración de Firebase paso a paso
-
-### 1. Crear proyecto
-
-1. Entra en Firebase Console.
-2. Crea un proyecto nuevo o usa uno existente.
-3. Añade una aplicación web desde **Project settings > Your apps > Web app**.
-4. Copia los datos de configuración de la app web.
-
-### 2. Configurar variables de entorno
-
-Para desarrollo local, copia `.env.example` a `.env` y rellena estas variables:
-
-```env
-PUBLIC_FIREBASE_API_KEY=
-PUBLIC_FIREBASE_AUTH_DOMAIN=
-PUBLIC_FIREBASE_PROJECT_ID=
-PUBLIC_FIREBASE_STORAGE_BUCKET=
-PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-PUBLIC_FIREBASE_APP_ID=
-PUBLIC_FIREBASE_MEASUREMENT_ID=
-```
-
-Para GitHub Pages, configura esos mismos nombres en GitHub:
+Para GitHub Pages, configura estos nombres en:
 
 ```text
 Settings > Secrets and variables > Actions > Variables
 ```
 
-Variables recomendadas para GitHub Actions:
+Variables recomendadas:
 
 ```text
 PUBLIC_FIREBASE_API_KEY
@@ -119,212 +110,99 @@ PUBLIC_FIREBASE_MEASUREMENT_ID
 PUBLIC_REPOSITORY_URL
 ```
 
-`PUBLIC_REPOSITORY_URL` es opcional. Las variables `ASTRO_SITE` y `ASTRO_BASE` también son opcionales en GitHub Pages porque el workflow y `astro.config.mjs` calculan `site` y `base` automáticamente. Si quieres forzarlas, usa estos valores para este repositorio:
+`PUBLIC_REPOSITORY_URL` es opcional. `ASTRO_SITE` y `ASTRO_BASE` también son opcionales porque el workflow y `astro.config.mjs` calculan `site` y `base` automáticamente. Si quieres forzarlas:
 
 ```text
 ASTRO_SITE=https://jalonsomerchan.github.io
 ASTRO_BASE=/menu-diario
 ```
 
-El workflow `.github/workflows/pages.yml` expone estas variables al paso `npm run build`, que es cuando Astro sustituye `import.meta.env.PUBLIC_*`. También acepta `secrets.*` como fallback si prefieres guardar los valores en **Secrets** en vez de **Variables**.
+Las claves públicas de Firebase identifican la app web, pero **no sustituyen a unas reglas correctas de Firestore**. No subas nunca un `.env` real.
 
-Ejemplo de correspondencia con el objeto de configuración de Firebase:
+## Configuración de Firebase
 
-```js
-const firebaseConfig = {
-  apiKey: 'PUBLIC_FIREBASE_API_KEY',
-  authDomain: 'PUBLIC_FIREBASE_AUTH_DOMAIN',
-  projectId: 'PUBLIC_FIREBASE_PROJECT_ID',
-  storageBucket: 'PUBLIC_FIREBASE_STORAGE_BUCKET',
-  messagingSenderId: 'PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-  appId: 'PUBLIC_FIREBASE_APP_ID',
-  measurementId: 'PUBLIC_FIREBASE_MEASUREMENT_ID',
-};
+Activa en Firebase Console:
+
+1. Authentication con Google.
+2. Authentication Anonymous si quieres permitir invitados.
+3. Firestore Database.
+4. Authorized domains:
+   - `localhost`
+   - `jalonsomerchan.github.io`
+   - tu dominio personalizado, si lo usas.
+
+Publica las reglas de `firestore.rules` en:
+
+```text
+Firebase Console > Firestore Database > Rules
 ```
 
-Estas claves son públicas en una app web, pero **no sustituyen a unas reglas de Firestore correctas**. No subas nunca el fichero `.env` real.
+La documentación del modelo de datos, índices y reglas vive en `docs/firebase.md`.
 
-### 3. Activar Authentication
-
-En Firebase Console:
-
-1. Ve a **Build > Authentication**.
-2. Activa **Google** como proveedor.
-3. Activa **Anonymous** para permitir sesiones invitadas.
-4. En **Settings > Authorized domains**, añade:
-   - `localhost` para desarrollo.
-   - `jalonsomerchan.github.io` para GitHub Pages.
-   - Tu dominio personalizado, si lo usas.
-
-### 4. Activar Firestore
-
-1. Ve a **Build > Firestore Database**.
-2. Crea una base de datos.
-3. Elige la región más adecuada.
-4. Empieza con reglas seguras, no en modo abierto para producción.
-
-### 5. Crear índices necesarios
-
-La app consulta menús por miembro y ordena por semana:
-
-```txt
-weeklyMenus
-  members array-contains
-  weekStart desc
-```
-
-Firestore puede mostrar un error con un enlace para crear el índice compuesto automáticamente. Ábrelo y confirma la creación del índice.
-
-## Modelo de datos en Firestore
+## Modelo de datos principal
 
 ### `users/{uid}`
-
-Perfil mínimo del usuario autenticado.
 
 ```json
 {
   "displayName": "Jorge",
+  "enabledMeals": ["lunch"],
+  "theme": "system",
   "updatedAt": "timestamp"
 }
 ```
 
 ### `weeklyMenus/{menuId}`
 
-Documento principal de una semana de menú.
-
 ```json
 {
-  "title": "11 may - 17 may",
-  "ownerId": "uid-del-creador",
-  "members": ["uid-del-creador", "uid-otra-persona"],
-  "inviteCode": "ABC123",
-  "weekStart": "2026-05-11",
+  "ownerId": "uid",
+  "members": ["uid"],
+  "weekStart": "2026-05-15",
   "days": {
-    "2026-05-11": {
-      "lunch": "Lentejas",
-      "dinner": "Tortilla francesa",
-      "notes": "Comprar pan"
-    }
-  },
-  "createdAt": "timestamp",
-  "updatedAt": "timestamp",
-  "updatedBy": "uid-ultimo-editor"
-}
-```
-
-## Reglas iniciales de Firestore
-
-Estas reglas sirven como base para el prototipo. Permiten que los miembros lean y editen sus menús y que alguien pueda unirse a un menú si conoce su código. Para una versión más estricta en producción, conviene mover la unión por código a una Cloud Function.
-
-```js
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
-
-    function isMember() {
-      return signedIn() && request.auth.uid in resource.data.members;
-    }
-
-    function willBeMember() {
-      return signedIn() && request.auth.uid in request.resource.data.members;
-    }
-
-    match /users/{userId} {
-      allow read, write: if signedIn() && request.auth.uid == userId;
-    }
-
-    match /weeklyMenus/{menuId} {
-      allow create: if signedIn()
-        && request.resource.data.ownerId == request.auth.uid
-        && request.auth.uid in request.resource.data.members;
-
-      allow get: if signedIn();
-      allow list: if signedIn();
-
-      allow update: if isMember() || willBeMember();
-      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+    "2026-05-16": {
+      "meals": {
+        "lunch": {
+          "items": ["Pasta"],
+          "skipped": false,
+          "reason": "",
+          "note": ""
+        }
+      },
+      "notes": ""
     }
   }
 }
 ```
 
-### Nota de seguridad sobre invitaciones
+Aunque la colección mantiene el nombre `weeklyMenus`, el documento activo se usa como bloque de planificación móvil y permite guardar los días próximos aunque no empiecen en lunes.
 
-La app usa `inviteCode` para compartir menús. En esta primera versión, el cliente consulta por código para unirse. Es suficiente para una fase inicial, pero en producción es preferible:
+### `dishes/{dishId}`
 
-- Generar códigos más largos.
-- Caducar invitaciones.
-- Mover la lógica de unión a Cloud Functions.
-- Evitar `allow list` general si no es necesario.
-- Validar de forma más estricta qué campos puede modificar cada usuario.
-
-## Notificaciones
-
-La app usa la API nativa de notificaciones del navegador:
-
-1. El usuario pulsa **Activar avisos**.
-2. El navegador solicita permiso.
-3. Si otra persona modifica el menú abierto, Firestore emite el cambio en tiempo real.
-4. La app muestra una notificación local con la Web Notifications API.
-
-Limitación actual: las notificaciones funcionan mientras la app está abierta o activa en el navegador. Para push real con la app cerrada habría que añadir Firebase Cloud Messaging, claves VAPID y un service worker específico.
-
-## Compartir un menú
-
-1. Entra con Google o como invitado.
-2. Crea o abre una semana.
-3. Pulsa **Compartir código**.
-4. Envía ese código a otra persona.
-5. La otra persona inicia sesión, pega el código en el campo de invitación y pulsa **Unirse**.
-
-A partir de ese momento, ambos usuarios editan el mismo menú y ven los cambios en tiempo real.
+```json
+{
+  "name": "Pasta",
+  "normalizedName": "pasta",
+  "createdBy": "uid",
+  "members": ["uid"],
+  "timesUsed": 3,
+  "lastUsedAt": "timestamp"
+}
+```
 
 ## Estructura principal
 
 ```text
-src/components/MenuApp.astro       UI de la webapp
-src/scripts/menu-app.ts            Lógica cliente, Auth, Firestore y notificaciones
-src/lib/firebase/config.ts         Lectura de variables públicas de Firebase
-src/lib/firebase/client.ts         Carga dinámica de Firebase Web SDK
-src/lib/menu/dates.ts              Helpers de semanas y fechas
-src/lib/menu/repository.ts         Operaciones de Firestore
-src/lib/menu/types.ts              Tipos del dominio de menús
-src/lib/notifications/browser.ts   Helper de notificaciones del navegador
-src/i18n/translations/*.json       Textos traducibles
-src/styles/global.css              Tokens visuales y estilos mobile first
-docs/firebase.md                   Modelo de datos y reglas recomendadas
+src/components/DashboardApp.astro      Dashboard rápido
+src/components/ConfiguratorApp.astro   Ajustes y configurador
+src/scripts/dashboard-app.ts           Lógica del dashboard
+src/scripts/configurator-app.ts        Lógica de ajustes/configuración
+src/lib/menu/repository.ts             Operaciones de Firestore
+src/lib/menu/types.ts                  Tipos del dominio
+src/i18n/translations/*.json           Textos traducibles
+src/styles/global.css                  Tokens visuales, light/dark y UI mobile first
+docs/firebase.md                       Modelo de datos, reglas e índices
 ```
-
-## GitHub Pages
-
-El despliegue está en `.github/workflows/pages.yml`.
-
-En GitHub Pages, Astro necesita las variables en tiempo de build. Por eso el workflow declara:
-
-```yaml
-env:
-  PUBLIC_FIREBASE_API_KEY: ${{ vars.PUBLIC_FIREBASE_API_KEY || secrets.PUBLIC_FIREBASE_API_KEY }}
-  PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ vars.PUBLIC_FIREBASE_AUTH_DOMAIN || secrets.PUBLIC_FIREBASE_AUTH_DOMAIN }}
-  PUBLIC_FIREBASE_PROJECT_ID: ${{ vars.PUBLIC_FIREBASE_PROJECT_ID || secrets.PUBLIC_FIREBASE_PROJECT_ID }}
-  PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ vars.PUBLIC_FIREBASE_STORAGE_BUCKET || secrets.PUBLIC_FIREBASE_STORAGE_BUCKET }}
-  PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.PUBLIC_FIREBASE_MESSAGING_SENDER_ID || secrets.PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-  PUBLIC_FIREBASE_APP_ID: ${{ vars.PUBLIC_FIREBASE_APP_ID || secrets.PUBLIC_FIREBASE_APP_ID }}
-  PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ vars.PUBLIC_FIREBASE_MEASUREMENT_ID || secrets.PUBLIC_FIREBASE_MEASUREMENT_ID }}
-```
-
-Puedes crear los valores como **Variables** porque son públicos en una app web de Firebase. Si los creas como **Secrets**, el workflow también los recogerá por fallback.
-
-Para configurar Pages:
-
-1. Ve a **Settings > Pages**.
-2. En **Build and deployment**, selecciona **GitHub Actions**.
-3. Ve a **Settings > Secrets and variables > Actions > Variables**.
-4. Crea las variables `PUBLIC_FIREBASE_*`.
-5. Asegúrate de que Firebase Authentication tiene autorizado `jalonsomerchan.github.io`.
-6. Haz merge a `main` o lanza manualmente el workflow **Deploy to GitHub Pages**.
 
 ## Tests y validación
 
@@ -339,40 +217,26 @@ npm run build
 Los tests smoke comprueban que:
 
 - La estructura mínima de Astro existe.
-- Los componentes principales están presentes.
+- Las rutas `/dashboard` y `/configurar` existen también en idiomas secundarios.
 - Las traducciones `es/en` mantienen las mismas claves.
-- La home carga la webapp.
-- La configuración de Firebase está documentada.
-- Los workflows de CI y Pages siguen disponibles.
-
-## i18n
-
-Los idiomas configurados están en `src/config/site.ts`.
-
-Las traducciones viven en:
-
-```text
-src/i18n/translations/es.json
-src/i18n/translations/en.json
-```
-
-Toda clave nueva de UI debe añadirse a todos los JSON configurados.
+- El dashboard y el configurador están conectados a sus scripts.
+- Las rutas siguen siendo compatibles con GitHub Pages.
 
 ## Documentación para agentes IA
 
 Antes de modificar el proyecto, una IA debe leer:
 
-- `agents.md`: reglas principales del repositorio.
-- `docs/ai-checklist.md`: checklist rápida antes de cerrar tareas.
-- `docs/template-usage.md`: cómo usar y modificar la plantilla.
-- `docs/i18n-guide.md`: cómo añadir textos, traducciones e idiomas.
-- `docs/github-pages.md`: cómo evitar romper GitHub Pages y `base`.
-- `docs/testing-guide.md`: cómo mantener tests smoke.
-- `docs/design-system.md`: reglas visuales, SEO, accesibilidad y responsive.
-- `docs/firebase.md`: reglas, modelo de datos e índices de Firebase.
+- `agents.md`.
+- `docs/ai-checklist.md`.
+- `docs/template-usage.md`.
+- `docs/i18n-guide.md`.
+- `docs/github-pages.md`.
+- `docs/testing-guide.md`.
+- `docs/design-system.md`.
+- `docs/firebase.md`.
 
 ## Notas técnicas
 
-La integración de Firebase se carga de forma dinámica en el navegador desde los módulos oficiales versionados de Firebase Web SDK. Así se evita añadir dependencias nuevas al lockfile de npm y se mantiene el proyecto ligero.
+La integración de Firebase se carga dinámicamente en el navegador desde los módulos oficiales versionados de Firebase Web SDK. Así se evita añadir dependencias nuevas al lockfile de npm y se mantiene el proyecto ligero.
 
 No se incluye ningún secreto en el repositorio. El fichero `.env` está ignorado por Git y solo debe existir en local o en el entorno de despliegue.
