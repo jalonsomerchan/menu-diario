@@ -68,19 +68,30 @@ function mergeDishLists(lists: Dish[][], includeArchived: boolean) {
   return sortDishes([...merged.values()], 'most-used') as Dish[];
 }
 
-async function findVisibleDuplicate(services: FirebaseServices, normalizedName: string, groupId?: string, userId?: string, excludeId?: string) {
-  const { db, firestoreModule } = services;
-  const globalSnapshot = await firestoreModule.getDocs(
-    firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('scope', '==', globalScope), firestoreModule.where('normalizedName', '==', normalizedName), firestoreModule.limit(1))
-  );
-  const globalDish = globalSnapshot.docs.map((item: any) => mapDish(item.id, item.data())).find((dish: Dish) => dish.id !== excludeId && !dish.archived);
-  if (globalDish) return globalDish;
+async function getFirstDishByQuery(services: FirebaseServices, query: any, excludeId?: string) {
+  const snapshot = await services.firestoreModule.getDocs(query);
+  return snapshot.docs.map((item: any) => mapDish(item.id, item.data())).find((dish: Dish) => dish.id !== excludeId && !dish.archived);
+}
 
+async function findGlobalDuplicate(services: FirebaseServices, normalizedName: string, excludeId?: string) {
+  const { db, firestoreModule } = services;
+  return getFirstDishByQuery(
+    services,
+    firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('scope', '==', globalScope), firestoreModule.where('normalizedName', '==', normalizedName), firestoreModule.limit(1)),
+    excludeId
+  );
+}
+
+async function findOwnDuplicate(services: FirebaseServices, normalizedName: string, groupId?: string, userId?: string, excludeId?: string) {
+  const { db, firestoreModule } = services;
   const ownQuery = groupId
     ? firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('scope', '==', groupScope), firestoreModule.where('groupId', '==', groupId), firestoreModule.where('normalizedName', '==', normalizedName), firestoreModule.limit(1))
     : firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('createdBy', '==', userId ?? ''), firestoreModule.where('normalizedName', '==', normalizedName), firestoreModule.limit(1));
-  const ownSnapshot = await firestoreModule.getDocs(ownQuery);
-  return ownSnapshot.docs.map((item: any) => mapDish(item.id, item.data())).find((dish: Dish) => dish.id !== excludeId && !dish.archived);
+  return getFirstDishByQuery(services, ownQuery, excludeId);
+}
+
+async function findVisibleDuplicate(services: FirebaseServices, normalizedName: string, groupId?: string, userId?: string, excludeId?: string) {
+  return (await findGlobalDuplicate(services, normalizedName, excludeId)) ?? findOwnDuplicate(services, normalizedName, groupId, userId, excludeId);
 }
 
 export function watchCatalogDishes(services: FirebaseServices, options: { userId: string; groupId?: string; includeArchived?: boolean }, callback: (dishes: Dish[]) => void, onError: (error: Error) => void) {
@@ -136,8 +147,8 @@ export async function createManualDish(services: FirebaseServices, userId: strin
 
 export async function duplicateGlobalDish(services: FirebaseServices, userId: string, dish: Dish, groupId?: string) {
   if (!dish.isGlobal) throw new Error('dish-not-global');
-  const duplicate = await findVisibleDuplicate(services, dish.normalizedName, groupId, userId, dish.id);
-  if (duplicate && !duplicate.isGlobal) throw new Error('dish-duplicate');
+  const ownDuplicate = await findOwnDuplicate(services, dish.normalizedName, groupId, userId, dish.id);
+  if (ownDuplicate) throw new Error('dish-duplicate');
   const { db, firestoreModule } = services;
   const scope = ownScope(groupId);
   await firestoreModule.setDoc(firestoreModule.doc(db, dishesCollection, getDishId(ownOwnerId(userId, groupId), dish.normalizedName, scope)), {
