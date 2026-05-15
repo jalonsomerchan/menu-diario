@@ -12,6 +12,10 @@ function toDate(value: any): Date | undefined {
   return value?.toDate?.() ?? value;
 }
 
+function toStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
 function mapDish(id: string, data: Record<string, any>): Dish {
   return {
     id,
@@ -20,7 +24,10 @@ function mapDish(id: string, data: Record<string, any>): Dish {
     createdBy: data.createdBy,
     members: data.members ?? [data.createdBy].filter(Boolean),
     timesUsed: data.timesUsed ?? 0,
-    tags: Array.isArray(data.tags) ? data.tags : [],
+    tags: toStringArray(data.tags),
+    quickTags: toStringArray(data.quickTags),
+    favorite: Boolean(data.favorite),
+    blocked: Boolean(data.blocked),
     archived: Boolean(data.archived),
     createdAt: toDate(data.createdAt),
     lastUsedAt: toDate(data.lastUsedAt),
@@ -74,8 +81,11 @@ export async function createManualDish(services: FirebaseServices, userId: strin
       createdBy: userId,
       members: [userId],
       timesUsed: snapshot.exists() ? snapshot.data().timesUsed ?? 0 : 0,
+      favorite: snapshot.exists() ? Boolean(snapshot.data().favorite) : false,
+      blocked: snapshot.exists() ? Boolean(snapshot.data().blocked) : false,
       archived: false,
-      tags: snapshot.exists() ? snapshot.data().tags ?? [] : [],
+      tags: snapshot.exists() ? toStringArray(snapshot.data().tags) : [],
+      quickTags: snapshot.exists() ? toStringArray(snapshot.data().quickTags) : [],
       createdAt: snapshot.exists() ? snapshot.data().createdAt : firestoreModule.serverTimestamp(),
       updatedAt: firestoreModule.serverTimestamp(),
     },
@@ -106,6 +116,9 @@ export async function renameDish(services: FirebaseServices, userId: string, dis
         members: dish.members?.length ? dish.members : [userId],
         timesUsed: dish.timesUsed ?? 0,
         tags: dish.tags ?? [],
+        quickTags: dish.quickTags ?? [],
+        favorite: Boolean(dish.favorite),
+        blocked: Boolean(dish.blocked),
         archived: false,
         createdAt: dish.createdAt ?? firestoreModule.serverTimestamp(),
         lastUsedAt: dish.lastUsedAt ?? null,
@@ -122,6 +135,22 @@ export async function renameDish(services: FirebaseServices, userId: string, dis
     {
       name: cleanName,
       normalizedName,
+      updatedAt: firestoreModule.serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+export async function updateDishPreferences(
+  services: FirebaseServices,
+  dishId: string,
+  preferences: { favorite?: boolean; blocked?: boolean; quickTags?: string[] }
+) {
+  const { db, firestoreModule } = services;
+  await firestoreModule.setDoc(
+    firestoreModule.doc(db, dishesCollection, dishId),
+    {
+      ...preferences,
       updatedAt: firestoreModule.serverTimestamp(),
     },
     { merge: true }
