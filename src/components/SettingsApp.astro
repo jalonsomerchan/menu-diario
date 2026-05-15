@@ -1,0 +1,89 @@
+---
+import type { Locale } from '../config/site';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const homePath = getLocalizedPath('/', locale);
+
+const labels = {
+  configMissing: t('menu.configMissing'),
+  loading: t('dashboard.loading'),
+  settings: t('dashboard.settings'),
+  theme: t('dashboard.theme'),
+  themeSystem: t('dashboard.themeSystem'),
+  themeLight: t('dashboard.themeLight'),
+  themeDark: t('dashboard.themeDark'),
+  enabledMeals: t('dashboard.enabledMeals'),
+  breakfast: t('dashboard.breakfast'),
+  lunch: t('dashboard.lunch'),
+  dinner: t('dashboard.dinner'),
+  groupTitle: t('group.title'),
+  groupDescription: t('group.description'),
+  inviteEmail: t('group.inviteEmail'),
+  addEmail: t('group.addEmail'),
+  joinCode: t('group.joinCode'),
+  joinGroup: t('group.joinGroup'),
+  leaveGroup: t('group.leaveGroup'),
+  members: t('group.members'),
+  pending: t('group.pending'),
+  options: t('group.options'),
+  copied: t('group.copied'),
+  updated: t('group.updated'),
+  guestSession: t('menu.guestSession'),
+  homePath,
+};
+---
+
+<section class="settings-app" data-settings-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status hidden></div>
+  <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
+  <div data-content hidden>
+    <section class="settings-card app-panel">
+      <p class="menu-app__eyebrow">{labels.settings}</p>
+      <h1>{labels.settings}</h1>
+      <label>{labels.theme}
+        <select data-theme-select>
+          <option value="system">{labels.themeSystem}</option>
+          <option value="light">{labels.themeLight}</option>
+          <option value="dark">{labels.themeDark}</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="settings-card app-panel">
+      <p class="menu-app__eyebrow">{labels.options}</p>
+      <h2>{labels.groupTitle}</h2>
+      <p>{labels.groupDescription}</p>
+      <fieldset class="meal-preferences">
+        <legend>{labels.enabledMeals}</legend>
+        <label><input type="checkbox" value="breakfast" data-meal-preference /> {labels.breakfast}</label>
+        <label><input type="checkbox" value="lunch" data-meal-preference /> {labels.lunch}</label>
+        <label><input type="checkbox" value="dinner" data-meal-preference /> {labels.dinner}</label>
+      </fieldset>
+    </section>
+
+    <section class="settings-card app-panel">
+      <h2>{labels.groupTitle}</h2>
+      <div class="group-code" data-invite-code></div>
+      <form class="join-form" data-invite-form>
+        <input type="email" data-invite-email placeholder={labels.inviteEmail} />
+        <button class="button button--primary" type="submit">{labels.addEmail}</button>
+      </form>
+      <form class="join-form" data-join-form>
+        <input type="text" data-join-code placeholder={labels.joinCode} />
+        <button class="button button--secondary" type="submit">{labels.joinGroup}</button>
+      </form>
+      <button class="button button--ghost" type="button" data-leave-group>{labels.leaveGroup}</button>
+      <div class="group-lists">
+        <div><h3>{labels.members}</h3><ul data-members></ul></div>
+        <div><h3>{labels.pending}</h3><ul data-pending></ul></div>
+      </div>
+    </section>
+  </div>
+</section>
+
+<script>
+  import '../scripts/settings-app.ts';
+</script>
