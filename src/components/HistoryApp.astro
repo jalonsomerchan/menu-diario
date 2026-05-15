@@ -25,6 +25,19 @@ const labels = {
   breakfast: t('dashboard.breakfast'),
   lunch: t('dashboard.lunch'),
   dinner: t('dashboard.dinner'),
+  addDish: t('dashboard.addDish'),
+  addPlate: t('dashboard.addPlate'),
+  removePlate: t('dashboard.removePlate'),
+  dishSuggestions: t('dashboard.dishSuggestions'),
+  dishPlaceholder: t('dashboard.dishPlaceholder'),
+  noDay: t('dashboard.noDay'),
+  reason: t('dashboard.reason'),
+  reasonAway: t('dashboard.reasonAway'),
+  reasonEatingOut: t('dashboard.reasonEatingOut'),
+  reasonNotHungry: t('dashboard.reasonNotHungry'),
+  reasonOther: t('dashboard.reasonOther'),
+  reasonDescription: t('dashboard.reasonDescription'),
+  notes: t('menu.notes'),
   todayEmpty: t('dashboard.todayEmpty'),
   skipSummary: t('dashboard.skipSummary'),
   homePath,
@@ -48,7 +61,7 @@ const labels = {
     <div class="next-days next-days--timeline" data-history-days></div>
   </div>
 
-  <dialog class="quick-edit-modal" data-history-modal>
+  <dialog class="quick-edit-modal quick-edit-modal--day" data-history-modal>
     <form method="dialog" class="quick-edit-modal__box" data-history-edit-form>
       <header>
         <h2>{labels.quickEdit}</h2>
