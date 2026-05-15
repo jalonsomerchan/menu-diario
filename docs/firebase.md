@@ -26,6 +26,7 @@ Después pulsa **Publish**. La app necesita permiso para:
 - Crear un `weeklyMenus/{menuId}` propio.
 - Leer menús estando autenticado, porque la unión por código usa una consulta por `inviteCode`.
 - Editar menús donde el usuario sea miembro.
+- Crear y actualizar platos reutilizables en `dishes` para sugerencias y estadísticas.
 - Añadirse como miembro cuando conoce un código de invitación.
 
 ## Colecciones
@@ -43,7 +44,7 @@ Perfil mínimo del usuario autenticado.
 
 ### `weeklyMenus/{menuId}`
 
-Menú semanal compartido.
+Menú semanal compartido. Cada día permite varios platos de comida y también marcar que ese día no se apunta comida.
 
 ```json
 {
@@ -54,9 +55,18 @@ Menú semanal compartido.
   "weekStart": "2026-05-11",
   "days": {
     "2026-05-11": {
-      "lunch": "Lentejas",
-      "dinner": "Tortilla",
+      "lunchItems": ["Lentejas", "Ensalada"],
+      "noLunch": false,
+      "noLunchReason": "",
+      "noLunchDescription": "",
       "notes": "Comprar pan"
+    },
+    "2026-05-12": {
+      "lunchItems": [],
+      "noLunch": true,
+      "noLunchReason": "eating-out",
+      "noLunchDescription": "Comida de trabajo",
+      "notes": ""
     }
   },
   "createdAt": "serverTimestamp",
@@ -65,62 +75,49 @@ Menú semanal compartido.
 }
 ```
 
+### `dishes/{dishId}`
+
+Catálogo de platos reutilizables. Se alimenta automáticamente cuando se añaden platos a un día.
+
+```json
+{
+  "name": "Lentejas",
+  "normalizedName": "lentejas",
+  "createdBy": "uid",
+  "members": ["uid"],
+  "timesUsed": 3,
+  "createdAt": "serverTimestamp",
+  "lastUsedAt": "serverTimestamp"
+}
+```
+
 ## Reglas incluidas
 
 La fuente de verdad está en `firestore.rules`. Copia ese fichero en Firestore Rules si configuras el proyecto desde Firebase Console.
 
-```txt
-rules_version = '2';
-
-service cloud.firestore {
-  match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
-
-    function isSelf(userId) {
-      return signedIn() && request.auth.uid == userId;
-    }
-
-    function isMenuMember() {
-      return signedIn() && request.auth.uid in resource.data.members;
-    }
-
-    function createsOwnMenu() {
-      return signedIn()
-        && request.resource.data.ownerId == request.auth.uid
-        && request.auth.uid in request.resource.data.members;
-    }
-
-    function keepsExistingMembers() {
-      return request.resource.data.members.hasAll(resource.data.members);
-    }
-
-    function joinsMenu() {
-      return signedIn()
-        && !(request.auth.uid in resource.data.members)
-        && request.auth.uid in request.resource.data.members
-        && keepsExistingMembers();
-    }
-
-    match /users/{userId} {
-      allow read, create, update: if isSelf(userId);
-      allow delete: if false;
-    }
-
-    match /weeklyMenus/{menuId} {
-      allow create: if createsOwnMenu();
-      allow read: if signedIn();
-      allow update: if isMenuMember() || joinsMenu();
-      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
-    }
-  }
-}
-```
-
 ## Índices
 
-Firestore puede pedir crear índices para consultas con `members array-contains` + `weekStart desc`. Si aparece el aviso en consola, acepta el índice propuesto.
+Firestore puede pedir crear índices para estas consultas:
+
+```txt
+weeklyMenus
+  members array-contains
+  weekStart desc
+```
+
+```txt
+dishes
+  members array-contains
+  timesUsed desc
+```
+
+```txt
+dishes
+  members array-contains
+  normalizedName asc
+```
+
+Si aparece un aviso en consola con un enlace para crear un índice compuesto, ábrelo y confirma la creación.
 
 La consulta por código de invitación usa `inviteCode ==`, que normalmente no necesita índice compuesto.
 
@@ -133,6 +130,6 @@ La app usa notificaciones del navegador cuando un documento escuchado en tiempo 
 Estas reglas están pensadas para que la app funcione en una primera versión cliente-only. Para producción conviene endurecerlas:
 
 - Mover la unión por código a una Cloud Function para eliminar `allow read: if signedIn()` en `weeklyMenus`.
-- Validar longitudes máximas de `lunch`, `dinner`, `notes`, `title` e `inviteCode`.
+- Validar longitudes máximas de `lunchItems`, `notes`, `title`, `inviteCode`, `name` y `noLunchDescription`.
 - Impedir que usuarios no propietarios cambien `ownerId` o eliminen miembros arbitrariamente.
 - Usar códigos de invitación más largos o con caducidad.

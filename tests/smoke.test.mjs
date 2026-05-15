@@ -45,7 +45,9 @@ describe('project smoke checks', () => {
       'package.json',
       'astro.config.mjs',
       'src/pages/index.astro',
+      'src/pages/dashboard.astro',
       'src/pages/[locale]/index.astro',
+      'src/pages/[locale]/dashboard.astro',
       'src/pages/404.astro',
       'src/pages/manifest.webmanifest.ts',
       'src/pages/robots.txt.ts',
@@ -80,7 +82,7 @@ describe('project smoke checks', () => {
   });
 
   it('keeps shared and app components available', () => {
-    ['Button', 'Container', 'Footer', 'Header', 'MenuApp'].forEach((component) => {
+    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'MenuApp'].forEach((component) => {
       assert.equal(
         existsSync(join(root, `src/components/${component}.astro`)),
         true,
@@ -137,6 +139,7 @@ describe('project smoke checks', () => {
       );
       assert.ok(translations['home.title'], `${locale}.json should include home.title`);
       assert.ok(translations['nav.main'], `${locale}.json should include nav.main`);
+      assert.ok(translations['dashboard.title'], `${locale}.json should include dashboard.title`);
       assert.ok(translations['menu.signInGoogle'], `${locale}.json should include menu.signInGoogle`);
     });
   });
@@ -165,21 +168,27 @@ describe('project smoke checks', () => {
     const siteConfig = readText('src/config/site.ts');
     const header = readText('src/components/Header.astro');
     const home = readText('src/pages/index.astro');
+    const dashboard = readText('src/pages/dashboard.astro');
     const localizedHome = readText('src/pages/[locale]/index.astro');
     const envExample = readText('.env.example');
-    const menuApp = readText('src/components/MenuApp.astro');
-    const menuScript = readText('src/scripts/menu-app.ts');
+    const authGate = readText('src/components/AuthGate.astro');
+    const dashboardApp = readText('src/components/DashboardApp.astro');
+    const dashboardScript = readText('src/scripts/dashboard-app.ts');
+    const repository = readText('src/lib/menu/repository.ts');
 
     assert.match(siteConfig, /repositoryUrl/);
     assert.match(envExample, /PUBLIC_FIREBASE_API_KEY/);
     assert.match(envExample, /PUBLIC_REPOSITORY_URL/);
     assert.match(header, /t\('nav\.main'\)/);
-    assert.match(home, /<MenuApp/);
-    assert.match(localizedHome, /<MenuApp/);
-    assert.match(menuApp, /data-menu-app/);
-    assert.match(menuScript, /getFirebaseServices|firebasejs/);
-    assert.match(menuScript, /hasFirebaseConfig/);
-    assert.match(menuScript, /watchWeekMenu/);
+    assert.match(home, /<AuthGate/);
+    assert.match(localizedHome, /<AuthGate/);
+    assert.match(dashboard, /<DashboardApp/);
+    assert.match(authGate, /data-auth-gate/);
+    assert.match(dashboardApp, /data-dashboard-app/);
+    assert.match(dashboardScript, /getOrCreateWeekMenu/);
+    assert.match(dashboardScript, /watchDishes/);
+    assert.match(repository, /dishes/);
+    assert.match(repository, /lunchItems/);
     assert.doesNotMatch(home, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
     assert.doesNotMatch(localizedHome, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
   });
@@ -203,5 +212,6 @@ describe('project smoke checks', () => {
     assert.equal(existsSync(join(root, 'agents.md')), true, 'agents.md should exist');
     assert.equal(existsSync(join(root, 'docs/design-system.md')), true, 'docs/design-system.md should exist');
     assert.equal(existsSync(join(root, 'docs/firebase.md')), true, 'docs/firebase.md should exist');
+    assert.equal(existsSync(join(root, 'firestore.rules')), true, 'firestore.rules should exist');
   });
 });

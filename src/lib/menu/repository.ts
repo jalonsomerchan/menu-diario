@@ -1,7 +1,8 @@
 import { getWeekDays, getWeekTitle } from './dates';
-import type { DailyMenu, FirebaseUser, MenuPatch, WeekMenu } from './types';
+import type { DailyMenu, Dish, FirebaseUser, MenuPatch, WeekMenu } from './types';
 
-const collectionName = 'weeklyMenus';
+const menusCollection = 'weeklyMenus';
+const dishesCollection = 'dishes';
 
 type FirebaseServices = {
   db: any;
@@ -9,7 +10,29 @@ type FirebaseServices = {
 };
 
 function emptyDay(): DailyMenu {
-  return { lunch: '', dinner: '', notes: '' };
+  return {
+    lunch: '',
+    dinner: '',
+    lunchItems: [],
+    noLunch: false,
+    noLunchReason: '',
+    noLunchDescription: '',
+    notes: '',
+  };
+}
+
+function normalizeDay(data: Partial<DailyMenu> = {}): DailyMenu {
+  const legacyLunchItems = data.lunch ? [data.lunch].filter(Boolean) : [];
+
+  return {
+    ...emptyDay(),
+    ...data,
+    lunchItems: Array.isArray(data.lunchItems) ? data.lunchItems : legacyLunchItems,
+    noLunch: Boolean(data.noLunch),
+    noLunchReason: data.noLunchReason ?? '',
+    noLunchDescription: data.noLunchDescription ?? '',
+    notes: data.notes ?? '',
+  };
 }
 
 function buildEmptyDays(weekStart: string) {
@@ -20,7 +43,13 @@ function createInviteCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
+function normalizeDishName(name: string) {
+  return name.trim().toLocaleLowerCase('es-ES').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 function mapWeekMenu(id: string, data: Record<string, any>): WeekMenu {
+  const rawDays = data.days ?? {};
+
   return {
     id,
     title: data.title,
@@ -28,9 +57,20 @@ function mapWeekMenu(id: string, data: Record<string, any>): WeekMenu {
     members: data.members ?? [],
     inviteCode: data.inviteCode,
     weekStart: data.weekStart,
-    days: data.days ?? {},
+    days: Object.fromEntries(Object.entries(rawDays).map(([key, value]) => [key, normalizeDay(value as Partial<DailyMenu>)])),
     updatedAt: data.updatedAt?.toDate?.(),
     updatedBy: data.updatedBy,
+  };
+}
+
+function mapDish(id: string, data: Record<string, any>): Dish {
+  return {
+    id,
+    name: data.name,
+    normalizedName: data.normalizedName,
+    createdBy: data.createdBy,
+    timesUsed: data.timesUsed ?? 0,
+    lastUsedAt: data.lastUsedAt?.toDate?.(),
   };
 }
 
@@ -48,7 +88,7 @@ export async function ensureUserProfile(services: FirebaseServices, user: Fireba
 
 export async function createWeekMenu(services: FirebaseServices, userId: string, weekStart: string, locale: string) {
   const { db, firestoreModule } = services;
-  const document = await firestoreModule.addDoc(firestoreModule.collection(db, collectionName), {
+  const document = await firestoreModule.addDoc(firestoreModule.collection(db, menusCollection), {
     title: getWeekTitle(weekStart, locale),
     ownerId: userId,
     members: [userId],
@@ -66,7 +106,7 @@ export async function createWeekMenu(services: FirebaseServices, userId: string,
 export async function getLatestMenuForUser(services: FirebaseServices, userId: string) {
   const { db, firestoreModule } = services;
   const menusQuery = firestoreModule.query(
-    firestoreModule.collection(db, collectionName),
+    firestoreModule.collection(db, menusCollection),
     firestoreModule.where('members', 'array-contains', userId),
     firestoreModule.orderBy('weekStart', 'desc'),
     firestoreModule.limit(1)
@@ -76,18 +116,32 @@ export async function getLatestMenuForUser(services: FirebaseServices, userId: s
   return snapshot.docs[0]?.id;
 }
 
+export async function getOrCreateWeekMenu(services: FirebaseServices, userId: string, weekStart: string, locale: string) {
+  const { db, firestoreModule } = services;
+  const menusQuery = firestoreModule.query(
+    firestoreModule.collection(db, menusCollection),
+    firestoreModule.where('members', 'array-contains', userId),
+    firestoreModule.where('weekStart', '==', weekStart),
+    firestoreModule.limit(1)
+  );
+  const snapshot = await firestoreModule.getDocs(menusQuery);
+
+  return snapshot.docs[0]?.id ?? createWeekMenu(services, userId, weekStart, locale);
+}
+
 export function watchUserMenus(
   services: FirebaseServices,
   userId: string,
   callback: (menus: WeekMenu[]) => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
+  maxResults = 12
 ) {
   const { db, firestoreModule } = services;
   const menusQuery = firestoreModule.query(
-    firestoreModule.collection(db, collectionName),
+    firestoreModule.collection(db, menusCollection),
     firestoreModule.where('members', 'array-contains', userId),
     firestoreModule.orderBy('weekStart', 'desc'),
-    firestoreModule.limit(12)
+    firestoreModule.limit(maxResults)
   );
 
   return firestoreModule.onSnapshot(
@@ -105,12 +159,68 @@ export function watchWeekMenu(
 ) {
   const { db, firestoreModule } = services;
   return firestoreModule.onSnapshot(
-    firestoreModule.doc(db, collectionName, menuId),
+    firestoreModule.doc(db, menusCollection, menuId),
     (snapshot: any) => {
       callback(snapshot.exists() ? mapWeekMenu(snapshot.id, snapshot.data()) : null);
     },
     onError
   );
+}
+
+export function watchDishes(
+  services: FirebaseServices,
+  userId: string,
+  callback: (dishes: Dish[]) => void,
+  onError: (error: Error) => void
+) {
+  const { db, firestoreModule } = services;
+  const dishesQuery = firestoreModule.query(
+    firestoreModule.collection(db, dishesCollection),
+    firestoreModule.where('members', 'array-contains', userId),
+    firestoreModule.orderBy('timesUsed', 'desc'),
+    firestoreModule.limit(50)
+  );
+
+  return firestoreModule.onSnapshot(
+    dishesQuery,
+    (snapshot: any) => callback(snapshot.docs.map((item: any) => mapDish(item.id, item.data()))),
+    onError
+  );
+}
+
+export async function upsertDish(services: FirebaseServices, userId: string, name: string) {
+  const cleanName = name.trim();
+
+  if (!cleanName) return;
+
+  const { db, firestoreModule } = services;
+  const normalizedName = normalizeDishName(cleanName);
+  const dishesQuery = firestoreModule.query(
+    firestoreModule.collection(db, dishesCollection),
+    firestoreModule.where('members', 'array-contains', userId),
+    firestoreModule.where('normalizedName', '==', normalizedName),
+    firestoreModule.limit(1)
+  );
+  const snapshot = await firestoreModule.getDocs(dishesQuery);
+  const existing = snapshot.docs[0];
+
+  if (existing) {
+    await firestoreModule.updateDoc(firestoreModule.doc(db, dishesCollection, existing.id), {
+      timesUsed: firestoreModule.increment(1),
+      lastUsedAt: firestoreModule.serverTimestamp(),
+    });
+    return;
+  }
+
+  await firestoreModule.addDoc(firestoreModule.collection(db, dishesCollection), {
+    name: cleanName,
+    normalizedName,
+    createdBy: userId,
+    members: [userId],
+    timesUsed: 1,
+    createdAt: firestoreModule.serverTimestamp(),
+    lastUsedAt: firestoreModule.serverTimestamp(),
+  });
 }
 
 export async function updateMenuPatch(
@@ -120,17 +230,21 @@ export async function updateMenuPatch(
   patch: MenuPatch
 ) {
   const { db, firestoreModule } = services;
-  await firestoreModule.updateDoc(firestoreModule.doc(db, collectionName, menuId), {
+  await firestoreModule.updateDoc(firestoreModule.doc(db, menusCollection, menuId), {
     [`days.${patch.dayKey}.${patch.slot}`]: patch.value,
     updatedAt: firestoreModule.serverTimestamp(),
     updatedBy: userId,
   });
+
+  if (patch.slot === 'lunchItems' && Array.isArray(patch.value)) {
+    await Promise.all(patch.value.map((item) => upsertDish(services, userId, item)));
+  }
 }
 
 export async function joinMenuByInviteCode(services: FirebaseServices, userId: string, inviteCode: string) {
   const { db, firestoreModule } = services;
   const menusQuery = firestoreModule.query(
-    firestoreModule.collection(db, collectionName),
+    firestoreModule.collection(db, menusCollection),
     firestoreModule.where('inviteCode', '==', inviteCode),
     firestoreModule.limit(1)
   );
@@ -145,7 +259,7 @@ export async function joinMenuByInviteCode(services: FirebaseServices, userId: s
   const members = new Set<string>(data.members ?? []);
   members.add(userId);
 
-  await firestoreModule.updateDoc(firestoreModule.doc(db, collectionName, menu.id), {
+  await firestoreModule.updateDoc(firestoreModule.doc(db, menusCollection, menu.id), {
     members: [...members],
     updatedAt: firestoreModule.serverTimestamp(),
     updatedBy: userId,
