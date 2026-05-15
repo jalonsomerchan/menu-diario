@@ -2,6 +2,7 @@
   "site.description": "Organiza el menú semanal en familia, guarda el histórico y comparte cambios al momento.",
   "nav.home": "Inicio",
   "nav.main": "Navegación principal",
+  "nav.language": "Cambiar idioma",
   "footer.createdWith": "Menu Diario, una webapp ligera para decidir qué comer juntos.",
   "home.eyebrow": "Menús compartidos",
   "home.title": "Apunta el menú diario y decide la semana en familia",
