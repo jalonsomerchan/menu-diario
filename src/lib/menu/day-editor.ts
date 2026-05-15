@@ -45,11 +45,11 @@ function renderReasonFields(labels: DayEditorLabels, reason = '', note = '') {
   `;
 }
 
-function renderSuggestionContainer(labels: DayEditorLabels, dayKey: string, meal: MealSlot, dishes: Dish[]) {
+function renderSuggestionContainer(labels: DayEditorLabels, meal: MealSlot, dishes: Dish[]) {
   const hasSuggestions = dishes.length > 0;
 
   return `
-    <div class="dish-suggestions" role="listbox" aria-label="${escapeHtml(labels.dishSuggestions)}" data-suggestions="${dayKey}-${meal}" data-suggestion-list="${meal}" ${hasSuggestions ? '' : 'hidden'}></div>
+    <div class="dish-suggestions" role="listbox" aria-label="${escapeHtml(labels.dishSuggestions)}" data-suggestion-list="${meal}" ${hasSuggestions ? '' : 'hidden'}></div>
   `;
 }
 
@@ -64,12 +64,13 @@ function renderDishControl(labels: DayEditorLabels, meal: MealSlot, value: strin
   `;
 }
 
-export function renderPlateRow(labels: DayEditorLabels, meal: MealSlot, value = '', index = 0) {
+export function renderPlateRow(labels: DayEditorLabels, meal: MealSlot, value = '', index = 0, dishes: Dish[] = []) {
   return `
     <div class="plate-row">
       <label>
         <span class="sr-only">${escapeHtml(labels.addDish)} ${index + 1}</span>
         ${renderDishControl(labels, meal, value)}
+        ${renderSuggestionContainer(labels, meal, dishes)}
       </label>
       <button class="icon-button icon-button--danger" type="button" data-remove-plate="${meal}" aria-label="${escapeHtml(labels.removePlate)}">
         <span aria-hidden="true">×</span>
@@ -78,7 +79,7 @@ export function renderPlateRow(labels: DayEditorLabels, meal: MealSlot, value = 
   `;
 }
 
-function renderMeal(labels: DayEditorLabels, dayKey: string, meal: MealSlot, mealData: MealEntry, dishes: Dish[]) {
+function renderMeal(labels: DayEditorLabels, meal: MealSlot, mealData: MealEntry, dishes: Dish[]) {
   const values = mealData.items.length ? mealData.items : [''];
 
   return `
@@ -90,9 +91,8 @@ function renderMeal(labels: DayEditorLabels, dayKey: string, meal: MealSlot, mea
         </button>
       </header>
       <div class="plate-list" data-plate-list="${meal}">
-        ${values.map((value, index) => renderPlateRow(labels, meal, value, index)).join('')}
+        ${values.map((value, index) => renderPlateRow(labels, meal, value, index, dishes)).join('')}
       </div>
-      ${renderSuggestionContainer(labels, dayKey, meal, dishes)}
     </section>
   `;
 }
@@ -104,7 +104,7 @@ export function renderDayEditor(options: DayEditorOptions) {
     ? renderReasonFields(labels, day.reason, day.skipNote)
     : `
       <div class="day-meals-block">
-        ${enabledMeals.map((meal) => renderMeal(labels, dayKey, meal, day.meals[meal] ?? emptyMeal(), dishes)).join('')}
+        ${enabledMeals.map((meal) => renderMeal(labels, meal, day.meals[meal] ?? emptyMeal(), dishes)).join('')}
         <label>${escapeHtml(labels.notes)}
           <textarea data-field="notes" rows="3">${escapeHtml(day.notes ?? '')}</textarea>
         </label>
