@@ -321,15 +321,17 @@ describe('project smoke checks', () => {
   it('keeps useful project documentation available', () => {
     const readme = readText('README.md');
     const firebaseDocs = readText('docs/firebase.md');
-    const designSystem = readText('docs/design-system.md');
+    const navigationDocs = readText('docs/navigation.md');
 
     assert.match(readme, /Menu Diario/);
     assert.match(firebaseDocs, /enabledMeals/);
     assert.match(firebaseDocs, /theme/);
-    assert.match(designSystem, /Header único/);
+    assert.match(navigationDocs, /Header único/);
+    assert.match(navigationDocs, /getLocalizedPath/);
     assert.equal(existsSync(join(root, 'agents.md')), true);
     assert.equal(existsSync(join(root, 'docs/design-system.md')), true);
     assert.equal(existsSync(join(root, 'docs/firebase.md')), true);
+    assert.equal(existsSync(join(root, 'docs/navigation.md')), true);
     assert.equal(existsSync(join(root, 'firestore.rules')), true);
   });
 });
