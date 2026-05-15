@@ -124,7 +124,7 @@ Remote Config debe considerarse una capa de operación del producto, no una fron
 - `PUBLIC_AI_MAX_SESSION_REQUESTS` limita una sesión del navegador.
 - `PUBLIC_AI_MAX_USER_DAILY_REQUESTS` limita un usuario o invitado durante el día local registrado.
 
-Estos límites solo mejoran UX y reducen abuso accidental. No son una protección real porque el usuario controla el cliente. Si más adelante la app añade Cloud Functions, deben repetirse los límites en backend por `uid`, IP, App Check y coste acumulado.
+Estos límites solo mejoran UX y reducen abuso accidental. no son una protección real porque el usuario controla el cliente. Si más adelante la app añade Cloud Functions, deben repetirse los límites en backend por `uid`, IP, App Check y coste acumulado.
 
 ### Uso recomendado para futuras funciones
 
@@ -267,7 +267,7 @@ Catálogo de platos reutilizables. Se alimenta automáticamente cuando se añade
 }
 ```
 
-`normalizedName` se usa para evitar duplicados por mayúsculas, acentos o espacios repetidos. Archivar un plato cambia `archived` a `true`; no borra ni modifica menús históricos que ya guarden ese nombre.
+Los platos creados manualmente empiezan con `timesUsed: 0` y sin `lastUsedAt`. `normalizedName` se usa para evitar duplicados por mayúsculas, acentos o espacios repetidos. Archivar un plato cambia `archived` a `true`; no borra ni modifica menús históricos que ya guarden ese nombre.
 
 ## Reglas incluidas
 
