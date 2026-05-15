@@ -9,21 +9,12 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
-const dashboardPath = getLocalizedPath('/dashboard', locale);
 
 const labels = {
   configMissing: t('menu.configMissing'),
-  signOut: t('menu.signOut'),
-  backDashboard: t('dashboard.backDashboard'),
   loading: t('dashboard.loading'),
-  settings: t('dashboard.settings'),
   configure: t('dashboard.configure'),
   configureHint: t('dashboard.configureHint'),
-  theme: t('dashboard.theme'),
-  themeSystem: t('dashboard.themeSystem'),
-  themeLight: t('dashboard.themeLight'),
-  themeDark: t('dashboard.themeDark'),
-  enabledMeals: t('dashboard.enabledMeals'),
   breakfast: t('dashboard.breakfast'),
   lunch: t('dashboard.lunch'),
   dinner: t('dashboard.dinner'),
@@ -39,10 +30,8 @@ const labels = {
   reasonDescription: t('dashboard.reasonDescription'),
   notes: t('menu.notes'),
   saveHint: t('menu.saveHint'),
-  days: t('menu.days'),
   guestSession: t('menu.guestSession'),
   homePath,
-  dashboardPath,
 };
 ---
 
@@ -51,44 +40,14 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>
-    <header class="dashboard-header app-panel">
-      <div>
-        <p class="menu-app__eyebrow">{labels.saveHint}</p>
-        <h1>{labels.configure}</h1>
-      </div>
-      <div class="dashboard-header__actions">
-        <a class="button button--secondary" href={dashboardPath}>{labels.backDashboard}</a>
-        <button class="button button--ghost" type="button" data-logout>{labels.signOut}</button>
-      </div>
-    </header>
-
-    <section id="ajustes" class="settings-card app-panel" aria-labelledby="settings-title">
-      <h2 id="settings-title">{labels.settings}</h2>
-      <div class="settings-grid">
-        <label>{labels.theme}
-          <select data-theme-select>
-            <option value="system">{labels.themeSystem}</option>
-            <option value="light">{labels.themeLight}</option>
-            <option value="dark">{labels.themeDark}</option>
-          </select>
-        </label>
-        <fieldset>
-          <legend>{labels.enabledMeals}</legend>
-          <label><input type="checkbox" value="breakfast" data-meal-preference /> {labels.breakfast}</label>
-          <label><input type="checkbox" value="lunch" data-meal-preference /> {labels.lunch}</label>
-          <label><input type="checkbox" value="dinner" data-meal-preference /> {labels.dinner}</label>
-        </fieldset>
-      </div>
-    </section>
-
     <section id="configurador" class="dashboard-section">
       <div class="section-heading section-heading--simple">
         <div>
           <p class="menu-app__eyebrow">{labels.configureHint}</p>
-          <h2>{labels.configure}</h2>
+          <h1>{labels.configure}</h1>
         </div>
       </div>
-      <div class="menu-days" data-config-days></div>
+      <div class="menu-days menu-days--cards" data-config-days></div>
     </section>
   </div>
 </section>
