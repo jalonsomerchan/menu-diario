@@ -135,6 +135,7 @@
   "ai.error": "The AI request could not be completed.",
   "ai.quotaExhausted": "You have reached the AI request limit for now.",
   "ai.missingConfig": "Firebase AI is not configured or the feature is disabled.",
+  "ai.appCheckUnavailable": "Firebase App Check is not ready. Check the configuration before using AI.",
   "ai.invalidResponse": "AI returned an invalid response.",
   "ai.retry": "Retry",
   "dishTags.quick": "Quick",

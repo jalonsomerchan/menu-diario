@@ -135,6 +135,7 @@
   "ai.error": "No se ha podido completar la petición de IA.",
   "ai.quotaExhausted": "Has alcanzado el límite de peticiones de IA por ahora.",
   "ai.missingConfig": "Firebase AI no está configurado o la función está desactivada.",
+  "ai.appCheckUnavailable": "Firebase App Check no está listo. Revisa la configuración antes de usar la IA.",
   "ai.invalidResponse": "La IA ha devuelto una respuesta no válida.",
   "ai.retry": "Reintentar",
   "dishTags.quick": "Rápido",

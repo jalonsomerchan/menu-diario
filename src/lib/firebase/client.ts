@@ -1,3 +1,4 @@
+import { initializeFirebaseAppCheck } from './app-check';
 import { getFirebaseConfig, hasFirebaseConfig } from './config';
 
 type FirebaseModuleName = 'app' | 'auth' | 'firestore';
@@ -17,6 +18,8 @@ async function importFirebaseModule(name: FirebaseModuleName) {
   return import(/* @vite-ignore */ `https://www.gstatic.com/firebasejs/${firebaseVersion}/firebase-${name}.js`);
 }
 
+export { hasFirebaseConfig };
+
 export async function getFirebaseServices() {
   if (!hasFirebaseConfig()) {
     throw new Error('Firebase public config is missing. Check .env.example.');
@@ -26,8 +29,9 @@ export async function getFirebaseServices() {
     importFirebaseModule('app'),
     importFirebaseModule('auth'),
     importFirebaseModule('firestore'),
-  ]).then(([appModule, authModule, firestoreModule]) => {
+  ]).then(async ([appModule, authModule, firestoreModule]) => {
     const app = appModule.initializeApp(getFirebaseConfig());
+    await initializeFirebaseAppCheck(app);
 
     return {
       app,

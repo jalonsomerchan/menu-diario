@@ -7,6 +7,7 @@ export const aiUiStates = [
   'error',
   'quota-exhausted',
   'missing-config',
+  'app-check-unavailable',
   'invalid-response',
 ] as const;
 
@@ -17,12 +18,14 @@ const stateMessages: Record<Exclude<AiUiState, 'idle'>, TranslationKey> = {
   error: 'ai.error',
   'quota-exhausted': 'ai.quotaExhausted',
   'missing-config': 'ai.missingConfig',
+  'app-check-unavailable': 'ai.appCheckUnavailable',
   'invalid-response': 'ai.invalidResponse',
 };
 
 const errorStateMap: Record<AiErrorCode, Exclude<AiUiState, 'idle' | 'loading'>> = {
   disabled: 'missing-config',
   'missing-config': 'missing-config',
+  'app-check-unavailable': 'app-check-unavailable',
   'quota-exhausted': 'quota-exhausted',
   timeout: 'error',
   'invalid-response': 'invalid-response',

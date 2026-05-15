@@ -1,3 +1,4 @@
+import { assertFirebaseAppCheckReadyForAi } from '../firebase/app-check';
 import { getFirebaseApp, hasFirebaseConfig } from '../firebase/client';
 import { aiGenerationConfig, aiPromptConfig } from './config';
 import { AiClientError, logAiError } from './errors';
@@ -45,7 +46,9 @@ export async function generateGeminiJson<T>({ prompt, validator, userId, timeout
   assertAiClientLimit(userId);
 
   try {
-    const result = await withTimeout(generateText(prompt), timeoutMs ?? aiGenerationConfig.timeoutMs);
+    const app = await getFirebaseApp();
+    await ensureAppCheckForAi();
+    const result = await withTimeout(generateText(prompt, app), timeoutMs ?? aiGenerationConfig.timeoutMs);
     const json = parseValidatedJson(result, validator);
     registerAiClientUse(userId);
 
@@ -56,8 +59,18 @@ export async function generateGeminiJson<T>({ prompt, validator, userId, timeout
   }
 }
 
-async function generateText(prompt: string) {
-  const app = await getFirebaseApp();
+async function ensureAppCheckForAi() {
+  try {
+    await assertFirebaseAppCheckReadyForAi();
+  } catch (error) {
+    throw new AiClientError('app-check-unavailable', 'Firebase App Check is not ready for AI requests.', {
+      cause: error,
+      retryable: true,
+    });
+  }
+}
+
+async function generateText(prompt: string, app: unknown) {
   const aiModule = await importFirebaseAiModule();
   const ai = aiModule.getAI(app, { backend: new aiModule.GoogleAIBackend() });
   const model = aiModule.getGenerativeModel(ai, {

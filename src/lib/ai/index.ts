@@ -6,6 +6,12 @@ export { buildJsonPrompt, parseJsonObject, parseValidatedJson } from './json';
 export { assertAiClientLimit, readLimitSnapshot, registerAiClientUse } from './limits';
 export { getAiFeatureFlagsFromRemoteConfig } from './remote-config';
 export { getAiRetryLabelKey, getAiUiMessageKey, getAiUiStateFromError } from './ui-state';
+export {
+  assertFirebaseAppCheckReadyForAi,
+  getFirebaseAppCheckState,
+  isFirebaseAppCheckReady,
+  shouldRequireFirebaseAppCheckForAi,
+} from '../firebase/app-check';
 export type { AiGenerationConfig } from './config';
 export type { AiErrorCode } from './errors';
 export type { AiFeatureFlags } from './flags';
