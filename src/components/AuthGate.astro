@@ -1,0 +1,36 @@
+---
+import type { Locale } from '../config/site';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardPath = getLocalizedPath('/dashboard', locale);
+
+const labels = {
+  configMissing: t('menu.configMissing'),
+  signInGoogle: t('menu.signInGoogle'),
+  signInGuest: t('menu.signInGuest'),
+  dashboardPath,
+};
+---
+
+<section class="auth-card" data-auth-gate data-labels={JSON.stringify(labels)}>
+  <div>
+    <p class="menu-app__eyebrow">{t('home.eyebrow')}</p>
+    <h2>{t('home.loginTitle')}</h2>
+    <p>{t('home.loginDescription')}</p>
+  </div>
+  <div class="menu-app__status" data-auth-status hidden></div>
+  <div class="menu-app__auth-actions">
+    <button class="button button--primary" type="button" data-google-login>{labels.signInGoogle}</button>
+    <button class="button button--secondary" type="button" data-guest-login>{labels.signInGuest}</button>
+  </div>
+</section>
+
+<script>
+  import '../scripts/auth-gate.ts';
+</script>
