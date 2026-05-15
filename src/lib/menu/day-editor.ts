@@ -102,11 +102,11 @@ export function renderDayEditor(options: DayEditorOptions) {
 
   return `
     <article class="day-card day-card--editor ${compact ? 'day-card--compact-editor' : ''}" id="dia-${dayKey}" data-day="${dayKey}">
-      <div class="day-card__date-number">${escapeHtml(dayNumber)}</div>
+      <header class="day-card__header">
+        <div class="day-card__date-number">${escapeHtml(dayNumber)}</div>
+        <div class="day-card__title"><h3>${escapeHtml(weekday)}</h3>${dateLabel ? `<p>${escapeHtml(dateLabel)}</p>` : ''}</div>
+      </header>
       <div class="day-card__content">
-        <header class="day-card__header">
-          <div><h3>${escapeHtml(weekday)}</h3>${dateLabel ? `<p>${escapeHtml(dateLabel)}</p>` : ''}</div>
-        </header>
         ${editorBody}
         <label class="checkbox-row day-skip-toggle">
           <input type="checkbox" data-field="skipped" ${skipped ? 'checked' : ''} />
