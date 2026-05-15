@@ -10,6 +10,7 @@ Usa esta lista antes de terminar cualquier tarea en este template.
 - Si hay rutas, assets o deploy, lee `docs/github-pages.md`.
 - Si hay estructura o configuración, lee `docs/testing-guide.md`.
 - Si hay diseño, componentes o CSS, lee `docs/design-system.md`.
+- Si hay Firebase, Firestore, App Check o Firebase AI Logic, lee `docs/firebase.md` y `docs/app-check.md`.
 
 ## 2. Arquitectura
 
@@ -51,14 +52,22 @@ Usa esta lista antes de terminar cualquier tarea en este template.
 - ¿Usa system fonts?
 - ¿Evita animaciones o JS innecesarios?
 
-## 7. Tests y documentación
+## 7. Firebase, App Check e IA
 
-- ¿Hace falta actualizar `tests/smoke.test.mjs`?
+- ¿Las variables nuevas viven en `.env.example` sin secretos?
+- ¿App Check se inicializa antes de usar Firestore, Auth o Firebase AI Logic cuando aplica?
+- ¿La IA sigue detrás de feature flags y con límites básicos de cliente?
+- ¿Los errores de App Check/Firebase AI tienen estados traducibles?
+- ¿La documentación explica localhost, GitHub Pages, dominio propio, activación gradual y depuración?
+
+## 8. Tests y documentación
+
+- ¿Hace falta actualizar `tests/smoke.test.mjs` o añadir checks estáticos?
 - ¿Hace falta actualizar README?
 - ¿Hace falta actualizar algún documento de `docs/`?
 - ¿Los workflows siguen ejecutando `npm test` y `npm run build`?
 
-## 8. Comandos recomendados
+## 9. Comandos recomendados
 
 ```sh
 npm test
@@ -71,7 +80,7 @@ Si también se tocó formato:
 npm run format:check
 ```
 
-## 9. Errores comunes que debes evitar
+## 10. Errores comunes que debes evitar
 
 - Añadir texto solo en español en componentes compartidos.
 - Crear rutas que funcionan en local pero fallan en GitHub Pages.
@@ -81,3 +90,4 @@ npm run format:check
 - Cambiar `base` o `site` sin revisar el despliegue.
 - Meter fuentes externas.
 - Meter JavaScript de cliente sin necesidad real.
+- Activar App Check enforcement o IA en producción sin fase de monitorización.
