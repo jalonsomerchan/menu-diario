@@ -31,7 +31,11 @@ const labels = {
   updated: t('menu.updated'),
   updatedBody: t('menu.updatedBody'),
   empty: t('menu.empty'),
+  emptyList: t('menu.emptyList'),
+  history: t('menu.history'),
+  upcoming: t('menu.upcoming'),
   today: t('menu.today'),
+  days: t('menu.days'),
   notFoundMenu: t('menu.notFoundMenu'),
   codeCopied: t('menu.codeCopied'),
   guestSession: t('menu.guestSession'),
@@ -80,6 +84,7 @@ const labels = {
       <button class="button button--ghost" type="button" data-share-code>{labels.share}</button>
     </form>
 
+    <div class="menu-lists" data-menu-lists></div>
     <div class="menu-days" data-days></div>
   </div>
 </section>
