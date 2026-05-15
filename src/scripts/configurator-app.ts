@@ -1,19 +1,17 @@
-import { closeSession, getFirebaseServices } from '../lib/firebase/client';
+import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { toIsoDate } from '../lib/menu/dates';
 import {
   ensureUserProfile,
   getOrCreateWeekMenu,
   updateMenuPatch,
-  updateUserPreferences,
   watchDishes,
   watchUserProfile,
   watchWeekMenu,
 } from '../lib/menu/repository';
-import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, ThemePreference, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 
 const root = document.querySelector<HTMLElement>('[data-configurator-app]');
-const themeValues: ThemePreference[] = ['system', 'light', 'dark'];
 
 if (root) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
@@ -22,7 +20,6 @@ if (root) {
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const content = root.querySelector<HTMLElement>('[data-content]');
   const configDays = root.querySelector<HTMLElement>('[data-config-days]');
-  const themeSelect = root.querySelector<HTMLSelectElement>('[data-theme-select]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -110,14 +107,8 @@ if (root) {
     return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(`${isoDate}T00:00:00`));
   }
 
-  function applyTheme(theme: ThemePreference) {
-    if (theme === 'system') {
-      document.documentElement.removeAttribute('data-theme');
-    } else {
-      document.documentElement.dataset.theme = theme;
-    }
-
-    if (themeSelect) themeSelect.value = theme;
+  function getDayNumber(isoDate: string) {
+    return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(new Date(`${isoDate}T00:00:00`));
   }
 
   function setVisible(isReady: boolean) {
@@ -185,26 +176,20 @@ if (root) {
 
         return `
           <article class="day-card day-card--editor" id="dia-${isoDate}" data-day="${isoDate}">
-            <header class="day-card__header">
-              <div><h3>${escapeHtml(formatWeekday(isoDate))}</h3><p>${escapeHtml(formatDate(isoDate))}</p></div>
-            </header>
-            ${mealEditors}
-            <label>${escapeHtml(labels.notes)}
-              <textarea data-field="notes" rows="2">${escapeHtml(day.notes ?? '')}</textarea>
-            </label>
+            <div class="day-card__date-number">${escapeHtml(getDayNumber(isoDate))}</div>
+            <div class="day-card__content">
+              <header class="day-card__header">
+                <div><h3>${escapeHtml(formatWeekday(isoDate))}</h3><p>${escapeHtml(formatDate(isoDate))}</p></div>
+              </header>
+              ${mealEditors}
+              <label>${escapeHtml(labels.notes)}
+                <textarea data-field="notes" rows="2">${escapeHtml(day.notes ?? '')}</textarea>
+              </label>
+            </div>
           </article>
         `;
       })
       .join('');
-  }
-
-  function renderPreferences(profile: UserProfile) {
-    currentProfile = profile;
-    applyTheme(profile.theme);
-
-    root.querySelectorAll<HTMLInputElement>('[data-meal-preference]').forEach((input) => {
-      input.checked = profile.enabledMeals.includes(input.value as MealSlot);
-    });
   }
 
   async function saveField(target: HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement) {
@@ -243,35 +228,12 @@ if (root) {
     });
   }
 
-  async function savePreferences() {
-    if (!currentUser) return;
-
-    const enabledMeals = [...root.querySelectorAll<HTMLInputElement>('[data-meal-preference]')]
-      .filter((input) => input.checked)
-      .map((input) => input.value as MealSlot);
-    const services = await getFirebaseServices();
-
-    await updateUserPreferences(services, currentUser.uid, {
-      enabledMeals: enabledMeals.length ? enabledMeals : ['lunch'],
-    });
-  }
-
   if (!hasFirebaseConfig()) {
     setVisible(false);
     showStatus(labels.configMissing, true);
   } else {
     getFirebaseServices()
       .then((services) => {
-        root.querySelector('[data-logout]')?.addEventListener('click', () => closeSession());
-        themeSelect?.addEventListener('change', async () => {
-          if (!currentUser || !themeValues.includes(themeSelect.value as ThemePreference)) return;
-          const theme = themeSelect.value as ThemePreference;
-          applyTheme(theme);
-          await updateUserPreferences(services, currentUser.uid, { theme });
-        });
-        root.querySelectorAll<HTMLInputElement>('[data-meal-preference]').forEach((input) => {
-          input.addEventListener('change', () => savePreferences().catch((error: Error) => showStatus(error.message, true)));
-        });
         configDays?.addEventListener('change', (event) => {
           const target = event.target;
           if (
@@ -329,7 +291,7 @@ if (root) {
             user,
             labels.guestSession,
             (profile) => {
-              renderPreferences(profile);
+              currentProfile = profile;
               if (currentMenu) renderConfig(currentMenu);
             },
             (error) => showStatus(error.message, true)
