@@ -1,7 +1,7 @@
 ---
 import { quickDishTags } from '../data/dish-tags';
 import type { Locale } from '../config/site';
-import { getLocalizedPath, useTranslations } from '../i18n/ui';
+import { getLocalizedPath, useTranslations, type TranslationKey } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -10,7 +10,9 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
-const tagLabels = Object.fromEntries(quickDishTags.map((tag) => [tag, t(`dishTags.${tag}`)]));
+const tagLabels = Object.fromEntries(
+  quickDishTags.map((tag) => [tag, t(`dishTags.${tag}` as TranslationKey)])
+);
 
 const labels = {
   configMissing: t('menu.configMissing'),
