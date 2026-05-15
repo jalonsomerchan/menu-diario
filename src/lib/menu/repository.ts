@@ -47,6 +47,10 @@ function normalizeDishName(name: string) {
   return name.trim().toLocaleLowerCase('es-ES').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+function getDishId(userId: string, normalizedName: string) {
+  return `${userId}_${encodeURIComponent(normalizedName).replaceAll('%', '_')}`.slice(0, 1400);
+}
+
 function mapWeekMenu(id: string, data: Record<string, any>): WeekMenu {
   const rawDays = data.days ?? {};
 
@@ -176,14 +180,18 @@ export function watchDishes(
   const { db, firestoreModule } = services;
   const dishesQuery = firestoreModule.query(
     firestoreModule.collection(db, dishesCollection),
-    firestoreModule.where('members', 'array-contains', userId),
-    firestoreModule.orderBy('timesUsed', 'desc'),
+    firestoreModule.where('createdBy', '==', userId),
     firestoreModule.limit(50)
   );
 
   return firestoreModule.onSnapshot(
     dishesQuery,
-    (snapshot: any) => callback(snapshot.docs.map((item: any) => mapDish(item.id, item.data()))),
+    (snapshot: any) => {
+      const dishes = snapshot.docs
+        .map((item: any) => mapDish(item.id, item.data()))
+        .sort((a: Dish, b: Dish) => b.timesUsed - a.timesUsed || a.name.localeCompare(b.name));
+      callback(dishes);
+    },
     onError
   );
 }
@@ -195,24 +203,18 @@ export async function upsertDish(services: FirebaseServices, userId: string, nam
 
   const { db, firestoreModule } = services;
   const normalizedName = normalizeDishName(cleanName);
-  const dishesQuery = firestoreModule.query(
-    firestoreModule.collection(db, dishesCollection),
-    firestoreModule.where('members', 'array-contains', userId),
-    firestoreModule.where('normalizedName', '==', normalizedName),
-    firestoreModule.limit(1)
-  );
-  const snapshot = await firestoreModule.getDocs(dishesQuery);
-  const existing = snapshot.docs[0];
+  const dishRef = firestoreModule.doc(db, dishesCollection, getDishId(userId, normalizedName));
+  const snapshot = await firestoreModule.getDoc(dishRef);
 
-  if (existing) {
-    await firestoreModule.updateDoc(firestoreModule.doc(db, dishesCollection, existing.id), {
+  if (snapshot.exists()) {
+    await firestoreModule.updateDoc(dishRef, {
       timesUsed: firestoreModule.increment(1),
       lastUsedAt: firestoreModule.serverTimestamp(),
     });
     return;
   }
 
-  await firestoreModule.addDoc(firestoreModule.collection(db, dishesCollection), {
+  await firestoreModule.setDoc(dishRef, {
     name: cleanName,
     normalizedName,
     createdBy: userId,

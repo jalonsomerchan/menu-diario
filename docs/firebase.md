@@ -105,19 +105,7 @@ weeklyMenus
   weekStart desc
 ```
 
-```txt
-dishes
-  members array-contains
-  timesUsed desc
-```
-
-```txt
-dishes
-  members array-contains
-  normalizedName asc
-```
-
-Si aparece un aviso en consola con un enlace para crear un índice compuesto, ábrelo y confirma la creación.
+La lista de platos reutilizables usa `createdBy == uid` y se ordena en el navegador por `timesUsed`, así que no necesita el índice compuesto `members + timesUsed`.
 
 La consulta por código de invitación usa `inviteCode ==`, que normalmente no necesita índice compuesto.
 
