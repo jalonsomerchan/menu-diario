@@ -1,6 +1,6 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
-import { toIsoDate } from '../lib/menu/dates';
+import { getMonday, toIsoDate } from '../lib/menu/dates';
 import {
   ensureUserProfile,
   getOrCreateWeekMenu,
@@ -31,11 +31,7 @@ if (root) {
   let unsubscribeProfile: (() => void) | undefined;
 
   function escapeHtml(value = '') {
-    return value
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;');
+    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
   }
 
   function showStatus(message: string, isError = false) {
@@ -93,6 +89,10 @@ if (root) {
     date.setHours(0, 0, 0, 0);
     date.setDate(date.getDate() + daysFromToday);
     return toIsoDate(date);
+  }
+
+  function getCurrentWeekStart() {
+    return toIsoDate(getMonday(new Date()));
   }
 
   function getConfigDates() {
@@ -236,21 +236,16 @@ if (root) {
       .then((services) => {
         configDays?.addEventListener('change', (event) => {
           const target = event.target;
-          if (
-            target instanceof HTMLTextAreaElement ||
-            target instanceof HTMLInputElement ||
-            target instanceof HTMLSelectElement
-          ) {
+          if (target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement || target instanceof HTMLSelectElement) {
             if (target.dataset.plateInput) {
               const card = target.closest<HTMLElement>('[data-day]');
-              if (card) {
-                savePlateList(card, target.dataset.plateInput as MealSlot).catch((error: Error) => showStatus(error.message, true));
-              }
+              if (card) savePlateList(card, target.dataset.plateInput as MealSlot).catch((error: Error) => showStatus(error.message, true));
               return;
             }
             saveField(target).catch((error: Error) => showStatus(error.message, true));
           }
         });
+
         configDays?.addEventListener('click', (event) => {
           const target = event.target;
           if (!(target instanceof HTMLButtonElement) || !target.dataset.addPlate) return;
@@ -284,7 +279,7 @@ if (root) {
           }
 
           await ensureUserProfile(services, user, labels.guestSession);
-          currentMenuId = await getOrCreateWeekMenu(services, user.uid, getDateOffset(0), locale);
+          currentMenuId = await getOrCreateWeekMenu(services, user.uid, getCurrentWeekStart(), locale);
 
           unsubscribeProfile = watchUserProfile(
             services,
