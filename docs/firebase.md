@@ -23,6 +23,7 @@ Firebase Console > Firestore Database > Rules
 Después pulsa **Publish**. La app necesita permiso para:
 
 - Crear o actualizar `users/{uid}` del usuario autenticado.
+- Guardar preferencias personales como `enabledMeals` y `theme`.
 - Crear un `weeklyMenus/{menuId}` propio.
 - Leer menús estando autenticado, porque la unión por código usa una consulta por `inviteCode`.
 - Editar menús donde el usuario sea miembro.
@@ -33,18 +34,23 @@ Después pulsa **Publish**. La app necesita permiso para:
 
 ### `users/{userId}`
 
-Perfil mínimo del usuario autenticado.
+Perfil mínimo y preferencias del usuario autenticado.
 
 ```json
 {
   "displayName": "Jorge",
+  "enabledMeals": ["breakfast", "lunch", "dinner"],
+  "theme": "system",
+  "createdAt": "serverTimestamp",
   "updatedAt": "serverTimestamp"
 }
 ```
 
+`enabledMeals` puede incluir `breakfast`, `lunch` y `dinner`. `theme` puede ser `system`, `light` o `dark`.
+
 ### `weeklyMenus/{menuId}`
 
-Menú semanal compartido. Cada día permite varios platos de comida y también marcar que ese día no se apunta comida.
+Menú semanal compartido. Cada día permite desayuno, comida y cena, y cada bloque permite varios platos o marcar que no se apunta esa comida.
 
 ```json
 {
@@ -55,18 +61,27 @@ Menú semanal compartido. Cada día permite varios platos de comida y también m
   "weekStart": "2026-05-11",
   "days": {
     "2026-05-11": {
-      "lunchItems": ["Lentejas", "Ensalada"],
-      "noLunch": false,
-      "noLunchReason": "",
-      "noLunchDescription": "",
+      "meals": {
+        "breakfast": {
+          "items": ["Café", "Tostada"],
+          "skipped": false,
+          "reason": "",
+          "note": ""
+        },
+        "lunch": {
+          "items": ["Lentejas", "Ensalada"],
+          "skipped": false,
+          "reason": "",
+          "note": ""
+        },
+        "dinner": {
+          "items": [],
+          "skipped": true,
+          "reason": "eating-out",
+          "note": "Cena fuera"
+        }
+      },
       "notes": "Comprar pan"
-    },
-    "2026-05-12": {
-      "lunchItems": [],
-      "noLunch": true,
-      "noLunchReason": "eating-out",
-      "noLunchDescription": "Comida de trabajo",
-      "notes": ""
     }
   },
   "createdAt": "serverTimestamp",
@@ -118,6 +133,6 @@ La app usa notificaciones del navegador cuando un documento escuchado en tiempo 
 Estas reglas están pensadas para que la app funcione en una primera versión cliente-only. Para producción conviene endurecerlas:
 
 - Mover la unión por código a una Cloud Function para eliminar `allow read: if signedIn()` en `weeklyMenus`.
-- Validar longitudes máximas de `lunchItems`, `notes`, `title`, `inviteCode`, `name` y `noLunchDescription`.
+- Validar longitudes máximas de `meals.*.items`, `meals.*.note`, `notes`, `title`, `inviteCode` y `name`.
 - Impedir que usuarios no propietarios cambien `ownerId` o eliminen miembros arbitrariamente.
 - Usar códigos de invitación más largos o con caducidad.
