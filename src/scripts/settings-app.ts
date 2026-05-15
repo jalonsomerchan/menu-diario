@@ -43,6 +43,14 @@ if (root) {
     status.dataset.variant = isError ? 'error' : 'info';
   }
 
+  function reportError(error: unknown) {
+    showStatus(error instanceof Error ? error.message : String(error), true);
+  }
+
+  function runAction(action: () => Promise<void>) {
+    action().catch(reportError);
+  }
+
   function setVisible(isReady: boolean) {
     if (loading) loading.hidden = isReady;
     if (content) content.hidden = !isReady;
@@ -98,83 +106,99 @@ if (root) {
   } else {
     getFirebaseServices()
       .then((services) => {
-        themeSelect?.addEventListener('change', async () => {
-          if (!currentUser || !themes.includes(themeSelect.value as ThemePreference)) return;
-          const theme = themeSelect.value as ThemePreference;
-          applyTheme(theme);
-          await updateUserPreferences(services, currentUser.uid, { theme });
+        themeSelect?.addEventListener('change', () => {
+          runAction(async () => {
+            if (!currentUser || !themes.includes(themeSelect.value as ThemePreference)) return;
+            const theme = themeSelect.value as ThemePreference;
+            applyTheme(theme);
+            await updateUserPreferences(services, currentUser.uid, { theme });
+          });
         });
 
         root.querySelectorAll<HTMLInputElement>('[data-meal-preference]').forEach((input) => {
-          input.addEventListener('change', async () => {
-            if (!currentGroup || !currentUser) return;
-            const enabledMeals = selectedMeals();
-            await updateGroupOptions(services, currentGroup.id, enabledMeals);
-            await updateUserPreferences(services, currentUser.uid, { enabledMeals });
+          input.addEventListener('change', () => {
+            runAction(async () => {
+              if (!currentGroup || !currentUser) return;
+              const enabledMeals = selectedMeals();
+              await updateGroupOptions(services, currentGroup.id, enabledMeals);
+              await updateUserPreferences(services, currentUser.uid, { enabledMeals });
+              showStatus(labels.updated);
+            });
+          });
+        });
+
+        root.querySelector('[data-invite-form]')?.addEventListener('submit', (event) => {
+          event.preventDefault();
+          runAction(async () => {
+            const input = root.querySelector<HTMLInputElement>('[data-invite-email]');
+            if (!currentGroup || !input?.value) return;
+            await addPendingGroupEmail(services, currentGroup.id, input.value);
+            input.value = '';
+            showStatus(`${labels.copied} ${currentGroup.inviteCode}`);
+          });
+        });
+
+        root.querySelector('[data-join-form]')?.addEventListener('submit', (event) => {
+          event.preventDefault();
+          runAction(async () => {
+            const input = root.querySelector<HTMLInputElement>('[data-join-code]');
+            if (!currentUser || !input?.value) return;
+            await joinGroupByInviteCode(services, currentUser, input.value);
+            input.value = '';
             showStatus(labels.updated);
           });
         });
 
-        root.querySelector('[data-invite-form]')?.addEventListener('submit', async (event) => {
-          event.preventDefault();
-          const input = root.querySelector<HTMLInputElement>('[data-invite-email]');
-          if (!currentGroup || !input?.value) return;
-          await addPendingGroupEmail(services, currentGroup.id, input.value);
-          input.value = '';
-          showStatus(`${labels.copied} ${currentGroup.inviteCode}`);
+        root.querySelector('[data-leave-group]')?.addEventListener('click', () => {
+          runAction(async () => {
+            if (!currentUser || !currentGroup || !currentProfile) return;
+            await leaveGroup(services, currentUser, currentGroup);
+            const personalProfile: UserProfile = { ...currentProfile, groupId: undefined };
+            const groupId = await ensureDefaultGroup(services, currentUser, personalProfile);
+            unsubscribeGroup?.();
+            unsubscribeGroup = watchGroup(services, groupId, renderGroup, reportError);
+          });
         });
 
-        root.querySelector('[data-join-form]')?.addEventListener('submit', async (event) => {
-          event.preventDefault();
-          const input = root.querySelector<HTMLInputElement>('[data-join-code]');
-          if (!currentUser || !input?.value) return;
-          await joinGroupByInviteCode(services, currentUser, input.value);
-          input.value = '';
-          showStatus(labels.updated);
+        root.addEventListener('click', (event) => {
+          runAction(async () => {
+            const target = event.target;
+            if (!(target instanceof HTMLElement) || !target.closest('[data-copy-code]') || !currentGroup) return;
+            await navigator.clipboard?.writeText(currentGroup.inviteCode);
+            showStatus(labels.copied);
+          });
         });
 
-        root.querySelector('[data-leave-group]')?.addEventListener('click', async () => {
-          if (!currentUser || !currentGroup || !currentProfile) return;
-          await leaveGroup(services, currentUser, currentGroup);
-          const personalProfile: UserProfile = { ...currentProfile, groupId: undefined };
-          const groupId = await ensureDefaultGroup(services, currentUser, personalProfile);
-          unsubscribeGroup?.();
-          unsubscribeGroup = watchGroup(services, groupId, renderGroup, (error) => showStatus(error.message, true));
-        });
+        services.authModule.onAuthStateChanged(services.auth, (user: FirebaseUser | null) => {
+          runAction(async () => {
+            currentUser = user;
+            unsubscribeProfile?.();
+            unsubscribeGroup?.();
 
-        root.addEventListener('click', async (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLElement) || !target.closest('[data-copy-code]') || !currentGroup) return;
-          await navigator.clipboard?.writeText(currentGroup.inviteCode);
-          showStatus(labels.copied);
-        });
+            if (!user) {
+              window.location.assign(labels.homePath || '/');
+              return;
+            }
 
-        services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
-          currentUser = user;
-          unsubscribeProfile?.();
-          unsubscribeGroup?.();
-
-          if (!user) {
-            window.location.assign(labels.homePath || '/');
-            return;
-          }
-
-          await ensureUserProfile(services, user, labels.guestSession);
-          unsubscribeProfile = watchUserProfile(
-            services,
-            user,
-            labels.guestSession,
-            async (profile) => {
-              currentProfile = profile;
-              applyTheme(profile.theme);
-              const groupId = await ensureDefaultGroup(services, user, profile);
-              unsubscribeGroup?.();
-              unsubscribeGroup = watchGroup(services, groupId, renderGroup, (error) => showStatus(error.message, true));
-            },
-            (error) => showStatus(error.message, true)
-          );
+            await ensureUserProfile(services, user, labels.guestSession);
+            unsubscribeProfile = watchUserProfile(
+              services,
+              user,
+              labels.guestSession,
+              (profile) => {
+                runAction(async () => {
+                  currentProfile = profile;
+                  applyTheme(profile.theme);
+                  const groupId = await ensureDefaultGroup(services, user, profile);
+                  unsubscribeGroup?.();
+                  unsubscribeGroup = watchGroup(services, groupId, renderGroup, reportError);
+                });
+              },
+              reportError
+            );
+          });
         });
       })
-      .catch((error: Error) => showStatus(error.message, true));
+      .catch(reportError);
   }
 }
