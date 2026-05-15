@@ -78,6 +78,9 @@ export type Dish = {
   members?: string[];
   timesUsed: number;
   tags?: string[];
+  quickTags?: string[];
+  favorite?: boolean;
+  blocked?: boolean;
   archived?: boolean;
   createdAt?: Date;
   lastUsedAt?: Date;
