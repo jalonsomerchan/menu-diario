@@ -1,3 +1,4 @@
+import { getSuggestionDishes, normalizeDishName } from '../dishes/helpers.mjs';
 import type { Dish } from './types';
 
 const suggestionLimit = 6;
@@ -5,14 +6,6 @@ let inputSequence = 0;
 
 function escapeHtml(value = '') {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-}
-
-function normalize(value = '') {
-  return value
-    .trim()
-    .toLocaleLowerCase('es-ES')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
 }
 
 function ensureInputId(input: HTMLInputElement) {
@@ -34,18 +27,17 @@ function setExpanded(input: HTMLInputElement, isExpanded: boolean) {
 }
 
 function getMatches(dishes: Dish[], query: string) {
-  const normalizedQuery = normalize(query);
+  const normalizedQuery = normalizeDishName(query);
 
-  return [...dishes]
+  return getSuggestionDishes(dishes, query)
     .map((dish) => {
-      const normalizedName = normalize(dish.name);
+      const normalizedName = normalizeDishName(dish.name);
       const startsWith = normalizedQuery ? normalizedName.startsWith(normalizedQuery) : false;
-      const includes = normalizedQuery ? normalizedName.includes(normalizedQuery) : true;
-      return { dish, startsWith, includes };
+      return { dish, startsWith };
     })
-    .filter((item) => item.includes)
     .sort((a, b) => {
       if (a.startsWith !== b.startsWith) return a.startsWith ? -1 : 1;
+      if (Boolean(a.dish.favorite) !== Boolean(b.dish.favorite)) return a.dish.favorite ? -1 : 1;
       return (b.dish.timesUsed ?? 0) - (a.dish.timesUsed ?? 0) || a.dish.name.localeCompare(b.dish.name);
     })
     .slice(0, suggestionLimit)
@@ -71,7 +63,7 @@ function renderSuggestions(list: HTMLElement, input: HTMLInputElement, dishes: D
   list.innerHTML = matches
     .map(
       (dish) =>
-        `<button type="button" role="option" data-suggestion="${escapeHtml(dish.name)}">${escapeHtml(dish.name)}</button>`
+        `<button type="button" role="option" data-suggestion="${escapeHtml(dish.name)}">${dish.favorite ? '<span aria-hidden="true">★</span> ' : ''}${escapeHtml(dish.name)}</button>`
     )
     .join('');
   list.hidden = false;
@@ -79,11 +71,25 @@ function renderSuggestions(list: HTMLElement, input: HTMLInputElement, dishes: D
 }
 
 function getSuggestionTarget(input: HTMLInputElement) {
-  const meal = input.dataset.plateInput;
+  const plateRow = input.closest<HTMLElement>('.plate-row');
   const mealSection = input.closest<HTMLElement>('[data-meal]');
-  const list = mealSection?.querySelector<HTMLElement>(`[data-suggestion-list="${meal}"]`);
+  const list = plateRow?.querySelector<HTMLElement>('[data-suggestion-list]');
 
   return list ? { list, mealSection } : null;
+}
+
+function selectSuggestion(root: HTMLElement, button: HTMLButtonElement) {
+  const list = button.closest<HTMLElement>('[data-suggestion-list]');
+  const inputId = list?.dataset.activeInputId;
+  const input = inputId ? root.querySelector<HTMLInputElement>(`#${CSS.escape(inputId)}`) : null;
+
+  if (!input || !list) return;
+
+  input.value = button.dataset.suggestion ?? '';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  hideSuggestions(list, input);
+  input.focus();
 }
 
 export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]) {
@@ -131,6 +137,17 @@ export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]
     }, 120);
   });
 
+  root.addEventListener('pointerdown', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    const button = target.closest<HTMLButtonElement>('[data-suggestion]');
+    if (!button) return;
+
+    event.preventDefault();
+    selectSuggestion(root, button);
+  });
+
   root.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
@@ -146,22 +163,5 @@ export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]
       input.focus();
       return;
     }
-
-    const button = target.closest<HTMLButtonElement>('[data-suggestion]');
-    if (!button) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const list = button.closest<HTMLElement>('[data-suggestion-list]');
-    const inputId = list?.dataset.activeInputId;
-    const input = inputId ? root.querySelector<HTMLInputElement>(`#${CSS.escape(inputId)}`) : null;
-
-    if (!input || !list) return;
-
-    input.value = button.dataset.suggestion ?? '';
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-    hideSuggestions(list, input);
-    input.focus();
   });
 }
