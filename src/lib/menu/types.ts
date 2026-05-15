@@ -14,6 +14,8 @@ export type WeekDay = {
 
 export type NoMealReason = 'away' | 'eating-out' | 'not-hungry' | 'other';
 export type ThemePreference = 'system' | 'light' | 'dark';
+export type DishScope = 'global' | 'group' | 'user';
+export type DishSource = 'admin' | 'group' | 'legacy' | 'duplicated-global' | 'manual' | 'menu';
 
 export type MealEntry = {
   items: string[];
@@ -74,14 +76,21 @@ export type Dish = {
   id: string;
   name: string;
   normalizedName: string;
+  scope: DishScope;
+  source: DishSource;
+  groupId?: string;
   createdBy: string;
   members?: string[];
+  isGlobal: boolean;
+  editable: boolean;
   timesUsed: number;
   tags?: string[];
   quickTags?: string[];
   favorite?: boolean;
   blocked?: boolean;
   archived?: boolean;
+  archivedAt?: Date;
+  duplicatedFrom?: string;
   createdAt?: Date;
   lastUsedAt?: Date;
   updatedAt?: Date;
