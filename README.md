@@ -8,7 +8,9 @@ La aplicación está construida sobre Astro y usa Firebase Authentication y Fire
 
 - `/`: landing informativa y acceso con Google o sesión invitada.
 - `/dashboard`: pantalla rápida para usuarios autenticados.
-- `/configurar`: pantalla separada para ajustes y configuración de menús.
+- `/configurar`: pantalla separada para edición de menús.
+- `/platos`: catálogo de platos generales y platos propios.
+- `/ajustes`: grupo, preferencias y opciones compartidas.
 
 En móvil, el dashboard muestra una tarjeta principal tipo resumen:
 
@@ -18,17 +20,19 @@ Hoy para comer:
 - Pasta
 ```
 
-Debajo aparecen accesos a **Ajustes** y **Configurar**, y después una lista de los próximos 7 días. Esa lista empieza siempre **mañana**, no el lunes. Cada tarjeta de día incluye un botón para editar ese día en `/configurar`.
+Debajo aparecen accesos a **Ajustes**, **Configurar** y **Mis platos**, y después una lista de los próximos 7 días. Esa lista empieza siempre **mañana**, no el lunes.
 
 ## Características principales
 
 - **Dashboard rápido**: resumen de hoy y próximos 7 días.
-- **Configurador separado**: ajustes y edición viven en `/configurar`.
+- **Configurador separado**: edición de días en `/configurar` y edición rápida desde dashboard e histórico.
 - **Próximos 7 días desde mañana**: el dashboard y el configurador no dependen de que la semana empiece en lunes.
 - **Preferencias por usuario**: cada usuario elige si quiere configurar desayuno, comida y/o cena.
 - **Tema por usuario**: sistema, claro u oscuro. Por defecto usa la preferencia del navegador.
-- **Varios platos por comida**: cada plato es un input independiente.
-- **Reutilización de platos**: los inputs usan `datalist` con platos ya escritos para mantener nombres consistentes.
+- **Varios platos por comida**: cada plato es un input independiente con búsqueda y texto libre.
+- **Catálogo dual de platos**: platos generales gestionados por administración y platos propios del grupo editables por miembros.
+- **Duplicado controlado**: un plato general puede duplicarse como propio para personalizarlo sin tocar el catálogo común.
+- **Deduplicación normalizada**: se comparan nombres sin mayúsculas, acentos ni espacios repetidos.
 - **Días sin comida**: al marcar que una comida no se apunta, se muestran motivo y nota.
 - **Autenticación flexible**: acceso con Google o como invitado anónimo mediante Firebase Auth.
 - **Firestore en tiempo real**: los cambios se sincronizan con el documento de menú activo.
@@ -152,7 +156,7 @@ Publica las reglas de `firestore.rules` en:
 Firebase Console > Firestore Database > Rules
 ```
 
-La documentación del modelo de datos, índices, reglas y preparación de Firebase AI vive en `docs/firebase.md`.
+La documentación del modelo de datos, índices, reglas, siembra de platos generales y preparación de Firebase AI vive en `docs/firebase.md`.
 
 ## Modelo de datos principal
 
@@ -163,7 +167,21 @@ La documentación del modelo de datos, índices, reglas y preparación de Fireba
   "displayName": "Jorge",
   "enabledMeals": ["lunch"],
   "theme": "system",
+  "groupId": "group-id",
   "updatedAt": "timestamp"
+}
+```
+
+### `groups/{groupId}`
+
+```json
+{
+  "ownerId": "uid",
+  "members": ["uid"],
+  "memberEmails": ["jorge@example.com"],
+  "pendingEmails": [],
+  "inviteCode": "ABC123",
+  "enabledMeals": ["lunch"]
 }
 ```
 
@@ -194,30 +212,66 @@ Aunque la colección mantiene el nombre `weeklyMenus`, el documento activo se us
 
 ### `dishes/{dishId}`
 
+El catálogo usa una sola colección para evitar duplicar lógica de búsqueda, sugerencias, normalización y deduplicación. El campo `scope` separa el origen:
+
 ```json
 {
-  "name": "Pasta",
-  "normalizedName": "pasta",
-  "createdBy": "uid",
-  "members": ["uid"],
-  "timesUsed": 3,
-  "lastUsedAt": "timestamp"
+  "name": "Lentejas con verduras",
+  "normalizedName": "lentejas con verduras",
+  "scope": "global",
+  "source": "admin",
+  "isGlobal": true,
+  "editable": false,
+  "createdBy": "admin-uid",
+  "timesUsed": 0,
+  "archived": false,
+  "quickTags": ["cheap", "healthy"]
 }
 ```
+
+```json
+{
+  "name": "Lentejas de la abuela",
+  "normalizedName": "lentejas de la abuela",
+  "scope": "group",
+  "groupId": "group-id",
+  "source": "duplicated-global",
+  "isGlobal": false,
+  "editable": true,
+  "createdBy": "uid",
+  "members": ["uid"],
+  "duplicatedFrom": "global_lentejas",
+  "timesUsed": 0,
+  "archived": false
+}
+```
+
+- `scope: global`: lectura para usuarios autenticados y escritura solo para administradores con custom claim `admin`.
+- `scope: group`: lectura y edición para miembros autorizados del grupo.
+- `scope: user`: fallback compatible para sesiones sin `groupId` o datos antiguos.
+- `archivedAt` marca archivado sin eliminar referencias históricas de menús.
+
+## Sembrar platos generales
+
+El fichero `data/global-dishes.seed.json` contiene datos iniciales sin credenciales. Puedes importarlo con la consola de Firebase, un script local controlado o Admin SDK fuera del repo. Al importar añade `createdBy`, `createdAt`, `updatedAt`, `timesUsed: 0`, `archived: false` y conserva `scope: "global"`, `source: "admin"`, `isGlobal: true`, `editable: false`.
 
 ## Estructura principal
 
 ```text
 src/components/DashboardApp.astro      Dashboard rápido
-src/components/ConfiguratorApp.astro   Ajustes y configurador
+src/components/ConfiguratorApp.astro   Configurador de menús
+src/components/DishesApp.astro         Catálogo de platos
 src/scripts/dashboard-app.ts           Lógica del dashboard
-src/scripts/configurator-app.ts        Lógica de ajustes/configuración
+src/scripts/configurator-app.ts        Lógica de configuración
+src/scripts/dishes-app.ts              Lógica de platos generales y propios
+src/lib/dishes/                        Repositorio, normalización y deduplicación de platos
 src/lib/menu/repository.ts             Operaciones de Firestore
 src/lib/menu/types.ts                  Tipos del dominio
 src/lib/ai/                            Base Firebase AI Logic/Gemini
 src/i18n/translations/*.json           Textos traducibles
 src/styles/global.css                  Tokens visuales, light/dark y UI mobile first
 docs/firebase.md                       Modelo de datos, reglas e índices
+firestore.rules                        Reglas de seguridad
 ```
 
 ## Tests y validación
@@ -233,27 +287,10 @@ npm run build
 Los tests smoke comprueban que:
 
 - La estructura mínima de Astro existe.
-- Las rutas `/dashboard` y `/configurar` existen también en idiomas secundarios.
+- Las rutas privadas existen también en idiomas secundarios.
 - Las traducciones `es/en` mantienen las mismas claves.
-- El dashboard y el configurador están conectados a sus scripts.
+- El dashboard, configurador, histórico y catálogo están conectados a sus scripts.
+- El catálogo distingue platos generales y propios, permisos de edición, normalización y deduplicación.
+- Las reglas de Firestore contienen controles para admin, grupo y platos globales.
 - La base de Firebase AI conserva flags, configuración, validación JSON y estados de error.
 - Las rutas siguen siendo compatibles con GitHub Pages.
-
-## Documentación para agentes IA
-
-Antes de modificar el proyecto, una IA debe leer:
-
-- `agents.md`.
-- `docs/ai-checklist.md`.
-- `docs/template-usage.md`.
-- `docs/i18n-guide.md`.
-- `docs/github-pages.md`.
-- `docs/testing-guide.md`.
-- `docs/design-system.md`.
-- `docs/firebase.md`.
-
-## Notas técnicas
-
-La integración de Firebase se carga dinámicamente en el navegador desde los módulos oficiales versionados de Firebase Web SDK. Así se evita añadir dependencias nuevas al lockfile de npm y se mantiene el proyecto ligero.
-
-No se incluye ningún secreto en el repositorio. El fichero `.env` está ignorado por Git y solo debe existir en local o en el entorno de despliegue.
