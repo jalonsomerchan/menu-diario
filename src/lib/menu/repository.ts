@@ -34,6 +34,9 @@ function emptyDay(): DailyMenu {
       lunch: emptyMeal(),
       dinner: emptyMeal(),
     },
+    skipped: false,
+    reason: '',
+    skipNote: '',
     notes: '',
   };
 }
@@ -70,6 +73,9 @@ function normalizeDay(data: Partial<DailyMenu> = {}): DailyMenu {
         items: meals.dinner?.items ?? (data.dinner ? [data.dinner].filter(Boolean) : []),
       }),
     },
+    skipped: Boolean(data.skipped),
+    reason: data.reason ?? '',
+    skipNote: data.skipNote ?? '',
     notes: data.notes ?? '',
   };
 }

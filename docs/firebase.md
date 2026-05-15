@@ -75,7 +75,7 @@ Si un usuario sale de un grupo, se elimina de `members` y se le crea o asigna un
 
 ### `weeklyMenus/{menuId}`
 
-Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permite varios platos o marcar que no se apunta esa comida.
+Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permite varios platos. También puede marcarse el día completo como no configurable, guardando motivo y nota.
 
 ```json
 {
@@ -86,6 +86,9 @@ Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permi
   "weekStart": "2026-05-11",
   "days": {
     "2026-05-11": {
+      "skipped": false,
+      "reason": "",
+      "skipNote": "",
       "meals": {
         "breakfast": {
           "items": ["Café", "Tostada"],
@@ -114,6 +117,8 @@ Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permi
   "updatedBy": "uid"
 }
 ```
+
+Cuando `days.{fecha}.skipped` es `true`, la interfaz oculta platos y notas del día y muestra `reason` y `skipNote`. Los campos `meals.*.skipped` se mantienen para compatibilidad y para posibles saltos por comida concreta.
 
 El histórico reutiliza estos documentos buscando menús donde el usuario es miembro y mostrando los días anteriores del rango seleccionado.
 
@@ -161,6 +166,6 @@ Estas reglas están pensadas para que la app funcione en una primera versión cl
 
 - Mover la unión por código a una Cloud Function para reducir `allow read: if signedIn()` en `weeklyMenus` y `groups`.
 - Enviar invitaciones reales por email desde backend o Cloud Functions.
-- Validar longitudes máximas de `meals.*.items`, `meals.*.note`, `notes`, `title`, `inviteCode`, `name`, `memberEmails` y `pendingEmails`.
+- Validar longitudes máximas de `meals.*.items`, `meals.*.note`, `notes`, `skipNote`, `title`, `inviteCode`, `name`, `memberEmails` y `pendingEmails`.
 - Impedir que usuarios no propietarios cambien `ownerId` o eliminen miembros arbitrariamente.
 - Usar códigos de invitación más largos o con caducidad.

@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 import type { Locale } from '../config/site';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -14,24 +15,36 @@ const historyPath = getLocalizedPath('/historico', locale);
 const settingsPath = getLocalizedPath('/ajustes', locale);
 const labels = {
   guestSession: t('menu.guestSession'),
+  openMenu: t('appNav.openMenu'),
+  closeMenu: t('appNav.closeMenu'),
 };
 ---
 
 <header class="app-header" data-app-header data-labels={JSON.stringify(labels)}>
-  <a class="app-header__brand" href={dashboardPath}>Menu Diario</a>
-  <nav class="app-header__nav" aria-label={t('nav.main')}>
-    <a href={dashboardPath}>{t('appNav.dashboard')}</a>
-    <a href={configurePath}>{t('appNav.configure')}</a>
-    <a href={historyPath}>{t('appNav.history')}</a>
-    <a href={settingsPath}>{t('appNav.settings')}</a>
-  </nav>
-  <div class="app-header__actions">
-    <select data-global-theme aria-label={t('dashboard.theme')}>
-      <option value="system">{t('dashboard.themeSystem')}</option>
-      <option value="light">{t('dashboard.themeLight')}</option>
-      <option value="dark">{t('dashboard.themeDark')}</option>
-    </select>
-    <button class="button button--ghost button--small" type="button" data-global-logout>{t('menu.signOut')}</button>
+  <div class="app-header__top">
+    <a class="app-header__brand" href={dashboardPath}>Menu Diario</a>
+    <button class="app-header__toggle" type="button" data-app-menu-toggle aria-expanded="false" aria-controls="app-menu-panel" aria-label={t('appNav.openMenu')}>
+      <Icon name="mdi:menu" aria-hidden="true" />
+    </button>
+  </div>
+  <div class="app-header__panel" id="app-menu-panel" data-app-menu-panel>
+    <nav class="app-header__nav" aria-label={t('nav.main')}>
+      <a href={dashboardPath}><Icon name="mdi:home-outline" aria-hidden="true" />{t('appNav.dashboard')}</a>
+      <a href={configurePath}><Icon name="mdi:calendar-edit" aria-hidden="true" />{t('appNav.configure')}</a>
+      <a href={historyPath}><Icon name="mdi:history" aria-hidden="true" />{t('appNav.history')}</a>
+      <a href={settingsPath}><Icon name="mdi:cog-outline" aria-hidden="true" />{t('appNav.settings')}</a>
+    </nav>
+    <div class="app-header__actions">
+      <select data-global-theme aria-label={t('dashboard.theme')}>
+        <option value="system">{t('dashboard.themeSystem')}</option>
+        <option value="light">{t('dashboard.themeLight')}</option>
+        <option value="dark">{t('dashboard.themeDark')}</option>
+      </select>
+      <button class="button button--ghost button--small" type="button" data-global-logout>
+        <Icon name="mdi:logout" aria-hidden="true" />
+        {t('menu.signOut')}
+      </button>
+    </div>
   </div>
 </header>
 

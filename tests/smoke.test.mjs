@@ -61,6 +61,7 @@ describe('project smoke checks', () => {
       'src/config/site.ts',
       'src/i18n/ui.ts',
       'src/i18n/translations',
+      'src/lib/menu/day-editor.ts',
       'src/utils/paths.ts',
       'src/styles/global.css',
     ].forEach((path) => {
@@ -124,7 +125,20 @@ describe('project smoke checks', () => {
     locales.forEach((locale) => {
       const translations = readJson(`src/i18n/translations/${locale}.json`);
       assert.deepEqual(Object.keys(translations).sort(), expectedKeys);
-      ['home.title', 'nav.main', 'dashboard.title', 'dashboard.moreActions', 'history.title', 'group.title', 'appNav.settings', 'menu.signInGoogle'].forEach((key) => {
+      [
+        'home.title',
+        'nav.main',
+        'dashboard.title',
+        'dashboard.moreActions',
+        'dashboard.noDay',
+        'dashboard.removePlate',
+        'dashboard.dishSuggestions',
+        'history.title',
+        'group.title',
+        'appNav.settings',
+        'appNav.openMenu',
+        'menu.signInGoogle',
+      ].forEach((key) => {
         assert.ok(translations[key], `${locale}.json should include ${key}`);
       });
     });
@@ -170,6 +184,8 @@ describe('project smoke checks', () => {
     assert.match(configure, /<ConfiguratorApp/);
     assert.match(settings, /<SettingsApp/);
     assert.match(history, /<HistoryApp/);
+    assert.match(appHeader, /astro-icon\/components/);
+    assert.match(appHeader, /data-app-menu-toggle/);
     assert.match(appHeader, /data-global-theme/);
     assert.match(appHeader, /appNav\.history/);
     assert.match(authGate, /data-auth-gate/);
@@ -182,6 +198,7 @@ describe('project smoke checks', () => {
 
   it('keeps data layer helpers and UI styles wired', () => {
     const repository = readText('src/lib/menu/repository.ts');
+    const dayEditor = readText('src/lib/menu/day-editor.ts');
     const types = readText('src/lib/menu/types.ts');
     const dashboardScript = readText('src/scripts/dashboard-app.ts');
     const configuratorScript = readText('src/scripts/configurator-app.ts');
@@ -194,17 +211,30 @@ describe('project smoke checks', () => {
     assert.match(repository, /ensureDefaultGroup/);
     assert.match(repository, /joinGroupByInviteCode/);
     assert.match(repository, /clearMenuDay/);
+    assert.match(dayEditor, /renderDayEditor/);
+    assert.match(dayEditor, /dish-suggestions/);
+    assert.match(dayEditor, /data-add-plate/);
+    assert.match(dayEditor, /data-remove-plate/);
+    assert.match(dayEditor, /data-field=\"skipped\"/);
+    assert.doesNotMatch(dayEditor, /<datalist/);
     assert.match(types, /type MenuGroup/);
     assert.match(types, /MealSlot = 'breakfast' \| 'lunch' \| 'dinner'/);
+    assert.match(types, /skipNote/);
+    assert.match(dashboardScript, /renderDayEditor/);
     assert.match(dashboardScript, /data-quick-edit/);
     assert.match(dashboardScript, /data-clear-day/);
-    assert.match(configuratorScript, /day-card__date-number/);
+    assert.match(configuratorScript, /renderDayEditor/);
     assert.match(settingsScript, /addPendingGroupEmail/);
     assert.match(settingsScript, /leaveGroup/);
+    assert.match(historyScript, /renderDayEditor/);
     assert.match(historyScript, /watchUserMenus/);
+    assert.match(headerScript, /data-app-menu-toggle/);
     assert.match(headerScript, /data-global-theme/);
-    assert.match(styles, /app-header/);
+    assert.match(styles, /app-header__toggle/);
     assert.match(styles, /day-actions/);
+    assert.match(styles, /dish-suggestions/);
+    assert.match(styles, /icon-button/);
+    assert.match(styles, /day-skip-toggle/);
     assert.match(styles, /quick-edit-modal/);
     assert.match(styles, /next-day-card__number/);
     assert.match(rules, /match \/groups/);

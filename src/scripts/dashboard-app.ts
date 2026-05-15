@@ -1,15 +1,17 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getMonday, toIsoDate } from '../lib/menu/dates';
+import { renderDayEditor } from '../lib/menu/day-editor';
 import {
   clearMenuDay,
   ensureUserProfile,
   getOrCreateWeekMenu,
   updateMenuPatch,
+  watchDishes,
   watchUserProfile,
   watchWeekMenu,
 } from '../lib/menu/repository';
-import type { DailyMenu, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { notifyMenuChanged, requestChangeNotifications } from '../lib/notifications/browser';
 
 const root = document.querySelector<HTMLElement>('[data-dashboard-app]');
@@ -31,8 +33,9 @@ if (root) {
   let currentProfile: UserProfile | null = null;
   let currentMenu: WeekMenu | null = null;
   let currentMenuId = '';
-  let quickDayKey = '';
+  let dishes: Dish[] = [];
   let unsubscribeMenu: (() => void) | undefined;
+  let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let firstMenuLoad = true;
 
@@ -78,6 +81,9 @@ if (root) {
           items: day?.meals?.dinner?.items ?? (day?.dinner ? [day.dinner] : []),
         }),
       },
+      skipped: Boolean(day?.skipped),
+      reason: day?.reason ?? '',
+      skipNote: day?.skipNote ?? '',
       notes: day?.notes ?? '',
     };
   }
@@ -105,6 +111,15 @@ if (root) {
     }
 
     return meal.items.length ? meal.items.join(', ') : labels.todayEmpty;
+  }
+
+  function renderDaySummary(day: DailyMenu, meal: MealSlot) {
+    if (day.skipped) {
+      const reason = reasonLabel(day.reason ?? '');
+      return reason ? `${labels.skipSummary}: ${reason}` : labels.skipSummary;
+    }
+
+    return renderMealSummary(day.meals[meal]);
   }
 
   function getDateOffset(daysFromToday: number) {
@@ -149,7 +164,7 @@ if (root) {
     const day = normalizeDay(menu.days[getDateOffset(0)]);
     const firstMeal = getEnabledMeals()[0] ?? 'lunch';
     const meal = day.meals[firstMeal];
-    const items = meal.skipped || meal.items.length === 0 ? [renderMealSummary(meal)] : meal.items;
+    const items = day.skipped || meal.skipped || meal.items.length === 0 ? [renderDaySummary(day, firstMeal)] : meal.items;
 
     todaySummary.innerHTML = items.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
   }
@@ -165,7 +180,7 @@ if (root) {
             (meal) => `
               <div class="day-meal-row">
                 <span>${escapeHtml(mealLabel(meal))}:</span>
-                <strong>${escapeHtml(renderMealSummary(day.meals[meal]))}</strong>
+                <strong>${escapeHtml(renderDaySummary(day, meal))}</strong>
               </div>
             `
           )
@@ -196,37 +211,52 @@ if (root) {
   function openQuickEdit(dayKey: string) {
     if (!currentMenu || !quickFields || !quickModal) return;
 
-    const day = normalizeDay(currentMenu.days[dayKey]);
-    quickDayKey = dayKey;
-    quickFields.innerHTML = getEnabledMeals()
-      .map((meal) => {
-        const value = day.meals[meal].items.join('\n');
-        return `
-          <label>${escapeHtml(mealLabel(meal))}
-            <textarea data-quick-meal="${meal}" rows="3">${escapeHtml(value)}</textarea>
-          </label>
-        `;
-      })
-      .join('');
+    quickFields.innerHTML = renderDayEditor({
+      dayKey,
+      dayNumber: getDayNumber(dayKey),
+      weekday: formatWeekday(dayKey),
+      day: normalizeDay(currentMenu.days[dayKey]),
+      enabledMeals: getEnabledMeals(),
+      dishes,
+      labels,
+      compact: true,
+    });
     quickModal.showModal();
   }
 
-  async function saveQuickEdit() {
-    if (!currentUser || !currentMenuId || !quickFields || !quickDayKey) return;
+  async function saveField(card: HTMLElement, path: string, value: string | boolean | string[]) {
+    if (!currentUser || !currentMenuId) return;
     const services = await getFirebaseServices();
+    await updateMenuPatch(services, currentMenuId, currentUser.uid, {
+      dayKey: card.dataset.day ?? '',
+      path,
+      value,
+    });
+  }
 
-    await Promise.all(
-      [...quickFields.querySelectorAll<HTMLTextAreaElement>('[data-quick-meal]')].map((textarea) =>
-        updateMenuPatch(services, currentMenuId, currentUser!.uid, {
-          dayKey: quickDayKey,
-          path: `meals.${textarea.dataset.quickMeal}.items`,
-          value: textarea.value
-            .split('\n')
-            .map((item) => item.trim())
-            .filter(Boolean),
-        })
-      )
-    );
+  async function savePlateList(card: HTMLElement, meal: MealSlot) {
+    const items = [...card.querySelectorAll<HTMLInputElement>(`[data-plate-input="${meal}"]`)]
+      .map((input) => input.value.trim())
+      .filter(Boolean);
+    await saveField(card, `meals.${meal}.items`, items);
+  }
+
+  function addPlate(card: HTMLElement, meal: MealSlot, value = '') {
+    const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
+    if (!list) return;
+
+    const row = document.createElement('div');
+    row.className = 'plate-row';
+    row.innerHTML = `
+      <label><span class="sr-only">${labels.addDish}</span><input type="text" value="" data-plate-input="${meal}" placeholder="${labels.dishPlaceholder}" autocomplete="off" /></label>
+      <button class="icon-button icon-button--danger" type="button" data-remove-plate="${meal}" aria-label="${labels.removePlate}"><span aria-hidden="true">×</span></button>
+    `;
+    list.append(row);
+    const input = row.querySelector<HTMLInputElement>('input');
+    if (input) {
+      input.value = value;
+      input.focus();
+    }
   }
 
   function renderDashboard(menu: WeekMenu) {
@@ -261,19 +291,69 @@ if (root) {
           }
         });
 
+        quickFields?.addEventListener('change', (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
+          const card = target.closest<HTMLElement>('[data-day]');
+          if (!card) return;
+
+          if (target.dataset.plateInput) {
+            savePlateList(card, target.dataset.plateInput as MealSlot).catch((error: Error) => showStatus(error.message, true));
+            return;
+          }
+
+          const field = target.dataset.field;
+          if (!field) return;
+          const value = target instanceof HTMLInputElement && target.type === 'checkbox' ? target.checked : target.value.trim();
+          saveField(card, field, value).catch((error: Error) => showStatus(error.message, true));
+        });
+
+        quickFields?.addEventListener('click', (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) return;
+          const button = target.closest<HTMLButtonElement>('button');
+          if (!button) return;
+          const card = button.closest<HTMLElement>('[data-day]');
+          if (!card) return;
+
+          if (button.dataset.addPlate) {
+            addPlate(card, button.dataset.addPlate as MealSlot);
+            return;
+          }
+
+          if (button.dataset.removePlate) {
+            const meal = button.dataset.removePlate as MealSlot;
+            button.closest('.plate-row')?.remove();
+            savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
+            return;
+          }
+
+          if (button.dataset.suggestion) {
+            const meal = button.closest<HTMLElement>('[data-meal]')?.dataset.meal as MealSlot | undefined;
+            if (!meal) return;
+            const emptyInput = card.querySelector<HTMLInputElement>(`[data-plate-input="${meal}"]`);
+            if (emptyInput && !emptyInput.value.trim()) {
+              emptyInput.value = button.dataset.suggestion;
+              savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
+              return;
+            }
+            addPlate(card, meal, button.dataset.suggestion);
+            savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
+          }
+        });
+
         quickForm?.addEventListener('submit', (event) => {
           const submitter = (event as SubmitEvent).submitter;
           if (submitter instanceof HTMLButtonElement && submitter.value === 'save') {
             event.preventDefault();
-            saveQuickEdit()
-              .then(() => quickModal?.close())
-              .catch((error: Error) => showStatus(error.message, true));
+            quickModal?.close();
           }
         });
 
         services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
           currentUser = user;
           unsubscribeMenu?.();
+          unsubscribeDishes?.();
           unsubscribeProfile?.();
 
           if (!user) {
@@ -295,6 +375,15 @@ if (root) {
               currentProfile = profile;
               applyTheme(profile.theme);
               if (currentMenu) renderDashboard(currentMenu);
+            },
+            (error) => showStatus(error.message, true)
+          );
+
+          unsubscribeDishes = watchDishes(
+            services,
+            user.uid,
+            (nextDishes) => {
+              dishes = nextDishes;
             },
             (error) => showStatus(error.message, true)
           );
