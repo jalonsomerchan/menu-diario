@@ -12,7 +12,7 @@ Activa en Firebase Console:
 
 ## Error `Missing or insufficient permissions`
 
-Si al iniciar sesión con Google aparece `Missing or insufficient permissions`, normalmente Google Auth sí ha funcionado, pero Firestore ha rechazado la lectura o escritura posterior.
+Si al iniciar sesión aparece `Missing or insufficient permissions`, normalmente la autenticación sí ha funcionado, pero Firestore ha rechazado la lectura o escritura posterior.
 
 Para solucionarlo, publica las reglas del fichero `firestore.rules` en Firebase Console:
 
@@ -23,12 +23,13 @@ Firebase Console > Firestore Database > Rules
 Después pulsa **Publish**. La app necesita permiso para:
 
 - Crear o actualizar `users/{uid}` del usuario autenticado.
-- Guardar preferencias personales como `enabledMeals` y `theme`.
+- Guardar preferencias personales como `enabledMeals`, `theme` y `groupId`.
+- Crear y actualizar `groups/{groupId}`.
+- Añadirse como miembro de un grupo cuando conoce el código de invitación.
 - Crear un `weeklyMenus/{menuId}` propio.
-- Leer menús estando autenticado, porque la unión por código usa una consulta por `inviteCode`.
-- Editar menús donde el usuario sea miembro.
+- Leer menús estando autenticado, porque el histórico y los códigos usan consultas cliente.
+- Editar o borrar días de menús donde el usuario sea miembro.
 - Crear y actualizar platos reutilizables en `dishes` para sugerencias y estadísticas.
-- Añadirse como miembro cuando conoce un código de invitación.
 
 ## Colecciones
 
@@ -39,8 +40,10 @@ Perfil mínimo y preferencias del usuario autenticado.
 ```json
 {
   "displayName": "Jorge",
+  "email": "jorge@example.com",
   "enabledMeals": ["breakfast", "lunch", "dinner"],
   "theme": "system",
+  "groupId": "group-id",
   "createdAt": "serverTimestamp",
   "updatedAt": "serverTimestamp"
 }
@@ -48,9 +51,31 @@ Perfil mínimo y preferencias del usuario autenticado.
 
 `enabledMeals` puede incluir `breakfast`, `lunch` y `dinner`. `theme` puede ser `system`, `light` o `dark`.
 
+### `groups/{groupId}`
+
+Grupo de convivencia o planificación. Permite ver miembros, emails pendientes y opciones compartidas.
+
+```json
+{
+  "name": "Menu Diario",
+  "ownerId": "uid",
+  "members": ["uid"],
+  "memberEmails": ["jorge@example.com"],
+  "pendingEmails": ["otra-persona@example.com"],
+  "inviteCode": "ABC123",
+  "enabledMeals": ["lunch"],
+  "createdAt": "serverTimestamp",
+  "updatedAt": "serverTimestamp"
+}
+```
+
+La invitación por email no envía correo desde la app. Guarda el email como pendiente y muestra el código para compartirlo manualmente. La otra persona se une escribiendo ese código en **Ajustes**.
+
+Si un usuario sale de un grupo, se elimina de `members` y se le crea o asigna un grupo propio para que no se quede sin configuración.
+
 ### `weeklyMenus/{menuId}`
 
-Menú semanal compartido. Cada día permite desayuno, comida y cena, y cada bloque permite varios platos o marcar que no se apunta esa comida.
+Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permite varios platos o marcar que no se apunta esa comida.
 
 ```json
 {
@@ -90,6 +115,8 @@ Menú semanal compartido. Cada día permite desayuno, comida y cena, y cada bloq
 }
 ```
 
+El histórico reutiliza estos documentos buscando menús donde el usuario es miembro y mostrando los días anteriores del rango seleccionado.
+
 ### `dishes/{dishId}`
 
 Catálogo de platos reutilizables. Se alimenta automáticamente cuando se añaden platos a un día.
@@ -122,7 +149,7 @@ weeklyMenus
 
 La lista de platos reutilizables usa `createdBy == uid` y se ordena en el navegador por `timesUsed`, así que no necesita el índice compuesto `members + timesUsed`.
 
-La consulta por código de invitación usa `inviteCode ==`, que normalmente no necesita índice compuesto.
+La consulta por código de grupo usa `inviteCode ==`, que normalmente no necesita índice compuesto.
 
 ## Notificaciones
 
@@ -132,7 +159,8 @@ La app usa notificaciones del navegador cuando un documento escuchado en tiempo 
 
 Estas reglas están pensadas para que la app funcione en una primera versión cliente-only. Para producción conviene endurecerlas:
 
-- Mover la unión por código a una Cloud Function para eliminar `allow read: if signedIn()` en `weeklyMenus`.
-- Validar longitudes máximas de `meals.*.items`, `meals.*.note`, `notes`, `title`, `inviteCode` y `name`.
+- Mover la unión por código a una Cloud Function para reducir `allow read: if signedIn()` en `weeklyMenus` y `groups`.
+- Enviar invitaciones reales por email desde backend o Cloud Functions.
+- Validar longitudes máximas de `meals.*.items`, `meals.*.note`, `notes`, `title`, `inviteCode`, `name`, `memberEmails` y `pendingEmails`.
 - Impedir que usuarios no propietarios cambien `ownerId` o eliminen miembros arbitrariamente.
 - Usar códigos de invitación más largos o con caducidad.
