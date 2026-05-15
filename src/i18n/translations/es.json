@@ -107,6 +107,8 @@
   "dishes.noCreatedAt": "Sin fecha guardada",
   "dishes.tags": "Etiquetas",
   "dishes.quickTags": "Etiquetas rápidas",
+  "dishes.removeTag": "Quitar etiqueta",
+  "dishes.noQuickTags": "Sin etiquetas rápidas",
   "dishes.edit": "Editar plato",
   "dishes.archive": "Archivar plato",
   "dishes.markFavorite": "Marcar favorito",
