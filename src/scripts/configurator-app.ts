@@ -155,7 +155,7 @@ if (root) {
     const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
     if (!list) return;
 
-    list.insertAdjacentHTML('beforeend', renderPlateRow(labels, meal, '', list.children.length));
+    list.insertAdjacentHTML('beforeend', renderPlateRow(labels, meal, '', list.children.length, dishes));
     list.querySelector<HTMLInputElement>('.plate-row:last-child input')?.focus();
   }
 

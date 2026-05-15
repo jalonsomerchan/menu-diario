@@ -71,9 +71,9 @@ function renderSuggestions(list: HTMLElement, input: HTMLInputElement, dishes: D
 }
 
 function getSuggestionTarget(input: HTMLInputElement) {
-  const meal = input.dataset.plateInput;
+  const plateRow = input.closest<HTMLElement>('.plate-row');
   const mealSection = input.closest<HTMLElement>('[data-meal]');
-  const list = mealSection?.querySelector<HTMLElement>(`[data-suggestion-list="${meal}"]`);
+  const list = plateRow?.querySelector<HTMLElement>('[data-suggestion-list]');
 
   return list ? { list, mealSection } : null;
 }

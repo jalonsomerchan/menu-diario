@@ -196,8 +196,8 @@ describe('project smoke checks', () => {
     assert.match(dashboardApp, /dashboard\.showDishOptions/);
     assert.match(configuratorApp, /data-configurator-app/);
     assert.match(configuratorApp, /dashboard\.showDishOptions/);
-    assert.match(configuratorApp, /dish-combobox__toggle/);
-    assert.match(configuratorApp, /overflow-y: auto/);
+    assert.match(configuratorApp, /dish-combobox:focus-within/);
+    assert.match(configuratorApp, /dish-suggestions\[hidden\]/);
     assert.match(settingsApp, /data-settings-app/);
     assert.match(historyApp, /data-history-app/);
     assert.match(historyApp, /dashboard\.showDishOptions/);
@@ -236,6 +236,7 @@ describe('project smoke checks', () => {
     assert.match(suggestionHelper, /ArrowDown/);
     assert.match(suggestionHelper, /pointerdown/);
     assert.match(suggestionHelper, /selectSuggestion/);
+    assert.match(suggestionHelper, /closest<HTMLElement>\('\.plate-row'\)/);
     assert.match(suggestionHelper, /aria-expanded/);
     assert.match(suggestionHelper, /CSS\.escape/);
     assert.match(types, /type MenuGroup/);
