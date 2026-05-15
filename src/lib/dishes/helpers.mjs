@@ -1,5 +1,6 @@
 export const dishSortModes = ['most-used', 'recent', 'oldest', 'name'];
 export const dishFilterModes = ['all', 'favorites', 'blocked'];
+export const dishScopes = ['global', 'group', 'user'];
 
 export function normalizeDishName(name) {
   return String(name ?? '')
@@ -10,8 +11,16 @@ export function normalizeDishName(name) {
     .replace(/\s+/g, ' ');
 }
 
-export function getDishId(userId, normalizedName) {
-  return `${userId}_${encodeURIComponent(normalizedName).replaceAll('%', '_')}`.slice(0, 1400);
+export function getDishId(ownerId, normalizedName, scope = 'group') {
+  return `${scope}_${ownerId}_${encodeURIComponent(normalizedName).replaceAll('%', '_')}`.slice(0, 1400);
+}
+
+export function isGlobalDish(dish) {
+  return dish.scope === 'global' || dish.isGlobal === true;
+}
+
+export function isEditableDish(dish) {
+  return Boolean(dish.editable) && !isGlobalDish(dish);
 }
 
 export function isSuggestableDish(dish) {
@@ -20,6 +29,24 @@ export function isSuggestableDish(dish) {
 
 export function hasDishTag(dish, tag) {
   return Array.isArray(dish.quickTags) && dish.quickTags.includes(tag);
+}
+
+export function hasDishDuplicate(dishes, normalizedName, options = {}) {
+  return dishes.some((dish) => {
+    if (dish.id === options.excludeId) return false;
+    if (dish.archived) return false;
+    if (dish.normalizedName !== normalizedName) return false;
+    return !options.scope || dish.scope === options.scope || isGlobalDish(dish);
+  });
+}
+
+export function getDuplicateDish(dishes, normalizedName, options = {}) {
+  return dishes.find((dish) => {
+    if (dish.id === options.excludeId) return false;
+    if (dish.archived) return false;
+    if (dish.normalizedName !== normalizedName) return false;
+    return !options.scope || dish.scope === options.scope || isGlobalDish(dish);
+  });
 }
 
 export function filterDishes(dishes, query, options = {}) {
@@ -53,7 +80,7 @@ function byName(a, b) {
 }
 
 function preferenceScore(dish) {
-  return (dish.favorite ? 2 : 0) - (dish.blocked ? 3 : 0);
+  return (dish.favorite ? 2 : 0) - (dish.blocked ? 3 : 0) + (isGlobalDish(dish) ? 0.2 : 0);
 }
 
 export function sortDishes(dishes, mode = 'most-used') {
