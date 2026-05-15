@@ -29,6 +29,9 @@ export type DailyMenu = {
   noLunch?: boolean;
   noLunchReason?: NoMealReason | '';
   noLunchDescription?: string;
+  skipped?: boolean;
+  reason?: NoMealReason | '';
+  skipNote?: string;
   notes?: string;
   meals: Record<MealSlot, MealEntry>;
 };
