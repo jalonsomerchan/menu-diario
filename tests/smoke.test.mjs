@@ -177,7 +177,9 @@ describe('project smoke checks', () => {
     assert.match(home, /<MenuApp/);
     assert.match(localizedHome, /<MenuApp/);
     assert.match(menuApp, /data-menu-app/);
-    assert.match(menuScript, /firebasejs/);
+    assert.match(menuScript, /getFirebaseServices|firebasejs/);
+    assert.match(menuScript, /hasFirebaseConfig/);
+    assert.match(menuScript, /watchWeekMenu/);
     assert.doesNotMatch(home, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
     assert.doesNotMatch(localizedHome, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
   });
