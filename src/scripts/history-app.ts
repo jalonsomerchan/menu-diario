@@ -1,15 +1,17 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getMonday, toIsoDate } from '../lib/menu/dates';
+import { renderDayEditor } from '../lib/menu/day-editor';
 import {
   clearMenuDay,
   ensureUserProfile,
   getOrCreateWeekMenu,
   updateMenuPatch,
+  watchDishes,
   watchUserMenus,
   watchUserProfile,
 } from '../lib/menu/repository';
-import type { DailyMenu, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 
 const root = document.querySelector<HTMLElement>('[data-history-app]');
 
@@ -29,9 +31,10 @@ if (root) {
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
   let menus: WeekMenu[] = [];
+  let dishes: Dish[] = [];
   let editMenuId = '';
-  let editDayKey = '';
   let unsubscribeMenus: (() => void) | undefined;
+  let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
 
   function escapeHtml(value = '') {
@@ -66,6 +69,9 @@ if (root) {
           items: day?.meals?.dinner?.items ?? (day?.dinner ? [day.dinner] : []),
         }),
       },
+      skipped: Boolean(day?.skipped),
+      reason: day?.reason ?? '',
+      skipNote: day?.skipNote ?? '',
       notes: day?.notes ?? '',
     };
   }
@@ -124,7 +130,7 @@ if (root) {
         const summaries = getEnabledMeals()
           .map(
             (meal) =>
-              `<div class="day-meal-row"><span>${escapeHtml(mealLabel(meal))}:</span><strong>${escapeHtml(renderMealSummary(found.day.meals[meal]))}</strong></div>`
+              `<div class="day-meal-row"><span>${escapeHtml(mealLabel(meal))}:</span><strong>${escapeHtml(found.day.skipped ? labels.skipSummary : renderMealSummary(found.day.meals[meal]))}</strong></div>`
           )
           .join('');
         rows.unshift(`
@@ -154,40 +160,51 @@ if (root) {
 
   function openEdit(menuId: string, dayKey: string) {
     const menu = menus.find((item) => item.id === menuId);
-    const day = normalizeDay(menu?.days[dayKey]);
-
     if (!menu || !modal || !editFields) return;
 
     editMenuId = menuId;
-    editDayKey = dayKey;
-    editFields.innerHTML = getEnabledMeals()
-      .map(
-        (meal) => `
-          <label>${escapeHtml(mealLabel(meal))}
-            <textarea data-history-meal="${meal}" rows="3">${escapeHtml(day.meals[meal].items.join('\n'))}</textarea>
-          </label>
-        `
-      )
-      .join('');
+    editFields.innerHTML = renderDayEditor({
+      dayKey,
+      dayNumber: getDayNumber(dayKey),
+      weekday: formatWeekday(dayKey),
+      day: normalizeDay(menu.days[dayKey]),
+      enabledMeals: getEnabledMeals(),
+      dishes,
+      labels,
+      compact: true,
+    });
     modal.showModal();
   }
 
-  async function saveEdit() {
-    if (!currentUser || !editMenuId || !editDayKey || !editFields) return;
+  async function saveField(card: HTMLElement, path: string, value: string | boolean | string[]) {
+    if (!currentUser || !editMenuId) return;
     const services = await getFirebaseServices();
+    await updateMenuPatch(services, editMenuId, currentUser.uid, {
+      dayKey: card.dataset.day ?? '',
+      path,
+      value,
+    });
+  }
 
-    await Promise.all(
-      [...editFields.querySelectorAll<HTMLTextAreaElement>('[data-history-meal]')].map((textarea) =>
-        updateMenuPatch(services, editMenuId, currentUser!.uid, {
-          dayKey: editDayKey,
-          path: `meals.${textarea.dataset.historyMeal}.items`,
-          value: textarea.value
-            .split('\n')
-            .map((item) => item.trim())
-            .filter(Boolean),
-        })
-      )
-    );
+  async function savePlateList(card: HTMLElement, meal: MealSlot) {
+    const items = [...card.querySelectorAll<HTMLInputElement>(`[data-plate-input="${meal}"]`)]
+      .map((input) => input.value.trim())
+      .filter(Boolean);
+    await saveField(card, `meals.${meal}.items`, items);
+  }
+
+  function addPlate(card: HTMLElement, meal: MealSlot, value = '') {
+    const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
+    if (!list) return;
+    const row = document.createElement('div');
+    row.className = 'plate-row';
+    row.innerHTML = `<label><span class="sr-only">${labels.addDish}</span><input type="text" value="" data-plate-input="${meal}" placeholder="${labels.dishPlaceholder}" autocomplete="off" /></label><button class="icon-button icon-button--danger" type="button" data-remove-plate="${meal}" aria-label="${labels.removePlate}"><span aria-hidden="true">×</span></button>`;
+    list.append(row);
+    const input = row.querySelector<HTMLInputElement>('input');
+    if (input) {
+      input.value = value;
+      input.focus();
+    }
   }
 
   if (!hasFirebaseConfig()) {
@@ -222,19 +239,63 @@ if (root) {
           }
         });
 
+        editFields?.addEventListener('change', (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
+          const card = target.closest<HTMLElement>('[data-day]');
+          if (!card) return;
+
+          if (target.dataset.plateInput) {
+            savePlateList(card, target.dataset.plateInput as MealSlot).catch((error: Error) => showStatus(error.message, true));
+            return;
+          }
+
+          const field = target.dataset.field;
+          if (!field) return;
+          const value = target instanceof HTMLInputElement && target.type === 'checkbox' ? target.checked : target.value.trim();
+          saveField(card, field, value).catch((error: Error) => showStatus(error.message, true));
+        });
+
+        editFields?.addEventListener('click', (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) return;
+          const button = target.closest<HTMLButtonElement>('button');
+          if (!button) return;
+          const card = button.closest<HTMLElement>('[data-day]');
+          if (!card) return;
+
+          if (button.dataset.addPlate) {
+            addPlate(card, button.dataset.addPlate as MealSlot);
+            return;
+          }
+
+          if (button.dataset.removePlate) {
+            const meal = button.dataset.removePlate as MealSlot;
+            button.closest('.plate-row')?.remove();
+            savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
+            return;
+          }
+
+          if (button.dataset.suggestion) {
+            const meal = button.closest<HTMLElement>('[data-meal]')?.dataset.meal as MealSlot | undefined;
+            if (!meal) return;
+            addPlate(card, meal, button.dataset.suggestion);
+            savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
+          }
+        });
+
         editForm?.addEventListener('submit', (event) => {
           const submitter = (event as SubmitEvent).submitter;
           if (submitter instanceof HTMLButtonElement && submitter.value === 'save') {
             event.preventDefault();
-            saveEdit()
-              .then(() => modal?.close())
-              .catch((error: Error) => showStatus(error.message, true));
+            modal?.close();
           }
         });
 
         services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
           currentUser = user;
           unsubscribeMenus?.();
+          unsubscribeDishes?.();
           unsubscribeProfile?.();
 
           if (!user) {
@@ -254,6 +315,9 @@ if (root) {
             },
             (error) => showStatus(error.message, true)
           );
+          unsubscribeDishes = watchDishes(services, user.uid, (nextDishes) => {
+            dishes = nextDishes;
+          }, (error) => showStatus(error.message, true));
           unsubscribeMenus = watchUserMenus(
             services,
             user.uid,
