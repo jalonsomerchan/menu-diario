@@ -62,6 +62,7 @@ describe('project smoke checks', () => {
       'src/i18n/ui.ts',
       'src/i18n/translations',
       'src/lib/menu/day-editor.ts',
+      'src/lib/menu/dish-suggestions.ts',
       'src/utils/paths.ts',
       'src/styles/global.css',
     ].forEach((path) => {
@@ -199,6 +200,7 @@ describe('project smoke checks', () => {
   it('keeps data layer helpers and UI styles wired', () => {
     const repository = readText('src/lib/menu/repository.ts');
     const dayEditor = readText('src/lib/menu/day-editor.ts');
+    const suggestionHelper = readText('src/lib/menu/dish-suggestions.ts');
     const types = readText('src/lib/menu/types.ts');
     const dashboardScript = readText('src/scripts/dashboard-app.ts');
     const configuratorScript = readText('src/scripts/configurator-app.ts');
@@ -213,20 +215,28 @@ describe('project smoke checks', () => {
     assert.match(repository, /clearMenuDay/);
     assert.match(dayEditor, /renderDayEditor/);
     assert.match(dayEditor, /dish-suggestions/);
+    assert.match(dayEditor, /data-suggestion-list/);
     assert.match(dayEditor, /data-add-plate/);
     assert.match(dayEditor, /data-remove-plate/);
     assert.match(dayEditor, /data-field=\"skipped\"/);
     assert.doesNotMatch(dayEditor, /<datalist/);
+    assert.match(suggestionHelper, /attachDishSuggestions/);
+    assert.match(suggestionHelper, /suggestionLimit = 6/);
+    assert.match(suggestionHelper, /focusin/);
+    assert.match(suggestionHelper, /CSS\.escape/);
     assert.match(types, /type MenuGroup/);
     assert.match(types, /MealSlot = 'breakfast' \| 'lunch' \| 'dinner'/);
     assert.match(types, /skipNote/);
     assert.match(dashboardScript, /renderDayEditor/);
+    assert.match(dashboardScript, /attachDishSuggestions/);
     assert.match(dashboardScript, /data-quick-edit/);
     assert.match(dashboardScript, /data-clear-day/);
     assert.match(configuratorScript, /renderDayEditor/);
+    assert.match(configuratorScript, /attachDishSuggestions/);
     assert.match(settingsScript, /addPendingGroupEmail/);
     assert.match(settingsScript, /leaveGroup/);
     assert.match(historyScript, /renderDayEditor/);
+    assert.match(historyScript, /attachDishSuggestions/);
     assert.match(historyScript, /watchUserMenus/);
     assert.match(headerScript, /data-app-menu-toggle/);
     assert.match(headerScript, /data-global-theme/);

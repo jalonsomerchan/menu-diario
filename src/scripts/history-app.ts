@@ -2,6 +2,7 @@ import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getMonday, toIsoDate } from '../lib/menu/dates';
 import { renderDayEditor } from '../lib/menu/day-editor';
+import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
   clearMenuDay,
   ensureUserProfile,
@@ -36,6 +37,8 @@ if (root) {
   let unsubscribeMenus: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+
+  attachDishSuggestions(root, () => dishes);
 
   function escapeHtml(value = '') {
     return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -193,18 +196,14 @@ if (root) {
     await saveField(card, `meals.${meal}.items`, items);
   }
 
-  function addPlate(card: HTMLElement, meal: MealSlot, value = '') {
+  function addPlate(card: HTMLElement, meal: MealSlot) {
     const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
     if (!list) return;
     const row = document.createElement('div');
     row.className = 'plate-row';
     row.innerHTML = `<label><span class="sr-only">${labels.addDish}</span><input type="text" value="" data-plate-input="${meal}" placeholder="${labels.dishPlaceholder}" autocomplete="off" /></label><button class="icon-button icon-button--danger" type="button" data-remove-plate="${meal}" aria-label="${labels.removePlate}"><span aria-hidden="true">×</span></button>`;
     list.append(row);
-    const input = row.querySelector<HTMLInputElement>('input');
-    if (input) {
-      input.value = value;
-      input.focus();
-    }
+    row.querySelector<HTMLInputElement>('input')?.focus();
   }
 
   if (!hasFirebaseConfig()) {
@@ -272,14 +271,6 @@ if (root) {
           if (button.dataset.removePlate) {
             const meal = button.dataset.removePlate as MealSlot;
             button.closest('.plate-row')?.remove();
-            savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
-            return;
-          }
-
-          if (button.dataset.suggestion) {
-            const meal = button.closest<HTMLElement>('[data-meal]')?.dataset.meal as MealSlot | undefined;
-            if (!meal) return;
-            addPlate(card, meal, button.dataset.suggestion);
             savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
           }
         });

@@ -2,6 +2,7 @@ import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getMonday, toIsoDate } from '../lib/menu/dates';
 import { renderDayEditor } from '../lib/menu/day-editor';
+import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
   ensureUserProfile,
   getOrCreateWeekMenu,
@@ -30,6 +31,8 @@ if (root) {
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+
+  attachDishSuggestions(root, () => dishes);
 
   function showStatus(message: string, isError = false) {
     if (!status) return;
@@ -148,7 +151,7 @@ if (root) {
     await saveField(card, `meals.${meal}.items`, items);
   }
 
-  function addPlate(card: HTMLElement, meal: MealSlot, value = '') {
+  function addPlate(card: HTMLElement, meal: MealSlot) {
     const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
     if (!list) return;
 
@@ -162,11 +165,7 @@ if (root) {
       <button class="icon-button icon-button--danger" type="button" data-remove-plate="${meal}" aria-label="${labels.removePlate}"><span aria-hidden="true">×</span></button>
     `;
     list.append(row);
-    const input = row.querySelector<HTMLInputElement>('input');
-    if (input) {
-      input.value = value;
-      input.focus();
-    }
+    row.querySelector<HTMLInputElement>('input')?.focus();
   }
 
   if (!hasFirebaseConfig()) {
@@ -211,20 +210,6 @@ if (root) {
           if (button.dataset.removePlate) {
             const meal = button.dataset.removePlate as MealSlot;
             button.closest('.plate-row')?.remove();
-            savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
-            return;
-          }
-
-          if (button.dataset.suggestion) {
-            const meal = button.closest<HTMLElement>('[data-meal]')?.dataset.meal as MealSlot | undefined;
-            if (!meal) return;
-            const emptyInput = card.querySelector<HTMLInputElement>(`[data-plate-input="${meal}"]`);
-            if (emptyInput && !emptyInput.value.trim()) {
-              emptyInput.value = button.dataset.suggestion;
-              savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
-              return;
-            }
-            addPlate(card, meal, button.dataset.suggestion);
             savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
           }
         });
