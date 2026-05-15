@@ -1,3 +1,4 @@
+import { getSuggestionDishes, normalizeDishName } from '../dishes/helpers.mjs';
 import type { Dish } from './types';
 
 const suggestionLimit = 6;
@@ -5,14 +6,6 @@ let inputSequence = 0;
 
 function escapeHtml(value = '') {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-}
-
-function normalize(value = '') {
-  return value
-    .trim()
-    .toLocaleLowerCase('es-ES')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
 }
 
 function ensureInputId(input: HTMLInputElement) {
@@ -25,18 +18,17 @@ function ensureInputId(input: HTMLInputElement) {
 }
 
 function getMatches(dishes: Dish[], query: string) {
-  const normalizedQuery = normalize(query);
+  const normalizedQuery = normalizeDishName(query);
 
-  return [...dishes]
+  return getSuggestionDishes(dishes, query)
     .map((dish) => {
-      const normalizedName = normalize(dish.name);
+      const normalizedName = normalizeDishName(dish.name);
       const startsWith = normalizedQuery ? normalizedName.startsWith(normalizedQuery) : false;
-      const includes = normalizedQuery ? normalizedName.includes(normalizedQuery) : true;
-      return { dish, startsWith, includes };
+      return { dish, startsWith };
     })
-    .filter((item) => item.includes)
     .sort((a, b) => {
       if (a.startsWith !== b.startsWith) return a.startsWith ? -1 : 1;
+      if (Boolean(a.dish.favorite) !== Boolean(b.dish.favorite)) return a.dish.favorite ? -1 : 1;
       return (b.dish.timesUsed ?? 0) - (a.dish.timesUsed ?? 0) || a.dish.name.localeCompare(b.dish.name);
     })
     .slice(0, suggestionLimit)
@@ -56,7 +48,7 @@ function renderSuggestions(list: HTMLElement, input: HTMLInputElement, dishes: D
   list.innerHTML = matches
     .map(
       (dish) =>
-        `<button type="button" role="option" data-suggestion="${escapeHtml(dish.name)}">${escapeHtml(dish.name)}</button>`
+        `<button type="button" role="option" data-suggestion="${escapeHtml(dish.name)}">${dish.favorite ? '<span aria-hidden="true">★</span> ' : ''}${escapeHtml(dish.name)}</button>`
     )
     .join('');
   list.hidden = false;
