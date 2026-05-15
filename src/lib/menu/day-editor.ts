@@ -45,11 +45,11 @@ function renderReasonFields(labels: DayEditorLabels, reason = '', note = '') {
   `;
 }
 
-function renderSuggestions(dayKey: string, meal: MealSlot, dishes: Dish[]) {
+function renderSuggestions(labels: DayEditorLabels, dayKey: string, meal: MealSlot, dishes: Dish[]) {
   if (!dishes.length) return '';
 
   return `
-    <div class="dish-suggestions" role="listbox" aria-label="Sugerencias" data-suggestions="${dayKey}-${meal}">
+    <div class="dish-suggestions" role="listbox" aria-label="${escapeHtml(labels.dishSuggestions)}" data-suggestions="${dayKey}-${meal}">
       ${dishes
         .slice(0, 8)
         .map(
@@ -89,7 +89,7 @@ function renderMeal(labels: DayEditorLabels, dayKey: string, meal: MealSlot, mea
           )
           .join('')}
       </div>
-      ${renderSuggestions(dayKey, meal, dishes)}
+      ${renderSuggestions(labels, dayKey, meal, dishes)}
     </section>
   `;
 }
