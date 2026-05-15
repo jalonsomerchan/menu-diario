@@ -7,6 +7,8 @@ const root = document.querySelector<HTMLElement>('[data-app-header]');
 const themes: ThemePreference[] = ['system', 'light', 'dark'];
 
 if (root && hasFirebaseConfig()) {
+  const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
+  const guestLabel = labels.guestSession ?? 'Guest session';
   const themeSelect = root.querySelector<HTMLSelectElement>('[data-global-theme]');
 
   function applyTheme(theme: ThemePreference) {
@@ -25,11 +27,11 @@ if (root && hasFirebaseConfig()) {
     services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
       if (!user) return;
 
-      await ensureUserProfile(services, user, 'Sesión invitada');
+      await ensureUserProfile(services, user, guestLabel);
       const unsubscribe = watchUserProfile(
         services,
         user,
-        'Sesión invitada',
+        guestLabel,
         (profile) => applyTheme(profile.theme),
         () => undefined
       );
