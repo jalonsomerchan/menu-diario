@@ -42,6 +42,7 @@ Debajo aparecen accesos a **Ajustes** y **Configurar**, y después una lista de 
 - TypeScript.
 - Firebase Authentication.
 - Cloud Firestore.
+- Firebase AI Logic preparado para Gemini.
 - Web Notifications API.
 - Tests smoke con `node:test`.
 - GitHub Actions para CI y GitHub Pages.
@@ -83,7 +84,9 @@ cp .env.example .env
 
 3. Rellena las variables `PUBLIC_FIREBASE_*` con la configuración de tu app web de Firebase.
 
-4. Arranca el entorno local:
+4. Deja la IA desactivada por defecto o activa `PUBLIC_AI_ENABLED=true` cuando Firebase AI Logic y App Check estén listos.
+
+5. Arranca el entorno local:
 
 ```sh
 npm run dev
@@ -108,6 +111,16 @@ PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 PUBLIC_FIREBASE_APP_ID
 PUBLIC_FIREBASE_MEASUREMENT_ID
 PUBLIC_REPOSITORY_URL
+PUBLIC_AI_ENABLED
+PUBLIC_AI_MENU_SUGGESTIONS_ENABLED
+PUBLIC_AI_REMOTE_CONFIG_ENABLED
+PUBLIC_FIREBASE_AI_MODEL
+PUBLIC_FIREBASE_AI_TEMPERATURE
+PUBLIC_FIREBASE_AI_TOP_P
+PUBLIC_FIREBASE_AI_MAX_OUTPUT_TOKENS
+PUBLIC_FIREBASE_AI_TIMEOUT_MS
+PUBLIC_AI_MAX_SESSION_REQUESTS
+PUBLIC_AI_MAX_USER_DAILY_REQUESTS
 ```
 
 `PUBLIC_REPOSITORY_URL` es opcional. `ASTRO_SITE` y `ASTRO_BASE` también son opcionales porque el workflow y `astro.config.mjs` calculan `site` y `base` automáticamente. Si quieres forzarlas:
@@ -117,7 +130,7 @@ ASTRO_SITE=https://jalonsomerchan.github.io
 ASTRO_BASE=/menu-diario
 ```
 
-Las claves públicas de Firebase identifican la app web, pero **no sustituyen a unas reglas correctas de Firestore**. No subas nunca un `.env` real.
+Las claves públicas de Firebase identifican la app web, pero **no sustituyen a unas reglas correctas de Firestore, App Check y límites de backend**. No subas nunca un `.env` real.
 
 ## Configuración de Firebase
 
@@ -126,7 +139,9 @@ Activa en Firebase Console:
 1. Authentication con Google.
 2. Authentication Anonymous si quieres permitir invitados.
 3. Firestore Database.
-4. Authorized domains:
+4. Firebase AI Logic si vas a activar funciones de IA.
+5. App Check para proteger llamadas desde cliente.
+6. Authorized domains:
    - `localhost`
    - `jalonsomerchan.github.io`
    - tu dominio personalizado, si lo usas.
@@ -137,7 +152,7 @@ Publica las reglas de `firestore.rules` en:
 Firebase Console > Firestore Database > Rules
 ```
 
-La documentación del modelo de datos, índices y reglas vive en `docs/firebase.md`.
+La documentación del modelo de datos, índices, reglas y preparación de Firebase AI vive en `docs/firebase.md`.
 
 ## Modelo de datos principal
 
@@ -199,6 +214,7 @@ src/scripts/dashboard-app.ts           Lógica del dashboard
 src/scripts/configurator-app.ts        Lógica de ajustes/configuración
 src/lib/menu/repository.ts             Operaciones de Firestore
 src/lib/menu/types.ts                  Tipos del dominio
+src/lib/ai/                            Base Firebase AI Logic/Gemini
 src/i18n/translations/*.json           Textos traducibles
 src/styles/global.css                  Tokens visuales, light/dark y UI mobile first
 docs/firebase.md                       Modelo de datos, reglas e índices
@@ -220,6 +236,7 @@ Los tests smoke comprueban que:
 - Las rutas `/dashboard` y `/configurar` existen también en idiomas secundarios.
 - Las traducciones `es/en` mantienen las mismas claves.
 - El dashboard y el configurador están conectados a sus scripts.
+- La base de Firebase AI conserva flags, configuración, validación JSON y estados de error.
 - Las rutas siguen siendo compatibles con GitHub Pages.
 
 ## Documentación para agentes IA
