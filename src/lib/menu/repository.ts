@@ -325,14 +325,18 @@ export async function updateMenuPatch(
   userId: string,
   patch: MenuPatch
 ) {
+  const path = patch.path ?? patch.slot;
+
+  if (!path) return;
+
   const { db, firestoreModule } = services;
   await firestoreModule.updateDoc(firestoreModule.doc(db, menusCollection, menuId), {
-    [`days.${patch.dayKey}.${patch.path}`]: patch.value,
+    [`days.${patch.dayKey}.${path}`]: patch.value,
     updatedAt: firestoreModule.serverTimestamp(),
     updatedBy: userId,
   });
 
-  if (patch.path.endsWith('.items') && Array.isArray(patch.value)) {
+  if ((path.endsWith('.items') || path === 'lunchItems') && Array.isArray(patch.value)) {
     await Promise.all(patch.value.map((item) => upsertDish(services, userId, item)));
   }
 }
