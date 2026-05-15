@@ -12,9 +12,15 @@ export type WeekDay = {
   isoDate: string;
 };
 
+export type NoLunchReason = 'away' | 'eating-out' | 'other';
+
 export type DailyMenu = {
-  lunch: string;
-  dinner: string;
+  lunch?: string;
+  dinner?: string;
+  lunchItems: string[];
+  noLunch: boolean;
+  noLunchReason: NoLunchReason | '';
+  noLunchDescription: string;
   notes: string;
 };
 
@@ -30,8 +36,17 @@ export type WeekMenu = {
   updatedBy?: string;
 };
 
+export type Dish = {
+  id: string;
+  name: string;
+  normalizedName: string;
+  createdBy: string;
+  timesUsed: number;
+  lastUsedAt?: Date;
+};
+
 export type MenuPatch = {
   dayKey: string;
-  slot: MealSlot | 'notes';
-  value: string;
+  slot: MealSlot | 'notes' | 'lunchItems' | 'noLunch' | 'noLunchReason' | 'noLunchDescription';
+  value: string | string[] | boolean;
 };
