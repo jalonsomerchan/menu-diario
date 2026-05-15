@@ -44,6 +44,7 @@
   "dashboard.addDish": "Plato",
   "dashboard.addPlate": "Añadir plato",
   "dashboard.removePlate": "Eliminar plato",
+  "dashboard.showDishOptions": "Mostrar platos guardados",
   "dashboard.dishSuggestions": "Platos anteriores",
   "dashboard.dishPlaceholder": "Escribe un plato",
   "dashboard.noMeal": "Este día no apunto esta comida",
