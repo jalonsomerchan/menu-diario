@@ -1,7 +1,7 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getMonday, toIsoDate } from '../lib/menu/dates';
-import { renderDayEditor } from '../lib/menu/day-editor';
+import { renderDayEditor, renderPlateRow } from '../lib/menu/day-editor';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
   ensureUserProfile,
@@ -155,17 +155,8 @@ if (root) {
     const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
     if (!list) return;
 
-    const row = document.createElement('div');
-    row.className = 'plate-row';
-    row.innerHTML = `
-      <label>
-        <span class="sr-only">${labels.addDish}</span>
-        <input type="text" value="" data-plate-input="${meal}" placeholder="${labels.dishPlaceholder}" autocomplete="off" />
-      </label>
-      <button class="icon-button icon-button--danger" type="button" data-remove-plate="${meal}" aria-label="${labels.removePlate}"><span aria-hidden="true">×</span></button>
-    `;
-    list.append(row);
-    row.querySelector<HTMLInputElement>('input')?.focus();
+    list.insertAdjacentHTML('beforeend', renderPlateRow(labels, meal, '', list.children.length));
+    list.querySelector<HTMLInputElement>('.plate-row:last-child input')?.focus();
   }
 
   if (!hasFirebaseConfig()) {
