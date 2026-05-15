@@ -4,7 +4,7 @@ export type FirebaseUser = {
   email?: string | null;
 };
 
-export type MealSlot = 'lunch' | 'dinner';
+export type MealSlot = 'breakfast' | 'lunch' | 'dinner';
 
 export type WeekDay = {
   key: string;
@@ -12,16 +12,25 @@ export type WeekDay = {
   isoDate: string;
 };
 
-export type NoLunchReason = 'away' | 'eating-out' | 'other';
+export type NoMealReason = 'away' | 'eating-out' | 'not-hungry' | 'other';
+export type ThemePreference = 'system' | 'light' | 'dark';
+
+export type MealEntry = {
+  items: string[];
+  skipped: boolean;
+  reason: NoMealReason | '';
+  note: string;
+};
 
 export type DailyMenu = {
   lunch?: string;
   dinner?: string;
-  lunchItems: string[];
-  noLunch: boolean;
-  noLunchReason: NoLunchReason | '';
-  noLunchDescription: string;
-  notes: string;
+  lunchItems?: string[];
+  noLunch?: boolean;
+  noLunchReason?: NoMealReason | '';
+  noLunchDescription?: string;
+  notes?: string;
+  meals: Record<MealSlot, MealEntry>;
 };
 
 export type WeekMenu = {
@@ -36,6 +45,14 @@ export type WeekMenu = {
   updatedBy?: string;
 };
 
+export type UserProfile = {
+  id: string;
+  displayName: string;
+  enabledMeals: MealSlot[];
+  theme: ThemePreference;
+  updatedAt?: Date;
+};
+
 export type Dish = {
   id: string;
   name: string;
@@ -47,6 +64,7 @@ export type Dish = {
 
 export type MenuPatch = {
   dayKey: string;
-  slot: MealSlot | 'notes' | 'lunchItems' | 'noLunch' | 'noLunchReason' | 'noLunchDescription';
+  path?: string;
+  slot?: string;
   value: string | string[] | boolean;
 };

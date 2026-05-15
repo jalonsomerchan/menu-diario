@@ -19,20 +19,33 @@ const labels = {
   dashboardTitle: t('dashboard.title'),
   loading: t('dashboard.loading'),
   hello: t('dashboard.hello'),
-  todayLunch: t('dashboard.todayLunch'),
-  todayNoLunch: t('dashboard.todayNoLunch'),
+  todayIntro: t('dashboard.todayIntro'),
   todayEmpty: t('dashboard.todayEmpty'),
   nextSeven: t('dashboard.nextSeven'),
   configure: t('dashboard.configure'),
+  configureHint: t('dashboard.configureHint'),
+  openConfigure: t('dashboard.openConfigure'),
+  editDay: t('dashboard.editDay'),
+  settings: t('dashboard.settings'),
+  theme: t('dashboard.theme'),
+  themeSystem: t('dashboard.themeSystem'),
+  themeLight: t('dashboard.themeLight'),
+  themeDark: t('dashboard.themeDark'),
+  enabledMeals: t('dashboard.enabledMeals'),
+  breakfast: t('dashboard.breakfast'),
+  lunch: t('dashboard.lunch'),
+  dinner: t('dashboard.dinner'),
   addDish: t('dashboard.addDish'),
+  addPlate: t('dashboard.addPlate'),
   dishPlaceholder: t('dashboard.dishPlaceholder'),
-  suggestions: t('dashboard.suggestions'),
-  noLunch: t('dashboard.noLunch'),
+  noMeal: t('dashboard.noMeal'),
   reason: t('dashboard.reason'),
   reasonAway: t('dashboard.reasonAway'),
   reasonEatingOut: t('dashboard.reasonEatingOut'),
+  reasonNotHungry: t('dashboard.reasonNotHungry'),
   reasonOther: t('dashboard.reasonOther'),
   reasonDescription: t('dashboard.reasonDescription'),
+  skipSummary: t('dashboard.skipSummary'),
   notes: t('menu.notes'),
   saveHint: t('menu.saveHint'),
   updated: t('menu.updated'),
@@ -48,30 +61,60 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div class="dashboard-app__content" data-content hidden>
-    <header class="dashboard-header">
+    <header class="dashboard-header app-panel">
       <div>
         <p class="menu-app__eyebrow">{labels.saveHint}</p>
         <h1>{labels.dashboardTitle}</h1>
         <p data-user-label></p>
       </div>
-      <div class="menu-toolbar__actions">
+      <div class="dashboard-header__actions">
         <button class="button button--ghost" type="button" data-notifications>{labels.enableNotifications}</button>
         <button class="button button--secondary" type="button" data-logout>{labels.signOut}</button>
       </div>
     </header>
 
-    <section class="today-card" aria-live="polite">
+    <section class="settings-card app-panel" aria-labelledby="settings-title">
+      <h2 id="settings-title">{labels.settings}</h2>
+      <div class="settings-grid">
+        <label>{labels.theme}
+          <select data-theme-select>
+            <option value="system">{labels.themeSystem}</option>
+            <option value="light">{labels.themeLight}</option>
+            <option value="dark">{labels.themeDark}</option>
+          </select>
+        </label>
+        <fieldset>
+          <legend>{labels.enabledMeals}</legend>
+          <label><input type="checkbox" value="breakfast" data-meal-preference /> {labels.breakfast}</label>
+          <label><input type="checkbox" value="lunch" data-meal-preference /> {labels.lunch}</label>
+          <label><input type="checkbox" value="dinner" data-meal-preference /> {labels.dinner}</label>
+        </fieldset>
+      </div>
+    </section>
+
+    <section class="today-card app-panel" aria-live="polite">
       <p class="menu-app__eyebrow">{labels.today}</p>
       <h2 data-today-summary>{labels.loading}</h2>
     </section>
 
     <section class="dashboard-section">
-      <h2>{labels.nextSeven}</h2>
+      <div class="section-heading">
+        <div>
+          <p class="menu-app__eyebrow">{labels.nextSeven}</p>
+          <h2>{labels.nextSeven}</h2>
+        </div>
+        <button class="button button--primary" type="button" data-open-config>{labels.openConfigure}</button>
+      </div>
       <div class="next-days" data-next-days></div>
     </section>
 
-    <section class="dashboard-section">
-      <h2>{labels.configure}</h2>
+    <section class="dashboard-section" id="configure-days" data-config-section hidden>
+      <div class="section-heading">
+        <div>
+          <p class="menu-app__eyebrow">{labels.configureHint}</p>
+          <h2>{labels.configure}</h2>
+        </div>
+      </div>
       <div class="menu-days" data-config-days></div>
     </section>
   </div>

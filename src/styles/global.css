@@ -3,16 +3,18 @@
 :root {
   color-scheme: light;
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --color-bg: #fff7ed;
+  --color-bg: #f8fafc;
   --color-surface: #ffffff;
-  --color-surface-soft: #ffedd5;
+  --color-surface-soft: #f1f5f9;
   --color-surface-raised: #ffffff;
-  --color-text: #1f2937;
-  --color-muted: #6b7280;
-  --color-border: #fed7aa;
-  --color-primary: #ea580c;
-  --color-primary-hover: #c2410c;
-  --color-primary-soft: #ffedd5;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-soft: #dbeafe;
+  --color-accent: #f97316;
+  --color-accent-soft: #ffedd5;
   --color-danger: #dc2626;
   --color-danger-soft: #fee2e2;
   --container-width: 72rem;
@@ -27,23 +29,45 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     color-scheme: dark;
-    --color-bg: #120d08;
-    --color-surface: #1c1917;
-    --color-surface-soft: #292524;
-    --color-surface-raised: #27211d;
-    --color-text: #fff7ed;
-    --color-muted: #d6d3d1;
-    --color-border: #44403c;
-    --color-primary: #fb923c;
-    --color-primary-hover: #fdba74;
-    --color-primary-soft: rgb(251 146 60 / 0.18);
+    --color-bg: #020617;
+    --color-surface: #0f172a;
+    --color-surface-soft: #111827;
+    --color-surface-raised: #1e293b;
+    --color-text: #f8fafc;
+    --color-muted: #cbd5e1;
+    --color-border: #1e293b;
+    --color-primary: #60a5fa;
+    --color-primary-hover: #93c5fd;
+    --color-primary-soft: rgb(37 99 235 / 0.18);
+    --color-accent: #fb923c;
+    --color-accent-soft: rgb(249 115 22 / 0.18);
     --color-danger: #f87171;
-    --color-danger-soft: rgb(248 113 113 / 0.18);
+    --color-danger-soft: rgb(220 38 38 / 0.18);
     --shadow-sm: 0 4px 16px rgb(0 0 0 / 0.35);
     --shadow-md: 0 16px 40px rgb(0 0 0 / 0.45);
   }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #020617;
+  --color-surface: #0f172a;
+  --color-surface-soft: #111827;
+  --color-surface-raised: #1e293b;
+  --color-text: #f8fafc;
+  --color-muted: #cbd5e1;
+  --color-border: #1e293b;
+  --color-primary: #60a5fa;
+  --color-primary-hover: #93c5fd;
+  --color-primary-soft: rgb(37 99 235 / 0.18);
+  --color-accent: #fb923c;
+  --color-accent-soft: rgb(249 115 22 / 0.18);
+  --color-danger: #f87171;
+  --color-danger-soft: rgb(220 38 38 / 0.18);
+  --shadow-sm: 0 4px 16px rgb(0 0 0 / 0.35);
+  --shadow-md: 0 16px 40px rgb(0 0 0 / 0.45);
 }
 
 * {
@@ -59,7 +83,8 @@ body {
   min-height: 100%;
   margin: 0;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary), transparent 78%), transparent 34rem),
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--color-primary), transparent 84%), transparent 30rem),
+    radial-gradient(circle at 90% 8%, color-mix(in srgb, var(--color-accent), transparent 88%), transparent 28rem),
     var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
@@ -83,6 +108,10 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button {
+  cursor: pointer;
 }
 
 :focus-visible {
@@ -110,12 +139,13 @@ select {
   gap: 0.5rem;
   border-radius: var(--radius-lg);
   border: 1px solid transparent;
-  padding: 0.75rem 1rem;
+  padding: 0.72rem 1rem;
   font-weight: 800;
   text-decoration: none;
   transition:
     background var(--transition-base),
     border-color var(--transition-base),
+    box-shadow var(--transition-base),
     transform var(--transition-base);
 }
 
@@ -126,6 +156,7 @@ select {
 .button--primary {
   background: var(--color-primary);
   color: #ffffff;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--color-primary), transparent 78%);
 }
 
 .button--primary:hover {
@@ -140,7 +171,14 @@ select {
 }
 
 .button--ghost {
-  background: transparent;
+  background: color-mix(in srgb, var(--color-surface), transparent 45%);
+}
+
+.button--small {
+  min-height: 2.1rem;
+  border-radius: var(--radius-md);
+  padding: 0.42rem 0.7rem;
+  font-size: 0.85rem;
 }
 
 .menu-app,
@@ -163,6 +201,7 @@ select {
   background: var(--color-danger-soft);
 }
 
+.app-panel,
 .menu-app__auth,
 .menu-app__workspace,
 .day-card,
@@ -171,10 +210,11 @@ select {
 .dashboard-header,
 .today-card,
 .next-day-card,
-.dashboard-app__loading {
+.dashboard-app__loading,
+.settings-card {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
-  background: color-mix(in srgb, var(--color-surface), transparent 4%);
+  background: color-mix(in srgb, var(--color-surface), transparent 3%);
   box-shadow: var(--shadow-sm);
 }
 
@@ -190,7 +230,8 @@ select {
 .menu-toolbar h2,
 .dashboard-header h1,
 .today-card h2,
-.dashboard-section h2 {
+.dashboard-section h2,
+.settings-card h2 {
   margin: 0.25rem 0;
   font-size: clamp(1.6rem, 6vw, 3rem);
   line-height: 1;
@@ -208,7 +249,7 @@ select {
 .menu-app__eyebrow {
   margin: 0;
   color: var(--color-primary);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 900;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -216,6 +257,7 @@ select {
 
 .menu-app__auth-actions,
 .menu-toolbar__actions,
+.dashboard-header__actions,
 .week-switcher,
 .join-form {
   display: grid;
@@ -224,15 +266,14 @@ select {
 
 .menu-app__workspace,
 .dashboard-app__content {
-  padding: 1rem;
+  padding: 0;
 }
 
-.menu-toolbar,
 .dashboard-header {
   display: grid;
   gap: 1rem;
   margin-bottom: 1rem;
-  padding: 1rem;
+  padding: 1.1rem;
 }
 
 .dashboard-app__loading {
@@ -241,22 +282,68 @@ select {
   font-weight: 800;
 }
 
+.settings-card,
 .today-card,
 .dashboard-section {
   margin-bottom: 1rem;
 }
 
+.settings-card,
 .today-card {
-  padding: 1.25rem;
+  padding: 1.1rem;
+}
+
+.settings-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.settings-grid label,
+.settings-grid fieldset {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.settings-grid fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.settings-grid select,
+.day-card textarea,
+.day-card select,
+.day-card input[type='text'] {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  padding: 0.8rem;
 }
 
 .today-card h2 {
-  font-size: clamp(1.35rem, 5vw, 2.5rem);
+  font-size: clamp(1.25rem, 5vw, 2.3rem);
 }
 
 .dashboard-section h2 {
-  margin-bottom: 0.85rem;
   font-size: clamp(1.25rem, 4vw, 2rem);
+}
+
+.section-heading {
+  display: grid;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
 }
 
 .week-switcher {
@@ -293,7 +380,14 @@ select {
 
 .next-day-card {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.85rem;
+}
+
+.next-day-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .next-day-card span,
@@ -301,8 +395,24 @@ select {
   color: var(--color-muted);
 }
 
+.next-day-card ul {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.next-day-card li {
+  display: grid;
+  gap: 0.12rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-soft);
+  padding: 0.7rem;
+}
+
 .next-day-card strong {
-  font-size: 1.05rem;
+  font-size: 1rem;
 }
 
 .menu-list h3 {
@@ -340,8 +450,12 @@ select {
 
 .day-card {
   display: grid;
-  gap: 0.9rem;
+  gap: 1rem;
   padding: 1rem;
+}
+
+.day-card--editor {
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 72%);
 }
 
 .day-card__header {
@@ -351,9 +465,10 @@ select {
   gap: 0.75rem;
 }
 
-.day-card h3 {
+.day-card h3,
+.meal-editor h4 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
 }
 
 .day-card p {
@@ -391,18 +506,28 @@ select {
   height: 1.1rem;
 }
 
-.day-card textarea,
-.day-card select {
-  width: 100%;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-raised);
-  color: var(--color-text);
-  padding: 0.8rem;
-}
-
 .day-card textarea {
   resize: vertical;
+}
+
+.meal-editor {
+  display: grid;
+  gap: 0.75rem;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-soft);
+  padding: 0.9rem;
+}
+
+.meal-editor header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.plate-list {
+  display: grid;
+  gap: 0.55rem;
 }
 
 .dish-suggestions {
@@ -422,16 +547,21 @@ select {
 @media (min-width: 720px) {
   .menu-app__auth,
   .auth-card,
-  .menu-toolbar,
-  .dashboard-header {
+  .dashboard-header,
+  .section-heading {
     grid-template-columns: 1fr auto;
     align-items: center;
   }
 
   .menu-app__auth-actions,
   .menu-toolbar__actions,
+  .dashboard-header__actions,
   .join-form {
     grid-template-columns: repeat(2, auto);
+  }
+
+  .settings-grid {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   }
 
   .week-switcher {
@@ -439,7 +569,6 @@ select {
   }
 
   .menu-lists,
-  .menu-days,
   .next-days {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

@@ -1,36 +1,63 @@
 import { getWeekDays, getWeekTitle } from './dates';
-import type { DailyMenu, Dish, FirebaseUser, MenuPatch, WeekMenu } from './types';
+import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, MenuPatch, ThemePreference, UserProfile, WeekMenu } from './types';
 
 const menusCollection = 'weeklyMenus';
 const dishesCollection = 'dishes';
+const defaultEnabledMeals: MealSlot[] = ['lunch'];
+const mealSlots: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
 
 type FirebaseServices = {
   db: any;
   firestoreModule: any;
 };
 
+function emptyMeal(): MealEntry {
+  return { items: [], skipped: false, reason: '', note: '' };
+}
+
 function emptyDay(): DailyMenu {
   return {
-    lunch: '',
-    dinner: '',
-    lunchItems: [],
-    noLunch: false,
-    noLunchReason: '',
-    noLunchDescription: '',
+    meals: {
+      breakfast: emptyMeal(),
+      lunch: emptyMeal(),
+      dinner: emptyMeal(),
+    },
     notes: '',
   };
 }
 
+function normalizeMeal(data?: Partial<MealEntry>): MealEntry {
+  return {
+    ...emptyMeal(),
+    ...data,
+    items: Array.isArray(data?.items) ? data.items : [],
+    skipped: Boolean(data?.skipped),
+    reason: data?.reason ?? '',
+    note: data?.note ?? '',
+  };
+}
+
 function normalizeDay(data: Partial<DailyMenu> = {}): DailyMenu {
-  const legacyLunchItems = data.lunch ? [data.lunch].filter(Boolean) : [];
+  const legacyLunchItems = data.lunchItems ?? (data.lunch ? [data.lunch].filter(Boolean) : []);
+  const meals = data.meals ?? {};
 
   return {
     ...emptyDay(),
     ...data,
-    lunchItems: Array.isArray(data.lunchItems) ? data.lunchItems : legacyLunchItems,
-    noLunch: Boolean(data.noLunch),
-    noLunchReason: data.noLunchReason ?? '',
-    noLunchDescription: data.noLunchDescription ?? '',
+    meals: {
+      breakfast: normalizeMeal(meals.breakfast),
+      lunch: normalizeMeal({
+        ...(meals.lunch ?? {}),
+        items: meals.lunch?.items ?? legacyLunchItems,
+        skipped: meals.lunch?.skipped ?? Boolean(data.noLunch),
+        reason: meals.lunch?.reason ?? data.noLunchReason ?? '',
+        note: meals.lunch?.note ?? data.noLunchDescription ?? '',
+      }),
+      dinner: normalizeMeal({
+        ...(meals.dinner ?? {}),
+        items: meals.dinner?.items ?? (data.dinner ? [data.dinner].filter(Boolean) : []),
+      }),
+    },
     notes: data.notes ?? '',
   };
 }
@@ -49,6 +76,16 @@ function normalizeDishName(name: string) {
 
 function getDishId(userId: string, normalizedName: string) {
   return `${userId}_${encodeURIComponent(normalizedName).replaceAll('%', '_')}`.slice(0, 1400);
+}
+
+function normalizeEnabledMeals(value: unknown): MealSlot[] {
+  if (!Array.isArray(value)) return defaultEnabledMeals;
+  const enabled = value.filter((meal): meal is MealSlot => mealSlots.includes(meal));
+  return enabled.length > 0 ? enabled : defaultEnabledMeals;
+}
+
+function normalizeTheme(value: unknown): ThemePreference {
+  return value === 'light' || value === 'dark' || value === 'system' ? value : 'system';
 }
 
 function mapWeekMenu(id: string, data: Record<string, any>): WeekMenu {
@@ -78,12 +115,69 @@ function mapDish(id: string, data: Record<string, any>): Dish {
   };
 }
 
+function mapUserProfile(id: string, data: Record<string, any>, fallbackName: string): UserProfile {
+  return {
+    id,
+    displayName: data.displayName ?? fallbackName,
+    enabledMeals: normalizeEnabledMeals(data.enabledMeals),
+    theme: normalizeTheme(data.theme),
+    updatedAt: data.updatedAt?.toDate?.(),
+  };
+}
+
 export async function ensureUserProfile(services: FirebaseServices, user: FirebaseUser, guestLabel: string) {
   const { db, firestoreModule } = services;
-  await firestoreModule.setDoc(
+  const userRef = firestoreModule.doc(db, 'users', user.uid);
+  const snapshot = await firestoreModule.getDoc(userRef);
+
+  if (snapshot.exists()) {
+    await firestoreModule.setDoc(
+      userRef,
+      {
+        displayName: user.displayName ?? snapshot.data().displayName ?? guestLabel,
+        updatedAt: firestoreModule.serverTimestamp(),
+      },
+      { merge: true }
+    );
+    return;
+  }
+
+  await firestoreModule.setDoc(userRef, {
+    displayName: user.displayName ?? guestLabel,
+    enabledMeals: defaultEnabledMeals,
+    theme: 'system',
+    createdAt: firestoreModule.serverTimestamp(),
+    updatedAt: firestoreModule.serverTimestamp(),
+  });
+}
+
+export function watchUserProfile(
+  services: FirebaseServices,
+  user: FirebaseUser,
+  guestLabel: string,
+  callback: (profile: UserProfile) => void,
+  onError: (error: Error) => void
+) {
+  const { db, firestoreModule } = services;
+  return firestoreModule.onSnapshot(
     firestoreModule.doc(db, 'users', user.uid),
+    (snapshot: any) => {
+      callback(mapUserProfile(user.uid, snapshot.exists() ? snapshot.data() : {}, user.displayName ?? user.email ?? guestLabel));
+    },
+    onError
+  );
+}
+
+export async function updateUserPreferences(
+  services: FirebaseServices,
+  userId: string,
+  preferences: { enabledMeals?: MealSlot[]; theme?: ThemePreference }
+) {
+  const { db, firestoreModule } = services;
+  await firestoreModule.setDoc(
+    firestoreModule.doc(db, 'users', userId),
     {
-      displayName: user.displayName ?? guestLabel,
+      ...preferences,
       updatedAt: firestoreModule.serverTimestamp(),
     },
     { merge: true }
@@ -231,14 +325,18 @@ export async function updateMenuPatch(
   userId: string,
   patch: MenuPatch
 ) {
+  const path = patch.path ?? patch.slot;
+
+  if (!path) return;
+
   const { db, firestoreModule } = services;
   await firestoreModule.updateDoc(firestoreModule.doc(db, menusCollection, menuId), {
-    [`days.${patch.dayKey}.${patch.slot}`]: patch.value,
+    [`days.${patch.dayKey}.${path}`]: patch.value,
     updatedAt: firestoreModule.serverTimestamp(),
     updatedBy: userId,
   });
 
-  if (patch.slot === 'lunchItems' && Array.isArray(patch.value)) {
+  if ((path.endsWith('.items') || path === 'lunchItems') && Array.isArray(patch.value)) {
     await Promise.all(patch.value.map((item) => upsertDish(services, userId, item)));
   }
 }
