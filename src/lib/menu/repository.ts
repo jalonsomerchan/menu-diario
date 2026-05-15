@@ -30,6 +30,20 @@ function createInviteCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
+function mapWeekMenu(id: string, data: Record<string, any>): WeekMenu {
+  return {
+    id,
+    title: data.title,
+    ownerId: data.ownerId,
+    members: data.members ?? [],
+    inviteCode: data.inviteCode,
+    weekStart: data.weekStart,
+    days: data.days ?? {},
+    updatedAt: data.updatedAt?.toDate?.(),
+    updatedBy: data.updatedBy,
+  };
+}
+
 export async function ensureUserProfile(db: Firestore, userId: string, displayName?: string | null) {
   await setDoc(
     doc(db, 'users', userId),
@@ -69,6 +83,19 @@ export async function getLatestMenuForUser(db: Firestore, userId: string) {
   return snapshot.docs[0]?.id;
 }
 
+export function watchUserMenus(db: Firestore, userId: string, callback: (menus: WeekMenu[]) => void) {
+  const menusQuery = query(
+    collection(db, collectionName),
+    where('members', 'array-contains', userId),
+    orderBy('weekStart', 'desc'),
+    limit(12)
+  );
+
+  return onSnapshot(menusQuery, (snapshot) => {
+    callback(snapshot.docs.map((item) => mapWeekMenu(item.id, item.data())));
+  });
+}
+
 export function watchWeekMenu(db: Firestore, menuId: string, callback: (menu: WeekMenu | null) => void) {
   return onSnapshot(doc(db, collectionName, menuId), (snapshot) => {
     if (!snapshot.exists()) {
@@ -76,18 +103,7 @@ export function watchWeekMenu(db: Firestore, menuId: string, callback: (menu: We
       return;
     }
 
-    const data = snapshot.data();
-    callback({
-      id: snapshot.id,
-      title: data.title,
-      ownerId: data.ownerId,
-      members: data.members ?? [],
-      inviteCode: data.inviteCode,
-      weekStart: data.weekStart,
-      days: data.days ?? {},
-      updatedAt: data.updatedAt?.toDate?.(),
-      updatedBy: data.updatedBy,
-    });
+    callback(mapWeekMenu(snapshot.id, snapshot.data()));
   });
 }
 
@@ -105,7 +121,7 @@ export async function joinMenuByInviteCode(db: Firestore, userId: string, invite
   const menu = snapshot.docs[0];
 
   if (!menu) {
-    throw new Error('No se encontró ningún menú con ese código.');
+    throw new Error('invite-not-found');
   }
 
   const data = menu.data();
