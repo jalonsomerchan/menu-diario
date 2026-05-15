@@ -46,7 +46,7 @@ describe('Firebase AI foundation', () => {
       'PUBLIC_FIREBASE_AI_TIMEOUT_MS=15000',
       'PUBLIC_AI_MAX_SESSION_REQUESTS=8',
       'PUBLIC_AI_MAX_USER_DAILY_REQUESTS=20',
-    ].forEach((key) => assert.match(envExample, new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))));
+    ].forEach((key) => assert.ok(envExample.includes(key), `.env.example should include ${key}`));
 
     assert.match(config, /aiGenerationConfig/);
     assert.match(config, /aiPromptConfig/);
