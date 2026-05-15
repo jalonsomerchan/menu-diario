@@ -124,7 +124,7 @@ El histórico reutiliza estos documentos buscando menús donde el usuario es mie
 
 ### `dishes/{dishId}`
 
-Catálogo de platos reutilizables. Se alimenta automáticamente cuando se añaden platos a un día.
+Catálogo de platos reutilizables. Se alimenta automáticamente cuando se añaden platos a un día y también permite crear platos manualmente desde **Mis platos** aunque todavía no se hayan comido.
 
 ```json
 {
@@ -133,10 +133,17 @@ Catálogo de platos reutilizables. Se alimenta automáticamente cuando se añade
   "createdBy": "uid",
   "members": ["uid"],
   "timesUsed": 3,
+  "tags": ["legumbre"],
+  "archived": false,
   "createdAt": "serverTimestamp",
-  "lastUsedAt": "serverTimestamp"
+  "lastUsedAt": "serverTimestamp",
+  "updatedAt": "serverTimestamp"
 }
 ```
+
+`normalizedName` se usa para evitar duplicados por mayúsculas, acentos o espacios repetidos. Los platos creados manualmente empiezan con `timesUsed: 0` y sin `lastUsedAt`. Archivar un plato cambia `archived` a `true`; no borra ni modifica menús históricos que ya guarden ese nombre en `weeklyMenus.days.*.meals.*.items`.
+
+`tags` queda preparado para futuras integraciones con recetas, sugerencias, lista de la compra y estadísticas avanzadas. La primera versión solo muestra etiquetas si ya existen en Firestore.
 
 ## Reglas incluidas
 
@@ -152,7 +159,7 @@ weeklyMenus
   weekStart desc
 ```
 
-La lista de platos reutilizables usa `createdBy == uid` y se ordena en el navegador por `timesUsed`, así que no necesita el índice compuesto `members + timesUsed`.
+La lista de platos reutilizables usa `createdBy == uid` y se ordena en el navegador por `timesUsed`, `lastUsedAt`, `createdAt` o `name`, así que no necesita índices compuestos nuevos.
 
 La consulta por código de grupo usa `inviteCode ==`, que normalmente no necesita índice compuesto.
 

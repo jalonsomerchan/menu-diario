@@ -1,0 +1,159 @@
+.dishes-app {
+  max-width: 58rem;
+  margin-inline: auto;
+  margin-top: 1rem;
+}
+
+.dishes-app__content,
+.dishes-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.dishes-hero,
+.dishes-form-card,
+.dishes-empty {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.1rem;
+}
+
+.dishes-hero h1,
+.dishes-form-card h2,
+.dishes-empty h2,
+.dish-card h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 7vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.dishes-hero p,
+.dishes-empty p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.dishes-hero__future {
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-soft);
+  padding: 0.8rem;
+  font-weight: 800;
+}
+
+.dishes-form,
+.dishes-toolbar {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dishes-form label,
+.dishes-toolbar label,
+.dish-card__edit label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+
+.dishes-form__row {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.dishes-form input,
+.dishes-toolbar input,
+.dishes-toolbar select,
+.dish-card__edit input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  padding: 0.8rem;
+}
+
+.dishes-toolbar {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  background: color-mix(in srgb, var(--color-surface), transparent 4%);
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.dish-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.dish-card__main {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.dish-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.dish-card dt {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.dish-card dd {
+  margin: 0.1rem 0 0;
+  font-weight: 850;
+}
+
+.dish-card__tags {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.dish-card__tags span {
+  color: var(--color-text);
+  font-weight: 850;
+}
+
+.dish-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.dish-card__edit {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 720px) {
+  .dishes-app {
+    max-width: 76rem;
+  }
+
+  .dishes-form__row,
+  .dishes-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .dishes-toolbar {
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 18rem);
+  }
+
+  .dishes-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dish-card dl {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
