@@ -1,9 +1,11 @@
-import { closeSession, getFirebaseServices } from '../lib/firebase/client';
+import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { toIsoDate } from '../lib/menu/dates';
 import {
+  clearMenuDay,
   ensureUserProfile,
   getOrCreateWeekMenu,
+  updateMenuPatch,
   watchUserProfile,
   watchWeekMenu,
 } from '../lib/menu/repository';
@@ -21,10 +23,15 @@ if (root) {
   const userLabel = root.querySelector<HTMLElement>('[data-user-label]');
   const todaySummary = root.querySelector<HTMLElement>('[data-today-summary]');
   const nextDays = root.querySelector<HTMLElement>('[data-next-days]');
+  const quickModal = root.querySelector<HTMLDialogElement>('[data-quick-modal]');
+  const quickForm = root.querySelector<HTMLFormElement>('[data-quick-form]');
+  const quickFields = root.querySelector<HTMLElement>('[data-quick-fields]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
   let currentMenu: WeekMenu | null = null;
+  let currentMenuId = '';
+  let quickDayKey = '';
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let firstMenuLoad = true;
@@ -165,12 +172,18 @@ if (root) {
           .join('');
 
         return `
-          <article class="next-day-card next-day-card--mockup">
+          <article class="next-day-card next-day-card--mockup" data-day="${isoDate}">
             <div class="next-day-card__number">${escapeHtml(getDayNumber(isoDate))}</div>
             <div class="next-day-card__body">
               <header>
                 <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
-                <a class="button button--ghost button--small" href="${labels.configurePath}#dia-${isoDate}">${escapeHtml(labels.editDay)}</a>
+                <details class="day-actions">
+                  <summary aria-label="${escapeHtml(labels.moreActions)}">⋯</summary>
+                  <div>
+                    <button type="button" data-quick-edit="${isoDate}">${escapeHtml(labels.editDay)}</button>
+                    <button type="button" data-clear-day="${isoDate}">${escapeHtml(labels.deleteDay)}</button>
+                  </div>
+                </details>
               </header>
               ${summaries}
             </div>
@@ -178,6 +191,42 @@ if (root) {
         `;
       })
       .join('');
+  }
+
+  function openQuickEdit(dayKey: string) {
+    if (!currentMenu || !quickFields || !quickModal) return;
+
+    const day = normalizeDay(currentMenu.days[dayKey]);
+    quickDayKey = dayKey;
+    quickFields.innerHTML = getEnabledMeals()
+      .map((meal) => {
+        const value = day.meals[meal].items.join('\n');
+        return `
+          <label>${escapeHtml(mealLabel(meal))}
+            <textarea data-quick-meal="${meal}" rows="3">${escapeHtml(value)}</textarea>
+          </label>
+        `;
+      })
+      .join('');
+    quickModal.showModal();
+  }
+
+  async function saveQuickEdit() {
+    if (!currentUser || !currentMenuId || !quickFields || !quickDayKey) return;
+    const services = await getFirebaseServices();
+
+    await Promise.all(
+      [...quickFields.querySelectorAll<HTMLTextAreaElement>('[data-quick-meal]')].map((textarea) =>
+        updateMenuPatch(services, currentMenuId, currentUser!.uid, {
+          dayKey: quickDayKey,
+          path: `meals.${textarea.dataset.quickMeal}.items`,
+          value: textarea.value
+            .split('\n')
+            .map((item) => item.trim())
+            .filter(Boolean),
+        })
+      )
+    );
   }
 
   function renderDashboard(menu: WeekMenu) {
@@ -193,13 +242,36 @@ if (root) {
   } else {
     getFirebaseServices()
       .then((services) => {
-        root.querySelector('[data-logout]')?.addEventListener('click', () => closeSession());
         root.querySelector('[data-notifications]')?.addEventListener('click', async () => {
           const permission = await requestChangeNotifications();
           showStatus(
             permission === 'granted' ? labels.notificationsEnabled : labels.notificationsDenied,
             permission !== 'granted'
           );
+        });
+
+        nextDays?.addEventListener('click', async (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLButtonElement)) return;
+
+          if (target.dataset.quickEdit) {
+            openQuickEdit(target.dataset.quickEdit);
+            return;
+          }
+
+          if (target.dataset.clearDay && currentUser && currentMenuId) {
+            await clearMenuDay(services, currentMenuId, currentUser.uid, target.dataset.clearDay);
+          }
+        });
+
+        quickForm?.addEventListener('submit', (event) => {
+          const submitter = event.submitter;
+          if (submitter instanceof HTMLButtonElement && submitter.value === 'save') {
+            event.preventDefault();
+            saveQuickEdit()
+              .then(() => quickModal?.close())
+              .catch((error: Error) => showStatus(error.message, true));
+          }
         });
 
         services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
@@ -215,7 +287,7 @@ if (root) {
           if (userLabel) userLabel.textContent = `${labels.hello} ${user.displayName || user.email || labels.guestSession}`;
 
           await ensureUserProfile(services, user, labels.guestSession);
-          const menuId = await getOrCreateWeekMenu(services, user.uid, getDateOffset(0), locale);
+          currentMenuId = await getOrCreateWeekMenu(services, user.uid, getDateOffset(0), locale);
           firstMenuLoad = true;
 
           unsubscribeProfile = watchUserProfile(
@@ -232,7 +304,7 @@ if (root) {
 
           unsubscribeMenu = watchWeekMenu(
             services,
-            menuId,
+            currentMenuId,
             (menu) => {
               if (!menu) return;
               const changedByOtherUser = !firstMenuLoad && menu.updatedBy && menu.updatedBy !== currentUser?.uid;
