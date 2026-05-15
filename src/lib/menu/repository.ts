@@ -157,26 +157,6 @@ function mapGroup(id: string, data: Record<string, any>): MenuGroup {
   };
 }
 
-async function updateOwnerMenusMembership(services: FirebaseServices, ownerId: string, memberId: string, action: 'add' | 'remove') {
-  const { db, firestoreModule } = services;
-  const menusQuery = firestoreModule.query(
-    firestoreModule.collection(db, menusCollection),
-    firestoreModule.where('ownerId', '==', ownerId),
-    firestoreModule.limit(60)
-  );
-  const snapshot = await firestoreModule.getDocs(menusQuery);
-
-  await Promise.all(
-    snapshot.docs.map((menu: any) =>
-      firestoreModule.updateDoc(firestoreModule.doc(db, menusCollection, menu.id), {
-        members: action === 'add' ? firestoreModule.arrayUnion(memberId) : firestoreModule.arrayRemove(memberId),
-        updatedAt: firestoreModule.serverTimestamp(),
-        updatedBy: memberId,
-      })
-    )
-  );
-}
-
 export async function ensureUserProfile(services: FirebaseServices, user: FirebaseUser, guestLabel: string) {
   const { db, firestoreModule } = services;
   const userRef = firestoreModule.doc(db, 'users', user.uid);
@@ -324,7 +304,6 @@ export async function joinGroupByInviteCode(services: FirebaseServices, user: Fi
     ...(email ? { memberEmails: firestoreModule.arrayUnion(email), pendingEmails: firestoreModule.arrayRemove(email) } : {}),
     updatedAt: firestoreModule.serverTimestamp(),
   });
-  await updateOwnerMenusMembership(services, data.ownerId, user.uid, 'add');
   await updateUserPreferences(services, user.uid, {
     groupId: group.id,
     enabledMeals: normalizeEnabledMeals(data.enabledMeals),
@@ -340,7 +319,6 @@ export async function leaveGroup(services: FirebaseServices, user: FirebaseUser,
     ...(email ? { memberEmails: firestoreModule.arrayRemove(email) } : {}),
     updatedAt: firestoreModule.serverTimestamp(),
   });
-  await updateOwnerMenusMembership(services, group.ownerId, user.uid, 'remove');
   await updateUserPreferences(services, user.uid, { groupId: null });
 }
 
