@@ -60,32 +60,48 @@ if (root) {
   }
 
   function renderTags(dish: Dish) {
-    const tags = [...(dish.tags ?? []), ...(dish.quickTags ?? [])];
+    const tags = dish.tags ?? [];
     if (!tags.length) return '';
     return `<p class="dish-card__tags"><span>${escapeHtml(labels.tags)}:</span> ${tags.map((tag) => escapeHtml(getTagLabel(tag))).join(', ')}</p>`;
   }
 
   function renderBadges(dish: Dish) {
     const badges = [];
-    if (dish.favorite) badges.push(`<span class="dish-badge">★ ${escapeHtml(labels.favoriteBadge)}</span>`);
     if (dish.blocked) badges.push(`<span class="dish-badge dish-badge--blocked">⊘ ${escapeHtml(labels.blockedBadge)}</span>`);
     return badges.length ? `<div class="dish-card__badges">${badges.join('')}</div>` : '';
   }
 
   function renderQuickTags(dish: Dish) {
     if (!quickTags.length) return '';
+
+    const selectedTags = dish.quickTags ?? [];
+    const availableTags = quickTags.filter((tag: string) => !selectedTags.includes(tag));
+    const selectedMarkup = selectedTags.length
+      ? selectedTags
+          .map(
+            (tag: string) => `
+              <span class="dish-tag-chip">
+                <button type="button" data-remove-quick-tag="${escapeHtml(tag)}" aria-label="${escapeHtml(labels.removeTag)} ${escapeHtml(getTagLabel(tag))}">×</button>
+                <span>${escapeHtml(getTagLabel(tag))}</span>
+              </span>
+            `
+          )
+          .join('')
+      : `<span class="dish-tags-empty">${escapeHtml(labels.noQuickTags)}</span>`;
+
+    const availableMarkup = availableTags
+      .map(
+        (tag: string) =>
+          `<button class="dish-tag-add" type="button" data-add-quick-tag="${escapeHtml(tag)}">+ ${escapeHtml(getTagLabel(tag))}</button>`
+      )
+      .join('');
+
     return `
-      <fieldset class="dish-card__quick-tags">
-        <legend>${escapeHtml(labels.quickTags)}</legend>
-        <div>
-          ${quickTags
-            .map((tag: string) => {
-              const checked = dish.quickTags?.includes(tag) ? ' checked' : '';
-              return `<label><input type="checkbox" value="${escapeHtml(tag)}" data-quick-tag${checked} /> ${escapeHtml(getTagLabel(tag))}</label>`;
-            })
-            .join('')}
-        </div>
-      </fieldset>
+      <section class="dish-card__quick-tags" aria-label="${escapeHtml(labels.quickTags)}">
+        <p>${escapeHtml(labels.quickTags)}</p>
+        <div class="dish-tag-list" data-selected-tags>${selectedMarkup}</div>
+        ${availableMarkup ? `<div class="dish-tag-actions">${availableMarkup}</div>` : ''}
+      </section>
     `;
   }
 
@@ -114,8 +130,13 @@ if (root) {
 
         return `
           <article class="dish-card app-panel" data-dish-id="${escapeHtml(dish.id)}">
-            <div class="dish-card__main">
+            <div class="dish-card__header">
               <h2>${escapeHtml(dish.name)}</h2>
+              <button class="dish-favorite" type="button" data-toggle-favorite aria-pressed="${dish.favorite ? 'true' : 'false'}" aria-label="${escapeHtml(favoriteText)}">
+                <span aria-hidden="true">${dish.favorite ? '★' : '☆'}</span>
+              </button>
+            </div>
+            <div class="dish-card__main">
               ${renderBadges(dish)}
               <dl>
                 <div><dt>${escapeHtml(labels.timesUsed)}</dt><dd>${dish.timesUsed}</dd></div>
@@ -133,7 +154,6 @@ if (root) {
               </div>
             </form>
             <div class="dish-card__actions" data-card-actions>
-              <button class="button button--secondary button--small" type="button" data-toggle-favorite aria-pressed="${dish.favorite ? 'true' : 'false'}">${escapeHtml(favoriteText)}</button>
               <button class="button button--secondary button--small" type="button" data-toggle-blocked aria-pressed="${dish.blocked ? 'true' : 'false'}">${escapeHtml(blockText)}</button>
               <button class="button button--secondary button--small" type="button" data-edit-dish>${escapeHtml(labels.edit)}</button>
               <button class="button button--ghost button--small" type="button" data-archive-dish>${escapeHtml(labels.archive)}</button>
@@ -181,6 +201,12 @@ if (root) {
     showStatus(labels.preferencesUpdated);
   }
 
+  function getNextQuickTags(dish: Dish, tag: string, shouldAdd: boolean) {
+    const currentTags = dish.quickTags ?? [];
+    if (shouldAdd) return [...new Set([...currentTags, tag])];
+    return currentTags.filter((item) => item !== tag);
+  }
+
   if (!hasFirebaseConfig()) {
     setVisible(false);
     showStatus(labels.firebaseMissing || labels.configMissing, true);
@@ -197,23 +223,24 @@ if (root) {
         filterSelect?.addEventListener('change', renderDishes);
         tagFilterSelect?.addEventListener('change', renderDishes);
 
-        list?.addEventListener('change', (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLInputElement) || !target.dataset.quickTag) return;
-          const card = target.closest<HTMLElement>('[data-dish-id]');
-          const dish = card ? findDish(card) : undefined;
-          if (!card || !dish) return;
-
-          const quickTags = [...card.querySelectorAll<HTMLInputElement>('[data-quick-tag]:checked')].map((input) => input.value);
-          savePreferences(card, { quickTags }).catch((error: Error) => showStatus(errorMessage(error), true));
-        });
-
         list?.addEventListener('click', (event) => {
           const target = event.target;
           if (!(target instanceof HTMLElement)) return;
           const card = target.closest<HTMLElement>('[data-dish-id]');
           const dish = card ? findDish(card) : undefined;
           if (!card || !dish) return;
+
+          const addedTag = target.closest<HTMLElement>('[data-add-quick-tag]')?.dataset.addQuickTag;
+          if (addedTag) {
+            savePreferences(card, { quickTags: getNextQuickTags(dish, addedTag, true) }).catch((error: Error) => showStatus(errorMessage(error), true));
+            return;
+          }
+
+          const removedTag = target.closest<HTMLElement>('[data-remove-quick-tag]')?.dataset.removeQuickTag;
+          if (removedTag) {
+            savePreferences(card, { quickTags: getNextQuickTags(dish, removedTag, false) }).catch((error: Error) => showStatus(errorMessage(error), true));
+            return;
+          }
 
           if (target.closest('[data-toggle-favorite]')) {
             savePreferences(card, { favorite: !dish.favorite }).catch((error: Error) => showStatus(errorMessage(error), true));
