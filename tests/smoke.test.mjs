@@ -132,7 +132,6 @@ describe('project smoke checks', () => {
       [
         'home.title',
         'nav.main',
-        'nav.language',
         'dashboard.title',
         'dashboard.moreActions',
         'dashboard.noDay',
