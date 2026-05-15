@@ -12,9 +12,12 @@ const dashboardPath = getLocalizedPath('/dashboard', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
 const historyPath = getLocalizedPath('/historico', locale);
 const settingsPath = getLocalizedPath('/ajustes', locale);
+const labels = {
+  guestSession: t('menu.guestSession'),
+};
 ---
 
-<header class="app-header" data-app-header>
+<header class="app-header" data-app-header data-labels={JSON.stringify(labels)}>
   <a class="app-header__brand" href={dashboardPath}>Menu Diario</a>
   <nav class="app-header__nav" aria-label={t('nav.main')}>
     <a href={dashboardPath}>{t('appNav.dashboard')}</a>
