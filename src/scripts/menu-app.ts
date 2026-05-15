@@ -1,4 +1,3 @@
-import { onAuthStateChanged, type User } from 'firebase/auth';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { closeSession, getFirebaseServices, signInAsGuest, signInWithGoogle } from '../lib/firebase/client';
 import { formatShortDate, getMonday, getWeekDays, getWeekTitle, shiftWeek, toIsoDate } from '../lib/menu/dates';
@@ -11,7 +10,7 @@ import {
   watchUserMenus,
   watchWeekMenu,
 } from '../lib/menu/repository';
-import type { WeekMenu } from '../lib/menu/types';
+import type { FirebaseUser, WeekMenu } from '../lib/menu/types';
 import { notifyMenuChanged, requestChangeNotifications } from '../lib/notifications/browser';
 
 const root = document.querySelector<HTMLElement>('[data-menu-app]');
@@ -29,7 +28,7 @@ if (root) {
   const userLabel = root.querySelector<HTMLElement>('[data-user-label]');
   const inviteInput = root.querySelector<HTMLInputElement>('#invite-code');
 
-  let currentUser: User | null = null;
+  let currentUser: FirebaseUser | null = null;
   let currentMenuId = '';
   let currentWeekStart = toIsoDate(getMonday());
   let currentMenu: WeekMenu | null = null;
@@ -75,40 +74,45 @@ if (root) {
 
   async function selectMenu(menuId: string) {
     if (!currentUser) return;
-    const { db } = getFirebaseServices();
+    const services = await getFirebaseServices();
 
     unsubscribeMenu?.();
     currentMenuId = menuId;
     firstMenuLoad = true;
     setMenuIdInUrl(menuId);
 
-    unsubscribeMenu = watchWeekMenu(db, menuId, (menu) => {
-      if (!menu) {
-        showStatus(labels.notFoundMenu, true);
-        return;
-      }
+    unsubscribeMenu = watchWeekMenu(
+      services,
+      menuId,
+      (menu) => {
+        if (!menu) {
+          showStatus(labels.notFoundMenu, true);
+          return;
+        }
 
-      const changedByOtherUser = !firstMenuLoad && menu.updatedBy && menu.updatedBy !== currentUser?.uid;
-      currentMenu = menu;
-      currentWeekStart = menu.weekStart;
-      renderMenu(menu);
+        const changedByOtherUser = !firstMenuLoad && menu.updatedBy && menu.updatedBy !== currentUser?.uid;
+        currentMenu = menu;
+        currentWeekStart = menu.weekStart;
+        renderMenu(menu);
 
-      if (changedByOtherUser) {
-        notifyMenuChanged(labels.updated, labels.updatedBody);
-      }
+        if (changedByOtherUser) {
+          notifyMenuChanged(labels.updated, labels.updatedBody);
+        }
 
-      firstMenuLoad = false;
-    });
+        firstMenuLoad = false;
+      },
+      (error) => showStatus(error.message, true)
+    );
   }
 
-  async function ensureActiveMenu(user: User) {
-    const { db } = getFirebaseServices();
-    await ensureUserProfile(db, user.uid, user.displayName);
+  async function ensureActiveMenu(user: FirebaseUser) {
+    const services = await getFirebaseServices();
+    await ensureUserProfile(services, user, labels.guestSession);
 
     const menuId =
       getMenuIdFromUrl() ||
-      (await getLatestMenuForUser(db, user.uid)) ||
-      (await createWeekMenu(db, user.uid, currentWeekStart));
+      (await getLatestMenuForUser(services, user.uid)) ||
+      (await createWeekMenu(services, user.uid, currentWeekStart, locale));
     await selectMenu(menuId);
   }
 
@@ -179,8 +183,8 @@ if (root) {
 
     if (!card || !slot) return;
 
-    const { db } = getFirebaseServices();
-    await updateMenuPatch(db, currentMenuId, currentUser.uid, {
+    const services = await getFirebaseServices();
+    await updateMenuPatch(services, currentMenuId, currentUser.uid, {
       dayKey: card.dataset.day ?? '',
       slot: slot as 'lunch' | 'dinner' | 'notes',
       value: target.value.trim(),
@@ -191,87 +195,108 @@ if (root) {
     setAuthenticated(false);
     showStatus(labels.configMissing, true);
   } else {
-    const { auth, db } = getFirebaseServices();
+    getFirebaseServices()
+      .then((services) => {
+        root.querySelector('[data-google-login]')?.addEventListener('click', () =>
+          signInWithGoogle().catch((error: Error) => showStatus(error.message, true))
+        );
+        root.querySelector('[data-guest-login]')?.addEventListener('click', () =>
+          signInAsGuest().catch((error: Error) => showStatus(error.message, true))
+        );
+        root.querySelector('[data-logout]')?.addEventListener('click', () => closeSession());
+        root.querySelector('[data-notifications]')?.addEventListener('click', async () => {
+          const permission = await requestChangeNotifications();
+          showStatus(
+            permission === 'granted' ? labels.notificationsEnabled : labels.notificationsDenied,
+            permission !== 'granted'
+          );
+        });
 
-    root.querySelector('[data-google-login]')?.addEventListener('click', () =>
-      signInWithGoogle().catch((error) => showStatus(error.message, true))
-    );
-    root.querySelector('[data-guest-login]')?.addEventListener('click', () =>
-      signInAsGuest().catch((error) => showStatus(error.message, true))
-    );
-    root.querySelector('[data-logout]')?.addEventListener('click', () => closeSession());
-    root.querySelector('[data-notifications]')?.addEventListener('click', async () => {
-      const permission = await requestChangeNotifications();
-      showStatus(
-        permission === 'granted' ? labels.notificationsEnabled : labels.notificationsDenied,
-        permission !== 'granted'
-      );
-    });
+        root.querySelector('[data-new-week]')?.addEventListener('click', async () => {
+          if (!currentUser) return;
+          const menuId = await createWeekMenu(services, currentUser.uid, currentWeekStart, locale);
+          await selectMenu(menuId);
+        });
 
-    root.querySelector('[data-new-week]')?.addEventListener('click', async () => {
-      if (!currentUser) return;
-      const menuId = await createWeekMenu(db, currentUser.uid, currentWeekStart);
-      await selectMenu(menuId);
-    });
+        root.querySelector('[data-prev-week]')?.addEventListener('click', () => {
+          currentWeekStart = shiftWeek(currentWeekStart, -1);
+          if (currentMenu) {
+            renderMenu({
+              ...currentMenu,
+              weekStart: currentWeekStart,
+              title: getWeekTitle(currentWeekStart, locale),
+              days: {},
+            });
+          }
+        });
 
-    root.querySelector('[data-prev-week]')?.addEventListener('click', () => {
-      currentWeekStart = shiftWeek(currentWeekStart, -1);
-      if (currentMenu) {
-        renderMenu({ ...currentMenu, weekStart: currentWeekStart, title: getWeekTitle(currentWeekStart, locale), days: {} });
-      }
-    });
+        root.querySelector('[data-next-week]')?.addEventListener('click', () => {
+          currentWeekStart = shiftWeek(currentWeekStart, 1);
+          if (currentMenu) {
+            renderMenu({
+              ...currentMenu,
+              weekStart: currentWeekStart,
+              title: getWeekTitle(currentWeekStart, locale),
+              days: {},
+            });
+          }
+        });
 
-    root.querySelector('[data-next-week]')?.addEventListener('click', () => {
-      currentWeekStart = shiftWeek(currentWeekStart, 1);
-      if (currentMenu) {
-        renderMenu({ ...currentMenu, weekStart: currentWeekStart, title: getWeekTitle(currentWeekStart, locale), days: {} });
-      }
-    });
+        root.querySelector('[data-share-code]')?.addEventListener('click', async () => {
+          if (!currentMenu?.inviteCode) return;
+          await navigator.clipboard?.writeText(currentMenu.inviteCode);
+          showStatus(`${labels.codeCopied}: ${currentMenu.inviteCode}`);
+        });
 
-    root.querySelector('[data-share-code]')?.addEventListener('click', async () => {
-      if (!currentMenu?.inviteCode) return;
-      await navigator.clipboard?.writeText(currentMenu.inviteCode);
-      showStatus(`${labels.codeCopied}: ${currentMenu.inviteCode}`);
-    });
+        root.querySelector('[data-join-form]')?.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!currentUser || !inviteInput?.value.trim()) return;
 
-    root.querySelector('[data-join-form]')?.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      if (!currentUser || !inviteInput?.value.trim()) return;
+          try {
+            const menuId = await joinMenuByInviteCode(
+              services,
+              currentUser.uid,
+              inviteInput.value.trim().toUpperCase()
+            );
+            await selectMenu(menuId);
+            clearStatus();
+          } catch {
+            showStatus(labels.joinError, true);
+          }
+        });
 
-      try {
-        const menuId = await joinMenuByInviteCode(db, currentUser.uid, inviteInput.value.trim().toUpperCase());
-        await selectMenu(menuId);
-        clearStatus();
-      } catch {
-        showStatus(labels.joinError, true);
-      }
-    });
+        menuLists?.addEventListener('click', (event) => {
+          const target = event.target;
+          if (target instanceof HTMLButtonElement && target.dataset.menuSelect) {
+            selectMenu(target.dataset.menuSelect).catch((error: Error) => showStatus(error.message, true));
+          }
+        });
 
-    menuLists?.addEventListener('click', (event) => {
-      const target = event.target;
-      if (target instanceof HTMLButtonElement && target.dataset.menuSelect) {
-        selectMenu(target.dataset.menuSelect).catch((error) => showStatus(error.message, true));
-      }
-    });
+        daysContainer?.addEventListener('change', (event) => {
+          const target = event.target;
+          if (target instanceof HTMLTextAreaElement) {
+            saveField(target).catch((error: Error) => showStatus(error.message, true));
+          }
+        });
 
-    daysContainer?.addEventListener('change', (event) => {
-      const target = event.target;
-      if (target instanceof HTMLTextAreaElement) {
-        saveField(target).catch((error) => showStatus(error.message, true));
-      }
-    });
+        services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
+          currentUser = user;
+          setAuthenticated(Boolean(user));
+          unsubscribeMenu?.();
+          unsubscribeMenus?.();
 
-    onAuthStateChanged(auth, async (user) => {
-      currentUser = user;
-      setAuthenticated(Boolean(user));
-      unsubscribeMenu?.();
-      unsubscribeMenus?.();
+          if (!user) return;
 
-      if (!user) return;
-
-      if (userLabel) userLabel.textContent = user.displayName || user.email || labels.guestSession;
-      unsubscribeMenus = watchUserMenus(db, user.uid, renderMenuList);
-      await ensureActiveMenu(user).catch((error) => showStatus(error.message, true));
-    });
+          if (userLabel) userLabel.textContent = user.displayName || user.email || labels.guestSession;
+          unsubscribeMenus = watchUserMenus(
+            services,
+            user.uid,
+            renderMenuList,
+            (error) => showStatus(error.message, true)
+          );
+          await ensureActiveMenu(user).catch((error: Error) => showStatus(error.message, true));
+        });
+      })
+      .catch((error: Error) => showStatus(error.message, true));
   }
 }
