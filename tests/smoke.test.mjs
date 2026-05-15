@@ -133,6 +133,7 @@ describe('project smoke checks', () => {
         'dashboard.moreActions',
         'dashboard.noDay',
         'dashboard.removePlate',
+        'dashboard.showDishOptions',
         'dashboard.dishSuggestions',
         'history.title',
         'group.title',
@@ -192,9 +193,12 @@ describe('project smoke checks', () => {
     assert.match(authGate, /data-auth-gate/);
     assert.match(dashboardApp, /data-quick-modal/);
     assert.match(dashboardApp, /data-notifications/);
+    assert.match(dashboardApp, /dashboard\.showDishOptions/);
     assert.match(configuratorApp, /data-configurator-app/);
+    assert.match(configuratorApp, /dashboard\.showDishOptions/);
     assert.match(settingsApp, /data-settings-app/);
     assert.match(historyApp, /data-history-app/);
+    assert.match(historyApp, /dashboard\.showDishOptions/);
   });
 
   it('keeps data layer helpers and UI styles wired', () => {
@@ -214,6 +218,10 @@ describe('project smoke checks', () => {
     assert.match(repository, /joinGroupByInviteCode/);
     assert.match(repository, /clearMenuDay/);
     assert.match(dayEditor, /renderDayEditor/);
+    assert.match(dayEditor, /renderPlateRow/);
+    assert.match(dayEditor, /dish-combobox/);
+    assert.match(dayEditor, /role=\"combobox\"/);
+    assert.match(dayEditor, /data-suggestion-toggle/);
     assert.match(dayEditor, /dish-suggestions/);
     assert.match(dayEditor, /data-suggestion-list/);
     assert.match(dayEditor, /data-add-plate/);
@@ -223,6 +231,8 @@ describe('project smoke checks', () => {
     assert.match(suggestionHelper, /attachDishSuggestions/);
     assert.match(suggestionHelper, /suggestionLimit = 6/);
     assert.match(suggestionHelper, /focusin/);
+    assert.match(suggestionHelper, /ArrowDown/);
+    assert.match(suggestionHelper, /aria-expanded/);
     assert.match(suggestionHelper, /CSS\.escape/);
     assert.match(types, /type MenuGroup/);
     assert.match(types, /MealSlot = 'breakfast' \| 'lunch' \| 'dinner'/);
@@ -232,6 +242,7 @@ describe('project smoke checks', () => {
     assert.match(dashboardScript, /data-quick-edit/);
     assert.match(dashboardScript, /data-clear-day/);
     assert.match(configuratorScript, /renderDayEditor/);
+    assert.match(configuratorScript, /renderPlateRow/);
     assert.match(configuratorScript, /attachDishSuggestions/);
     assert.match(settingsScript, /addPendingGroupEmail/);
     assert.match(settingsScript, /leaveGroup/);
