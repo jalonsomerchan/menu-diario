@@ -2,6 +2,7 @@ import { getWeekDays, getWeekTitle } from './dates';
 import type {
   DailyMenu,
   Dish,
+  DishScope,
   FirebaseUser,
   MealEntry,
   MealSlot,
@@ -97,11 +98,11 @@ function uniqueValues(values: string[]) {
 }
 
 function normalizeDishName(name: string) {
-  return name.trim().toLocaleLowerCase('es-ES').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return name.trim().toLocaleLowerCase('es-ES').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
 }
 
-function getDishId(userId: string, normalizedName: string) {
-  return `${userId}_${encodeURIComponent(normalizedName).replaceAll('%', '_')}`.slice(0, 1400);
+function getDishId(ownerId: string, normalizedName: string, scope: DishScope = 'group') {
+  return `${scope}_${ownerId}_${encodeURIComponent(normalizedName).replaceAll('%', '_')}`.slice(0, 1400);
 }
 
 function stringArray(value: unknown): string[] {
@@ -135,18 +136,28 @@ function mapWeekMenu(id: string, data: Record<string, any>): WeekMenu {
 }
 
 function mapDish(id: string, data: Record<string, any>): Dish {
+  const scope: DishScope = data.scope === 'global' || data.isGlobal === true ? 'global' : data.groupId ? 'group' : data.scope ?? 'user';
+  const isGlobal = scope === 'global';
+
   return {
     id,
     name: data.name,
     normalizedName: data.normalizedName,
+    scope,
+    source: data.source ?? (isGlobal ? 'admin' : scope === 'group' ? 'group' : 'legacy'),
+    groupId: data.groupId,
     createdBy: data.createdBy,
     members: stringArray(data.members),
+    isGlobal,
+    editable: data.editable ?? !isGlobal,
     timesUsed: data.timesUsed ?? 0,
     tags: stringArray(data.tags),
     quickTags: stringArray(data.quickTags),
     favorite: Boolean(data.favorite),
     blocked: Boolean(data.blocked),
     archived: Boolean(data.archived),
+    archivedAt: data.archivedAt?.toDate?.(),
+    duplicatedFrom: data.duplicatedFrom,
     createdAt: data.createdAt?.toDate?.(),
     lastUsedAt: data.lastUsedAt?.toDate?.(),
     updatedAt: data.updatedAt?.toDate?.(),
@@ -438,41 +449,70 @@ export function watchDishes(
   services: FirebaseServices,
   userId: string,
   callback: (dishes: Dish[]) => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
+  groupId?: string
 ) {
   const { db, firestoreModule } = services;
-  const dishesQuery = firestoreModule.query(
+  const lists: Dish[][] = [[], []];
+  const emit = () => {
+    const merged = new Map<string, Dish>();
+    lists.flat().forEach((dish) => {
+      if (!dish.archived) merged.set(dish.id, dish);
+    });
+    callback(
+      [...merged.values()].sort(
+        (a, b) => Number(Boolean(b.favorite)) - Number(Boolean(a.favorite)) || b.timesUsed - a.timesUsed || a.name.localeCompare(b.name)
+      )
+    );
+  };
+  const globalQuery = firestoreModule.query(
     firestoreModule.collection(db, dishesCollection),
-    firestoreModule.where('createdBy', '==', userId),
+    firestoreModule.where('scope', '==', 'global'),
     firestoreModule.limit(50)
   );
+  const ownQuery = groupId
+    ? firestoreModule.query(
+        firestoreModule.collection(db, dishesCollection),
+        firestoreModule.where('scope', '==', 'group'),
+        firestoreModule.where('groupId', '==', groupId),
+        firestoreModule.limit(100)
+      )
+    : firestoreModule.query(
+        firestoreModule.collection(db, dishesCollection),
+        firestoreModule.where('createdBy', '==', userId),
+        firestoreModule.limit(100)
+      );
 
-  return firestoreModule.onSnapshot(
-    dishesQuery,
-    (snapshot: any) => {
-      const dishes = snapshot.docs
-        .map((item: any) => mapDish(item.id, item.data()))
-        .filter((dish: Dish) => !dish.archived)
-        .sort((a: Dish, b: Dish) => Number(Boolean(b.favorite)) - Number(Boolean(a.favorite)) || b.timesUsed - a.timesUsed || a.name.localeCompare(b.name));
-      callback(dishes);
-    },
-    onError
-  );
+  const unsubGlobal = firestoreModule.onSnapshot(globalQuery, (snapshot: any) => {
+    lists[0] = snapshot.docs.map((item: any) => mapDish(item.id, item.data()));
+    emit();
+  }, onError);
+  const unsubOwn = firestoreModule.onSnapshot(ownQuery, (snapshot: any) => {
+    lists[1] = snapshot.docs.map((item: any) => mapDish(item.id, item.data()));
+    emit();
+  }, onError);
+
+  return () => {
+    unsubGlobal();
+    unsubOwn();
+  };
 }
 
-export async function upsertDish(services: FirebaseServices, userId: string, name: string) {
-  const cleanName = name.trim();
+export async function upsertDish(services: FirebaseServices, userId: string, name: string, groupId?: string) {
+  const cleanName = name.trim().replace(/\s+/g, ' ');
 
   if (!cleanName) return;
 
   const { db, firestoreModule } = services;
   const normalizedName = normalizeDishName(cleanName);
-  const dishRef = firestoreModule.doc(db, dishesCollection, getDishId(userId, normalizedName));
+  const ownerId = groupId || userId;
+  const dishRef = firestoreModule.doc(db, dishesCollection, getDishId(ownerId, normalizedName, 'group'));
   const snapshot = await firestoreModule.getDoc(dishRef);
 
   if (snapshot.exists()) {
     await firestoreModule.updateDoc(dishRef, {
       archived: false,
+      archivedAt: null,
       timesUsed: firestoreModule.increment(1),
       lastUsedAt: firestoreModule.serverTimestamp(),
       updatedAt: firestoreModule.serverTimestamp(),
@@ -483,12 +523,18 @@ export async function upsertDish(services: FirebaseServices, userId: string, nam
   await firestoreModule.setDoc(dishRef, {
     name: cleanName,
     normalizedName,
+    scope: 'group',
+    groupId: groupId ?? null,
+    source: 'menu',
+    isGlobal: false,
+    editable: true,
     createdBy: userId,
     members: [userId],
     timesUsed: 1,
     favorite: false,
     blocked: false,
     archived: false,
+    archivedAt: null,
     quickTags: [],
     createdAt: firestoreModule.serverTimestamp(),
     lastUsedAt: firestoreModule.serverTimestamp(),
@@ -500,7 +546,8 @@ export async function updateMenuPatch(
   services: FirebaseServices,
   menuId: string,
   userId: string,
-  patch: MenuPatch
+  patch: MenuPatch,
+  groupId?: string
 ) {
   const path = patch.path ?? patch.slot;
 
@@ -514,7 +561,7 @@ export async function updateMenuPatch(
   });
 
   if ((path.endsWith('.items') || path === 'lunchItems') && Array.isArray(patch.value)) {
-    await Promise.all(patch.value.map((item) => upsertDish(services, userId, item)));
+    await Promise.all(patch.value.map((item) => upsertDish(services, userId, item, groupId)));
   }
 }
 
