@@ -80,7 +80,8 @@ video {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -142,7 +143,9 @@ textarea {
   background: transparent;
 }
 
-.menu-app {
+.menu-app,
+.dashboard-app,
+.auth-card {
   margin-top: 2rem;
 }
 
@@ -163,29 +166,41 @@ textarea {
 .menu-app__auth,
 .menu-app__workspace,
 .day-card,
-.menu-list {
+.menu-list,
+.auth-card,
+.dashboard-header,
+.today-card,
+.next-day-card,
+.dashboard-app__loading {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
   background: color-mix(in srgb, var(--color-surface), transparent 4%);
   box-shadow: var(--shadow-sm);
 }
 
-.menu-app__auth {
+.menu-app__auth,
+.auth-card {
   display: grid;
   gap: 1.5rem;
   padding: 1.25rem;
 }
 
 .menu-app__auth h2,
-.menu-toolbar h2 {
+.auth-card h2,
+.menu-toolbar h2,
+.dashboard-header h1,
+.today-card h2,
+.dashboard-section h2 {
   margin: 0.25rem 0;
-  font-size: clamp(1.75rem, 7vw, 3.2rem);
+  font-size: clamp(1.6rem, 6vw, 3rem);
   line-height: 1;
   letter-spacing: -0.05em;
 }
 
 .menu-app__auth p,
-.menu-toolbar p {
+.auth-card p,
+.menu-toolbar p,
+.dashboard-header p {
   margin: 0;
   color: var(--color-muted);
 }
@@ -207,14 +222,41 @@ textarea {
   gap: 0.75rem;
 }
 
-.menu-app__workspace {
+.menu-app__workspace,
+.dashboard-app__content {
   padding: 1rem;
 }
 
-.menu-toolbar {
+.menu-toolbar,
+.dashboard-header {
   display: grid;
   gap: 1rem;
   margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.dashboard-app__loading {
+  padding: 1.25rem;
+  color: var(--color-muted);
+  font-weight: 800;
+}
+
+.today-card,
+.dashboard-section {
+  margin-bottom: 1rem;
+}
+
+.today-card {
+  padding: 1.25rem;
+}
+
+.today-card h2 {
+  font-size: clamp(1.35rem, 5vw, 2.5rem);
+}
+
+.dashboard-section h2 {
+  margin-bottom: 0.85rem;
+  font-size: clamp(1.25rem, 4vw, 2rem);
 }
 
 .week-switcher {
@@ -237,14 +279,30 @@ textarea {
   text-transform: uppercase;
 }
 
-.menu-lists {
+.menu-lists,
+.next-days {
   display: grid;
   gap: 1rem;
   margin-bottom: 1rem;
 }
 
-.menu-list {
+.menu-list,
+.next-day-card {
   padding: 1rem;
+}
+
+.next-day-card {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.next-day-card span,
+.next-day-card p {
+  color: var(--color-muted);
+}
+
+.next-day-card strong {
+  font-size: 1.05rem;
 }
 
 .menu-list h3 {
@@ -259,7 +317,8 @@ textarea {
   padding-bottom: 0.2rem;
 }
 
-.menu-list__button {
+.menu-list__button,
+.dish-chip {
   flex: 0 0 auto;
   border: 1px solid var(--color-border);
   border-radius: 999px;
@@ -312,7 +371,8 @@ textarea {
   font-weight: 900;
 }
 
-.day-card label {
+.day-card label,
+.checkbox-row {
   display: grid;
   gap: 0.35rem;
   color: var(--color-muted);
@@ -320,9 +380,20 @@ textarea {
   font-weight: 800;
 }
 
-.day-card textarea {
+.checkbox-row {
+  display: flex !important;
+  align-items: center;
+  color: var(--color-text);
+}
+
+.checkbox-row input {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.day-card textarea,
+.day-card select {
   width: 100%;
-  resize: vertical;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface-raised);
@@ -330,9 +401,29 @@ textarea {
   padding: 0.8rem;
 }
 
+.day-card textarea {
+  resize: vertical;
+}
+
+.dish-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dish-suggestions span {
+  width: 100%;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 @media (min-width: 720px) {
   .menu-app__auth,
-  .menu-toolbar {
+  .auth-card,
+  .menu-toolbar,
+  .dashboard-header {
     grid-template-columns: 1fr auto;
     align-items: center;
   }
@@ -348,13 +439,15 @@ textarea {
   }
 
   .menu-lists,
-  .menu-days {
+  .menu-days,
+  .next-days {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 1024px) {
-  .menu-days {
+  .menu-days,
+  .next-days {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
