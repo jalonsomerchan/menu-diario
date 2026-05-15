@@ -1,13 +1,13 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
-import { archiveDish, createManualDish, renameDish, watchUserDishes } from '../lib/dishes/repository';
-import { filterDishes, sortDishes, type DishSortMode } from '../lib/dishes/helpers.mjs';
+import { archiveDish, createManualDish, renameDish, updateDishPreferences, watchUserDishes } from '../lib/dishes/repository';
+import { filterDishes, sortDishes, type DishFilterMode, type DishSortMode } from '../lib/dishes/helpers.mjs';
 import type { Dish, FirebaseUser } from '../lib/menu/types';
 
 const root = document.querySelector<HTMLElement>('[data-dishes-app]');
 
 if (root) {
-  const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
+  const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, any>;
   const locale = document.documentElement.lang === 'en' ? 'en-US' : 'es-ES';
   const status = root.querySelector<HTMLElement>('[data-status]');
   const loading = root.querySelector<HTMLElement>('[data-loading]');
@@ -16,14 +16,18 @@ if (root) {
   const nameInput = root.querySelector<HTMLInputElement>('[data-dish-name]');
   const searchInput = root.querySelector<HTMLInputElement>('[data-dish-search]');
   const sortSelect = root.querySelector<HTMLSelectElement>('[data-dish-sort]');
+  const filterSelect = root.querySelector<HTMLSelectElement>('[data-dish-filter]');
+  const tagFilterSelect = root.querySelector<HTMLSelectElement>('[data-dish-tag-filter]');
   const list = root.querySelector<HTMLElement>('[data-dishes-list]');
+  const quickTags = Array.isArray(labels.quickTags) ? labels.quickTags : [];
+  const tagLabels = labels.tagLabels ?? {};
 
   let currentUser: FirebaseUser | null = null;
   let dishes: Dish[] = [];
   let unsubscribeDishes: (() => void) | undefined;
 
   function escapeHtml(value = '') {
-    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
   }
 
   function showStatus(message: string, isError = false) {
@@ -44,17 +48,49 @@ if (root) {
   }
 
   function getVisibleDishes() {
-    const filtered = filterDishes(dishes, searchInput?.value ?? '') as Dish[];
+    const filtered = filterDishes(dishes, searchInput?.value ?? '', {
+      mode: (filterSelect?.value as DishFilterMode) ?? 'all',
+      tag: tagFilterSelect?.value ?? '',
+    }) as Dish[];
     return sortDishes(filtered, (sortSelect?.value as DishSortMode) ?? 'most-used') as Dish[];
   }
 
+  function getTagLabel(tag: string) {
+    return tagLabels[tag] ?? tag;
+  }
+
   function renderTags(dish: Dish) {
-    if (!dish.tags?.length) return '';
-    return `<p class="dish-card__tags"><span>${escapeHtml(labels.tags)}:</span> ${dish.tags.map(escapeHtml).join(', ')}</p>`;
+    const tags = [...(dish.tags ?? []), ...(dish.quickTags ?? [])];
+    if (!tags.length) return '';
+    return `<p class="dish-card__tags"><span>${escapeHtml(labels.tags)}:</span> ${tags.map((tag) => escapeHtml(getTagLabel(tag))).join(', ')}</p>`;
+  }
+
+  function renderBadges(dish: Dish) {
+    const badges = [];
+    if (dish.favorite) badges.push(`<span class="dish-badge">★ ${escapeHtml(labels.favoriteBadge)}</span>`);
+    if (dish.blocked) badges.push(`<span class="dish-badge dish-badge--blocked">⊘ ${escapeHtml(labels.blockedBadge)}</span>`);
+    return badges.length ? `<div class="dish-card__badges">${badges.join('')}</div>` : '';
+  }
+
+  function renderQuickTags(dish: Dish) {
+    if (!quickTags.length) return '';
+    return `
+      <fieldset class="dish-card__quick-tags">
+        <legend>${escapeHtml(labels.quickTags)}</legend>
+        <div>
+          ${quickTags
+            .map((tag: string) => {
+              const checked = dish.quickTags?.includes(tag) ? ' checked' : '';
+              return `<label><input type="checkbox" value="${escapeHtml(tag)}" data-quick-tag${checked} /> ${escapeHtml(getTagLabel(tag))}</label>`;
+            })
+            .join('')}
+        </div>
+      </fieldset>
+    `;
   }
 
   function renderEmpty() {
-    const hasSearch = Boolean(searchInput?.value.trim());
+    const hasSearch = Boolean(searchInput?.value.trim()) || Boolean(tagFilterSelect?.value) || filterSelect?.value !== 'all';
     const title = hasSearch ? labels.emptySearch : labels.empty;
     const hint = hasSearch ? '' : `<p>${escapeHtml(labels.emptyHint)}</p>`;
     return `<article class="app-panel dishes-empty"><h2>${escapeHtml(title)}</h2>${hint}</article>`;
@@ -73,17 +109,21 @@ if (root) {
       .map((dish) => {
         const lastUsed = dish.lastUsedAt ? formatDate(dish.lastUsedAt) : labels.neverUsed;
         const createdAt = dish.createdAt ? formatDate(dish.createdAt) : labels.noCreatedAt;
+        const favoriteText = dish.favorite ? labels.unmarkFavorite : labels.markFavorite;
+        const blockText = dish.blocked ? labels.unblock : labels.block;
 
         return `
           <article class="dish-card app-panel" data-dish-id="${escapeHtml(dish.id)}">
             <div class="dish-card__main">
               <h2>${escapeHtml(dish.name)}</h2>
+              ${renderBadges(dish)}
               <dl>
                 <div><dt>${escapeHtml(labels.timesUsed)}</dt><dd>${dish.timesUsed}</dd></div>
                 <div><dt>${escapeHtml(labels.lastUsed)}</dt><dd>${escapeHtml(lastUsed)}</dd></div>
                 <div><dt>${escapeHtml(labels.createdAt)}</dt><dd>${escapeHtml(createdAt)}</dd></div>
               </dl>
               ${renderTags(dish)}
+              ${renderQuickTags(dish)}
             </div>
             <form class="dish-card__edit" data-edit-form hidden>
               <label>${escapeHtml(labels.addName)}<input type="text" data-edit-name value="${escapeHtml(dish.name)}" minlength="2" maxlength="90" /></label>
@@ -93,6 +133,8 @@ if (root) {
               </div>
             </form>
             <div class="dish-card__actions" data-card-actions>
+              <button class="button button--secondary button--small" type="button" data-toggle-favorite aria-pressed="${dish.favorite ? 'true' : 'false'}">${escapeHtml(favoriteText)}</button>
+              <button class="button button--secondary button--small" type="button" data-toggle-blocked aria-pressed="${dish.blocked ? 'true' : 'false'}">${escapeHtml(blockText)}</button>
               <button class="button button--secondary button--small" type="button" data-edit-dish>${escapeHtml(labels.edit)}</button>
               <button class="button button--ghost button--small" type="button" data-archive-dish>${escapeHtml(labels.archive)}</button>
             </div>
@@ -133,6 +175,12 @@ if (root) {
     card.querySelector<HTMLElement>('[data-card-actions]')!.hidden = false;
   }
 
+  async function savePreferences(card: HTMLElement, nextValues: { favorite?: boolean; blocked?: boolean; quickTags?: string[] }) {
+    const services = await getFirebaseServices();
+    await updateDishPreferences(services, card.dataset.dishId ?? '', nextValues);
+    showStatus(labels.preferencesUpdated);
+  }
+
   if (!hasFirebaseConfig()) {
     setVisible(false);
     showStatus(labels.firebaseMissing || labels.configMissing, true);
@@ -146,12 +194,36 @@ if (root) {
 
         searchInput?.addEventListener('input', renderDishes);
         sortSelect?.addEventListener('change', renderDishes);
+        filterSelect?.addEventListener('change', renderDishes);
+        tagFilterSelect?.addEventListener('change', renderDishes);
+
+        list?.addEventListener('change', (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement) || !target.dataset.quickTag) return;
+          const card = target.closest<HTMLElement>('[data-dish-id]');
+          const dish = card ? findDish(card) : undefined;
+          if (!card || !dish) return;
+
+          const quickTags = [...card.querySelectorAll<HTMLInputElement>('[data-quick-tag]:checked')].map((input) => input.value);
+          savePreferences(card, { quickTags }).catch((error: Error) => showStatus(errorMessage(error), true));
+        });
 
         list?.addEventListener('click', (event) => {
           const target = event.target;
           if (!(target instanceof HTMLElement)) return;
           const card = target.closest<HTMLElement>('[data-dish-id]');
-          if (!card) return;
+          const dish = card ? findDish(card) : undefined;
+          if (!card || !dish) return;
+
+          if (target.closest('[data-toggle-favorite]')) {
+            savePreferences(card, { favorite: !dish.favorite }).catch((error: Error) => showStatus(errorMessage(error), true));
+            return;
+          }
+
+          if (target.closest('[data-toggle-blocked]')) {
+            savePreferences(card, { blocked: !dish.blocked }).catch((error: Error) => showStatus(errorMessage(error), true));
+            return;
+          }
 
           if (target.closest('[data-edit-dish]')) openEditor(card);
           if (target.closest('[data-cancel-edit]')) closeEditor(card);
