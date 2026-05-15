@@ -6,6 +6,7 @@ interface Props { locale: Locale }
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
+const dishesPath = getLocalizedPath('/mis-platos', locale);
 
 const labels = {
   configMissing: t('menu.configMissing'),
@@ -31,6 +32,9 @@ const labels = {
   options: t('group.options'),
   copied: t('group.copied'),
   updated: t('group.updated'),
+  dishesTitle: t('dishes.title'),
+  dishesDescription: t('dishes.description'),
+  manageDishes: t('dishes.manageFromSettings'),
   guestSession: t('menu.guestSession'),
   homePath,
 };
@@ -62,6 +66,13 @@ const labels = {
         <label><input type="checkbox" value="lunch" data-meal-preference /> {labels.lunch}</label>
         <label><input type="checkbox" value="dinner" data-meal-preference /> {labels.dinner}</label>
       </fieldset>
+    </section>
+
+    <section class="settings-card app-panel">
+      <p class="menu-app__eyebrow">{labels.dishesTitle}</p>
+      <h2>{labels.dishesTitle}</h2>
+      <p>{labels.dishesDescription}</p>
+      <a class="button button--secondary" href={dishesPath}>{labels.manageDishes}</a>
     </section>
 
     <section class="settings-card app-panel">
