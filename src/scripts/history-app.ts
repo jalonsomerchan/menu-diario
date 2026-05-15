@@ -1,7 +1,14 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { toIsoDate } from '../lib/menu/dates';
-import { clearMenuDay, ensureUserProfile, getOrCreateWeekMenu, updateMenuPatch, watchUserMenus, watchUserProfile } from '../lib/menu/repository';
+import {
+  clearMenuDay,
+  ensureUserProfile,
+  getOrCreateWeekMenu,
+  updateMenuPatch,
+  watchUserMenus,
+  watchUserProfile,
+} from '../lib/menu/repository';
 import type { DailyMenu, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 
 const root = document.querySelector<HTMLElement>('[data-history-app]');
@@ -15,10 +22,15 @@ if (root) {
   const list = root.querySelector<HTMLElement>('[data-history-days]');
   const fromInput = root.querySelector<HTMLInputElement>('[data-date-from]');
   const toInput = root.querySelector<HTMLInputElement>('[data-date-to]');
+  const modal = root.querySelector<HTMLDialogElement>('[data-history-modal]');
+  const editForm = root.querySelector<HTMLFormElement>('[data-history-edit-form]');
+  const editFields = root.querySelector<HTMLElement>('[data-history-edit-fields]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
   let menus: WeekMenu[] = [];
+  let editMenuId = '';
+  let editDayKey = '';
   let unsubscribeMenus: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
 
@@ -45,8 +57,14 @@ if (root) {
     return {
       meals: {
         breakfast: normalizeMeal(day?.meals?.breakfast),
-        lunch: normalizeMeal({ ...(day?.meals?.lunch ?? {}), items: day?.meals?.lunch?.items ?? day?.lunchItems ?? (day?.lunch ? [day.lunch] : []) }),
-        dinner: normalizeMeal({ ...(day?.meals?.dinner ?? {}), items: day?.meals?.dinner?.items ?? (day?.dinner ? [day.dinner] : []) }),
+        lunch: normalizeMeal({
+          ...(day?.meals?.lunch ?? {}),
+          items: day?.meals?.lunch?.items ?? day?.lunchItems ?? (day?.lunch ? [day.lunch] : []),
+        }),
+        dinner: normalizeMeal({
+          ...(day?.meals?.dinner ?? {}),
+          items: day?.meals?.dinner?.items ?? (day?.dinner ? [day.dinner] : []),
+        }),
       },
       notes: day?.notes ?? '',
     };
@@ -100,13 +118,25 @@ if (root) {
       const found = findDay(isoDate);
       if (found) {
         const summaries = getEnabledMeals()
-          .map((meal) => `<div class="day-meal-row"><span>${escapeHtml(mealLabel(meal))}:</span><strong>${escapeHtml(renderMealSummary(found.day.meals[meal]))}</strong></div>`)
+          .map(
+            (meal) =>
+              `<div class="day-meal-row"><span>${escapeHtml(mealLabel(meal))}:</span><strong>${escapeHtml(renderMealSummary(found.day.meals[meal]))}</strong></div>`
+          )
           .join('');
         rows.unshift(`
           <article class="next-day-card next-day-card--mockup" data-day="${isoDate}" data-menu="${found.menu.id}">
             <div class="next-day-card__number">${escapeHtml(getDayNumber(isoDate))}</div>
             <div class="next-day-card__body">
-              <header><h3>${escapeHtml(formatWeekday(isoDate))}</h3><button class="button button--ghost button--small" type="button" data-clear-day="${isoDate}" data-menu="${found.menu.id}">${escapeHtml(labels.deleteDay)}</button></header>
+              <header>
+                <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
+                <details class="day-actions">
+                  <summary aria-label="${escapeHtml(labels.moreActions)}">⋯</summary>
+                  <div>
+                    <button type="button" data-history-edit="${isoDate}" data-menu="${found.menu.id}">${escapeHtml(labels.editDay)}</button>
+                    <button type="button" data-clear-day="${isoDate}" data-menu="${found.menu.id}">${escapeHtml(labels.deleteDay)}</button>
+                  </div>
+                </details>
+              </header>
               ${summaries}
             </div>
           </article>
@@ -118,52 +148,122 @@ if (root) {
     list.innerHTML = rows.length ? rows.join('') : `<p class="menu-list__empty">${escapeHtml(labels.empty)}</p>`;
   }
 
+  function openEdit(menuId: string, dayKey: string) {
+    const menu = menus.find((item) => item.id === menuId);
+    const day = normalizeDay(menu?.days[dayKey]);
+
+    if (!menu || !modal || !editFields) return;
+
+    editMenuId = menuId;
+    editDayKey = dayKey;
+    editFields.innerHTML = getEnabledMeals()
+      .map(
+        (meal) => `
+          <label>${escapeHtml(mealLabel(meal))}
+            <textarea data-history-meal="${meal}" rows="3">${escapeHtml(day.meals[meal].items.join('\n'))}</textarea>
+          </label>
+        `
+      )
+      .join('');
+    modal.showModal();
+  }
+
+  async function saveEdit() {
+    if (!currentUser || !editMenuId || !editDayKey || !editFields) return;
+    const services = await getFirebaseServices();
+
+    await Promise.all(
+      [...editFields.querySelectorAll<HTMLTextAreaElement>('[data-history-meal]')].map((textarea) =>
+        updateMenuPatch(services, editMenuId, currentUser!.uid, {
+          dayKey: editDayKey,
+          path: `meals.${textarea.dataset.historyMeal}.items`,
+          value: textarea.value
+            .split('\n')
+            .map((item) => item.trim())
+            .filter(Boolean),
+        })
+      )
+    );
+  }
+
   if (!hasFirebaseConfig()) {
     if (loading) loading.hidden = true;
     showStatus(labels.configMissing, true);
   } else {
-    getFirebaseServices().then((services) => {
-      const today = new Date();
-      if (toInput) toInput.value = getDateOffset(-1);
-      if (fromInput) {
-        today.setDate(today.getDate() - 30);
-        fromInput.value = toIsoDate(today);
-      }
-
-      root.querySelector('[data-history-form]')?.addEventListener('submit', (event) => {
-        event.preventDefault();
-        renderHistory();
-      });
-
-      list?.addEventListener('click', async (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLButtonElement) || !target.dataset.clearDay || !target.dataset.menu || !currentUser) return;
-        await clearMenuDay(services, target.dataset.menu, currentUser.uid, target.dataset.clearDay);
-      });
-
-      services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
-        currentUser = user;
-        unsubscribeMenus?.();
-        unsubscribeProfile?.();
-
-        if (!user) {
-          window.location.assign(labels.homePath || '/');
-          return;
+    getFirebaseServices()
+      .then((services) => {
+        const today = new Date();
+        if (toInput) toInput.value = getDateOffset(-1);
+        if (fromInput) {
+          today.setDate(today.getDate() - 30);
+          fromInput.value = toIsoDate(today);
         }
 
-        await ensureUserProfile(services, user, 'Sesión invitada');
-        await getOrCreateWeekMenu(services, user.uid, getDateOffset(0), locale);
-        unsubscribeProfile = watchUserProfile(services, user, 'Sesión invitada', (profile) => {
-          currentProfile = profile;
-          if (menus.length) renderHistory();
-        }, (error) => showStatus(error.message, true));
-        unsubscribeMenus = watchUserMenus(services, user.uid, (nextMenus) => {
-          menus = nextMenus;
-          if (loading) loading.hidden = true;
-          if (content) content.hidden = false;
+        root.querySelector('[data-history-form]')?.addEventListener('submit', (event) => {
+          event.preventDefault();
           renderHistory();
-        }, (error) => showStatus(error.message, true), 60);
-      });
-    }).catch((error: Error) => showStatus(error.message, true));
+        });
+
+        list?.addEventListener('click', async (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLButtonElement) || !currentUser) return;
+
+          if (target.dataset.historyEdit && target.dataset.menu) {
+            openEdit(target.dataset.menu, target.dataset.historyEdit);
+            return;
+          }
+
+          if (target.dataset.clearDay && target.dataset.menu) {
+            await clearMenuDay(services, target.dataset.menu, currentUser.uid, target.dataset.clearDay);
+          }
+        });
+
+        editForm?.addEventListener('submit', (event) => {
+          const submitter = event.submitter;
+          if (submitter instanceof HTMLButtonElement && submitter.value === 'save') {
+            event.preventDefault();
+            saveEdit()
+              .then(() => modal?.close())
+              .catch((error: Error) => showStatus(error.message, true));
+          }
+        });
+
+        services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
+          currentUser = user;
+          unsubscribeMenus?.();
+          unsubscribeProfile?.();
+
+          if (!user) {
+            window.location.assign(labels.homePath || '/');
+            return;
+          }
+
+          await ensureUserProfile(services, user, 'Sesión invitada');
+          await getOrCreateWeekMenu(services, user.uid, getDateOffset(0), locale);
+          unsubscribeProfile = watchUserProfile(
+            services,
+            user,
+            'Sesión invitada',
+            (profile) => {
+              currentProfile = profile;
+              if (menus.length) renderHistory();
+            },
+            (error) => showStatus(error.message, true)
+          );
+          unsubscribeMenus = watchUserMenus(
+            services,
+            user.uid,
+            (nextMenus) => {
+              menus = nextMenus;
+              if (loading) loading.hidden = true;
+              if (content) content.hidden = false;
+              renderHistory();
+            },
+            (error) => showStatus(error.message, true),
+            60
+          );
+        });
+      })
+      .catch((error: Error) => showStatus(error.message, true));
   }
 }
