@@ -1,8 +1,9 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
-import { archiveDish, createManualDish, renameDish, updateDishPreferences, watchUserDishes } from '../lib/dishes/repository';
-import { filterDishes, sortDishes, type DishFilterMode, type DishSortMode } from '../lib/dishes/helpers.mjs';
-import type { Dish, FirebaseUser } from '../lib/menu/types';
+import { archiveDish, createManualDish, duplicateGlobalDish, renameDish, updateDishPreferences, watchUserDishes } from '../lib/dishes/repository';
+import { filterDishes, isEditableDish, sortDishes, type DishFilterMode, type DishSortMode } from '../lib/dishes/helpers.mjs';
+import { ensureUserProfile, watchUserProfile } from '../lib/menu/repository';
+import type { Dish, FirebaseUser, UserProfile } from '../lib/menu/types';
 
 const root = document.querySelector<HTMLElement>('[data-dishes-app]');
 
@@ -23,8 +24,10 @@ if (root) {
   const tagLabels = labels.tagLabels ?? {};
 
   let currentUser: FirebaseUser | null = null;
+  let currentProfile: UserProfile | null = null;
   let dishes: Dish[] = [];
   let unsubscribeDishes: (() => void) | undefined;
+  let unsubscribeProfile: (() => void) | undefined;
 
   function escapeHtml(value = '') {
     return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -67,12 +70,14 @@ if (root) {
 
   function renderBadges(dish: Dish) {
     const badges = [];
+    badges.push(`<span class="dish-badge ${dish.isGlobal ? 'dish-badge--global' : 'dish-badge--group'}">${escapeHtml(dish.isGlobal ? labels.globalBadge : labels.groupBadge)}</span>`);
+    if (!isEditableDish(dish)) badges.push(`<span class="dish-badge dish-badge--readonly">${escapeHtml(labels.readOnlyBadge)}</span>`);
     if (dish.blocked) badges.push(`<span class="dish-badge dish-badge--blocked">⊘ ${escapeHtml(labels.blockedBadge)}</span>`);
-    return badges.length ? `<div class="dish-card__badges">${badges.join('')}</div>` : '';
+    return `<div class="dish-card__badges">${badges.join('')}</div>`;
   }
 
   function renderQuickTags(dish: Dish) {
-    if (!quickTags.length) return '';
+    if (!quickTags.length || !isEditableDish(dish)) return '';
 
     const selectedTags = dish.quickTags ?? [];
     const availableTags = quickTags.filter((tag: string) => !selectedTags.includes(tag));
@@ -112,6 +117,25 @@ if (root) {
     return `<article class="app-panel dishes-empty"><h2>${escapeHtml(title)}</h2>${hint}</article>`;
   }
 
+  function renderActions(dish: Dish) {
+    if (dish.isGlobal) {
+      return `
+        <p class="dish-card__readonly">${escapeHtml(labels.globalReadOnly)}</p>
+        <div class="dish-card__actions" data-card-actions>
+          <button class="button button--secondary button--small" type="button" data-duplicate-global>${escapeHtml(labels.duplicateAsGroup)}</button>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="dish-card__actions" data-card-actions>
+        <button class="button button--secondary button--small" type="button" data-toggle-blocked aria-pressed="${dish.blocked ? 'true' : 'false'}">${escapeHtml(dish.blocked ? labels.unblock : labels.block)}</button>
+        <button class="button button--secondary button--small" type="button" data-edit-dish>${escapeHtml(labels.edit)}</button>
+        <button class="button button--ghost button--small" type="button" data-archive-dish>${escapeHtml(labels.archive)}</button>
+      </div>
+    `;
+  }
+
   function renderDishes() {
     if (!list) return;
     const visibleDishes = getVisibleDishes();
@@ -126,13 +150,13 @@ if (root) {
         const lastUsed = dish.lastUsedAt ? formatDate(dish.lastUsedAt) : labels.neverUsed;
         const createdAt = dish.createdAt ? formatDate(dish.createdAt) : labels.noCreatedAt;
         const favoriteText = dish.favorite ? labels.unmarkFavorite : labels.markFavorite;
-        const blockText = dish.blocked ? labels.unblock : labels.block;
+        const favoriteDisabled = isEditableDish(dish) ? '' : 'disabled';
 
         return `
           <article class="dish-card app-panel" data-dish-id="${escapeHtml(dish.id)}">
             <div class="dish-card__header">
               <h2>${escapeHtml(dish.name)}</h2>
-              <button class="dish-favorite" type="button" data-toggle-favorite aria-pressed="${dish.favorite ? 'true' : 'false'}" aria-label="${escapeHtml(favoriteText)}">
+              <button class="dish-favorite" type="button" data-toggle-favorite aria-pressed="${dish.favorite ? 'true' : 'false'}" aria-label="${escapeHtml(favoriteText)}" ${favoriteDisabled}>
                 <span aria-hidden="true">${dish.favorite ? '★' : '☆'}</span>
               </button>
             </div>
@@ -153,11 +177,7 @@ if (root) {
                 <button class="button button--ghost button--small" type="button" data-cancel-edit>${escapeHtml(labels.cancel)}</button>
               </div>
             </form>
-            <div class="dish-card__actions" data-card-actions>
-              <button class="button button--secondary button--small" type="button" data-toggle-blocked aria-pressed="${dish.blocked ? 'true' : 'false'}">${escapeHtml(blockText)}</button>
-              <button class="button button--secondary button--small" type="button" data-edit-dish>${escapeHtml(labels.edit)}</button>
-              <button class="button button--ghost button--small" type="button" data-archive-dish>${escapeHtml(labels.archive)}</button>
-            </div>
+            ${renderActions(dish)}
           </article>
         `;
       })
@@ -166,7 +186,9 @@ if (root) {
 
   function errorMessage(error: Error) {
     if (error.message === 'dish-invalid-name') return labels.invalid;
+    if (error.message === 'dish-duplicate-global') return labels.duplicateGlobal;
     if (error.message === 'dish-duplicate') return labels.duplicate;
+    if (error.message === 'dish-not-editable' || error.message === 'dish-not-global') return labels.notEditable;
     if (error.message.toLowerCase().includes('permission')) return labels.permissionsError;
     return error.message;
   }
@@ -174,7 +196,7 @@ if (root) {
   async function submitNewDish() {
     if (!currentUser || !nameInput) return;
     const services = await getFirebaseServices();
-    await createManualDish(services, currentUser.uid, nameInput.value);
+    await createManualDish(services, currentUser.uid, nameInput.value, currentProfile?.groupId);
     nameInput.value = '';
     nameInput.focus();
     showStatus(labels.added);
@@ -184,7 +206,11 @@ if (root) {
     return dishes.find((dish) => dish.id === card.dataset.dishId);
   }
 
-  function openEditor(card: HTMLElement) {
+  function openEditor(card: HTMLElement, dish: Dish) {
+    if (!isEditableDish(dish)) {
+      showStatus(labels.notEditable, true);
+      return;
+    }
     card.querySelector<HTMLElement>('[data-edit-form]')!.hidden = false;
     card.querySelector<HTMLElement>('[data-card-actions]')!.hidden = true;
     card.querySelector<HTMLInputElement>('[data-edit-name]')?.focus();
@@ -195,7 +221,11 @@ if (root) {
     card.querySelector<HTMLElement>('[data-card-actions]')!.hidden = false;
   }
 
-  async function savePreferences(card: HTMLElement, nextValues: { favorite?: boolean; blocked?: boolean; quickTags?: string[] }) {
+  async function savePreferences(card: HTMLElement, dish: Dish, nextValues: { favorite?: boolean; blocked?: boolean; quickTags?: string[] }) {
+    if (!isEditableDish(dish)) {
+      showStatus(labels.notEditable, true);
+      return;
+    }
     const services = await getFirebaseServices();
     await updateDishPreferences(services, card.dataset.dishId ?? '', nextValues);
     showStatus(labels.preferencesUpdated);
@@ -232,27 +262,34 @@ if (root) {
 
           const addedTag = target.closest<HTMLElement>('[data-add-quick-tag]')?.dataset.addQuickTag;
           if (addedTag) {
-            savePreferences(card, { quickTags: getNextQuickTags(dish, addedTag, true) }).catch((error: Error) => showStatus(errorMessage(error), true));
+            savePreferences(card, dish, { quickTags: getNextQuickTags(dish, addedTag, true) }).catch((error: Error) => showStatus(errorMessage(error), true));
             return;
           }
 
           const removedTag = target.closest<HTMLElement>('[data-remove-quick-tag]')?.dataset.removeQuickTag;
           if (removedTag) {
-            savePreferences(card, { quickTags: getNextQuickTags(dish, removedTag, false) }).catch((error: Error) => showStatus(errorMessage(error), true));
+            savePreferences(card, dish, { quickTags: getNextQuickTags(dish, removedTag, false) }).catch((error: Error) => showStatus(errorMessage(error), true));
             return;
           }
 
           if (target.closest('[data-toggle-favorite]')) {
-            savePreferences(card, { favorite: !dish.favorite }).catch((error: Error) => showStatus(errorMessage(error), true));
+            savePreferences(card, dish, { favorite: !dish.favorite }).catch((error: Error) => showStatus(errorMessage(error), true));
             return;
           }
 
           if (target.closest('[data-toggle-blocked]')) {
-            savePreferences(card, { blocked: !dish.blocked }).catch((error: Error) => showStatus(errorMessage(error), true));
+            savePreferences(card, dish, { blocked: !dish.blocked }).catch((error: Error) => showStatus(errorMessage(error), true));
             return;
           }
 
-          if (target.closest('[data-edit-dish]')) openEditor(card);
+          if (target.closest('[data-duplicate-global]') && currentUser) {
+            duplicateGlobalDish(services, currentUser.uid, dish, currentProfile?.groupId)
+              .then(() => showStatus(labels.duplicated))
+              .catch((error: Error) => showStatus(errorMessage(error), true));
+            return;
+          }
+
+          if (target.closest('[data-edit-dish]')) openEditor(card, dish);
           if (target.closest('[data-cancel-edit]')) closeEditor(card);
           if (target.closest('[data-archive-dish]')) {
             if (!window.confirm(labels.confirmArchive)) return;
@@ -276,22 +313,36 @@ if (root) {
             .catch((error: Error) => showStatus(errorMessage(error), true));
         });
 
-        services.authModule.onAuthStateChanged(services.auth, (user: FirebaseUser | null) => {
+        services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
           currentUser = user;
           unsubscribeDishes?.();
+          unsubscribeProfile?.();
 
           if (!user) {
             window.location.assign(labels.homePath || '/');
             return;
           }
 
-          unsubscribeDishes = watchUserDishes(
+          await ensureUserProfile(services, user, labels.guestSession ?? labels.configMissing);
+          unsubscribeProfile = watchUserProfile(
             services,
-            user.uid,
-            (nextDishes) => {
-              dishes = nextDishes;
-              setVisible(true);
-              renderDishes();
+            user,
+            labels.guestSession ?? labels.configMissing,
+            (profile) => {
+              currentProfile = profile;
+              unsubscribeDishes?.();
+              unsubscribeDishes = watchUserDishes(
+                services,
+                user.uid,
+                (nextDishes) => {
+                  dishes = nextDishes;
+                  setVisible(true);
+                  renderDishes();
+                },
+                (error) => showStatus(errorMessage(error), true),
+                false,
+                profile.groupId
+              );
             },
             (error) => showStatus(errorMessage(error), true)
           );
