@@ -8,7 +8,105 @@ Activa en Firebase Console:
 
 - Authentication: Google y Anonymous.
 - Firestore Database.
+- Firebase AI Logic cuando se activen funciones con Gemini.
+- App Check antes de exponer funciones de IA a usuarios reales.
 - Authorized domains: el dominio donde se despliegue la webapp.
+
+## Firebase AI Logic y Gemini
+
+La base técnica de IA vive en `src/lib/ai/` y está preparada para usarse desde futuras funciones concretas sin añadir dependencias npm. Sigue el mismo patrón que Auth y Firestore: carga dinámica de módulos oficiales versionados del Firebase Web SDK desde el navegador.
+
+Archivos principales:
+
+```text
+src/lib/ai/config.ts         Modelos, temperatura, topP, tokens, timeouts y prompts base
+src/lib/ai/client.ts         Wrapper mínimo para Gemini con JSON validado y timeout
+src/lib/ai/errors.ts         Errores normalizados y logs no sensibles
+src/lib/ai/flags.ts          Feature flags por entorno y Remote Config
+src/lib/ai/json.ts           Helpers para pedir y validar JSON estructurado
+src/lib/ai/limits.ts         Límites básicos por usuario/sesión en cliente
+src/lib/ai/remote-config.ts  Preparación opcional para Firebase Remote Config
+src/lib/ai/ui-state.ts       Estados comunes traducibles de UI
+```
+
+### Variables de entorno
+
+La IA queda desactivada por defecto. Para activarla en un entorno concreto:
+
+```env
+PUBLIC_AI_ENABLED=true
+PUBLIC_AI_MENU_SUGGESTIONS_ENABLED=true
+PUBLIC_FIREBASE_AI_MODEL=gemini-2.5-flash-lite
+PUBLIC_FIREBASE_AI_TEMPERATURE=0.35
+PUBLIC_FIREBASE_AI_TOP_P=0.9
+PUBLIC_FIREBASE_AI_MAX_OUTPUT_TOKENS=768
+PUBLIC_FIREBASE_AI_TIMEOUT_MS=15000
+PUBLIC_AI_MAX_SESSION_REQUESTS=8
+PUBLIC_AI_MAX_USER_DAILY_REQUESTS=20
+```
+
+Si se quiere gobernar el apagado/encendido desde Remote Config:
+
+```env
+PUBLIC_AI_REMOTE_CONFIG_ENABLED=true
+```
+
+Claves remotas preparadas:
+
+```text
+ai_enabled
+ai_menu_suggestions_enabled
+```
+
+Remote Config debe considerarse una capa de operación del producto, no una frontera de seguridad. Una función crítica no debe depender solo de flags de cliente.
+
+### App Check
+
+Antes de activar IA para usuarios reales:
+
+1. Activa App Check en Firebase Console.
+2. Registra los dominios reales, `localhost` para desarrollo y el dominio de GitHub Pages si aplica.
+3. Usa reCAPTCHA Enterprise o el proveedor recomendado para web.
+4. Prueba en modo monitorización antes de forzar cumplimiento.
+5. Cuando todo funcione, exige App Check en Firebase AI Logic y servicios relacionados.
+
+App Check ayuda a reducir abuso desde clientes no autorizados, pero no sustituye reglas de seguridad, límites de backend ni monitorización.
+
+### Límites cliente
+
+`src/lib/ai/limits.ts` aplica límites básicos con `sessionStorage`:
+
+- `PUBLIC_AI_MAX_SESSION_REQUESTS` para limitar una sesión del navegador.
+- `PUBLIC_AI_MAX_USER_DAILY_REQUESTS` para limitar un usuario o invitado durante el día local registrado.
+
+Estos límites solo mejoran UX y reducen abuso accidental. No son una protección real porque el usuario controla el cliente. Si más adelante la app añade Cloud Functions, deben repetirse los límites en backend por `uid`, IP, App Check y coste acumulado.
+
+### Uso recomendado para futuras funciones
+
+Cada función concreta debe construir un prompt pequeño y validar la forma exacta antes de usar la respuesta:
+
+```ts
+import { buildJsonPrompt, generateGeminiJson } from '../lib/ai';
+
+const isSuggestionResponse = (value: unknown): value is { suggestions: string[] } =>
+  Boolean(
+    value &&
+      typeof value === 'object' &&
+      Array.isArray((value as { suggestions?: unknown }).suggestions) &&
+      (value as { suggestions: unknown[] }).suggestions.every((item) => typeof item === 'string')
+  );
+
+const result = await generateGeminiJson({
+  userId: user.uid,
+  prompt: buildJsonPrompt([
+    'Suggest three simple lunch ideas.',
+    'Return { "suggestions": string[] }.',
+  ]),
+  validator: isSuggestionResponse,
+});
+```
+
+No uses la respuesta de Gemini directamente en Firestore ni en la UI sin pasar antes por un validador.
 
 ## Error `Missing or insufficient permissions`
 
@@ -183,3 +281,4 @@ Estas reglas están pensadas para que la app funcione en una primera versión cl
 - Validar longitudes máximas de `meals.*.items`, `meals.*.note`, `notes`, `skipNote`, `title`, `inviteCode`, `name`, `memberEmails`, `pendingEmails`, `quickTags` y `tags`.
 - Impedir que usuarios no propietarios cambien `ownerId` o eliminen miembros arbitrariamente.
 - Usar códigos de invitación más largos o con caducidad.
+- Repetir en backend cualquier cuota de IA si se añaden Cloud Functions o endpoints propios.
