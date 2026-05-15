@@ -46,8 +46,9 @@ export async function generateGeminiJson<T>({ prompt, validator, userId, timeout
   assertAiClientLimit(userId);
 
   try {
+    const app = await getFirebaseApp();
     await ensureAppCheckForAi();
-    const result = await withTimeout(generateText(prompt), timeoutMs ?? aiGenerationConfig.timeoutMs);
+    const result = await withTimeout(generateText(prompt, app), timeoutMs ?? aiGenerationConfig.timeoutMs);
     const json = parseValidatedJson(result, validator);
     registerAiClientUse(userId);
 
@@ -69,8 +70,7 @@ async function ensureAppCheckForAi() {
   }
 }
 
-async function generateText(prompt: string) {
-  const app = await getFirebaseApp();
+async function generateText(prompt: string, app: unknown) {
   const aiModule = await importFirebaseAiModule();
   const ai = aiModule.getAI(app, { backend: new aiModule.GoogleAIBackend() });
   const model = aiModule.getGenerativeModel(ai, {
