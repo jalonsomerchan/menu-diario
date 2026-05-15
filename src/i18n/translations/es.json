@@ -77,6 +77,8 @@
   "appNav.configure": "Configurar",
   "appNav.history": "Histórico",
   "appNav.settings": "Ajustes",
+  "appNav.openMenu": "Abrir menú",
+  "appNav.closeMenu": "Cerrar menú",
   "menu.configMissing": "Configura Firebase en las variables PUBLIC_FIREBASE_* para activar la app.",
   "menu.signInGoogle": "Entrar con Google",
   "menu.signInGuest": "Entrar como invitado",
