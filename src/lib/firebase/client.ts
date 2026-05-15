@@ -3,6 +3,7 @@ import { getFirebaseConfig, hasFirebaseConfig } from './config';
 type FirebaseModuleName = 'app' | 'auth' | 'firestore';
 
 type FirebaseServices = {
+  app: any;
   auth: any;
   db: any;
   authModule: any;
@@ -29,6 +30,7 @@ export async function getFirebaseServices() {
     const app = appModule.initializeApp(getFirebaseConfig());
 
     return {
+      app,
       auth: authModule.getAuth(app),
       db: firestoreModule.getFirestore(app),
       authModule,
@@ -37,6 +39,12 @@ export async function getFirebaseServices() {
   });
 
   return servicesPromise;
+}
+
+export async function getFirebaseApp() {
+  const { app } = await getFirebaseServices();
+
+  return app;
 }
 
 export async function signInWithGoogle() {
