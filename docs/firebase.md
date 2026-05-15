@@ -29,84 +29,7 @@ src/lib/ai/remote-config.ts  Preparación opcional para Firebase Remote Config
 src/lib/ai/ui-state.ts       Estados comunes traducibles de UI
 ```
 
-### Variables de entorno
-
-La IA queda desactivada por defecto. Para activarla en un entorno concreto:
-
-```env
-PUBLIC_AI_ENABLED=true
-PUBLIC_AI_MENU_SUGGESTIONS_ENABLED=true
-PUBLIC_FIREBASE_AI_MODEL=gemini-2.5-flash-lite
-PUBLIC_FIREBASE_AI_TEMPERATURE=0.35
-PUBLIC_FIREBASE_AI_TOP_P=0.9
-PUBLIC_FIREBASE_AI_MAX_OUTPUT_TOKENS=768
-PUBLIC_FIREBASE_AI_TIMEOUT_MS=15000
-PUBLIC_AI_MAX_SESSION_REQUESTS=8
-PUBLIC_AI_MAX_USER_DAILY_REQUESTS=20
-```
-
-Si se quiere gobernar el apagado/encendido desde Remote Config:
-
-```env
-PUBLIC_AI_REMOTE_CONFIG_ENABLED=true
-```
-
-Claves remotas preparadas:
-
-```text
-ai_enabled
-ai_menu_suggestions_enabled
-```
-
-Remote Config debe considerarse una capa de operación del producto, no una frontera de seguridad. Una función crítica no debe depender solo de flags de cliente.
-
-### App Check
-
-Antes de activar IA para usuarios reales:
-
-1. Activa App Check en Firebase Console.
-2. Registra los dominios reales, `localhost` para desarrollo y el dominio de GitHub Pages si aplica.
-3. Usa reCAPTCHA Enterprise o el proveedor recomendado para web.
-4. Prueba en modo monitorización antes de forzar cumplimiento.
-5. Cuando todo funcione, exige App Check en Firebase AI Logic y servicios relacionados.
-
-App Check ayuda a reducir abuso desde clientes no autorizados, pero no sustituye reglas de seguridad, límites de backend ni monitorización.
-
-### Límites cliente
-
-`src/lib/ai/limits.ts` aplica límites básicos con `sessionStorage`:
-
-- `PUBLIC_AI_MAX_SESSION_REQUESTS` para limitar una sesión del navegador.
-- `PUBLIC_AI_MAX_USER_DAILY_REQUESTS` para limitar un usuario o invitado durante el día local registrado.
-
-Estos límites solo mejoran UX y reducen abuso accidental. No son una protección real porque el usuario controla el cliente. Si más adelante la app añade Cloud Functions, deben repetirse los límites en backend por `uid`, IP, App Check y coste acumulado.
-
-### Uso recomendado para futuras funciones
-
-Cada función concreta debe construir un prompt pequeño y validar la forma exacta antes de usar la respuesta:
-
-```ts
-import { buildJsonPrompt, generateGeminiJson } from '../lib/ai';
-
-const isSuggestionResponse = (value: unknown): value is { suggestions: string[] } =>
-  Boolean(
-    value &&
-      typeof value === 'object' &&
-      Array.isArray((value as { suggestions?: unknown }).suggestions) &&
-      (value as { suggestions: unknown[] }).suggestions.every((item) => typeof item === 'string')
-  );
-
-const result = await generateGeminiJson({
-  userId: user.uid,
-  prompt: buildJsonPrompt([
-    'Suggest three simple lunch ideas.',
-    'Return { "suggestions": string[] }.',
-  ]),
-  validator: isSuggestionResponse,
-});
-```
-
-No uses la respuesta de Gemini directamente en Firestore ni en la UI sin pasar antes por un validador.
+La IA queda desactivada por defecto. Las sugerencias inteligentes deben usar el catálogo visible completo: platos generales (`scope: global`) y platos propios (`scope: group` o `scope: user`) ya cargados por `watchDishes`.
 
 ## Error `Missing or insufficient permissions`
 
@@ -127,7 +50,8 @@ Después pulsa **Publish**. La app necesita permiso para:
 - Crear un `weeklyMenus/{menuId}` propio.
 - Leer menús estando autenticado, porque el histórico y los códigos usan consultas cliente.
 - Editar o borrar días de menús donde el usuario sea miembro.
-- Crear y actualizar platos reutilizables en `dishes` para sugerencias y estadísticas.
+- Leer platos generales y platos propios visibles para su grupo.
+- Crear y actualizar platos propios, pero no platos generales desde la UI normal.
 
 ## Colecciones
 
@@ -169,8 +93,6 @@ Grupo de convivencia o planificación. Permite ver miembros, emails pendientes y
 
 La invitación por email no envía correo desde la app. Guarda el email como pendiente y muestra el código para compartirlo manualmente. La otra persona se une escribiendo ese código en **Ajustes**.
 
-Si un usuario sale de un grupo, se elimina de `members` y se le crea o asigna un grupo propio para que no se quede sin configuración.
-
 ### `weeklyMenus/{menuId}`
 
 Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permite varios platos. También puede marcarse el día completo como no configurable, guardando motivo y nota.
@@ -188,24 +110,9 @@ Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permi
       "reason": "",
       "skipNote": "",
       "meals": {
-        "breakfast": {
-          "items": ["Café", "Tostada"],
-          "skipped": false,
-          "reason": "",
-          "note": ""
-        },
-        "lunch": {
-          "items": ["Lentejas", "Ensalada"],
-          "skipped": false,
-          "reason": "",
-          "note": ""
-        },
-        "dinner": {
-          "items": [],
-          "skipped": true,
-          "reason": "eating-out",
-          "note": "Cena fuera"
-        }
+        "breakfast": { "items": ["Café", "Tostada"], "skipped": false, "reason": "", "note": "" },
+        "lunch": { "items": ["Lentejas", "Ensalada"], "skipped": false, "reason": "", "note": "" },
+        "dinner": { "items": [], "skipped": true, "reason": "eating-out", "note": "Cena fuera" }
       },
       "notes": "Comprar pan"
     }
@@ -222,37 +129,127 @@ El histórico reutiliza estos documentos buscando menús donde el usuario es mie
 
 ### `dishes/{dishId}`
 
-Catálogo de platos reutilizables. Se alimenta automáticamente cuando se añaden platos a un día y también permite crear platos manualmente desde **Mis platos** aunque todavía no se hayan comido.
+El catálogo de platos usa **una sola colección** `dishes`. Se eligió este modelo para no duplicar consultas, normalización, deduplicación, UI, sugerencias y futuras funciones de IA. La separación se hace con campos explícitos de ámbito y permisos.
+
+#### Plato general
+
+Creado o gestionado por administración. Visible para usuarios autenticados y no editable desde la UI normal.
 
 ```json
 {
-  "name": "Lentejas",
-  "normalizedName": "lentejas",
-  "createdBy": "uid",
-  "members": ["uid"],
-  "timesUsed": 3,
-  "favorite": true,
+  "name": "Lentejas con verduras",
+  "normalizedName": "lentejas con verduras",
+  "scope": "global",
+  "groupId": null,
+  "createdBy": "admin-uid",
+  "isGlobal": true,
+  "editable": false,
+  "source": "admin",
+  "timesUsed": 0,
+  "favorite": false,
   "blocked": false,
   "tags": ["legumbre"],
-  "quickTags": ["cheap", "healthy", "batch-cooking"],
+  "quickTags": ["cheap", "healthy"],
   "archived": false,
+  "archivedAt": null,
   "createdAt": "serverTimestamp",
-  "lastUsedAt": "serverTimestamp",
   "updatedAt": "serverTimestamp"
 }
 ```
 
-`normalizedName` se usa para evitar duplicados por mayúsculas, acentos o espacios repetidos. Los platos creados manualmente empiezan con `timesUsed: 0` y sin `lastUsedAt`. Archivar un plato cambia `archived` a `true`; no borra ni modifica menús históricos que ya guarden ese nombre en `weeklyMenus.days.*.meals.*.items`.
+#### Plato propio del grupo
 
-`favorite` prioriza el plato en listados y sugerencias. `blocked` evita que el plato aparezca como sugerencia automática, aunque el usuario puede escribirlo manualmente en un menú. `quickTags` guarda etiquetas rápidas configuradas en `src/data/dish-tags.ts`: `quick`, `cheap`, `healthy`, `vegetarian`, `treat`, `kids`, `batch-cooking` y `freezable`. Las etiquetas visibles están traducidas en `src/i18n/translations/*.json`.
+Creado desde menús, manualmente en **Mis platos** o duplicando un plato general. Visible y editable por miembros autorizados del grupo.
 
-`tags` queda preparado para futuras integraciones con recetas, sugerencias, lista de la compra y estadísticas avanzadas. La primera versión solo muestra etiquetas si ya existen en Firestore.
+```json
+{
+  "name": "Lentejas de casa",
+  "normalizedName": "lentejas de casa",
+  "scope": "group",
+  "groupId": "group-id",
+  "createdBy": "uid",
+  "members": ["uid"],
+  "isGlobal": false,
+  "editable": true,
+  "source": "duplicated-global",
+  "duplicatedFrom": "global_lentejas con verduras",
+  "timesUsed": 0,
+  "favorite": false,
+  "blocked": false,
+  "tags": ["legumbre"],
+  "quickTags": ["cheap", "healthy"],
+  "archived": false,
+  "archivedAt": null,
+  "createdAt": "serverTimestamp",
+  "updatedAt": "serverTimestamp"
+}
+```
+
+#### Fallback `scope: user`
+
+Si una sesión todavía no tiene `groupId` o existen datos antiguos, la app mantiene compatibilidad con platos personales por `createdBy`. En cuanto hay grupo, las nuevas escrituras pasan a `scope: group`.
+
+#### Campos clave
+
+- `scope`: `global`, `group` o `user`.
+- `groupId`: obligatorio para `scope: group`.
+- `createdBy`: UID que creó el documento o UID administrativo.
+- `isGlobal`: redundante pero explícito para UI/reglas.
+- `editable`: `false` en globales, `true` en propios.
+- `source`: `admin`, `manual`, `menu`, `group`, `legacy` o `duplicated-global`.
+- `archived` y `archivedAt`: archivado lógico sin borrar históricos.
+- `duplicatedFrom`: id del plato general original cuando aplica.
+
+`normalizedName` se usa para evitar duplicados por mayúsculas, acentos o espacios repetidos. La UI avisa si se intenta crear un plato propio con el mismo nombre que un general o que otro propio visible.
+
+`favorite` prioriza el plato en listados y sugerencias. `blocked` evita que el plato propio aparezca como sugerencia automática, aunque el usuario puede escribirlo manualmente en un menú. Los platos generales no se pueden bloquear, archivar ni marcar favoritos desde la UI normal; para personalizarlos se duplican primero.
+
+## Sembrar platos generales
+
+El repositorio incluye `data/global-dishes.seed.json` como ejemplo controlado y sin credenciales. No contiene claves privadas ni configuración de Firebase.
+
+Opciones seguras:
+
+1. Importación manual desde Firebase Console, creando documentos en `dishes` con `scope: global`, `isGlobal: true`, `editable: false` y `source: admin`.
+2. Script local fuera del repo con Firebase Admin SDK y credenciales en una ruta no versionada.
+3. Tarea de backend protegida si más adelante se añaden Cloud Functions.
+
+Al sembrar, añade estos campos si no vienen en el JSON:
+
+```json
+{
+  "createdBy": "admin-uid",
+  "timesUsed": 0,
+  "favorite": false,
+  "blocked": false,
+  "archived": false,
+  "archivedAt": null,
+  "createdAt": "serverTimestamp",
+  "updatedAt": "serverTimestamp"
+}
+```
+
+El id recomendado es `global_` + `encodeURIComponent(normalizedName)` saneado igual que `getDishId`, o cualquier id estable documentado.
 
 ## Reglas incluidas
 
 La fuente de verdad está en `firestore.rules`. Copia ese fichero en Firestore Rules si configuras el proyecto desde Firebase Console.
 
-Las reglas actuales permiten a usuarios autenticados actualizar sus documentos de `dishes` siempre que sean miembros del documento. Los campos `favorite`, `blocked`, `quickTags` y `archived` no eliminan referencias históricas porque los menús guardan los nombres de los platos dentro de `weeklyMenus`.
+Las reglas actuales permiten:
+
+- Leer `dishes` a usuarios autenticados.
+- Crear o modificar platos globales solo a usuarios con custom claim `admin == true`.
+- Crear o modificar platos `scope: group` solo si el usuario pertenece a `groups/{groupId}.members`.
+- Crear o modificar platos `scope: user` propios como compatibilidad con datos antiguos o ausencia temporal de grupo.
+- Bloquear borrados físicos de platos. El borrado funcional se hace con `archived` y `archivedAt`.
+
+Para convertir a un usuario en administrador hay que asignar custom claims desde un entorno seguro, por ejemplo con Admin SDK en local o backend:
+
+```js
+await getAuth().setCustomUserClaims(uid, { admin: true });
+```
+
+No ejecutes ese código en cliente ni guardes credenciales de servicio en el repo.
 
 ## Índices
 
@@ -262,11 +259,22 @@ Firestore puede pedir crear índices para estas consultas:
 weeklyMenus
   members array-contains
   weekStart desc
+
+dishes
+  scope asc
+  normalizedName asc
+
+dishes
+  scope asc
+  groupId asc
+  normalizedName asc
+
+dishes
+  scope asc
+  groupId asc
 ```
 
-La lista de platos reutilizables usa `createdBy == uid` y se ordena en el navegador por favoritos, bloqueados, etiquetas, `timesUsed`, `lastUsedAt`, `createdAt` o `name`, así que no necesita índices compuestos nuevos.
-
-La consulta por código de grupo usa `inviteCode ==`, que normalmente no necesita índice compuesto.
+La lista de platos reutilizables se ordena en el navegador por favoritos, bloqueados, etiquetas, `timesUsed`, `lastUsedAt`, `createdAt` o `name`, así que no necesita índices compuestos para ordenación.
 
 ## Notificaciones
 
@@ -280,5 +288,6 @@ Estas reglas están pensadas para que la app funcione en una primera versión cl
 - Enviar invitaciones reales por email desde backend o Cloud Functions.
 - Validar longitudes máximas de `meals.*.items`, `meals.*.note`, `notes`, `skipNote`, `title`, `inviteCode`, `name`, `memberEmails`, `pendingEmails`, `quickTags` y `tags`.
 - Impedir que usuarios no propietarios cambien `ownerId` o eliminen miembros arbitrariamente.
+- Añadir validaciones estrictas por campos permitidos en `dishes` si la app pasa a producción con más roles.
 - Usar códigos de invitación más largos o con caducidad.
 - Repetir en backend cualquier cuota de IA si se añaden Cloud Functions o endpoints propios.
