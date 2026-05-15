@@ -1,0 +1,54 @@
+---
+import type { Locale } from '../config/site';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const homePath = getLocalizedPath('/', locale);
+
+const labels = {
+  configMissing: t('menu.configMissing'),
+  loading: t('dashboard.loading'),
+  title: t('history.title'),
+  description: t('history.description'),
+  from: t('history.from'),
+  to: t('history.to'),
+  search: t('history.search'),
+  empty: t('history.empty'),
+  editDay: t('dashboard.editDay'),
+  deleteDay: t('dashboard.deleteDay'),
+  quickEdit: t('dashboard.quickEdit'),
+  moreActions: t('dashboard.moreActions'),
+  save: t('dashboard.save'),
+  cancel: t('dashboard.cancel'),
+  breakfast: t('dashboard.breakfast'),
+  lunch: t('dashboard.lunch'),
+  dinner: t('dashboard.dinner'),
+  todayEmpty: t('dashboard.todayEmpty'),
+  skipSummary: t('dashboard.skipSummary'),
+  homePath,
+};
+---
+
+<section class="history-app" data-history-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status hidden></div>
+  <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
+  <div data-content hidden>
+    <section class="settings-card app-panel">
+      <p class="menu-app__eyebrow">{labels.title}</p>
+      <h1>{labels.title}</h1>
+      <p>{labels.description}</p>
+      <form class="history-search" data-history-form>
+        <label>{labels.from}<input type="date" data-date-from /></label>
+        <label>{labels.to}<input type="date" data-date-to /></label>
+        <button class="button button--primary" type="submit">{labels.search}</button>
+      </form>
+    </section>
+    <div class="next-days next-days--timeline" data-history-days></div>
+  </div>
+</section>
+
+<script>
+  import '../scripts/history-app.ts';
+</script>
