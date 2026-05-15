@@ -52,7 +52,7 @@ const labels = {
       </nav>
 
       <div class="site-header__actions">
-        <div class="site-header__locales" aria-label={t('nav.language')}>
+        <div class="site-header__locales" aria-label={t('nav.main')}>
           {alternateLocales.map((alternateLocale) => (
             <a href={getLocalizedPath('/', alternateLocale)} hreflang={alternateLocale}>{localeLabels[alternateLocale]}</a>
           ))}
