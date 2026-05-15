@@ -1,4 +1,5 @@
 ---
+import { quickDishTags } from '../data/dish-tags';
 import type { Locale } from '../config/site';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -9,6 +10,7 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
+const tagLabels = Object.fromEntries(quickDishTags.map((tag) => [tag, t(`dishTags.${tag}`)]));
 
 const labels = {
   configMissing: t('menu.configMissing'),
@@ -27,14 +29,28 @@ const labels = {
   sortRecent: t('dishes.sortRecent'),
   sortOldest: t('dishes.sortOldest'),
   sortName: t('dishes.sortName'),
+  filter: t('dishes.filter'),
+  filterAll: t('dishes.filterAll'),
+  filterFavorites: t('dishes.filterFavorites'),
+  filterBlocked: t('dishes.filterBlocked'),
+  filterTag: t('dishes.filterTag'),
+  allTags: t('dishes.allTags'),
   timesUsed: t('dishes.timesUsed'),
   lastUsed: t('dishes.lastUsed'),
   createdAt: t('dishes.createdAt'),
   neverUsed: t('dishes.neverUsed'),
   noCreatedAt: t('dishes.noCreatedAt'),
   tags: t('dishes.tags'),
+  quickTags: t('dishes.quickTags'),
   edit: t('dishes.edit'),
   archive: t('dishes.archive'),
+  markFavorite: t('dishes.markFavorite'),
+  unmarkFavorite: t('dishes.unmarkFavorite'),
+  block: t('dishes.block'),
+  unblock: t('dishes.unblock'),
+  favoriteBadge: t('dishes.favoriteBadge'),
+  blockedBadge: t('dishes.blockedBadge'),
+  preferencesUpdated: t('dishes.preferencesUpdated'),
   save: t('dashboard.save'),
   cancel: t('dashboard.cancel'),
   empty: t('dishes.empty'),
@@ -49,6 +65,8 @@ const labels = {
   invalid: t('dishes.invalid'),
   confirmArchive: t('dishes.confirmArchive'),
   homePath,
+  quickTags,
+  tagLabels,
 };
 ---
 
@@ -78,6 +96,19 @@ const labels = {
     <section class="dishes-toolbar" aria-label={labels.title}>
       <label>{labels.search}
         <input type="search" data-dish-search placeholder={labels.searchPlaceholder} />
+      </label>
+      <label>{labels.filter}
+        <select data-dish-filter>
+          <option value="all">{labels.filterAll}</option>
+          <option value="favorites">{labels.filterFavorites}</option>
+          <option value="blocked">{labels.filterBlocked}</option>
+        </select>
+      </label>
+      <label>{labels.filterTag}
+        <select data-dish-tag-filter>
+          <option value="">{labels.allTags}</option>
+          {quickDishTags.map((tag) => <option value={tag}>{tagLabels[tag]}</option>)}
+        </select>
       </label>
       <label>{labels.sort}
         <select data-dish-sort>
