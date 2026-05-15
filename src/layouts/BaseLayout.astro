@@ -40,7 +40,13 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" type="image/svg+xml" href={withBasePath('favicon.svg')} />
     <link rel="icon" href={withBasePath('favicon.ico')} />
+    <link rel="apple-touch-icon" href={withBasePath('og-image.svg')} />
     <link rel="manifest" href={withBasePath('manifest.webmanifest')} />
+    <meta name="theme-color" content="#ea580c" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content={siteConfig.name} />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
@@ -58,5 +64,8 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
       <slot />
     </main>
     <Footer locale={locale} />
+    <script>
+      import '../scripts/pwa-register.ts';
+    </script>
   </body>
 </html>
