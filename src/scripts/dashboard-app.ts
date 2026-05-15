@@ -14,6 +14,9 @@ import {
 } from '../lib/menu/repository';
 import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { notifyMenuChanged, requestChangeNotifications } from '../lib/notifications/browser';
+import { getNetworkStatus, watchNetworkStatus } from '../lib/pwa/network-status';
+import { readLastOfflineMenuCache, saveOfflineMenuCache } from '../lib/pwa/offline-cache';
+import { shouldBlockOfflineWrites } from '../lib/pwa/offline-sync';
 
 const root = document.querySelector<HTMLElement>('[data-dashboard-app]');
 
@@ -29,6 +32,8 @@ if (root) {
   const quickModal = root.querySelector<HTMLDialogElement>('[data-quick-modal]');
   const quickForm = root.querySelector<HTMLFormElement>('[data-quick-form]');
   const quickFields = root.querySelector<HTMLElement>('[data-quick-fields]');
+  const offlineBanner = root.querySelector<HTMLElement>('[data-offline-banner]');
+  const offlineMessage = root.querySelector<HTMLElement>('[data-offline-message]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -39,6 +44,8 @@ if (root) {
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let firstMenuLoad = true;
+  let isOnline = getNetworkStatus() === 'online';
+  let isReadOnlyOffline = !isOnline;
 
   attachDishSuggestions(root, () => dishes);
 
@@ -51,6 +58,14 @@ if (root) {
     status.hidden = false;
     status.textContent = message;
     status.dataset.variant = isError ? 'error' : 'info';
+  }
+
+  function updateOfflineState(message = labels.offlineReadOnly) {
+    isReadOnlyOffline = !isOnline;
+    if (!offlineBanner) return;
+
+    offlineBanner.hidden = isOnline;
+    if (offlineMessage) offlineMessage.textContent = message;
   }
 
   function emptyMeal(): MealEntry {
@@ -175,6 +190,7 @@ if (root) {
   function renderNextSeven(menu: WeekMenu) {
     if (!nextDays) return;
 
+    const disabledAttr = isReadOnlyOffline ? 'disabled aria-disabled="true"' : '';
     nextDays.innerHTML = getNextSevenDates()
       .map((isoDate) => {
         const day = normalizeDay(menu.days[isoDate]);
@@ -198,8 +214,8 @@ if (root) {
                 <details class="day-actions">
                   <summary aria-label="${escapeHtml(labels.moreActions)}">⋯</summary>
                   <div>
-                    <button type="button" data-quick-edit="${isoDate}">${escapeHtml(labels.editDay)}</button>
-                    <button type="button" data-clear-day="${isoDate}">${escapeHtml(labels.deleteDay)}</button>
+                    <button type="button" data-quick-edit="${isoDate}" ${disabledAttr}>${escapeHtml(labels.editDay)}</button>
+                    <button type="button" data-clear-day="${isoDate}" ${disabledAttr}>${escapeHtml(labels.deleteDay)}</button>
                   </div>
                 </details>
               </header>
@@ -212,6 +228,11 @@ if (root) {
   }
 
   function openQuickEdit(dayKey: string) {
+    if (isReadOnlyOffline) {
+      showStatus(labels.offlineReadOnly, true);
+      return;
+    }
+
     if (!currentMenu || !quickFields || !quickModal) return;
 
     quickFields.innerHTML = renderDayEditor({
@@ -227,7 +248,51 @@ if (root) {
     quickModal.showModal();
   }
 
+  function cacheCurrentMenu(menu = currentMenu) {
+    if (!menu || !currentUser || !currentMenuId) return;
+
+    saveOfflineMenuCache({
+      userId: currentUser.uid,
+      menuId: currentMenuId,
+      menu,
+      profile: {
+        displayName: currentProfile?.displayName || currentUser.displayName || currentUser.email || labels.guestSession,
+        enabledMeals: getEnabledMeals(),
+        theme: currentProfile?.theme ?? 'system',
+      },
+    });
+  }
+
+  function renderOfflineCache() {
+    const cached = readLastOfflineMenuCache();
+    if (!cached) {
+      setVisible(false);
+      showStatus(labels.offlineNoCache, true);
+      updateOfflineState(labels.offlineNoCache);
+      return;
+    }
+
+    currentUser = { uid: cached.userId, displayName: cached.profile.displayName };
+    currentMenuId = cached.menuId;
+    currentProfile = {
+      id: cached.userId,
+      displayName: cached.profile.displayName,
+      email: '',
+      enabledMeals: cached.profile.enabledMeals,
+      theme: cached.profile.theme,
+    };
+    if (userLabel) userLabel.textContent = `${labels.hello} ${cached.profile.displayName}`;
+    applyTheme(cached.profile.theme);
+    renderDashboard(cached.menu);
+    updateOfflineState(`${labels.offlineCached} ${new Date(cached.savedAt).toLocaleString(locale)}. ${labels.offlineReadOnly}`);
+  }
+
   async function saveField(card: HTMLElement, path: string, value: string | boolean | string[]) {
+    if (shouldBlockOfflineWrites(isOnline)) {
+      showStatus(labels.offlineReadOnly, true);
+      return;
+    }
+
     if (!currentUser || !currentMenuId) return;
     const services = await getFirebaseServices();
     await updateMenuPatch(services, currentMenuId, currentUser.uid, {
@@ -245,6 +310,11 @@ if (root) {
   }
 
   function addPlate(card: HTMLElement, meal: MealSlot) {
+    if (isReadOnlyOffline) {
+      showStatus(labels.offlineReadOnly, true);
+      return;
+    }
+
     const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
     if (!list) return;
 
@@ -265,9 +335,26 @@ if (root) {
     renderNextSeven(menu);
   }
 
+  watchNetworkStatus((networkStatus) => {
+    const wasOffline = !isOnline;
+    isOnline = networkStatus === 'online';
+    updateOfflineState();
+
+    if (!isOnline && !currentMenu) {
+      renderOfflineCache();
+    }
+
+    if (isOnline && wasOffline) {
+      showStatus(labels.backOnline);
+      if (currentMenu) renderDashboard(currentMenu);
+    }
+  });
+
   if (!hasFirebaseConfig()) {
     setVisible(false);
     showStatus(labels.configMissing, true);
+  } else if (!isOnline) {
+    renderOfflineCache();
   } else {
     getFirebaseServices()
       .then((services) => {
@@ -286,6 +373,10 @@ if (root) {
           }
 
           if (target.dataset.clearDay && currentUser && currentMenuId) {
+            if (shouldBlockOfflineWrites(isOnline)) {
+              showStatus(labels.offlineReadOnly, true);
+              return;
+            }
             await clearMenuDay(services, currentMenuId, currentUser.uid, target.dataset.clearDay);
           }
         });
@@ -359,7 +450,10 @@ if (root) {
             (profile) => {
               currentProfile = profile;
               applyTheme(profile.theme);
-              if (currentMenu) renderDashboard(currentMenu);
+              if (currentMenu) {
+                renderDashboard(currentMenu);
+                cacheCurrentMenu(currentMenu);
+              }
             },
             (error) => showStatus(error.message, true)
           );
@@ -380,6 +474,7 @@ if (root) {
               if (!menu) return;
               const changedByOtherUser = !firstMenuLoad && menu.updatedBy && menu.updatedBy !== currentUser?.uid;
               renderDashboard(menu);
+              cacheCurrentMenu(menu);
               if (changedByOtherUser) notifyMenuChanged(labels.updated, labels.updatedBody);
               firstMenuLoad = false;
             },
@@ -387,6 +482,12 @@ if (root) {
           );
         });
       })
-      .catch((error: Error) => showStatus(error.message, true));
+      .catch((error: Error) => {
+        if (!isOnline) {
+          renderOfflineCache();
+          return;
+        }
+        showStatus(error.message, true);
+      });
   }
 }

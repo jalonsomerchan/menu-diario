@@ -49,6 +49,11 @@ const labels = {
   updated: t('menu.updated'),
   updatedBody: t('menu.updatedBody'),
   guestSession: t('menu.guestSession'),
+  offlineTitle: t('pwa.offlineTitle'),
+  offlineCached: t('pwa.offlineCached'),
+  offlineReadOnly: t('pwa.offlineReadOnly'),
+  offlineNoCache: t('pwa.offlineNoCache'),
+  backOnline: t('pwa.backOnline'),
   homePath,
   configurePath,
 };
@@ -56,6 +61,10 @@ const labels = {
 
 <section class="dashboard-app dashboard-app--compact" data-dashboard-app data-labels={JSON.stringify(labels)}>
   <div class="menu-app__status" data-status hidden></div>
+  <div class="offline-banner" data-offline-banner hidden role="status" aria-live="polite">
+    <strong data-offline-title>{labels.offlineTitle}</strong>
+    <span data-offline-message>{labels.offlineReadOnly}</span>
+  </div>
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div class="dashboard-app__content" data-content hidden>
