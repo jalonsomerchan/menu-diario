@@ -137,11 +137,17 @@ if (root) {
   async function saveField(card: HTMLElement, path: string, value: string | boolean | string[]) {
     if (!currentUser || !currentMenuId) return;
     const services = await getFirebaseServices();
-    await updateMenuPatch(services, currentMenuId, currentUser.uid, {
-      dayKey: card.dataset.day ?? '',
-      path,
-      value,
-    });
+    await updateMenuPatch(
+      services,
+      currentMenuId,
+      currentUser.uid,
+      {
+        dayKey: card.dataset.day ?? '',
+        path,
+        value,
+      },
+      currentProfile?.groupId
+    );
   }
 
   async function savePlateList(card: HTMLElement, meal: MealSlot) {
@@ -225,16 +231,17 @@ if (root) {
             labels.guestSession,
             (profile) => {
               currentProfile = profile;
-              if (currentMenu) renderConfig(currentMenu);
-            },
-            (error) => showStatus(error.message, true)
-          );
-
-          unsubscribeDishes = watchDishes(
-            services,
-            user.uid,
-            (nextDishes) => {
-              dishes = nextDishes;
+              unsubscribeDishes?.();
+              unsubscribeDishes = watchDishes(
+                services,
+                user.uid,
+                (nextDishes) => {
+                  dishes = nextDishes;
+                  if (currentMenu) renderConfig(currentMenu);
+                },
+                (error) => showStatus(error.message, true),
+                profile.groupId
+              );
               if (currentMenu) renderConfig(currentMenu);
             },
             (error) => showStatus(error.message, true)
