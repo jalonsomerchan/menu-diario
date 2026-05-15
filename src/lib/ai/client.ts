@@ -1,3 +1,4 @@
+import { assertFirebaseAppCheckReadyForAi } from '../firebase/app-check';
 import { getFirebaseApp, hasFirebaseConfig } from '../firebase/client';
 import { aiGenerationConfig, aiPromptConfig } from './config';
 import { AiClientError, logAiError } from './errors';
@@ -45,6 +46,7 @@ export async function generateGeminiJson<T>({ prompt, validator, userId, timeout
   assertAiClientLimit(userId);
 
   try {
+    await ensureAppCheckForAi();
     const result = await withTimeout(generateText(prompt), timeoutMs ?? aiGenerationConfig.timeoutMs);
     const json = parseValidatedJson(result, validator);
     registerAiClientUse(userId);
@@ -53,6 +55,17 @@ export async function generateGeminiJson<T>({ prompt, validator, userId, timeout
   } catch (error) {
     logAiError(error, 'generateGeminiJson');
     throw normalizeAiError(error);
+  }
+}
+
+async function ensureAppCheckForAi() {
+  try {
+    await assertFirebaseAppCheckReadyForAi();
+  } catch (error) {
+    throw new AiClientError('app-check-unavailable', 'Firebase App Check is not ready for AI requests.', {
+      cause: error,
+      retryable: true,
+    });
   }
 }
 
