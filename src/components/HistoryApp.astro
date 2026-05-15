@@ -47,6 +47,19 @@ const labels = {
     </section>
     <div class="next-days next-days--timeline" data-history-days></div>
   </div>
+
+  <dialog class="quick-edit-modal" data-history-modal>
+    <form method="dialog" class="quick-edit-modal__box" data-history-edit-form>
+      <header>
+        <h2>{labels.quickEdit}</h2>
+        <button class="button button--ghost button--small" value="cancel" type="submit">{labels.cancel}</button>
+      </header>
+      <div data-history-edit-fields></div>
+      <footer>
+        <button class="button button--primary" value="save" type="submit">{labels.save}</button>
+      </footer>
+    </form>
+  </dialog>
 </section>
 
 <script>
