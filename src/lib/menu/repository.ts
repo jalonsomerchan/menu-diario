@@ -86,6 +86,10 @@ function normalizeEmail(email = '') {
   return email.trim().toLocaleLowerCase('es-ES');
 }
 
+function uniqueValues(values: string[]) {
+  return [...new Set(values.filter(Boolean))];
+}
+
 function normalizeDishName(name: string) {
   return name.trim().toLocaleLowerCase('es-ES').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -278,8 +282,12 @@ export async function addPendingGroupEmail(services: FirebaseServices, groupId: 
   if (!cleanEmail) return;
 
   const { db, firestoreModule } = services;
-  await firestoreModule.updateDoc(firestoreModule.doc(db, groupsCollection, groupId), {
-    pendingEmails: firestoreModule.arrayUnion(cleanEmail),
+  const groupRef = firestoreModule.doc(db, groupsCollection, groupId);
+  const snapshot = await firestoreModule.getDoc(groupRef);
+  const data = snapshot.exists() ? snapshot.data() : {};
+
+  await firestoreModule.updateDoc(groupRef, {
+    pendingEmails: uniqueValues([...(data.pendingEmails ?? []), cleanEmail]),
     updatedAt: firestoreModule.serverTimestamp(),
   });
 }
@@ -299,9 +307,14 @@ export async function joinGroupByInviteCode(services: FirebaseServices, user: Fi
 
   const data = group.data();
   const email = normalizeEmail(user.email ?? '');
+  const members = uniqueValues([...(data.members ?? []), user.uid]);
+  const memberEmails = email ? uniqueValues([...(data.memberEmails ?? []), email]) : data.memberEmails ?? [];
+  const pendingEmails = email ? (data.pendingEmails ?? []).filter((item: string) => item !== email) : data.pendingEmails ?? [];
+
   await firestoreModule.updateDoc(firestoreModule.doc(db, groupsCollection, group.id), {
-    members: firestoreModule.arrayUnion(user.uid),
-    ...(email ? { memberEmails: firestoreModule.arrayUnion(email), pendingEmails: firestoreModule.arrayRemove(email) } : {}),
+    members,
+    memberEmails,
+    pendingEmails,
     updatedAt: firestoreModule.serverTimestamp(),
   });
   await updateUserPreferences(services, user.uid, {
@@ -315,8 +328,8 @@ export async function leaveGroup(services: FirebaseServices, user: FirebaseUser,
   const { db, firestoreModule } = services;
   const email = normalizeEmail(user.email ?? '');
   await firestoreModule.updateDoc(firestoreModule.doc(db, groupsCollection, group.id), {
-    members: firestoreModule.arrayRemove(user.uid),
-    ...(email ? { memberEmails: firestoreModule.arrayRemove(email) } : {}),
+    members: group.members.filter((member) => member !== user.uid),
+    memberEmails: email ? group.memberEmails.filter((item) => item !== email) : group.memberEmails,
     updatedAt: firestoreModule.serverTimestamp(),
   });
   await updateUserPreferences(services, user.uid, { groupId: null });
