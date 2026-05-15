@@ -196,6 +196,8 @@ describe('project smoke checks', () => {
     assert.match(dashboardApp, /dashboard\.showDishOptions/);
     assert.match(configuratorApp, /data-configurator-app/);
     assert.match(configuratorApp, /dashboard\.showDishOptions/);
+    assert.match(configuratorApp, /dish-combobox__toggle/);
+    assert.match(configuratorApp, /overflow-y: auto/);
     assert.match(settingsApp, /data-settings-app/);
     assert.match(historyApp, /data-history-app/);
     assert.match(historyApp, /dashboard\.showDishOptions/);
@@ -232,6 +234,8 @@ describe('project smoke checks', () => {
     assert.match(suggestionHelper, /suggestionLimit = 6/);
     assert.match(suggestionHelper, /focusin/);
     assert.match(suggestionHelper, /ArrowDown/);
+    assert.match(suggestionHelper, /pointerdown/);
+    assert.match(suggestionHelper, /selectSuggestion/);
     assert.match(suggestionHelper, /aria-expanded/);
     assert.match(suggestionHelper, /CSS\.escape/);
     assert.match(types, /type MenuGroup/);

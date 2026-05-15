@@ -78,6 +78,20 @@ function getSuggestionTarget(input: HTMLInputElement) {
   return list ? { list, mealSection } : null;
 }
 
+function selectSuggestion(root: HTMLElement, button: HTMLButtonElement) {
+  const list = button.closest<HTMLElement>('[data-suggestion-list]');
+  const inputId = list?.dataset.activeInputId;
+  const input = inputId ? root.querySelector<HTMLInputElement>(`#${CSS.escape(inputId)}`) : null;
+
+  if (!input || !list) return;
+
+  input.value = button.dataset.suggestion ?? '';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  hideSuggestions(list, input);
+  input.focus();
+}
+
 export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]) {
   root.addEventListener('focusin', (event) => {
     const input = event.target;
@@ -123,6 +137,17 @@ export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]
     }, 120);
   });
 
+  root.addEventListener('pointerdown', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    const button = target.closest<HTMLButtonElement>('[data-suggestion]');
+    if (!button) return;
+
+    event.preventDefault();
+    selectSuggestion(root, button);
+  });
+
   root.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
@@ -138,22 +163,5 @@ export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]
       input.focus();
       return;
     }
-
-    const button = target.closest<HTMLButtonElement>('[data-suggestion]');
-    if (!button) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const list = button.closest<HTMLElement>('[data-suggestion-list]');
-    const inputId = list?.dataset.activeInputId;
-    const input = inputId ? root.querySelector<HTMLInputElement>(`#${CSS.escape(inputId)}`) : null;
-
-    if (!input || !list) return;
-
-    input.value = button.dataset.suggestion ?? '';
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-    hideSuggestions(list, input);
-    input.focus();
   });
 }
