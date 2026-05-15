@@ -322,7 +322,7 @@ if (root) {
           }
 
           await ensureUserProfile(services, user, labels.guestSession);
-          currentMenuId = await getOrCreateWeekMenu(services, user.uid, getDateOffset(1), locale);
+          currentMenuId = await getOrCreateWeekMenu(services, user.uid, getDateOffset(0), locale);
 
           unsubscribeProfile = watchUserProfile(
             services,
