@@ -88,13 +88,35 @@ export async function renameDish(services: FirebaseServices, userId: string, dis
   const normalizedName = normalizeDishName(cleanName);
 
   if (normalizedName.length < 2) throw new Error('dish-invalid-name');
-  if (normalizedName !== dish.normalizedName) {
-    const { db, firestoreModule } = services;
-    const duplicate = await firestoreModule.getDoc(firestoreModule.doc(db, dishesCollection, getDishId(userId, normalizedName)));
-    if (duplicate.exists() && !duplicate.data().archived) throw new Error('dish-duplicate');
-  }
 
   const { db, firestoreModule } = services;
+
+  if (normalizedName !== dish.normalizedName) {
+    const nextRef = firestoreModule.doc(db, dishesCollection, getDishId(userId, normalizedName));
+    const duplicate = await firestoreModule.getDoc(nextRef);
+
+    if (duplicate.exists() && !duplicate.data().archived) throw new Error('dish-duplicate');
+
+    await firestoreModule.setDoc(
+      nextRef,
+      {
+        name: cleanName,
+        normalizedName,
+        createdBy: userId,
+        members: dish.members?.length ? dish.members : [userId],
+        timesUsed: dish.timesUsed ?? 0,
+        tags: dish.tags ?? [],
+        archived: false,
+        createdAt: dish.createdAt ?? firestoreModule.serverTimestamp(),
+        lastUsedAt: dish.lastUsedAt ?? null,
+        updatedAt: firestoreModule.serverTimestamp(),
+      },
+      { merge: true }
+    );
+    await archiveDish(services, dish.id);
+    return;
+  }
+
   await firestoreModule.setDoc(
     firestoreModule.doc(db, dishesCollection, dish.id),
     {
