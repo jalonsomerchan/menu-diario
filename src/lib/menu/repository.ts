@@ -104,6 +104,10 @@ function getDishId(userId: string, normalizedName: string) {
   return `${userId}_${encodeURIComponent(normalizedName).replaceAll('%', '_')}`.slice(0, 1400);
 }
 
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
 function normalizeEnabledMeals(value: unknown): MealSlot[] {
   if (!Array.isArray(value)) return defaultEnabledMeals;
   const enabled = value.filter((meal): meal is MealSlot => mealSlots.includes(meal));
@@ -136,8 +140,16 @@ function mapDish(id: string, data: Record<string, any>): Dish {
     name: data.name,
     normalizedName: data.normalizedName,
     createdBy: data.createdBy,
+    members: stringArray(data.members),
     timesUsed: data.timesUsed ?? 0,
+    tags: stringArray(data.tags),
+    quickTags: stringArray(data.quickTags),
+    favorite: Boolean(data.favorite),
+    blocked: Boolean(data.blocked),
+    archived: Boolean(data.archived),
+    createdAt: data.createdAt?.toDate?.(),
     lastUsedAt: data.lastUsedAt?.toDate?.(),
+    updatedAt: data.updatedAt?.toDate?.(),
   };
 }
 
@@ -440,7 +452,8 @@ export function watchDishes(
     (snapshot: any) => {
       const dishes = snapshot.docs
         .map((item: any) => mapDish(item.id, item.data()))
-        .sort((a: Dish, b: Dish) => b.timesUsed - a.timesUsed || a.name.localeCompare(b.name));
+        .filter((dish: Dish) => !dish.archived)
+        .sort((a: Dish, b: Dish) => Number(Boolean(b.favorite)) - Number(Boolean(a.favorite)) || b.timesUsed - a.timesUsed || a.name.localeCompare(b.name));
       callback(dishes);
     },
     onError
@@ -459,8 +472,10 @@ export async function upsertDish(services: FirebaseServices, userId: string, nam
 
   if (snapshot.exists()) {
     await firestoreModule.updateDoc(dishRef, {
+      archived: false,
       timesUsed: firestoreModule.increment(1),
       lastUsedAt: firestoreModule.serverTimestamp(),
+      updatedAt: firestoreModule.serverTimestamp(),
     });
     return;
   }
@@ -471,8 +486,13 @@ export async function upsertDish(services: FirebaseServices, userId: string, nam
     createdBy: userId,
     members: [userId],
     timesUsed: 1,
+    favorite: false,
+    blocked: false,
+    archived: false,
+    quickTags: [],
     createdAt: firestoreModule.serverTimestamp(),
     lastUsedAt: firestoreModule.serverTimestamp(),
+    updatedAt: firestoreModule.serverTimestamp(),
   });
 }
 
