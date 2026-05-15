@@ -18,7 +18,10 @@ export class AiClientError extends Error {
     this.name = 'AiClientError';
     this.code = code;
     this.retryable = options.retryable ?? false;
-    this.cause = options.cause;
+
+    if (options.cause) {
+      (this as Error & { cause?: unknown }).cause = options.cause;
+    }
   }
 }
 
