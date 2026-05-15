@@ -2,7 +2,7 @@
 
 Menu Diario es una webapp mobile first para apuntar qué vas a comer cada día, planificar desayunos, comidas y cenas, guardar histórico, ver próximos menús y reutilizar platos ya escritos.
 
-La aplicación está construida sobre Astro y usa Firebase Authentication, Firestore, App Check y una base preparada para Firebase AI Logic/Gemini desde el navegador. Está pensada para funcionar bien en móvil, conservar compatibilidad con GitHub Pages y mantener una base ligera, traducible y modular.
+La aplicación está construida sobre Astro y usa Firebase Authentication, Firestore, App Check y una base preparada para Firebase AI Logic/Gemini desde el navegador. Está pensada para funcionar bien en móvil, instalarse como PWA, conservar compatibilidad con GitHub Pages y mantener una base ligera, traducible y modular.
 
 ## Flujo principal
 
@@ -10,7 +10,7 @@ La aplicación está construida sobre Astro y usa Firebase Authentication, Fires
 - `/dashboard`: pantalla rápida para usuarios autenticados.
 - `/configurar`: pantalla separada para ajustes y configuración de menús.
 
-En móvil, el dashboard muestra una tarjeta principal tipo resumen y una lista de los próximos 7 días empezando siempre mañana. Cada tarjeta permite editar el día en `/configurar`.
+En móvil, el dashboard muestra una tarjeta principal tipo resumen y una lista de los próximos 7 días empezando siempre mañana. Cada tarjeta permite editar el día en `/configurar` cuando hay conexión.
 
 ## Características principales
 
@@ -22,6 +22,7 @@ En móvil, el dashboard muestra una tarjeta principal tipo resumen y una lista d
 - **Días sin comida** con motivo y nota.
 - **Autenticación flexible** con Google o invitado anónimo.
 - **Firestore en tiempo real** para menús compartidos.
+- **PWA móvil** con manifest instalable, service worker ligero y consulta offline del último menú cargado.
 - **Firebase App Check** preparado para proteger Firestore y Firebase AI Logic.
 - **Firebase AI Logic/Gemini** preparado con flags, timeouts, validación JSON, errores traducidos y límites básicos de cliente.
 - **i18n** en español e inglés (`es/en`).
@@ -37,6 +38,7 @@ En móvil, el dashboard muestra una tarjeta principal tipo resumen y una lista d
 - Firebase App Check.
 - Firebase AI Logic preparado para Gemini.
 - Web Notifications API.
+- Service Worker y Web App Manifest con APIs nativas.
 - Tests smoke con `node:test`.
 - GitHub Actions para CI y GitHub Pages.
 
@@ -162,6 +164,19 @@ La documentación del modelo de datos, reglas, índices, App Check y preparació
 - `docs/firebase.md`.
 - `docs/app-check.md`.
 
+## PWA y modo offline
+
+La PWA se apoya en APIs nativas y ficheros pequeños:
+
+- `src/pages/manifest.webmanifest.ts`: manifest instalable y respetuoso con `BASE_URL`.
+- `src/pages/sw.js.ts`: service worker con precache de rutas principales y caché ligera de assets del mismo origen.
+- `src/scripts/pwa-register.ts`: registro del service worker con `scope` basado en `import.meta.env.BASE_URL`.
+- `src/lib/pwa/`: estado online/offline, caché local versionada y estado de sincronización.
+
+El dashboard guarda el último menú cargado correctamente en `localStorage` con versión. Si se abre sin conexión, muestra ese menú en modo solo lectura con un aviso accesible y traducido. En esta fase **no se permite editar offline**: no hay cola local de cambios para evitar conflictos silenciosos si Firestore cambió mientras el dispositivo estaba sin conexión.
+
+La guía completa está en `docs/pwa-offline.md`.
+
 ## App Check y activación gradual
 
 La app inicializa App Check en `src/lib/firebase/app-check.ts` antes de exponer Auth y Firestore desde `src/lib/firebase/client.ts`.
@@ -242,14 +257,19 @@ src/components/DashboardApp.astro      Dashboard rápido
 src/components/ConfiguratorApp.astro   Ajustes y configurador
 src/scripts/dashboard-app.ts           Lógica del dashboard
 src/scripts/configurator-app.ts        Lógica de ajustes/configuración
+src/scripts/pwa-register.ts            Registro del service worker
+src/pages/sw.js.ts                     Service worker dinámico y base-aware
 src/lib/firebase/                      Inicialización de Firebase y App Check
 src/lib/menu/repository.ts             Operaciones de Firestore
 src/lib/menu/types.ts                  Tipos del dominio
+src/lib/pwa/                           Helpers de conexión, caché offline y sync state
 src/lib/ai/                            Base Firebase AI Logic/Gemini
 src/i18n/translations/*.json           Textos traducibles
 src/styles/global.css                  Tokens visuales, light/dark y UI mobile first
+src/styles/pwa.css                     Estados offline y PWA
 docs/firebase.md                       Modelo de datos, reglas e índices
 docs/app-check.md                      Configuración y depuración de App Check
+docs/pwa-offline.md                    Instalación, caché, offline y límites
 ```
 
 ## Tests y validación
@@ -270,6 +290,7 @@ Los tests smoke comprueban que:
 - El dashboard y el configurador están conectados a sus scripts.
 - La base de Firebase AI conserva flags, configuración, validación JSON y estados de error.
 - App Check mantiene variables, inicialización, documentación y errores traducidos.
+- La PWA mantiene manifest instalable, service worker con `base`, estado offline traducido y caché local versionada.
 - Las rutas siguen siendo compatibles con GitHub Pages.
 
 ## Documentación para agentes IA
@@ -285,6 +306,7 @@ Antes de modificar el proyecto, una IA debe leer:
 - `docs/design-system.md`.
 - `docs/firebase.md`.
 - `docs/app-check.md`.
+- `docs/pwa-offline.md`.
 
 ## Notas técnicas
 
