@@ -23,6 +23,7 @@ const labels = {
   share: t('menu.share'),
   previous: t('menu.previous'),
   next: t('menu.next'),
+  weekSwitcher: t('menu.weekSwitcher'),
   lunch: t('menu.lunch'),
   dinner: t('menu.dinner'),
   notes: t('menu.notes'),
@@ -66,7 +67,7 @@ const labels = {
       </div>
     </div>
 
-    <div class="week-switcher" aria-label="Cambiar semana">
+    <div class="week-switcher" aria-label={labels.weekSwitcher}>
       <button class="button button--secondary" type="button" data-prev-week>{labels.previous}</button>
       <button class="button button--primary" type="button" data-new-week>{labels.newWeek}</button>
       <button class="button button--secondary" type="button" data-next-week>{labels.next}</button>
