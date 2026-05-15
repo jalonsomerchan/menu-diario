@@ -1,0 +1,98 @@
+---
+import type { Locale } from '../config/site';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const homePath = getLocalizedPath('/', locale);
+
+const labels = {
+  configMissing: t('menu.configMissing'),
+  loading: t('dashboard.loading'),
+  title: t('dishes.title'),
+  description: t('dishes.description'),
+  future: t('dishes.future'),
+  addTitle: t('dishes.addTitle'),
+  addName: t('dishes.addName'),
+  addPlaceholder: t('dishes.addPlaceholder'),
+  addButton: t('dishes.addButton'),
+  search: t('dishes.search'),
+  searchPlaceholder: t('dishes.searchPlaceholder'),
+  sort: t('dishes.sort'),
+  sortMostUsed: t('dishes.sortMostUsed'),
+  sortRecent: t('dishes.sortRecent'),
+  sortOldest: t('dishes.sortOldest'),
+  sortName: t('dishes.sortName'),
+  timesUsed: t('dishes.timesUsed'),
+  lastUsed: t('dishes.lastUsed'),
+  createdAt: t('dishes.createdAt'),
+  neverUsed: t('dishes.neverUsed'),
+  noCreatedAt: t('dishes.noCreatedAt'),
+  tags: t('dishes.tags'),
+  edit: t('dishes.edit'),
+  archive: t('dishes.archive'),
+  save: t('dashboard.save'),
+  cancel: t('dashboard.cancel'),
+  empty: t('dishes.empty'),
+  emptyHint: t('dishes.emptyHint'),
+  emptySearch: t('dishes.emptySearch'),
+  permissionsError: t('dishes.permissionsError'),
+  firebaseMissing: t('dishes.firebaseMissing'),
+  added: t('dishes.added'),
+  updated: t('dishes.updated'),
+  archived: t('dishes.archived'),
+  duplicate: t('dishes.duplicate'),
+  invalid: t('dishes.invalid'),
+  confirmArchive: t('dishes.confirmArchive'),
+  homePath,
+};
+---
+
+<section class="dishes-app" data-dishes-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status aria-live="polite" hidden></div>
+  <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
+
+  <div class="dishes-app__content" data-content hidden>
+    <section class="app-panel dishes-hero">
+      <p class="menu-app__eyebrow">{labels.title}</p>
+      <h1>{labels.title}</h1>
+      <p>{labels.description}</p>
+      <p class="dishes-hero__future">{labels.future}</p>
+    </section>
+
+    <section class="app-panel dishes-form-card" aria-labelledby="dish-add-title">
+      <h2 id="dish-add-title">{labels.addTitle}</h2>
+      <form class="dishes-form" data-dish-form>
+        <label for="dish-name">{labels.addName}</label>
+        <div class="dishes-form__row">
+          <input id="dish-name" type="text" data-dish-name minlength="2" maxlength="90" autocomplete="off" placeholder={labels.addPlaceholder} />
+          <button class="button button--primary" type="submit">{labels.addButton}</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="dishes-toolbar" aria-label={labels.title}>
+      <label>{labels.search}
+        <input type="search" data-dish-search placeholder={labels.searchPlaceholder} />
+      </label>
+      <label>{labels.sort}
+        <select data-dish-sort>
+          <option value="most-used">{labels.sortMostUsed}</option>
+          <option value="recent">{labels.sortRecent}</option>
+          <option value="oldest">{labels.sortOldest}</option>
+          <option value="name">{labels.sortName}</option>
+        </select>
+      </label>
+    </section>
+
+    <div class="dishes-list" data-dishes-list></div>
+  </div>
+</section>
+
+<script>
+  import '../scripts/dishes-app.ts';
+</script>
