@@ -53,6 +53,31 @@ function renderSuggestionContainer(labels: DayEditorLabels, dayKey: string, meal
   `;
 }
 
+function renderDishControl(labels: DayEditorLabels, meal: MealSlot, value: string) {
+  return `
+    <span class="dish-combobox" data-dish-combobox>
+      <input type="text" role="combobox" value="${escapeHtml(value)}" data-plate-input="${meal}" placeholder="${escapeHtml(labels.dishPlaceholder)}" autocomplete="off" aria-autocomplete="list" aria-expanded="false" />
+      <button class="dish-combobox__toggle" type="button" data-suggestion-toggle="${meal}" aria-label="${escapeHtml(labels.showDishOptions)}">
+        <span aria-hidden="true">▾</span>
+      </button>
+    </span>
+  `;
+}
+
+export function renderPlateRow(labels: DayEditorLabels, meal: MealSlot, value = '', index = 0) {
+  return `
+    <div class="plate-row">
+      <label>
+        <span class="sr-only">${escapeHtml(labels.addDish)} ${index + 1}</span>
+        ${renderDishControl(labels, meal, value)}
+      </label>
+      <button class="icon-button icon-button--danger" type="button" data-remove-plate="${meal}" aria-label="${escapeHtml(labels.removePlate)}">
+        <span aria-hidden="true">×</span>
+      </button>
+    </div>
+  `;
+}
+
 function renderMeal(labels: DayEditorLabels, dayKey: string, meal: MealSlot, mealData: MealEntry, dishes: Dish[]) {
   const values = mealData.items.length ? mealData.items : [''];
 
@@ -65,21 +90,7 @@ function renderMeal(labels: DayEditorLabels, dayKey: string, meal: MealSlot, mea
         </button>
       </header>
       <div class="plate-list" data-plate-list="${meal}">
-        ${values
-          .map(
-            (value, index) => `
-              <div class="plate-row">
-                <label>
-                  <span class="sr-only">${escapeHtml(labels.addDish)} ${index + 1}</span>
-                  <input type="text" value="${escapeHtml(value)}" data-plate-input="${meal}" placeholder="${escapeHtml(labels.dishPlaceholder)}" autocomplete="off" />
-                </label>
-                <button class="icon-button icon-button--danger" type="button" data-remove-plate="${meal}" aria-label="${escapeHtml(labels.removePlate)}">
-                  <span aria-hidden="true">×</span>
-                </button>
-              </div>
-            `
-          )
-          .join('')}
+        ${values.map((value, index) => renderPlateRow(labels, meal, value, index)).join('')}
       </div>
       ${renderSuggestionContainer(labels, dayKey, meal, dishes)}
     </section>

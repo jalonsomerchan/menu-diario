@@ -44,6 +44,7 @@
   "dashboard.addDish": "Dish",
   "dashboard.addPlate": "Add dish",
   "dashboard.removePlate": "Remove dish",
+  "dashboard.showDishOptions": "Show saved dishes",
   "dashboard.dishSuggestions": "Previous dishes",
   "dashboard.dishPlaceholder": "Type a dish",
   "dashboard.noMeal": "I will not plan this meal for this day",

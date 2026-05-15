@@ -21,6 +21,7 @@ const labels = {
   addDish: t('dashboard.addDish'),
   addPlate: t('dashboard.addPlate'),
   removePlate: t('dashboard.removePlate'),
+  showDishOptions: t('dashboard.showDishOptions'),
   dishSuggestions: t('dashboard.dishSuggestions'),
   dishPlaceholder: t('dashboard.dishPlaceholder'),
   noMeal: t('dashboard.noMeal'),
@@ -54,6 +55,36 @@ const labels = {
     </section>
   </div>
 </section>
+
+<style is:global>
+  .configurator-app .dish-combobox {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+  }
+
+  .configurator-app .dish-combobox input {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  .configurator-app .dish-combobox__toggle {
+    display: grid;
+    min-width: 2.75rem;
+    place-items: center;
+    border: 1px solid var(--color-border);
+    border-left: 0;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    font-weight: 900;
+  }
+
+  .configurator-app .dish-suggestions {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+</style>
 
 <script>
   import '../scripts/configurator-app.ts';
