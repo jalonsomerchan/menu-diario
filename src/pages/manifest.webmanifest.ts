@@ -10,14 +10,38 @@ export function GET() {
     short_name: 'Menu Diario',
     description: t('site.description'),
     start_url: getBasePath(),
+    scope: getBasePath(),
+    id: getBasePath(),
     display: 'standalone',
+    display_override: ['standalone', 'minimal-ui', 'browser'],
+    orientation: 'portrait-primary',
     background_color: '#fff7ed',
     theme_color: '#ea580c',
+    categories: ['food', 'productivity', 'lifestyle'],
     icons: [
       {
         src: withBasePath('favicon.svg'),
         sizes: 'any',
         type: 'image/svg+xml',
+        purpose: 'any maskable',
+      },
+      {
+        src: withBasePath('og-image.svg'),
+        sizes: '512x512',
+        type: 'image/svg+xml',
+        purpose: 'any maskable',
+      },
+    ],
+    shortcuts: [
+      {
+        name: t('dashboard.title'),
+        short_name: t('dashboard.title'),
+        url: withBasePath('dashboard'),
+      },
+      {
+        name: t('dashboard.configure'),
+        short_name: t('dashboard.configure'),
+        url: withBasePath('configurar'),
       },
     ],
   };
