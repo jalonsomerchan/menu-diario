@@ -13,7 +13,7 @@ const homeUrl = getLocalizedPath('/', locale);
 const alternateLocales = getAlternateLocales(locale);
 ---
 
-<header class="border-b border-[var(--color-border)] bg-white/80 backdrop-blur">
+<header class="border-b border-[var(--color-border)] bg-[var(--color-surface)]/85 backdrop-blur">
   <Container class="flex items-center justify-between py-4">
     <a class="font-bold tracking-tight" href={homeUrl}>{siteConfig.name}</a>
     <nav aria-label={t('nav.main')} class="flex items-center gap-4 text-sm text-[var(--color-muted)]">

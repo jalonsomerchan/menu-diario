@@ -7,12 +7,12 @@ export function GET() {
 
   const manifest = {
     name: siteConfig.name,
-    short_name: siteConfig.name,
+    short_name: 'Menu Diario',
     description: t('site.description'),
     start_url: getBasePath(),
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#2563eb',
+    background_color: '#fff7ed',
+    theme_color: '#ea580c',
     icons: [
       {
         src: withBasePath('favicon.svg'),
