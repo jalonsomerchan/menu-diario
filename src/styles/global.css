@@ -183,6 +183,7 @@ button {
 
 .menu-app,
 .dashboard-app,
+.configurator-app,
 .auth-card {
   margin-top: 2rem;
 }
@@ -282,6 +283,57 @@ button {
   font-weight: 800;
 }
 
+.dashboard-app--compact {
+  max-width: 58rem;
+  margin-inline: auto;
+}
+
+.today-hero {
+  min-height: 13.5rem;
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+  padding: 1.35rem;
+}
+
+.today-hero__hello {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: clamp(1.2rem, 5vw, 1.75rem);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.today-hero h1 {
+  margin: 0;
+  font-size: clamp(2.1rem, 12vw, 4.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.today-hero ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: clamp(1.25rem, 6vw, 2rem);
+  font-weight: 800;
+}
+
+.dashboard-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 1.1rem;
+}
+
+.dashboard-actions .button:nth-child(n + 3) {
+  grid-column: span 1;
+  min-height: 2.35rem;
+  font-size: 0.84rem;
+}
+
 .settings-card,
 .today-card,
 .dashboard-section {
@@ -346,6 +398,10 @@ button {
   margin-bottom: 1rem;
 }
 
+.section-heading--simple h2 {
+  margin-bottom: 0;
+}
+
 .week-switcher {
   grid-template-columns: 1fr;
   margin-bottom: 1rem;
@@ -373,6 +429,10 @@ button {
   margin-bottom: 1rem;
 }
 
+.next-days--timeline {
+  gap: 0.75rem;
+}
+
 .menu-list,
 .next-day-card {
   padding: 1rem;
@@ -383,11 +443,45 @@ button {
   gap: 0.85rem;
 }
 
-.next-day-card header {
+.next-day-card--mockup {
+  grid-template-columns: 3.2rem minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.next-day-card__number {
+  display: grid;
+  place-items: center;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
+  font-size: clamp(2.2rem, 13vw, 3.5rem);
+  font-weight: 900;
+  letter-spacing: -0.08em;
+}
+
+.next-day-card__body {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem;
+}
+
+.next-day-card header,
+.next-day-card__body header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
+}
+
+.next-day-card h3 {
+  margin: 0;
+  font-size: clamp(1.3rem, 7vw, 2rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
 }
 
 .next-day-card span,
@@ -411,7 +505,20 @@ button {
   padding: 0.7rem;
 }
 
-.next-day-card strong {
+.day-meal-row {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.day-meal-row span {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.next-day-card strong,
+.day-meal-row strong {
   font-size: 1rem;
 }
 
@@ -456,6 +563,7 @@ button {
 
 .day-card--editor {
   border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 72%);
+  scroll-margin-top: 1rem;
 }
 
 .day-card__header {
@@ -564,6 +672,16 @@ button {
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   }
 
+  .dashboard-actions {
+    grid-template-columns: repeat(4, auto);
+    justify-content: start;
+  }
+
+  .today-hero {
+    min-height: 16rem;
+    padding: 2rem;
+  }
+
   .week-switcher {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -575,6 +693,10 @@ button {
 }
 
 @media (min-width: 1024px) {
+  .dashboard-app--compact {
+    max-width: 76rem;
+  }
+
   .menu-days,
   .next-days {
     grid-template-columns: repeat(3, minmax(0, 1fr));

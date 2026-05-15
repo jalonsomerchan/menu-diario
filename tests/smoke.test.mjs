@@ -46,8 +46,10 @@ describe('project smoke checks', () => {
       'astro.config.mjs',
       'src/pages/index.astro',
       'src/pages/dashboard.astro',
+      'src/pages/configurar.astro',
       'src/pages/[locale]/index.astro',
       'src/pages/[locale]/dashboard.astro',
+      'src/pages/[locale]/configurar.astro',
       'src/pages/404.astro',
       'src/pages/manifest.webmanifest.ts',
       'src/pages/robots.txt.ts',
@@ -82,13 +84,15 @@ describe('project smoke checks', () => {
   });
 
   it('keeps shared and app components available', () => {
-    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'MenuApp'].forEach((component) => {
-      assert.equal(
-        existsSync(join(root, `src/components/${component}.astro`)),
-        true,
-        `${component}.astro should exist`
-      );
-    });
+    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'MenuApp'].forEach(
+      (component) => {
+        assert.equal(
+          existsSync(join(root, `src/components/${component}.astro`)),
+          true,
+          `${component}.astro should exist`
+        );
+      }
+    );
   });
 
   it('keeps Astro i18n enabled and aligned with site config', () => {
@@ -140,7 +144,8 @@ describe('project smoke checks', () => {
       assert.ok(translations['home.title'], `${locale}.json should include home.title`);
       assert.ok(translations['nav.main'], `${locale}.json should include nav.main`);
       assert.ok(translations['dashboard.title'], `${locale}.json should include dashboard.title`);
-      assert.ok(translations['dashboard.theme'], `${locale}.json should include dashboard.theme`);
+      assert.ok(translations['dashboard.todayForLunch'], `${locale}.json should include dashboard.todayForLunch`);
+      assert.ok(translations['dashboard.backDashboard'], `${locale}.json should include dashboard.backDashboard`);
       assert.ok(translations['menu.signInGoogle'], `${locale}.json should include menu.signInGoogle`);
     });
   });
@@ -170,11 +175,14 @@ describe('project smoke checks', () => {
     const header = readText('src/components/Header.astro');
     const home = readText('src/pages/index.astro');
     const dashboard = readText('src/pages/dashboard.astro');
+    const configure = readText('src/pages/configurar.astro');
     const localizedHome = readText('src/pages/[locale]/index.astro');
     const envExample = readText('.env.example');
     const authGate = readText('src/components/AuthGate.astro');
     const dashboardApp = readText('src/components/DashboardApp.astro');
+    const configuratorApp = readText('src/components/ConfiguratorApp.astro');
     const dashboardScript = readText('src/scripts/dashboard-app.ts');
+    const configuratorScript = readText('src/scripts/configurator-app.ts');
     const repository = readText('src/lib/menu/repository.ts');
     const types = readText('src/lib/menu/types.ts');
     const styles = readText('src/styles/global.css');
@@ -186,16 +194,25 @@ describe('project smoke checks', () => {
     assert.match(home, /<AuthGate/);
     assert.match(localizedHome, /<AuthGate/);
     assert.match(dashboard, /<DashboardApp/);
+    assert.match(configure, /<ConfiguratorApp/);
     assert.match(authGate, /data-auth-gate/);
     assert.match(dashboardApp, /data-dashboard-app/);
-    assert.match(dashboardApp, /data-theme-select/);
-    assert.match(dashboardApp, /data-meal-preference/);
-    assert.match(dashboardScript, /watchUserProfile/);
-    assert.match(dashboardScript, /data-plate-input/);
-    assert.match(dashboardScript, /datalist/);
+    assert.match(dashboardApp, /configurePath/);
+    assert.doesNotMatch(dashboardApp, /data-theme-select/);
+    assert.match(configuratorApp, /data-configurator-app/);
+    assert.match(configuratorApp, /data-theme-select/);
+    assert.match(configuratorApp, /data-meal-preference/);
+    assert.match(dashboardScript, /getNextSevenDates/);
+    assert.match(dashboardScript, /index \+ 1/);
+    assert.match(configuratorScript, /getConfigDates/);
+    assert.match(configuratorScript, /index \+ 1/);
+    assert.match(configuratorScript, /data-plate-input/);
+    assert.match(configuratorScript, /datalist/);
     assert.match(repository, /updateUserPreferences/);
     assert.match(repository, /enabledMeals/);
     assert.match(types, /MealSlot = 'breakfast' \| 'lunch' \| 'dinner'/);
+    assert.match(styles, /today-hero/);
+    assert.match(styles, /next-day-card--mockup/);
     assert.match(styles, /data-theme='dark'/);
     assert.doesNotMatch(home, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
     assert.doesNotMatch(localizedHome, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
