@@ -48,8 +48,22 @@ export type WeekMenu = {
 export type UserProfile = {
   id: string;
   displayName: string;
+  email: string;
   enabledMeals: MealSlot[];
   theme: ThemePreference;
+  groupId?: string;
+  updatedAt?: Date;
+};
+
+export type MenuGroup = {
+  id: string;
+  name: string;
+  ownerId: string;
+  members: string[];
+  memberEmails: string[];
+  pendingEmails: string[];
+  inviteCode: string;
+  enabledMeals: MealSlot[];
   updatedAt?: Date;
 };
 
