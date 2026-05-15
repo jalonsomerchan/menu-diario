@@ -64,6 +64,7 @@ export type Dish = {
 
 export type MenuPatch = {
   dayKey: string;
-  path: string;
+  path?: string;
+  slot?: string;
   value: string | string[] | boolean;
 };
