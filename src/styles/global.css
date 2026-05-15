@@ -112,7 +112,10 @@ textarea {
   padding: 0.75rem 1rem;
   font-weight: 800;
   text-decoration: none;
-  transition: background var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    transform var(--transition-base);
 }
 
 .button:active {
@@ -159,7 +162,8 @@ textarea {
 
 .menu-app__auth,
 .menu-app__workspace,
-.day-card {
+.day-card,
+.menu-list {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
   background: color-mix(in srgb, var(--color-surface), transparent 4%);
@@ -231,6 +235,43 @@ textarea {
   color: var(--color-text);
   padding: 0.75rem 1rem;
   text-transform: uppercase;
+}
+
+.menu-lists {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.menu-list {
+  padding: 1rem;
+}
+
+.menu-list h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.menu-list > div {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+}
+
+.menu-list__button {
+  flex: 0 0 auto;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-soft);
+  color: var(--color-text);
+  padding: 0.55rem 0.85rem;
+  font-weight: 800;
+}
+
+.menu-list__empty {
+  margin: 0;
+  color: var(--color-muted);
 }
 
 .menu-days {
@@ -306,6 +347,7 @@ textarea {
     grid-template-columns: repeat(3, 1fr);
   }
 
+  .menu-lists,
   .menu-days {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
