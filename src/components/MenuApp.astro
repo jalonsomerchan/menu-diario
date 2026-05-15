@@ -10,34 +10,31 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 
 const labels = {
-  configMissing: t('app.configMissing'),
-  signInGoogle: t('app.signInGoogle'),
-  signInGuest: t('app.signInGuest'),
-  signOut: t('app.signOut'),
-  enableNotifications: t('app.enableNotifications'),
-  newWeek: t('app.newWeek'),
-  join: t('app.join'),
-  invitePlaceholder: t('app.invitePlaceholder'),
-  share: t('app.share'),
-  previous: t('app.previous'),
-  next: t('app.next'),
-  lunch: t('app.lunch'),
-  dinner: t('app.dinner'),
-  notes: t('app.notes'),
-  saveHint: t('app.saveHint'),
-  updated: t('app.updated'),
-  updatedBody: t('app.updatedBody'),
-  empty: t('app.empty'),
-  history: t('app.history'),
-  upcoming: t('app.upcoming'),
-  today: t('app.today'),
-  weekSwitcher: t('app.weekSwitcher'),
-  menuNotFound: t('app.menuNotFound'),
-  notificationsOn: t('app.notificationsOn'),
-  notificationsOff: t('app.notificationsOff'),
-  copiedCode: t('app.copiedCode'),
-  guestSession: t('app.guestSession'),
-  joinError: t('app.joinError'),
+  configMissing: t('menu.configMissing'),
+  signInGoogle: t('menu.signInGoogle'),
+  signInGuest: t('menu.signInGuest'),
+  signOut: t('menu.signOut'),
+  enableNotifications: t('menu.enableNotifications'),
+  notificationsEnabled: t('menu.notificationsEnabled'),
+  notificationsDenied: t('menu.notificationsDenied'),
+  newWeek: t('menu.newWeek'),
+  join: t('menu.join'),
+  invitePlaceholder: t('menu.invitePlaceholder'),
+  share: t('menu.share'),
+  previous: t('menu.previous'),
+  next: t('menu.next'),
+  lunch: t('menu.lunch'),
+  dinner: t('menu.dinner'),
+  notes: t('menu.notes'),
+  saveHint: t('menu.saveHint'),
+  updated: t('menu.updated'),
+  updatedBody: t('menu.updatedBody'),
+  empty: t('menu.empty'),
+  today: t('menu.today'),
+  notFoundMenu: t('menu.notFoundMenu'),
+  codeCopied: t('menu.codeCopied'),
+  guestSession: t('menu.guestSession'),
+  joinError: t('menu.joinError'),
 };
 ---
 
@@ -69,7 +66,7 @@ const labels = {
       </div>
     </div>
 
-    <div class="week-switcher" aria-label={labels.weekSwitcher}>
+    <div class="week-switcher" aria-label="Cambiar semana">
       <button class="button button--secondary" type="button" data-prev-week>{labels.previous}</button>
       <button class="button button--primary" type="button" data-new-week>{labels.newWeek}</button>
       <button class="button button--secondary" type="button" data-next-week>{labels.next}</button>
@@ -82,7 +79,6 @@ const labels = {
       <button class="button button--ghost" type="button" data-share-code>{labels.share}</button>
     </form>
 
-    <div class="menu-lists" data-menu-lists></div>
     <div class="menu-days" data-days></div>
   </div>
 </section>
