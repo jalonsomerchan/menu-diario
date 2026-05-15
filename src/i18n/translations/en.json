@@ -2,6 +2,7 @@
   "site.description": "Plan weekly meals together, keep the history and share changes instantly.",
   "nav.home": "Home",
   "nav.main": "Main navigation",
+  "nav.language": "Change language",
   "footer.createdWith": "Menu Diario, a lightweight web app to decide what to eat together.",
   "home.eyebrow": "Shared meal planning",
   "home.title": "Write down the daily menu and decide the week together",
