@@ -219,7 +219,7 @@ if (root) {
         });
 
         editForm?.addEventListener('submit', (event) => {
-          const submitter = event.submitter;
+          const submitter = (event as SubmitEvent).submitter;
           if (submitter instanceof HTMLButtonElement && submitter.value === 'save') {
             event.preventDefault();
             saveEdit()
