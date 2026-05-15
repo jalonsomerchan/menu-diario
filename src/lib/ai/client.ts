@@ -6,7 +6,8 @@ import { parseValidatedJson, type JsonValidator } from './json';
 import { assertAiClientLimit, registerAiClientUse } from './limits';
 
 type FirebaseAiModule = {
-  getAI: (app: unknown) => unknown;
+  GoogleAIBackend: new () => unknown;
+  getAI: (app: unknown, options: { backend: unknown }) => unknown;
   getGenerativeModel: (ai: unknown, options: Record<string, unknown>) => GenerativeModel;
 };
 
@@ -58,7 +59,7 @@ export async function generateGeminiJson<T>({ prompt, validator, userId, timeout
 async function generateText(prompt: string) {
   const app = await getFirebaseApp();
   const aiModule = await importFirebaseAiModule();
-  const ai = aiModule.getAI(app);
+  const ai = aiModule.getAI(app, { backend: new aiModule.GoogleAIBackend() });
   const model = aiModule.getGenerativeModel(ai, {
     model: aiGenerationConfig.model,
     generationConfig: {
