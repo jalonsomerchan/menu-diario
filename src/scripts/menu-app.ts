@@ -32,6 +32,10 @@ if (root) {
   let unsubscribeMenu: (() => void) | undefined;
   let firstMenuLoad = true;
 
+  function escapeHtml(value = '') {
+    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+  }
+
   function showStatus(message: string, isError = false) {
     if (!status) return;
     status.hidden = false;
@@ -71,7 +75,7 @@ if (root) {
 
     unsubscribeMenu = watchWeekMenu(db, menuId, (menu) => {
       if (!menu) {
-        showStatus('No se ha encontrado este menú.', true);
+        showStatus(labels.notFoundMenu, true);
         return;
       }
 
@@ -115,14 +119,14 @@ if (root) {
           <article class="day-card" data-day="${day.key}">
             <header class="day-card__header">
               <div>
-                <h3>${day.label}</h3>
+                <h3>${escapeHtml(day.label)}</h3>
                 <p>${formatShortDate(day.isoDate)}</p>
               </div>
               ${badge}
             </header>
-            <label>${labels.lunch}<textarea data-field="lunch" rows="2" placeholder="${labels.empty}">${data.lunch}</textarea></label>
-            <label>${labels.dinner}<textarea data-field="dinner" rows="2" placeholder="${labels.empty}">${data.dinner}</textarea></label>
-            <label>${labels.notes}<textarea data-field="notes" rows="2" placeholder="${labels.notes}">${data.notes}</textarea></label>
+            <label>${labels.lunch}<textarea data-field="lunch" rows="2" placeholder="${labels.empty}">${escapeHtml(data.lunch)}</textarea></label>
+            <label>${labels.dinner}<textarea data-field="dinner" rows="2" placeholder="${labels.empty}">${escapeHtml(data.dinner)}</textarea></label>
+            <label>${labels.notes}<textarea data-field="notes" rows="2" placeholder="${labels.notes}">${escapeHtml(data.notes)}</textarea></label>
           </article>
         `;
       })
@@ -155,7 +159,7 @@ if (root) {
     root.querySelector('[data-logout]')?.addEventListener('click', () => closeSession());
     root.querySelector('[data-notifications]')?.addEventListener('click', async () => {
       const permission = await requestChangeNotifications();
-      showStatus(permission === 'granted' ? 'Avisos activados.' : 'No se han podido activar los avisos.', permission !== 'granted');
+      showStatus(permission === 'granted' ? labels.notificationsEnabled : labels.notificationsDenied, permission !== 'granted');
     });
 
     root.querySelector('[data-new-week]')?.addEventListener('click', async () => {
@@ -166,18 +170,18 @@ if (root) {
 
     root.querySelector('[data-prev-week]')?.addEventListener('click', () => {
       currentWeekStart = shiftWeek(currentWeekStart, -1);
-      if (currentMenu) renderMenu({ ...currentMenu, weekStart: currentWeekStart, title: getWeekTitle(currentWeekStart) });
+      if (currentMenu) renderMenu({ ...currentMenu, weekStart: currentWeekStart, title: getWeekTitle(currentWeekStart), days: {} });
     });
 
     root.querySelector('[data-next-week]')?.addEventListener('click', () => {
       currentWeekStart = shiftWeek(currentWeekStart, 1);
-      if (currentMenu) renderMenu({ ...currentMenu, weekStart: currentWeekStart, title: getWeekTitle(currentWeekStart) });
+      if (currentMenu) renderMenu({ ...currentMenu, weekStart: currentWeekStart, title: getWeekTitle(currentWeekStart), days: {} });
     });
 
     root.querySelector('[data-share-code]')?.addEventListener('click', async () => {
       if (!currentMenu?.inviteCode) return;
       await navigator.clipboard?.writeText(currentMenu.inviteCode);
-      showStatus(`Código copiado: ${currentMenu.inviteCode}`);
+      showStatus(`${labels.codeCopied}: ${currentMenu.inviteCode}`);
     });
 
     root.querySelector('[data-join-form]')?.addEventListener('submit', async (event) => {
@@ -189,7 +193,7 @@ if (root) {
         await selectMenu(menuId);
         clearStatus();
       } catch (error) {
-        showStatus(error instanceof Error ? error.message : 'No se pudo unir al menú.', true);
+        showStatus(error instanceof Error ? error.message : labels.joinError, true);
       }
     });
 
@@ -207,7 +211,7 @@ if (root) {
 
       if (!user) return;
 
-      userLabel && (userLabel.textContent = user.displayName || user.email || 'Sesión invitada');
+      if (userLabel) userLabel.textContent = user.displayName || user.email || labels.guestSession;
       await ensureActiveMenu(user).catch((error) => showStatus(error.message, true));
     });
   }
