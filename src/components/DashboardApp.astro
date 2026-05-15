@@ -31,11 +31,20 @@ const labels = {
   breakfast: t('dashboard.breakfast'),
   lunch: t('dashboard.lunch'),
   dinner: t('dashboard.dinner'),
-  skipSummary: t('dashboard.skipSummary'),
+  addDish: t('dashboard.addDish'),
+  addPlate: t('dashboard.addPlate'),
+  removePlate: t('dashboard.removePlate'),
+  dishSuggestions: t('dashboard.dishSuggestions'),
+  dishPlaceholder: t('dashboard.dishPlaceholder'),
+  noDay: t('dashboard.noDay'),
+  reason: t('dashboard.reason'),
   reasonAway: t('dashboard.reasonAway'),
   reasonEatingOut: t('dashboard.reasonEatingOut'),
   reasonNotHungry: t('dashboard.reasonNotHungry'),
   reasonOther: t('dashboard.reasonOther'),
+  reasonDescription: t('dashboard.reasonDescription'),
+  notes: t('menu.notes'),
+  skipSummary: t('dashboard.skipSummary'),
   updated: t('menu.updated'),
   updatedBody: t('menu.updatedBody'),
   guestSession: t('menu.guestSession'),
@@ -64,7 +73,7 @@ const labels = {
     </section>
   </div>
 
-  <dialog class="quick-edit-modal" data-quick-modal>
+  <dialog class="quick-edit-modal quick-edit-modal--day" data-quick-modal>
     <form method="dialog" class="quick-edit-modal__box" data-quick-form>
       <header>
         <h2>{labels.quickEdit}</h2>
