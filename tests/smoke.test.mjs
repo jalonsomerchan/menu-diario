@@ -60,7 +60,7 @@ describe('project smoke checks', () => {
     });
   });
 
-  it('keeps template metadata files available', () => {
+  it('keeps project metadata files available', () => {
     ['.nvmrc', '.env.example', '.gitignore', '.prettierrc', '.prettierignore', 'README.md'].forEach(
       (path) => {
         assert.equal(existsSync(join(root, path)), true, `${path} should exist`);
@@ -71,6 +71,7 @@ describe('project smoke checks', () => {
   it('keeps the expected npm scripts available', () => {
     const pkg = readJson('package.json');
 
+    assert.equal(pkg.name, 'menu-diario');
     assert.equal(pkg.scripts?.dev, 'astro dev');
     assert.equal(pkg.scripts?.build, 'astro build');
     assert.equal(pkg.scripts?.preview, 'astro preview');
@@ -78,8 +79,8 @@ describe('project smoke checks', () => {
     assert.ok(pkg.scripts?.clean?.includes('scripts/clean.mjs'));
   });
 
-  it('keeps basic template components available', () => {
-    ['Button', 'Container', 'Footer', 'Header'].forEach((component) => {
+  it('keeps shared and app components available', () => {
+    ['Button', 'Container', 'Footer', 'Header', 'MenuApp'].forEach((component) => {
       assert.equal(
         existsSync(join(root, `src/components/${component}.astro`)),
         true,
@@ -109,7 +110,7 @@ describe('project smoke checks', () => {
       );
     });
 
-    assert.match(readme, /Traducciones e idiomas/);
+    assert.match(readme, /i18n/);
     assert.match(readme, /src\/i18n\/translations/);
   });
 
@@ -136,6 +137,7 @@ describe('project smoke checks', () => {
       );
       assert.ok(translations['home.title'], `${locale}.json should include home.title`);
       assert.ok(translations['nav.main'], `${locale}.json should include nav.main`);
+      assert.ok(translations['menu.signInGoogle'], `${locale}.json should include menu.signInGoogle`);
     });
   });
 
@@ -159,18 +161,23 @@ describe('project smoke checks', () => {
     assert.match(robots, /sitemap-index\.xml/);
   });
 
-  it('keeps starter links and labels configurable or translated', () => {
+  it('keeps app configuration documented and product UI wired', () => {
     const siteConfig = readText('src/config/site.ts');
     const header = readText('src/components/Header.astro');
     const home = readText('src/pages/index.astro');
     const localizedHome = readText('src/pages/[locale]/index.astro');
     const envExample = readText('.env.example');
+    const menuApp = readText('src/components/MenuApp.astro');
+    const menuScript = readText('src/scripts/menu-app.ts');
 
     assert.match(siteConfig, /repositoryUrl/);
+    assert.match(envExample, /PUBLIC_FIREBASE_API_KEY/);
     assert.match(envExample, /PUBLIC_REPOSITORY_URL/);
     assert.match(header, /t\('nav\.main'\)/);
-    assert.match(home, /siteConfig\.repositoryUrl/);
-    assert.match(localizedHome, /siteConfig\.repositoryUrl/);
+    assert.match(home, /<MenuApp/);
+    assert.match(localizedHome, /<MenuApp/);
+    assert.match(menuApp, /data-menu-app/);
+    assert.match(menuScript, /firebasejs/);
     assert.doesNotMatch(home, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
     assert.doesNotMatch(localizedHome, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
   });
@@ -190,8 +197,9 @@ describe('project smoke checks', () => {
   it('keeps useful project documentation available', () => {
     const readme = readText('README.md');
 
-    assert.match(readme, /\S/, 'README.md should not be empty');
+    assert.match(readme, /Menu Diario/, 'README.md should describe the product');
     assert.equal(existsSync(join(root, 'agents.md')), true, 'agents.md should exist');
     assert.equal(existsSync(join(root, 'docs/design-system.md')), true, 'docs/design-system.md should exist');
+    assert.equal(existsSync(join(root, 'docs/firebase.md')), true, 'docs/firebase.md should exist');
   });
 });
