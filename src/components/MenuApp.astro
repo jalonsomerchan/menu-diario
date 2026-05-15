@@ -1,0 +1,84 @@
+---
+import type { Locale } from '../config/site';
+import { useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const labels = {
+  configMissing: 'Configura Firebase en las variables PUBLIC_FIREBASE_* para activar la app.',
+  signInGoogle: 'Entrar con Google',
+  signInGuest: 'Entrar como invitado',
+  signOut: 'Salir',
+  enableNotifications: 'Activar avisos',
+  newWeek: 'Nueva semana',
+  join: 'Unirse',
+  invitePlaceholder: 'Código de invitación',
+  share: 'Compartir código',
+  previous: 'Anterior',
+  next: 'Siguiente',
+  lunch: 'Comida',
+  dinner: 'Cena',
+  notes: 'Notas',
+  saveHint: 'Se guarda automáticamente',
+  updated: 'Menú actualizado',
+  updatedBody: 'Alguien ha cambiado el menú semanal.',
+  empty: 'Sin plato apuntado',
+  history: 'Histórico',
+  upcoming: 'Próximos menús',
+  today: 'Hoy',
+};
+---
+
+<section class="menu-app" data-menu-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status hidden></div>
+
+  <div class="menu-app__auth" data-auth-panel>
+    <div>
+      <p class="menu-app__eyebrow">{t('home.eyebrow')}</p>
+      <h2>{t('home.appTitle')}</h2>
+      <p>{t('home.appDescription')}</p>
+    </div>
+    <div class="menu-app__auth-actions">
+      <button class="button button--primary" type="button" data-google-login>{labels.signInGoogle}</button>
+      <button class="button button--secondary" type="button" data-guest-login>{labels.signInGuest}</button>
+    </div>
+  </div>
+
+  <div class="menu-app__workspace" data-workspace hidden>
+    <div class="menu-toolbar">
+      <div>
+        <span class="menu-app__eyebrow">{labels.saveHint}</span>
+        <h2 data-week-title>{t('home.appTitle')}</h2>
+        <p data-user-label></p>
+      </div>
+      <div class="menu-toolbar__actions">
+        <button class="button button--ghost" type="button" data-notifications>{labels.enableNotifications}</button>
+        <button class="button button--ghost" type="button" data-logout>{labels.signOut}</button>
+      </div>
+    </div>
+
+    <div class="week-switcher" aria-label="Cambiar semana">
+      <button class="button button--secondary" type="button" data-prev-week>{labels.previous}</button>
+      <button class="button button--primary" type="button" data-new-week>{labels.newWeek}</button>
+      <button class="button button--secondary" type="button" data-next-week>{labels.next}</button>
+    </div>
+
+    <form class="join-form" data-join-form>
+      <label class="sr-only" for="invite-code">{labels.invitePlaceholder}</label>
+      <input id="invite-code" name="inviteCode" inputmode="text" autocomplete="off" placeholder={labels.invitePlaceholder} />
+      <button class="button button--secondary" type="submit">{labels.join}</button>
+      <button class="button button--ghost" type="button" data-share-code>{labels.share}</button>
+    </form>
+
+    <div class="menu-days" data-days></div>
+  </div>
+</section>
+
+<script>
+  import '../scripts/menu-app.ts';
+</script>
