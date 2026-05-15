@@ -81,8 +81,33 @@ const labels = {
   }
 
   .configurator-app .dish-suggestions {
-    flex-wrap: wrap;
-    overflow-x: visible;
+    display: grid;
+    gap: 0;
+    max-height: 13.5rem;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+    padding: 0.25rem;
+  }
+
+  .configurator-app .dish-suggestions button {
+    display: block;
+    width: 100%;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    padding: 0.72rem 0.8rem;
+    text-align: left;
+    font-size: 0.95rem;
+    font-weight: 800;
+  }
+
+  .configurator-app .dish-suggestions button:hover,
+  .configurator-app .dish-suggestions button:focus-visible {
+    background: var(--color-primary-soft);
   }
 </style>
 
