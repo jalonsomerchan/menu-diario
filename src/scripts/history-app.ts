@@ -1,7 +1,7 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getMonday, toIsoDate } from '../lib/menu/dates';
-import { renderDayEditor } from '../lib/menu/day-editor';
+import { renderDayEditor, renderPlateRow } from '../lib/menu/day-editor';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
   clearMenuDay,
@@ -63,14 +63,8 @@ if (root) {
     return {
       meals: {
         breakfast: normalizeMeal(day?.meals?.breakfast),
-        lunch: normalizeMeal({
-          ...(day?.meals?.lunch ?? {}),
-          items: day?.meals?.lunch?.items ?? day?.lunchItems ?? (day?.lunch ? [day.lunch] : []),
-        }),
-        dinner: normalizeMeal({
-          ...(day?.meals?.dinner ?? {}),
-          items: day?.meals?.dinner?.items ?? (day?.dinner ? [day.dinner] : []),
-        }),
+        lunch: normalizeMeal({ ...(day?.meals?.lunch ?? {}), items: day?.meals?.lunch?.items ?? day?.lunchItems ?? (day?.lunch ? [day.lunch] : []) }),
+        dinner: normalizeMeal({ ...(day?.meals?.dinner ?? {}), items: day?.meals?.dinner?.items ?? (day?.dinner ? [day.dinner] : []) }),
       },
       skipped: Boolean(day?.skipped),
       reason: day?.reason ?? '',
@@ -131,10 +125,7 @@ if (root) {
       const found = findDay(isoDate);
       if (found) {
         const summaries = getEnabledMeals()
-          .map(
-            (meal) =>
-              `<div class="day-meal-row"><span>${escapeHtml(mealLabel(meal))}:</span><strong>${escapeHtml(found.day.skipped ? labels.skipSummary : renderMealSummary(found.day.meals[meal]))}</strong></div>`
-          )
+          .map((meal) => `<div class="day-meal-row"><span>${escapeHtml(mealLabel(meal))}:</span><strong>${escapeHtml(found.day.skipped ? labels.skipSummary : renderMealSummary(found.day.meals[meal]))}</strong></div>`)
           .join('');
         rows.unshift(`
           <article class="next-day-card next-day-card--mockup" data-day="${isoDate}" data-menu="${found.menu.id}">
@@ -182,11 +173,17 @@ if (root) {
   async function saveField(card: HTMLElement, path: string, value: string | boolean | string[]) {
     if (!currentUser || !editMenuId) return;
     const services = await getFirebaseServices();
-    await updateMenuPatch(services, editMenuId, currentUser.uid, {
-      dayKey: card.dataset.day ?? '',
-      path,
-      value,
-    });
+    await updateMenuPatch(
+      services,
+      editMenuId,
+      currentUser.uid,
+      {
+        dayKey: card.dataset.day ?? '',
+        path,
+        value,
+      },
+      currentProfile?.groupId
+    );
   }
 
   async function savePlateList(card: HTMLElement, meal: MealSlot) {
@@ -199,11 +196,8 @@ if (root) {
   function addPlate(card: HTMLElement, meal: MealSlot) {
     const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
     if (!list) return;
-    const row = document.createElement('div');
-    row.className = 'plate-row';
-    row.innerHTML = `<label><span class="sr-only">${labels.addDish}</span><input type="text" value="" data-plate-input="${meal}" placeholder="${labels.dishPlaceholder}" autocomplete="off" /></label><button class="icon-button icon-button--danger" type="button" data-remove-plate="${meal}" aria-label="${labels.removePlate}"><span aria-hidden="true">×</span></button>`;
-    list.append(row);
-    row.querySelector<HTMLInputElement>('input')?.focus();
+    list.insertAdjacentHTML('beforeend', renderPlateRow(labels, meal, '', list.children.length, dishes));
+    list.querySelector<HTMLInputElement>('.plate-row:last-child input')?.focus();
   }
 
   if (!hasFirebaseConfig()) {
@@ -294,21 +288,22 @@ if (root) {
             return;
           }
 
-          await ensureUserProfile(services, user, 'Sesión invitada');
+          await ensureUserProfile(services, user, labels.guestSession);
           await getOrCreateWeekMenu(services, user.uid, getCurrentWeekStart(), locale);
           unsubscribeProfile = watchUserProfile(
             services,
             user,
-            'Sesión invitada',
+            labels.guestSession,
             (profile) => {
               currentProfile = profile;
+              unsubscribeDishes?.();
+              unsubscribeDishes = watchDishes(services, user.uid, (nextDishes) => {
+                dishes = nextDishes;
+              }, (error) => showStatus(error.message, true), profile.groupId);
               if (menus.length) renderHistory();
             },
             (error) => showStatus(error.message, true)
           );
-          unsubscribeDishes = watchDishes(services, user.uid, (nextDishes) => {
-            dishes = nextDishes;
-          }, (error) => showStatus(error.message, true));
           unsubscribeMenus = watchUserMenus(
             services,
             user.uid,
