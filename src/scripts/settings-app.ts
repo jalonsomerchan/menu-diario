@@ -107,8 +107,10 @@ if (root) {
 
         root.querySelectorAll<HTMLInputElement>('[data-meal-preference]').forEach((input) => {
           input.addEventListener('change', async () => {
-            if (!currentGroup) return;
-            await updateGroupOptions(services, currentGroup.id, selectedMeals());
+            if (!currentGroup || !currentUser) return;
+            const enabledMeals = selectedMeals();
+            await updateGroupOptions(services, currentGroup.id, enabledMeals);
+            await updateUserPreferences(services, currentUser.uid, { enabledMeals });
             showStatus(labels.updated);
           });
         });
