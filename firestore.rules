@@ -25,10 +25,6 @@ service cloud.firestore {
       return signedIn() && request.auth.uid in resource.data.members;
     }
 
-    function willBeMemberDocument() {
-      return signedIn() && request.auth.uid in request.resource.data.members;
-    }
-
     function createsOwnMemberDocument() {
       return signedIn() && request.auth.uid in request.resource.data.members;
     }
@@ -54,17 +50,18 @@ service cloud.firestore {
       return data.scope == 'global' || data.isGlobal == true;
     }
 
-    function isOwnLegacyOrPersonalDish(data) {
+    function isOwnPersonalDish(data) {
       return signedIn()
+        && data.scope == 'user'
         && data.createdBy == request.auth.uid
         && request.auth.uid in data.members
-        && (!('isGlobal' in data) || data.isGlobal == false)
-        && (!('editable' in data) || data.editable == true)
-        && (!('scope' in data) || data.scope == 'user');
+        && data.isGlobal == false
+        && data.editable == true;
     }
 
     function isGroupDishData(data) {
       return data.scope == 'group'
+        && data.groupId is string
         && data.isGlobal == false
         && data.editable == true
         && request.auth.uid in data.members
@@ -94,11 +91,11 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if isAdmin()
         || isGroupDishData(request.resource.data)
-        || isOwnLegacyOrPersonalDish(request.resource.data);
+        || isOwnPersonalDish(request.resource.data);
       allow update: if isAdmin()
         || (!isGlobalDishData(resource.data)
           && !isGlobalDishData(request.resource.data)
-          && (isGroupDishData(request.resource.data) || isOwnLegacyOrPersonalDish(request.resource.data)));
+          && (isGroupDishData(request.resource.data) || isOwnPersonalDish(request.resource.data)));
       allow delete: if false;
     }
   }
