@@ -45,19 +45,11 @@ function renderReasonFields(labels: DayEditorLabels, reason = '', note = '') {
   `;
 }
 
-function renderSuggestions(labels: DayEditorLabels, dayKey: string, meal: MealSlot, dishes: Dish[]) {
-  if (!dishes.length) return '';
+function renderSuggestionContainer(labels: DayEditorLabels, dayKey: string, meal: MealSlot, dishes: Dish[]) {
+  const hasSuggestions = dishes.length > 0;
 
   return `
-    <div class="dish-suggestions" role="listbox" aria-label="${escapeHtml(labels.dishSuggestions)}" data-suggestions="${dayKey}-${meal}">
-      ${dishes
-        .slice(0, 8)
-        .map(
-          (dish) =>
-            `<button type="button" role="option" data-suggestion="${escapeHtml(dish.name)}">${escapeHtml(dish.name)}</button>`
-        )
-        .join('')}
-    </div>
+    <div class="dish-suggestions" role="listbox" aria-label="${escapeHtml(labels.dishSuggestions)}" data-suggestions="${dayKey}-${meal}" data-suggestion-list="${meal}" ${hasSuggestions ? '' : 'hidden'}></div>
   `;
 }
 
@@ -89,7 +81,7 @@ function renderMeal(labels: DayEditorLabels, dayKey: string, meal: MealSlot, mea
           )
           .join('')}
       </div>
-      ${renderSuggestions(labels, dayKey, meal, dishes)}
+      ${renderSuggestionContainer(labels, dayKey, meal, dishes)}
     </section>
   `;
 }
