@@ -134,9 +134,10 @@ if (root) {
         });
 
         root.querySelector('[data-leave-group]')?.addEventListener('click', async () => {
-          if (!currentUser || !currentGroup) return;
+          if (!currentUser || !currentGroup || !currentProfile) return;
           await leaveGroup(services, currentUser, currentGroup);
-          const groupId = await ensureDefaultGroup(services, currentUser, currentProfile!);
+          const personalProfile: UserProfile = { ...currentProfile, groupId: undefined };
+          const groupId = await ensureDefaultGroup(services, currentUser, personalProfile);
           unsubscribeGroup?.();
           unsubscribeGroup = watchGroup(services, groupId, renderGroup, (error) => showStatus(error.message, true));
         });
