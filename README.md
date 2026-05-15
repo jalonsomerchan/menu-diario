@@ -88,7 +88,7 @@ npm run dev
 
 ### 2. Configurar variables de entorno
 
-Copia `.env.example` a `.env` y rellena estas variables:
+Para desarrollo local, copia `.env.example` a `.env` y rellena estas variables:
 
 ```env
 PUBLIC_FIREBASE_API_KEY=
@@ -99,6 +99,34 @@ PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 PUBLIC_FIREBASE_APP_ID=
 PUBLIC_FIREBASE_MEASUREMENT_ID=
 ```
+
+Para GitHub Pages, configura esos mismos nombres en GitHub:
+
+```text
+Settings > Secrets and variables > Actions > Variables
+```
+
+Variables recomendadas para GitHub Actions:
+
+```text
+PUBLIC_FIREBASE_API_KEY
+PUBLIC_FIREBASE_AUTH_DOMAIN
+PUBLIC_FIREBASE_PROJECT_ID
+PUBLIC_FIREBASE_STORAGE_BUCKET
+PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+PUBLIC_FIREBASE_APP_ID
+PUBLIC_FIREBASE_MEASUREMENT_ID
+PUBLIC_REPOSITORY_URL
+```
+
+`PUBLIC_REPOSITORY_URL` es opcional. Las variables `ASTRO_SITE` y `ASTRO_BASE` también son opcionales en GitHub Pages porque el workflow y `astro.config.mjs` calculan `site` y `base` automáticamente. Si quieres forzarlas, usa estos valores para este repositorio:
+
+```text
+ASTRO_SITE=https://jalonsomerchan.github.io
+ASTRO_BASE=/menu-diario
+```
+
+El workflow `.github/workflows/pages.yml` expone estas variables al paso `npm run build`, que es cuando Astro sustituye `import.meta.env.PUBLIC_*`. También acepta `secrets.*` como fallback si prefieres guardar los valores en **Secrets** en vez de **Variables**.
 
 Ejemplo de correspondencia con el objeto de configuración de Firebase:
 
@@ -125,8 +153,8 @@ En Firebase Console:
 3. Activa **Anonymous** para permitir sesiones invitadas.
 4. En **Settings > Authorized domains**, añade:
    - `localhost` para desarrollo.
-   - El dominio final de producción.
-   - Si usas GitHub Pages, el dominio `usuario.github.io` o tu dominio personalizado.
+   - `jalonsomerchan.github.io` para GitHub Pages.
+   - Tu dominio personalizado, si lo usas.
 
 ### 4. Activar Firestore
 
@@ -270,27 +298,33 @@ src/styles/global.css              Tokens visuales y estilos mobile first
 docs/firebase.md                   Modelo de datos y reglas recomendadas
 ```
 
-## Variables de despliegue
-
-Para despliegues en dominio raíz:
-
-```env
-ASTRO_SITE=https://example.com
-ASTRO_BASE=/
-```
-
-Para GitHub Pages en subruta, el workflow calcula `base` automáticamente usando el nombre del repositorio. Si quieres forzarlo:
-
-```env
-ASTRO_SITE=https://usuario.github.io
-ASTRO_BASE=/menu-diario/
-```
-
 ## GitHub Pages
 
-El proyecto conserva compatibilidad con despliegue en dominio raíz y subruta. En GitHub Actions, `astro.config.mjs` calcula automáticamente `site` y `base`.
+El despliegue está en `.github/workflows/pages.yml`.
 
-Antes de desplegar en GitHub Pages, configura las variables `PUBLIC_FIREBASE_*` como variables de entorno del repositorio o del workflow, según el método de despliegue usado.
+En GitHub Pages, Astro necesita las variables en tiempo de build. Por eso el workflow declara:
+
+```yaml
+env:
+  PUBLIC_FIREBASE_API_KEY: ${{ vars.PUBLIC_FIREBASE_API_KEY || secrets.PUBLIC_FIREBASE_API_KEY }}
+  PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ vars.PUBLIC_FIREBASE_AUTH_DOMAIN || secrets.PUBLIC_FIREBASE_AUTH_DOMAIN }}
+  PUBLIC_FIREBASE_PROJECT_ID: ${{ vars.PUBLIC_FIREBASE_PROJECT_ID || secrets.PUBLIC_FIREBASE_PROJECT_ID }}
+  PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ vars.PUBLIC_FIREBASE_STORAGE_BUCKET || secrets.PUBLIC_FIREBASE_STORAGE_BUCKET }}
+  PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.PUBLIC_FIREBASE_MESSAGING_SENDER_ID || secrets.PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+  PUBLIC_FIREBASE_APP_ID: ${{ vars.PUBLIC_FIREBASE_APP_ID || secrets.PUBLIC_FIREBASE_APP_ID }}
+  PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ vars.PUBLIC_FIREBASE_MEASUREMENT_ID || secrets.PUBLIC_FIREBASE_MEASUREMENT_ID }}
+```
+
+Puedes crear los valores como **Variables** porque son públicos en una app web de Firebase. Si los creas como **Secrets**, el workflow también los recogerá por fallback.
+
+Para configurar Pages:
+
+1. Ve a **Settings > Pages**.
+2. En **Build and deployment**, selecciona **GitHub Actions**.
+3. Ve a **Settings > Secrets and variables > Actions > Variables**.
+4. Crea las variables `PUBLIC_FIREBASE_*`.
+5. Asegúrate de que Firebase Authentication tiene autorizado `jalonsomerchan.github.io`.
+6. Haz merge a `main` o lanza manualmente el workflow **Deploy to GitHub Pages**.
 
 ## Tests y validación
 
