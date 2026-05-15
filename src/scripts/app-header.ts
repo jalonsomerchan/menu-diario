@@ -1,6 +1,6 @@
 import { closeSession, getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
-import { ensureUserProfile, updateUserPreferences, watchUserProfile } from '../lib/menu/repository';
+import { updateUserPreferences, watchUserProfile } from '../lib/menu/repository';
 import type { FirebaseUser, ThemePreference } from '../lib/menu/types';
 
 const root = document.querySelector<HTMLElement>('[data-app-header]');
@@ -27,7 +27,6 @@ if (root && hasFirebaseConfig()) {
     services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
       if (!user) return;
 
-      await ensureUserProfile(services, user, guestLabel);
       const unsubscribe = watchUserProfile(
         services,
         user,

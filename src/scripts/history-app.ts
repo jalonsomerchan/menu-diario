@@ -1,6 +1,6 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
-import { toIsoDate } from '../lib/menu/dates';
+import { getMonday, toIsoDate } from '../lib/menu/dates';
 import {
   clearMenuDay,
   ensureUserProfile,
@@ -83,6 +83,10 @@ if (root) {
     date.setHours(0, 0, 0, 0);
     date.setDate(date.getDate() + daysFromToday);
     return toIsoDate(date);
+  }
+
+  function getCurrentWeekStart() {
+    return toIsoDate(getMonday(new Date()));
   }
 
   function formatWeekday(isoDate: string) {
@@ -239,7 +243,7 @@ if (root) {
           }
 
           await ensureUserProfile(services, user, 'Sesión invitada');
-          await getOrCreateWeekMenu(services, user.uid, getDateOffset(0), locale);
+          await getOrCreateWeekMenu(services, user.uid, getCurrentWeekStart(), locale);
           unsubscribeProfile = watchUserProfile(
             services,
             user,

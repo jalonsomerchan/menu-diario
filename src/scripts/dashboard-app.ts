@@ -1,6 +1,6 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
-import { toIsoDate } from '../lib/menu/dates';
+import { getMonday, toIsoDate } from '../lib/menu/dates';
 import {
   clearMenuDay,
   ensureUserProfile,
@@ -37,11 +37,7 @@ if (root) {
   let firstMenuLoad = true;
 
   function escapeHtml(value = '') {
-    return value
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;');
+    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
   }
 
   function showStatus(message: string, isError = false) {
@@ -116,6 +112,10 @@ if (root) {
     date.setHours(0, 0, 0, 0);
     date.setDate(date.getDate() + daysFromToday);
     return toIsoDate(date);
+  }
+
+  function getCurrentWeekStart() {
+    return toIsoDate(getMonday(new Date()));
   }
 
   function getNextSevenDates() {
@@ -244,10 +244,7 @@ if (root) {
       .then((services) => {
         root.querySelector('[data-notifications]')?.addEventListener('click', async () => {
           const permission = await requestChangeNotifications();
-          showStatus(
-            permission === 'granted' ? labels.notificationsEnabled : labels.notificationsDenied,
-            permission !== 'granted'
-          );
+          showStatus(permission === 'granted' ? labels.notificationsEnabled : labels.notificationsDenied, permission !== 'granted');
         });
 
         nextDays?.addEventListener('click', async (event) => {
@@ -287,7 +284,7 @@ if (root) {
           if (userLabel) userLabel.textContent = `${labels.hello} ${user.displayName || user.email || labels.guestSession}`;
 
           await ensureUserProfile(services, user, labels.guestSession);
-          currentMenuId = await getOrCreateWeekMenu(services, user.uid, getDateOffset(0), locale);
+          currentMenuId = await getOrCreateWeekMenu(services, user.uid, getCurrentWeekStart(), locale);
           firstMenuLoad = true;
 
           unsubscribeProfile = watchUserProfile(
