@@ -1,9 +1,12 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { archiveDish, createManualDish, duplicateGlobalDish, renameDish, updateDishPreferences, watchUserDishes } from '../lib/dishes/repository';
-import { filterDishes, isEditableDish, sortDishes, type DishFilterMode, type DishSortMode } from '../lib/dishes/helpers.mjs';
+import { filterDishes, isEditableDish, sortDishes } from '../lib/dishes/helpers.mjs';
 import { ensureUserProfile, watchUserProfile } from '../lib/menu/repository';
 import type { Dish, FirebaseUser, UserProfile } from '../lib/menu/types';
+
+type DishFilterMode = 'all' | 'favorites' | 'blocked';
+type DishSortMode = 'most-used' | 'recent' | 'oldest' | 'name';
 
 const root = document.querySelector<HTMLElement>('[data-dishes-app]');
 
