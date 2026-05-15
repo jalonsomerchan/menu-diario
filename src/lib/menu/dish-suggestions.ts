@@ -24,6 +24,15 @@ function ensureInputId(input: HTMLInputElement) {
   return input.id;
 }
 
+function ensureListId(list: HTMLElement, input: HTMLInputElement) {
+  if (!list.id) list.id = `${ensureInputId(input)}-listbox`;
+  input.setAttribute('aria-controls', list.id);
+}
+
+function setExpanded(input: HTMLInputElement, isExpanded: boolean) {
+  input.setAttribute('aria-expanded', String(isExpanded));
+}
+
 function getMatches(dishes: Dish[], query: string) {
   const normalizedQuery = normalize(query);
 
@@ -43,13 +52,19 @@ function getMatches(dishes: Dish[], query: string) {
     .map((item) => item.dish);
 }
 
+function hideSuggestions(list: HTMLElement, input?: HTMLInputElement | null) {
+  list.hidden = true;
+  list.innerHTML = '';
+  if (input) setExpanded(input, false);
+}
+
 function renderSuggestions(list: HTMLElement, input: HTMLInputElement, dishes: Dish[]) {
   const matches = getMatches(dishes, input.value);
   list.dataset.activeInputId = ensureInputId(input);
+  ensureListId(list, input);
 
   if (!matches.length) {
-    list.hidden = true;
-    list.innerHTML = '';
+    hideSuggestions(list, input);
     return;
   }
 
@@ -60,6 +75,15 @@ function renderSuggestions(list: HTMLElement, input: HTMLInputElement, dishes: D
     )
     .join('');
   list.hidden = false;
+  setExpanded(input, true);
+}
+
+function getSuggestionTarget(input: HTMLInputElement) {
+  const meal = input.dataset.plateInput;
+  const mealSection = input.closest<HTMLElement>('[data-meal]');
+  const list = mealSection?.querySelector<HTMLElement>(`[data-suggestion-list="${meal}"]`);
+
+  return list ? { list, mealSection } : null;
 }
 
 export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]) {
@@ -67,24 +91,32 @@ export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]
     const input = event.target;
     if (!(input instanceof HTMLInputElement) || !input.dataset.plateInput) return;
 
-    const meal = input.dataset.plateInput;
-    const mealSection = input.closest<HTMLElement>('[data-meal]');
-    const list = mealSection?.querySelector<HTMLElement>(`[data-suggestion-list="${meal}"]`);
-    if (!list) return;
+    const target = getSuggestionTarget(input);
+    if (!target) return;
 
-    renderSuggestions(list, input, getDishes());
+    renderSuggestions(target.list, input, getDishes());
   });
 
   root.addEventListener('input', (event) => {
     const input = event.target;
     if (!(input instanceof HTMLInputElement) || !input.dataset.plateInput) return;
 
-    const meal = input.dataset.plateInput;
-    const mealSection = input.closest<HTMLElement>('[data-meal]');
-    const list = mealSection?.querySelector<HTMLElement>(`[data-suggestion-list="${meal}"]`);
-    if (!list) return;
+    const target = getSuggestionTarget(input);
+    if (!target) return;
 
-    renderSuggestions(list, input, getDishes());
+    renderSuggestions(target.list, input, getDishes());
+  });
+
+  root.addEventListener('keydown', (event) => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement) || !input.dataset.plateInput || event.key !== 'ArrowDown') return;
+
+    const target = getSuggestionTarget(input);
+    if (!target) return;
+
+    event.preventDefault();
+    renderSuggestions(target.list, input, getDishes());
+    target.list.querySelector<HTMLButtonElement>('[data-suggestion]')?.focus();
   });
 
   root.addEventListener('focusout', (event) => {
@@ -92,10 +124,9 @@ export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]
     if (!(input instanceof HTMLInputElement) || !input.dataset.plateInput) return;
 
     window.setTimeout(() => {
-      const mealSection = input.closest<HTMLElement>('[data-meal]');
-      const list = mealSection?.querySelector<HTMLElement>('[data-suggestion-list]');
-      if (list && !mealSection?.contains(document.activeElement)) {
-        list.hidden = true;
+      const target = getSuggestionTarget(input);
+      if (target && !target.mealSection?.contains(document.activeElement)) {
+        hideSuggestions(target.list, input);
       }
     }, 120);
   });
@@ -103,6 +134,18 @@ export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]
   root.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
+
+    const toggle = target.closest<HTMLButtonElement>('[data-suggestion-toggle]');
+    if (toggle) {
+      const input = toggle.closest<HTMLElement>('.plate-row')?.querySelector<HTMLInputElement>('[data-plate-input]');
+      const suggestionTarget = input ? getSuggestionTarget(input) : null;
+      if (!input || !suggestionTarget) return;
+
+      event.preventDefault();
+      renderSuggestions(suggestionTarget.list, input, getDishes());
+      input.focus();
+      return;
+    }
 
     const button = target.closest<HTMLButtonElement>('[data-suggestion]');
     if (!button) return;
@@ -114,10 +157,11 @@ export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]
     const inputId = list?.dataset.activeInputId;
     const input = inputId ? root.querySelector<HTMLInputElement>(`#${CSS.escape(inputId)}`) : null;
 
-    if (!input) return;
+    if (!input || !list) return;
 
     input.value = button.dataset.suggestion ?? '';
     input.dispatchEvent(new Event('change', { bubbles: true }));
-    list.hidden = true;
+    hideSuggestions(list, input);
+    input.focus();
   });
 }
