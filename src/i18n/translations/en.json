@@ -107,6 +107,8 @@
   "dishes.noCreatedAt": "No saved date",
   "dishes.tags": "Tags",
   "dishes.quickTags": "Quick tags",
+  "dishes.removeTag": "Remove tag",
+  "dishes.noQuickTags": "No quick tags",
   "dishes.edit": "Edit dish",
   "dishes.archive": "Archive dish",
   "dishes.markFavorite": "Mark favorite",
