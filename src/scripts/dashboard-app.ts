@@ -1,43 +1,31 @@
 import { closeSession, getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
-import { getMonday, getWeekDays, toIsoDate } from '../lib/menu/dates';
+import { toIsoDate } from '../lib/menu/dates';
 import {
   ensureUserProfile,
   getOrCreateWeekMenu,
-  updateMenuPatch,
-  updateUserPreferences,
-  watchDishes,
   watchUserProfile,
   watchWeekMenu,
 } from '../lib/menu/repository';
-import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, ThemePreference, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { notifyMenuChanged, requestChangeNotifications } from '../lib/notifications/browser';
 
 const root = document.querySelector<HTMLElement>('[data-dashboard-app]');
-const mealSlots: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
-const themeValues: ThemePreference[] = ['system', 'light', 'dark'];
 
 if (root) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
   const locale = document.documentElement.lang === 'en' ? 'en-US' : 'es-ES';
-  const dayLabels = (labels.days ?? '').split('|').filter(Boolean);
   const status = root.querySelector<HTMLElement>('[data-status]');
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const content = root.querySelector<HTMLElement>('[data-content]');
   const userLabel = root.querySelector<HTMLElement>('[data-user-label]');
   const todaySummary = root.querySelector<HTMLElement>('[data-today-summary]');
   const nextDays = root.querySelector<HTMLElement>('[data-next-days]');
-  const configDays = root.querySelector<HTMLElement>('[data-config-days]');
-  const configSection = root.querySelector<HTMLElement>('[data-config-section]');
-  const themeSelect = root.querySelector<HTMLSelectElement>('[data-theme-select]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
-  let currentMenuId = '';
   let currentMenu: WeekMenu | null = null;
-  let dishes: Dish[] = [];
   let unsubscribeMenu: (() => void) | undefined;
-  let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let firstMenuLoad = true;
 
@@ -91,6 +79,10 @@ if (root) {
     };
   }
 
+  function getEnabledMeals(): MealSlot[] {
+    return currentProfile?.enabledMeals?.length ? currentProfile.enabledMeals : ['lunch'];
+  }
+
   function mealLabel(meal: MealSlot) {
     return labels[meal] ?? meal;
   }
@@ -103,44 +95,6 @@ if (root) {
     return '';
   }
 
-  function formatDate(isoDate: string, includeWeekday = true) {
-    return new Intl.DateTimeFormat(locale, {
-      weekday: includeWeekday ? 'short' : undefined,
-      day: 'numeric',
-      month: 'short',
-    }).format(new Date(`${isoDate}T00:00:00`));
-  }
-
-  function getNextSevenDates() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() + index);
-      return toIsoDate(date);
-    });
-  }
-
-  function getEnabledMeals() {
-    return currentProfile?.enabledMeals?.length ? currentProfile.enabledMeals : ['lunch'];
-  }
-
-  function applyTheme(theme: ThemePreference) {
-    if (theme === 'system') {
-      document.documentElement.removeAttribute('data-theme');
-    } else {
-      document.documentElement.dataset.theme = theme;
-    }
-
-    if (themeSelect) themeSelect.value = theme;
-  }
-
-  function setVisible(isReady: boolean) {
-    if (loading) loading.hidden = isReady;
-    if (content) content.hidden = !isReady;
-  }
-
   function renderMealSummary(meal: MealEntry) {
     if (meal.skipped) {
       const reason = reasonLabel(meal.reason);
@@ -150,17 +104,47 @@ if (root) {
     return meal.items.length ? meal.items.join(', ') : labels.todayEmpty;
   }
 
+  function getDateOffset(daysFromToday: number) {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + daysFromToday);
+    return toIsoDate(date);
+  }
+
+  function getNextSevenDates() {
+    return Array.from({ length: 7 }, (_, index) => getDateOffset(index + 1));
+  }
+
+  function formatWeekday(isoDate: string) {
+    return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(new Date(`${isoDate}T00:00:00`));
+  }
+
+  function getDayNumber(isoDate: string) {
+    return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(new Date(`${isoDate}T00:00:00`));
+  }
+
+  function applyTheme(theme: UserProfile['theme']) {
+    if (theme === 'system') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.dataset.theme = theme;
+    }
+  }
+
+  function setVisible(isReady: boolean) {
+    if (loading) loading.hidden = isReady;
+    if (content) content.hidden = !isReady;
+  }
+
   function renderToday(menu: WeekMenu) {
     if (!todaySummary) return;
 
-    const todayKey = toIsoDate(new Date());
-    const day = normalizeDay(menu.days[todayKey]);
-    const userName = currentUser?.displayName || currentUser?.email || labels.guestSession;
-    const meals = getEnabledMeals()
-      .map((meal) => `${mealLabel(meal)}: ${renderMealSummary(day.meals[meal])}`)
-      .join(' · ');
+    const day = normalizeDay(menu.days[getDateOffset(0)]);
+    const firstMeal = getEnabledMeals()[0] ?? 'lunch';
+    const meal = day.meals[firstMeal];
+    const items = meal.skipped || meal.items.length === 0 ? [renderMealSummary(meal)] : meal.items;
 
-    todaySummary.textContent = `${labels.hello} ${userName}, ${labels.todayIntro} ${meals}`;
+    todaySummary.innerHTML = items.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
   }
 
   function renderNextSeven(menu: WeekMenu) {
@@ -169,113 +153,31 @@ if (root) {
     nextDays.innerHTML = getNextSevenDates()
       .map((isoDate) => {
         const day = normalizeDay(menu.days[isoDate]);
-        const mealSummaries = getEnabledMeals()
+        const summaries = getEnabledMeals()
           .map(
             (meal) => `
-              <li>
-                <span>${escapeHtml(mealLabel(meal))}</span>
+              <div class="day-meal-row">
+                <span>${escapeHtml(mealLabel(meal))}:</span>
                 <strong>${escapeHtml(renderMealSummary(day.meals[meal]))}</strong>
-              </li>
+              </div>
             `
           )
           .join('');
 
         return `
-          <article class="next-day-card" data-day="${isoDate}">
-            <header>
-              <span>${escapeHtml(formatDate(isoDate))}</span>
-              <button class="button button--ghost button--small" type="button" data-edit-day="${isoDate}">${escapeHtml(labels.editDay)}</button>
-            </header>
-            <ul>${mealSummaries}</ul>
+          <article class="next-day-card next-day-card--mockup">
+            <div class="next-day-card__number">${escapeHtml(getDayNumber(isoDate))}</div>
+            <div class="next-day-card__body">
+              <header>
+                <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
+                <a class="button button--ghost button--small" href="${labels.configurePath}#dia-${isoDate}">${escapeHtml(labels.editDay)}</a>
+              </header>
+              ${summaries}
+            </div>
           </article>
         `;
       })
       .join('');
-  }
-
-  function renderMealInputs(dayKey: string, meal: MealSlot, mealData: MealEntry) {
-    const listId = `dish-options-${dayKey}-${meal}`;
-    const values = mealData.items.length ? mealData.items : [''];
-    const skipFields = mealData.skipped
-      ? `
-        <label>${escapeHtml(labels.reason)}
-          <select data-field="meals.${meal}.reason">
-            <option value=""></option>
-            <option value="away" ${mealData.reason === 'away' ? 'selected' : ''}>${escapeHtml(labels.reasonAway)}</option>
-            <option value="eating-out" ${mealData.reason === 'eating-out' ? 'selected' : ''}>${escapeHtml(labels.reasonEatingOut)}</option>
-            <option value="not-hungry" ${mealData.reason === 'not-hungry' ? 'selected' : ''}>${escapeHtml(labels.reasonNotHungry)}</option>
-            <option value="other" ${mealData.reason === 'other' ? 'selected' : ''}>${escapeHtml(labels.reasonOther)}</option>
-          </select>
-        </label>
-        <label>${escapeHtml(labels.reasonDescription)}
-          <textarea data-field="meals.${meal}.note" rows="2">${escapeHtml(mealData.note)}</textarea>
-        </label>
-      `
-      : '';
-
-    return `
-      <section class="meal-editor" data-meal="${meal}">
-        <header>
-          <h4>${escapeHtml(mealLabel(meal))}</h4>
-          <button class="button button--ghost button--small" type="button" data-add-plate="${meal}">${escapeHtml(labels.addPlate)}</button>
-        </header>
-        <div class="plate-list" data-plate-list="${meal}">
-          ${values
-            .map(
-              (value, index) => `
-                <label>
-                  <span class="sr-only">${escapeHtml(labels.addDish)} ${index + 1}</span>
-                  <input type="text" list="${listId}" value="${escapeHtml(value)}" data-plate-input="${meal}" placeholder="${escapeHtml(labels.dishPlaceholder)}" />
-                </label>
-              `
-            )
-            .join('')}
-        </div>
-        <datalist id="${listId}">
-          ${dishes.map((dish) => `<option value="${escapeHtml(dish.name)}"></option>`).join('')}
-        </datalist>
-        <label class="checkbox-row">
-          <input type="checkbox" data-field="meals.${meal}.skipped" ${mealData.skipped ? 'checked' : ''} />
-          <span>${escapeHtml(labels.noMeal)}</span>
-        </label>
-        ${skipFields}
-      </section>
-    `;
-  }
-
-  function renderConfig(menu: WeekMenu) {
-    if (!configDays) return;
-
-    const weekStart = toIsoDate(getMonday());
-    const days = getWeekDays(weekStart, dayLabels);
-
-    configDays.innerHTML = days
-      .map((weekDay) => {
-        const day = normalizeDay(menu.days[weekDay.key]);
-        const mealEditors = getEnabledMeals().map((meal) => renderMealInputs(weekDay.key, meal, day.meals[meal])).join('');
-
-        return `
-          <article class="day-card day-card--editor" data-day="${weekDay.key}">
-            <header class="day-card__header">
-              <div><h3>${escapeHtml(weekDay.label)}</h3><p>${escapeHtml(formatDate(weekDay.isoDate))}</p></div>
-            </header>
-            ${mealEditors}
-            <label>${escapeHtml(labels.notes)}
-              <textarea data-field="notes" rows="2">${escapeHtml(day.notes ?? '')}</textarea>
-            </label>
-          </article>
-        `;
-      })
-      .join('');
-  }
-
-  function renderPreferences(profile: UserProfile) {
-    currentProfile = profile;
-    applyTheme(profile.theme);
-
-    root.querySelectorAll<HTMLInputElement>('[data-meal-preference]').forEach((input) => {
-      input.checked = profile.enabledMeals.includes(input.value as MealSlot);
-    });
   }
 
   function renderDashboard(menu: WeekMenu) {
@@ -283,56 +185,6 @@ if (root) {
     setVisible(true);
     renderToday(menu);
     renderNextSeven(menu);
-    renderConfig(menu);
-  }
-
-  async function saveField(target: HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement) {
-    if (!currentUser || !currentMenuId) return;
-    const card = target.closest<HTMLElement>('[data-day]');
-    const field = target.dataset.field;
-
-    if (!card || !field) return;
-
-    let value: string | boolean = target.value.trim();
-
-    if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-      value = target.checked;
-    }
-
-    const services = await getFirebaseServices();
-    await updateMenuPatch(services, currentMenuId, currentUser.uid, {
-      dayKey: card.dataset.day ?? '',
-      path: field,
-      value,
-    });
-  }
-
-  async function savePlateList(card: HTMLElement, meal: MealSlot) {
-    if (!currentUser || !currentMenuId) return;
-
-    const items = [...card.querySelectorAll<HTMLInputElement>(`[data-plate-input="${meal}"]`)]
-      .map((input) => input.value.trim())
-      .filter(Boolean);
-    const services = await getFirebaseServices();
-
-    await updateMenuPatch(services, currentMenuId, currentUser.uid, {
-      dayKey: card.dataset.day ?? '',
-      path: `meals.${meal}.items`,
-      value: items,
-    });
-  }
-
-  async function savePreferences() {
-    if (!currentUser) return;
-
-    const enabledMeals = [...root.querySelectorAll<HTMLInputElement>('[data-meal-preference]')]
-      .filter((input) => input.checked)
-      .map((input) => input.value as MealSlot);
-    const services = await getFirebaseServices();
-
-    await updateUserPreferences(services, currentUser.uid, {
-      enabledMeals: enabledMeals.length ? enabledMeals : ['lunch'],
-    });
   }
 
   if (!hasFirebaseConfig()) {
@@ -349,72 +201,10 @@ if (root) {
             permission !== 'granted'
           );
         });
-        root.querySelector('[data-open-config]')?.addEventListener('click', () => {
-          if (!configSection) return;
-          configSection.hidden = false;
-          configSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-        themeSelect?.addEventListener('change', async () => {
-          if (!currentUser || !themeValues.includes(themeSelect.value as ThemePreference)) return;
-          const theme = themeSelect.value as ThemePreference;
-          applyTheme(theme);
-          await updateUserPreferences(services, currentUser.uid, { theme });
-        });
-        root.querySelectorAll<HTMLInputElement>('[data-meal-preference]').forEach((input) => {
-          input.addEventListener('change', () => savePreferences().catch((error: Error) => showStatus(error.message, true)));
-        });
-
-        nextDays?.addEventListener('click', (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLButtonElement) || !target.dataset.editDay || !configSection) return;
-          configSection.hidden = false;
-          const editor = configDays?.querySelector<HTMLElement>(`[data-day="${target.dataset.editDay}"]`);
-          (editor ?? configSection).scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-
-        configDays?.addEventListener('change', (event) => {
-          const target = event.target;
-          if (
-            target instanceof HTMLTextAreaElement ||
-            target instanceof HTMLInputElement ||
-            target instanceof HTMLSelectElement
-          ) {
-            if (target.dataset.plateInput) {
-              const card = target.closest<HTMLElement>('[data-day]');
-              if (card) {
-                savePlateList(card, target.dataset.plateInput as MealSlot).catch((error: Error) => showStatus(error.message, true));
-              }
-              return;
-            }
-            saveField(target).catch((error: Error) => showStatus(error.message, true));
-          }
-        });
-
-        configDays?.addEventListener('click', (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLButtonElement) || !target.dataset.addPlate) return;
-          const meal = target.dataset.addPlate as MealSlot;
-          const card = target.closest<HTMLElement>('[data-day]');
-          const list = card?.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
-          const firstInput = list?.querySelector<HTMLInputElement>(`[data-plate-input="${meal}"]`);
-
-          if (!card || !list || !firstInput) return;
-
-          const label = document.createElement('label');
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.setAttribute('list', firstInput.getAttribute('list') ?? '');
-          input.dataset.plateInput = meal;
-          input.placeholder = labels.dishPlaceholder;
-          label.append(input);
-          list.append(label);
-          input.focus();
-        });
 
         services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
           currentUser = user;
           unsubscribeMenu?.();
-          unsubscribeDishes?.();
           unsubscribeProfile?.();
 
           if (!user) {
@@ -422,11 +212,10 @@ if (root) {
             return;
           }
 
-          if (userLabel) userLabel.textContent = user.displayName || user.email || labels.guestSession;
+          if (userLabel) userLabel.textContent = `${labels.hello} ${user.displayName || user.email || labels.guestSession}`;
 
           await ensureUserProfile(services, user, labels.guestSession);
-          const weekStart = toIsoDate(getMonday());
-          currentMenuId = await getOrCreateWeekMenu(services, user.uid, weekStart, locale);
+          const menuId = await getOrCreateWeekMenu(services, user.uid, getDateOffset(0), locale);
           firstMenuLoad = true;
 
           unsubscribeProfile = watchUserProfile(
@@ -434,25 +223,16 @@ if (root) {
             user,
             labels.guestSession,
             (profile) => {
-              renderPreferences(profile);
+              currentProfile = profile;
+              applyTheme(profile.theme);
               if (currentMenu) renderDashboard(currentMenu);
-            },
-            (error) => showStatus(error.message, true)
-          );
-
-          unsubscribeDishes = watchDishes(
-            services,
-            user.uid,
-            (nextDishes) => {
-              dishes = nextDishes;
-              if (currentMenu) renderConfig(currentMenu);
             },
             (error) => showStatus(error.message, true)
           );
 
           unsubscribeMenu = watchWeekMenu(
             services,
-            currentMenuId,
+            menuId,
             (menu) => {
               if (!menu) return;
               const changedByOtherUser = !firstMenuLoad && menu.updatedBy && menu.updatedBy !== currentUser?.uid;
