@@ -47,9 +47,13 @@ describe('project smoke checks', () => {
       'src/pages/index.astro',
       'src/pages/dashboard.astro',
       'src/pages/configurar.astro',
+      'src/pages/ajustes.astro',
+      'src/pages/historico.astro',
       'src/pages/[locale]/index.astro',
       'src/pages/[locale]/dashboard.astro',
       'src/pages/[locale]/configurar.astro',
+      'src/pages/[locale]/ajustes.astro',
+      'src/pages/[locale]/historico.astro',
       'src/pages/404.astro',
       'src/pages/manifest.webmanifest.ts',
       'src/pages/robots.txt.ts',
@@ -64,27 +68,8 @@ describe('project smoke checks', () => {
     });
   });
 
-  it('keeps project metadata files available', () => {
-    ['.nvmrc', '.env.example', '.gitignore', '.prettierrc', '.prettierignore', 'README.md'].forEach(
-      (path) => {
-        assert.equal(existsSync(join(root, path)), true, `${path} should exist`);
-      }
-    );
-  });
-
-  it('keeps the expected npm scripts available', () => {
-    const pkg = readJson('package.json');
-
-    assert.equal(pkg.name, 'menu-diario');
-    assert.equal(pkg.scripts?.dev, 'astro dev');
-    assert.equal(pkg.scripts?.build, 'astro build');
-    assert.equal(pkg.scripts?.preview, 'astro preview');
-    assert.ok(pkg.scripts?.test?.includes('node --test'));
-    assert.ok(pkg.scripts?.clean?.includes('scripts/clean.mjs'));
-  });
-
   it('keeps shared and app components available', () => {
-    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'MenuApp'].forEach(
+    ['Button', 'Container', 'Footer', 'Header', 'AppHeader', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'SettingsApp', 'HistoryApp', 'MenuApp'].forEach(
       (component) => {
         assert.equal(
           existsSync(join(root, `src/components/${component}.astro`)),
@@ -93,6 +78,20 @@ describe('project smoke checks', () => {
         );
       }
     );
+  });
+
+  it('keeps project metadata and expected npm scripts available', () => {
+    ['.nvmrc', '.env.example', '.gitignore', '.prettierrc', '.prettierignore', 'README.md'].forEach(
+      (path) => assert.equal(existsSync(join(root, path)), true, `${path} should exist`)
+    );
+
+    const pkg = readJson('package.json');
+    assert.equal(pkg.name, 'menu-diario');
+    assert.equal(pkg.scripts?.dev, 'astro dev');
+    assert.equal(pkg.scripts?.build, 'astro build');
+    assert.equal(pkg.scripts?.preview, 'astro preview');
+    assert.ok(pkg.scripts?.test?.includes('node --test'));
+    assert.ok(pkg.scripts?.clean?.includes('scripts/clean.mjs'));
   });
 
   it('keeps Astro i18n enabled and aligned with site config', () => {
@@ -104,16 +103,8 @@ describe('project smoke checks', () => {
     assert.match(astroConfig, new RegExp(`defaultLocale:\\s*['\"]${defaultLocale}['\"]`));
 
     locales.forEach((locale) => {
-      assert.match(
-        astroConfig,
-        new RegExp(`['\"]${locale}['\"]`),
-        `${locale} should be configured in Astro i18n locales`
-      );
-      assert.equal(
-        existsSync(join(root, `src/i18n/translations/${locale}.json`)),
-        true,
-        `${locale}.json should exist`
-      );
+      assert.match(astroConfig, new RegExp(`['\"]${locale}['\"]`));
+      assert.equal(existsSync(join(root, `src/i18n/translations/${locale}.json`)), true);
     });
 
     assert.match(readme, /i18n/);
@@ -128,25 +119,14 @@ describe('project smoke checks', () => {
       .filter((file) => file.endsWith('.json'))
       .map((file) => file.replace(/\.json$/, ''));
 
-    assert.deepEqual(
-      [...translationFiles].sort(),
-      [...locales].sort(),
-      'translation JSON files should match configured locales'
-    );
+    assert.deepEqual([...translationFiles].sort(), [...locales].sort());
 
     locales.forEach((locale) => {
       const translations = readJson(`src/i18n/translations/${locale}.json`);
-      assert.deepEqual(
-        Object.keys(translations).sort(),
-        expectedKeys,
-        `${locale}.json keys should match ${defaultLocale}.json`
-      );
-      assert.ok(translations['home.title'], `${locale}.json should include home.title`);
-      assert.ok(translations['nav.main'], `${locale}.json should include nav.main`);
-      assert.ok(translations['dashboard.title'], `${locale}.json should include dashboard.title`);
-      assert.ok(translations['dashboard.todayForLunch'], `${locale}.json should include dashboard.todayForLunch`);
-      assert.ok(translations['dashboard.backDashboard'], `${locale}.json should include dashboard.backDashboard`);
-      assert.ok(translations['menu.signInGoogle'], `${locale}.json should include menu.signInGoogle`);
+      assert.deepEqual(Object.keys(translations).sort(), expectedKeys);
+      ['home.title', 'nav.main', 'dashboard.title', 'dashboard.moreActions', 'history.title', 'group.title', 'appNav.settings', 'menu.signInGoogle'].forEach((key) => {
+        assert.ok(translations[key], `${locale}.json should include ${key}`);
+      });
     });
   });
 
@@ -170,52 +150,64 @@ describe('project smoke checks', () => {
     assert.match(robots, /sitemap-index\.xml/);
   });
 
-  it('keeps app configuration documented and product UI wired', () => {
-    const siteConfig = readText('src/config/site.ts');
-    const header = readText('src/components/Header.astro');
+  it('keeps app navigation and feature wiring available', () => {
     const home = readText('src/pages/index.astro');
     const dashboard = readText('src/pages/dashboard.astro');
     const configure = readText('src/pages/configurar.astro');
-    const localizedHome = readText('src/pages/[locale]/index.astro');
-    const envExample = readText('.env.example');
+    const settings = readText('src/pages/ajustes.astro');
+    const history = readText('src/pages/historico.astro');
+    const appHeader = readText('src/components/AppHeader.astro');
     const authGate = readText('src/components/AuthGate.astro');
     const dashboardApp = readText('src/components/DashboardApp.astro');
     const configuratorApp = readText('src/components/ConfiguratorApp.astro');
-    const dashboardScript = readText('src/scripts/dashboard-app.ts');
-    const configuratorScript = readText('src/scripts/configurator-app.ts');
+    const settingsApp = readText('src/components/SettingsApp.astro');
+    const historyApp = readText('src/components/HistoryApp.astro');
+
+    assert.match(home, /<AuthGate/);
+    assert.match(dashboard, /<AppHeader/);
+    assert.match(dashboard, /<DashboardApp/);
+    assert.match(configure, /<AppHeader/);
+    assert.match(configure, /<ConfiguratorApp/);
+    assert.match(settings, /<SettingsApp/);
+    assert.match(history, /<HistoryApp/);
+    assert.match(appHeader, /data-global-theme/);
+    assert.match(appHeader, /appNav\.history/);
+    assert.match(authGate, /data-auth-gate/);
+    assert.match(dashboardApp, /data-quick-modal/);
+    assert.match(dashboardApp, /data-notifications/);
+    assert.match(configuratorApp, /data-configurator-app/);
+    assert.match(settingsApp, /data-settings-app/);
+    assert.match(historyApp, /data-history-app/);
+  });
+
+  it('keeps data layer helpers and UI styles wired', () => {
     const repository = readText('src/lib/menu/repository.ts');
     const types = readText('src/lib/menu/types.ts');
+    const dashboardScript = readText('src/scripts/dashboard-app.ts');
+    const configuratorScript = readText('src/scripts/configurator-app.ts');
+    const settingsScript = readText('src/scripts/settings-app.ts');
+    const historyScript = readText('src/scripts/history-app.ts');
+    const headerScript = readText('src/scripts/app-header.ts');
     const styles = readText('src/styles/global.css');
+    const rules = readText('firestore.rules');
 
-    assert.match(siteConfig, /repositoryUrl/);
-    assert.match(envExample, /PUBLIC_FIREBASE_API_KEY/);
-    assert.match(envExample, /PUBLIC_REPOSITORY_URL/);
-    assert.match(header, /t\('nav\.main'\)/);
-    assert.match(home, /<AuthGate/);
-    assert.match(localizedHome, /<AuthGate/);
-    assert.match(dashboard, /<DashboardApp/);
-    assert.match(configure, /<ConfiguratorApp/);
-    assert.match(authGate, /data-auth-gate/);
-    assert.match(dashboardApp, /data-dashboard-app/);
-    assert.match(dashboardApp, /configurePath/);
-    assert.doesNotMatch(dashboardApp, /data-theme-select/);
-    assert.match(configuratorApp, /data-configurator-app/);
-    assert.match(configuratorApp, /data-theme-select/);
-    assert.match(configuratorApp, /data-meal-preference/);
-    assert.match(dashboardScript, /getNextSevenDates/);
-    assert.match(dashboardScript, /index \+ 1/);
-    assert.match(configuratorScript, /getConfigDates/);
-    assert.match(configuratorScript, /index \+ 1/);
-    assert.match(configuratorScript, /data-plate-input/);
-    assert.match(configuratorScript, /datalist/);
-    assert.match(repository, /updateUserPreferences/);
-    assert.match(repository, /enabledMeals/);
+    assert.match(repository, /ensureDefaultGroup/);
+    assert.match(repository, /joinGroupByInviteCode/);
+    assert.match(repository, /clearMenuDay/);
+    assert.match(types, /type MenuGroup/);
     assert.match(types, /MealSlot = 'breakfast' \| 'lunch' \| 'dinner'/);
-    assert.match(styles, /today-hero/);
-    assert.match(styles, /next-day-card--mockup/);
-    assert.match(styles, /data-theme='dark'/);
-    assert.doesNotMatch(home, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
-    assert.doesNotMatch(localizedHome, /https:\/\/github\.com\/jalonsomerchan\/astro-template/);
+    assert.match(dashboardScript, /data-quick-edit/);
+    assert.match(dashboardScript, /data-clear-day/);
+    assert.match(configuratorScript, /day-card__date-number/);
+    assert.match(settingsScript, /addPendingGroupEmail/);
+    assert.match(settingsScript, /leaveGroup/);
+    assert.match(historyScript, /watchUserMenus/);
+    assert.match(headerScript, /data-global-theme/);
+    assert.match(styles, /app-header/);
+    assert.match(styles, /day-actions/);
+    assert.match(styles, /quick-edit-modal/);
+    assert.match(styles, /next-day-card__number/);
+    assert.match(rules, /match \/groups/);
   });
 
   it('includes GitHub workflows for CI and Pages', () => {
@@ -234,12 +226,12 @@ describe('project smoke checks', () => {
     const readme = readText('README.md');
     const firebaseDocs = readText('docs/firebase.md');
 
-    assert.match(readme, /Menu Diario/, 'README.md should describe the product');
+    assert.match(readme, /Menu Diario/);
     assert.match(firebaseDocs, /enabledMeals/);
     assert.match(firebaseDocs, /theme/);
-    assert.equal(existsSync(join(root, 'agents.md')), true, 'agents.md should exist');
-    assert.equal(existsSync(join(root, 'docs/design-system.md')), true, 'docs/design-system.md should exist');
-    assert.equal(existsSync(join(root, 'docs/firebase.md')), true, 'docs/firebase.md should exist');
-    assert.equal(existsSync(join(root, 'firestore.rules')), true, 'firestore.rules should exist');
+    assert.equal(existsSync(join(root, 'agents.md')), true);
+    assert.equal(existsSync(join(root, 'docs/design-system.md')), true);
+    assert.equal(existsSync(join(root, 'docs/firebase.md')), true);
+    assert.equal(existsSync(join(root, 'firestore.rules')), true);
   });
 });

@@ -18,6 +18,10 @@ service cloud.firestore {
       return signedIn() && request.auth.uid in request.resource.data.members;
     }
 
+    function createsOwnMemberDocument() {
+      return signedIn() && request.auth.uid in request.resource.data.members;
+    }
+
     function createsOwnMenu() {
       return signedIn()
         && request.resource.data.ownerId == request.auth.uid
@@ -42,6 +46,13 @@ service cloud.firestore {
 
     match /weeklyMenus/{menuId} {
       allow create: if createsOwnMenu();
+      allow read: if signedIn();
+      allow update: if isMemberDocument() || joinsDocument();
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /groups/{groupId} {
+      allow create: if createsOwnMemberDocument() && request.resource.data.ownerId == request.auth.uid;
       allow read: if signedIn();
       allow update: if isMemberDocument() || joinsDocument();
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;

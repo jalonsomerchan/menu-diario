@@ -1,8 +1,20 @@
 import { getWeekDays, getWeekTitle } from './dates';
-import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, MenuPatch, ThemePreference, UserProfile, WeekMenu } from './types';
+import type {
+  DailyMenu,
+  Dish,
+  FirebaseUser,
+  MealEntry,
+  MealSlot,
+  MenuGroup,
+  MenuPatch,
+  ThemePreference,
+  UserProfile,
+  WeekMenu,
+} from './types';
 
 const menusCollection = 'weeklyMenus';
 const dishesCollection = 'dishes';
+const groupsCollection = 'groups';
 const defaultEnabledMeals: MealSlot[] = ['lunch'];
 const mealSlots: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
 
@@ -70,6 +82,10 @@ function createInviteCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
+function normalizeEmail(email = '') {
+  return email.trim().toLocaleLowerCase('es-ES');
+}
+
 function normalizeDishName(name: string) {
   return name.trim().toLocaleLowerCase('es-ES').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -115,26 +131,64 @@ function mapDish(id: string, data: Record<string, any>): Dish {
   };
 }
 
-function mapUserProfile(id: string, data: Record<string, any>, fallbackName: string): UserProfile {
+function mapUserProfile(id: string, data: Record<string, any>, fallbackName: string, fallbackEmail = ''): UserProfile {
   return {
     id,
     displayName: data.displayName ?? fallbackName,
+    email: data.email ?? fallbackEmail,
     enabledMeals: normalizeEnabledMeals(data.enabledMeals),
     theme: normalizeTheme(data.theme),
+    groupId: data.groupId,
     updatedAt: data.updatedAt?.toDate?.(),
   };
+}
+
+function mapGroup(id: string, data: Record<string, any>): MenuGroup {
+  return {
+    id,
+    name: data.name ?? 'Menu Diario',
+    ownerId: data.ownerId,
+    members: data.members ?? [],
+    memberEmails: data.memberEmails ?? [],
+    pendingEmails: data.pendingEmails ?? [],
+    inviteCode: data.inviteCode,
+    enabledMeals: normalizeEnabledMeals(data.enabledMeals),
+    updatedAt: data.updatedAt?.toDate?.(),
+  };
+}
+
+async function updateOwnerMenusMembership(services: FirebaseServices, ownerId: string, memberId: string, action: 'add' | 'remove') {
+  const { db, firestoreModule } = services;
+  const menusQuery = firestoreModule.query(
+    firestoreModule.collection(db, menusCollection),
+    firestoreModule.where('ownerId', '==', ownerId),
+    firestoreModule.limit(60)
+  );
+  const snapshot = await firestoreModule.getDocs(menusQuery);
+
+  await Promise.all(
+    snapshot.docs.map((menu: any) =>
+      firestoreModule.updateDoc(firestoreModule.doc(db, menusCollection, menu.id), {
+        members: action === 'add' ? firestoreModule.arrayUnion(memberId) : firestoreModule.arrayRemove(memberId),
+        updatedAt: firestoreModule.serverTimestamp(),
+        updatedBy: memberId,
+      })
+    )
+  );
 }
 
 export async function ensureUserProfile(services: FirebaseServices, user: FirebaseUser, guestLabel: string) {
   const { db, firestoreModule } = services;
   const userRef = firestoreModule.doc(db, 'users', user.uid);
   const snapshot = await firestoreModule.getDoc(userRef);
+  const email = normalizeEmail(user.email ?? '');
 
   if (snapshot.exists()) {
     await firestoreModule.setDoc(
       userRef,
       {
         displayName: user.displayName ?? snapshot.data().displayName ?? guestLabel,
+        email: email || snapshot.data().email || '',
         updatedAt: firestoreModule.serverTimestamp(),
       },
       { merge: true }
@@ -144,6 +198,7 @@ export async function ensureUserProfile(services: FirebaseServices, user: Fireba
 
   await firestoreModule.setDoc(userRef, {
     displayName: user.displayName ?? guestLabel,
+    email,
     enabledMeals: defaultEnabledMeals,
     theme: 'system',
     createdAt: firestoreModule.serverTimestamp(),
@@ -162,7 +217,14 @@ export function watchUserProfile(
   return firestoreModule.onSnapshot(
     firestoreModule.doc(db, 'users', user.uid),
     (snapshot: any) => {
-      callback(mapUserProfile(user.uid, snapshot.exists() ? snapshot.data() : {}, user.displayName ?? user.email ?? guestLabel));
+      callback(
+        mapUserProfile(
+          user.uid,
+          snapshot.exists() ? snapshot.data() : {},
+          user.displayName ?? user.email ?? guestLabel,
+          normalizeEmail(user.email ?? '')
+        )
+      );
     },
     onError
   );
@@ -171,7 +233,7 @@ export function watchUserProfile(
 export async function updateUserPreferences(
   services: FirebaseServices,
   userId: string,
-  preferences: { enabledMeals?: MealSlot[]; theme?: ThemePreference }
+  preferences: { enabledMeals?: MealSlot[]; theme?: ThemePreference; groupId?: string | null }
 ) {
   const { db, firestoreModule } = services;
   await firestoreModule.setDoc(
@@ -182,6 +244,104 @@ export async function updateUserPreferences(
     },
     { merge: true }
   );
+}
+
+export async function ensureDefaultGroup(services: FirebaseServices, user: FirebaseUser, profile: UserProfile) {
+  if (profile.groupId) return profile.groupId;
+
+  const { db, firestoreModule } = services;
+  const email = normalizeEmail(user.email ?? profile.email);
+  const groupRef = await firestoreModule.addDoc(firestoreModule.collection(db, groupsCollection), {
+    name: 'Menu Diario',
+    ownerId: user.uid,
+    members: [user.uid],
+    memberEmails: email ? [email] : [],
+    pendingEmails: [],
+    inviteCode: createInviteCode(),
+    enabledMeals: profile.enabledMeals,
+    createdAt: firestoreModule.serverTimestamp(),
+    updatedAt: firestoreModule.serverTimestamp(),
+  });
+
+  await updateUserPreferences(services, user.uid, { groupId: groupRef.id });
+  return groupRef.id;
+}
+
+export function watchGroup(
+  services: FirebaseServices,
+  groupId: string,
+  callback: (group: MenuGroup | null) => void,
+  onError: (error: Error) => void
+) {
+  const { db, firestoreModule } = services;
+  return firestoreModule.onSnapshot(
+    firestoreModule.doc(db, groupsCollection, groupId),
+    (snapshot: any) => callback(snapshot.exists() ? mapGroup(snapshot.id, snapshot.data()) : null),
+    onError
+  );
+}
+
+export async function updateGroupOptions(services: FirebaseServices, groupId: string, enabledMeals: MealSlot[]) {
+  const { db, firestoreModule } = services;
+  await firestoreModule.setDoc(
+    firestoreModule.doc(db, groupsCollection, groupId),
+    {
+      enabledMeals: enabledMeals.length ? enabledMeals : defaultEnabledMeals,
+      updatedAt: firestoreModule.serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+export async function addPendingGroupEmail(services: FirebaseServices, groupId: string, email: string) {
+  const cleanEmail = normalizeEmail(email);
+  if (!cleanEmail) return;
+
+  const { db, firestoreModule } = services;
+  await firestoreModule.updateDoc(firestoreModule.doc(db, groupsCollection, groupId), {
+    pendingEmails: firestoreModule.arrayUnion(cleanEmail),
+    updatedAt: firestoreModule.serverTimestamp(),
+  });
+}
+
+export async function joinGroupByInviteCode(services: FirebaseServices, user: FirebaseUser, inviteCode: string) {
+  const { db, firestoreModule } = services;
+  const cleanCode = inviteCode.trim().toUpperCase();
+  const groupsQuery = firestoreModule.query(
+    firestoreModule.collection(db, groupsCollection),
+    firestoreModule.where('inviteCode', '==', cleanCode),
+    firestoreModule.limit(1)
+  );
+  const snapshot = await firestoreModule.getDocs(groupsQuery);
+  const group = snapshot.docs[0];
+
+  if (!group) throw new Error('group-not-found');
+
+  const data = group.data();
+  const email = normalizeEmail(user.email ?? '');
+  await firestoreModule.updateDoc(firestoreModule.doc(db, groupsCollection, group.id), {
+    members: firestoreModule.arrayUnion(user.uid),
+    ...(email ? { memberEmails: firestoreModule.arrayUnion(email), pendingEmails: firestoreModule.arrayRemove(email) } : {}),
+    updatedAt: firestoreModule.serverTimestamp(),
+  });
+  await updateOwnerMenusMembership(services, data.ownerId, user.uid, 'add');
+  await updateUserPreferences(services, user.uid, {
+    groupId: group.id,
+    enabledMeals: normalizeEnabledMeals(data.enabledMeals),
+  });
+  return group.id;
+}
+
+export async function leaveGroup(services: FirebaseServices, user: FirebaseUser, group: MenuGroup) {
+  const { db, firestoreModule } = services;
+  const email = normalizeEmail(user.email ?? '');
+  await firestoreModule.updateDoc(firestoreModule.doc(db, groupsCollection, group.id), {
+    members: firestoreModule.arrayRemove(user.uid),
+    ...(email ? { memberEmails: firestoreModule.arrayRemove(email) } : {}),
+    updatedAt: firestoreModule.serverTimestamp(),
+  });
+  await updateOwnerMenusMembership(services, group.ownerId, user.uid, 'remove');
+  await updateUserPreferences(services, user.uid, { groupId: null });
 }
 
 export async function createWeekMenu(services: FirebaseServices, userId: string, weekStart: string, locale: string) {
@@ -232,7 +392,7 @@ export function watchUserMenus(
   userId: string,
   callback: (menus: WeekMenu[]) => void,
   onError: (error: Error) => void,
-  maxResults = 12
+  maxResults = 30
 ) {
   const { db, firestoreModule } = services;
   const menusQuery = firestoreModule.query(
@@ -339,6 +499,15 @@ export async function updateMenuPatch(
   if ((path.endsWith('.items') || path === 'lunchItems') && Array.isArray(patch.value)) {
     await Promise.all(patch.value.map((item) => upsertDish(services, userId, item)));
   }
+}
+
+export async function clearMenuDay(services: FirebaseServices, menuId: string, userId: string, dayKey: string) {
+  const { db, firestoreModule } = services;
+  await firestoreModule.updateDoc(firestoreModule.doc(db, menusCollection, menuId), {
+    [`days.${dayKey}`]: emptyDay(),
+    updatedAt: firestoreModule.serverTimestamp(),
+    updatedBy: userId,
+  });
 }
 
 export async function joinMenuByInviteCode(services: FirebaseServices, userId: string, inviteCode: string) {
