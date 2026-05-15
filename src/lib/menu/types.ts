@@ -75,8 +75,13 @@ export type Dish = {
   name: string;
   normalizedName: string;
   createdBy: string;
+  members?: string[];
   timesUsed: number;
+  tags?: string[];
+  archived?: boolean;
+  createdAt?: Date;
   lastUsedAt?: Date;
+  updatedAt?: Date;
 };
 
 export type MenuPatch = {
