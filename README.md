@@ -1,27 +1,16 @@
-# Astro Template
+# Menu Diario
 
-Plantilla base para crear proyectos con Astro sin repetir configuración inicial.
+Webapp mobile first para apuntar el menú diario, planificar comidas y cenas por semana, guardar histórico, compartir tableros con otras personas y recibir avisos cuando alguien cambie un plato.
 
-Incluye:
+## Funcionalidades
 
-- Astro 6
-- Tailwind CSS 4
-- MDX
-- Sitemap
-- i18n nativo de Astro
-- Traducciones mediante JSON por idioma
-- Layout base
-- Componentes mínimos reutilizables
-- SEO técnico básico
-- Página 404
-- `robots.txt` dinámico
-- Manifest web dinámico
-- Imagen social por defecto
-- Tests smoke con `node:test`
-- CI en pull requests
-- Despliegue automático en GitHub Pages
-- Dependabot para npm y GitHub Actions
-- Documentación específica para agentes IA
+- Autenticación con Google o sesión invitada mediante Firebase Auth.
+- Menús semanales en Firestore con comida, cena y notas por día.
+- Histórico y próximos menús mediante semanas independientes.
+- Colaboración en tiempo real con listeners de Firestore.
+- Invitación por código para compartir un menú con más personas.
+- Notificaciones del navegador cuando otra persona modifica el menú abierto.
+- UI responsive, accesible, preparada para modo claro/oscuro e i18n `es/en`.
 
 ## Requisitos
 
@@ -31,6 +20,29 @@ Usa Node 22. El repositorio incluye `.nvmrc`.
 nvm use
 npm ci
 ```
+
+## Configuración de Firebase
+
+Copia `.env.example` a `.env` y rellena las variables públicas de la app web de Firebase:
+
+```env
+PUBLIC_FIREBASE_API_KEY=
+PUBLIC_FIREBASE_AUTH_DOMAIN=
+PUBLIC_FIREBASE_PROJECT_ID=
+PUBLIC_FIREBASE_STORAGE_BUCKET=
+PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+PUBLIC_FIREBASE_APP_ID=
+PUBLIC_FIREBASE_MEASUREMENT_ID=
+```
+
+Estas claves públicas identifican la app web, pero no sustituyen a unas reglas correctas de Firestore. No subas `.env` al repositorio.
+
+Activa en Firebase:
+
+1. Authentication con Google y Anonymous.
+2. Firestore Database.
+3. Reglas de seguridad adaptadas a `docs/firebase.md`.
+4. El dominio de despliegue en Authorized domains de Authentication.
 
 ## Comandos
 
@@ -44,59 +56,28 @@ npm ci
 | `npm run format:check` | Comprueba formato |
 | `npm run clean` | Borra `dist` y `.astro` |
 
-## Estructura recomendada
+## Estructura principal
 
 ```text
-/
-├── .github/
-│   ├── dependabot.yml
-│   └── workflows/
-│       ├── ci.yml
-│       └── pages.yml
-├── docs/
-│   ├── ai-checklist.md
-│   ├── design-system.md
-│   ├── github-pages.md
-│   ├── i18n-guide.md
-│   ├── template-usage.md
-│   └── testing-guide.md
-├── public/
-│   ├── favicon.svg
-│   ├── favicon.ico
-│   └── og-image.svg
-├── scripts/
-│   └── clean.mjs
-├── src/
-│   ├── components/
-│   │   ├── Button.astro
-│   │   ├── Container.astro
-│   │   ├── Footer.astro
-│   │   └── Header.astro
-│   ├── config/
-│   │   └── site.ts
-│   ├── i18n/
-│   │   ├── translations/
-│   │   │   ├── en.json
-│   │   │   └── es.json
-│   │   └── ui.ts
-│   ├── layouts/
-│   │   └── BaseLayout.astro
-│   ├── pages/
-│   │   ├── [locale]/
-│   │   │   └── index.astro
-│   │   ├── 404.astro
-│   │   ├── index.astro
-│   │   ├── manifest.webmanifest.ts
-│   │   └── robots.txt.ts
-│   └── styles/
-│       └── global.css
-└── tests/
-    └── smoke.test.mjs
+src/components/MenuApp.astro       UI de la webapp
+src/scripts/menu-app.ts            Lógica cliente, Auth, Firestore y notificaciones
+src/i18n/translations/*.json       Textos traducibles
+src/styles/global.css              Tokens visuales y estilos mobile first
+docs/firebase.md                   Modelo de datos y reglas recomendadas
+```
+
+## GitHub Pages
+
+El proyecto conserva compatibilidad con despliegue en dominio raíz y subruta. En GitHub Actions, `astro.config.mjs` calcula automáticamente `site` y `base`. Para dominio propio usa:
+
+```env
+ASTRO_SITE=https://example.com
+ASTRO_BASE=/
 ```
 
 ## Documentación para agentes IA
 
-Antes de modificar el template, una IA debe leer:
+Antes de modificar el proyecto, una IA debe leer:
 
 - `agents.md`: reglas principales del repositorio.
 - `docs/ai-checklist.md`: checklist rápida antes de cerrar tareas.
@@ -106,156 +87,6 @@ Antes de modificar el template, una IA debe leer:
 - `docs/testing-guide.md`: cómo mantener tests smoke.
 - `docs/design-system.md`: reglas visuales, SEO, accesibilidad y responsive.
 
-## Crear un proyecto nuevo desde esta plantilla
+## Notas técnicas
 
-1. Usa este repositorio como template o clónalo.
-2. Cambia `name` en `package.json`.
-3. Cambia los datos de `src/config/site.ts`.
-4. Cambia los textos en `src/i18n/translations/*.json`.
-5. Cambia `public/favicon.svg`, `public/favicon.ico` y `public/og-image.svg`.
-6. Revisa `src/pages/manifest.webmanifest.ts` si quieres cambiar color, iconos o modo de visualización.
-7. Revisa `.env.example` si necesitas sobrescribir `ASTRO_SITE` o `ASTRO_BASE`.
-8. Ejecuta `npm ci`, `npm test` y `npm run build`.
-9. Activa GitHub Pages en el repositorio usando GitHub Actions como fuente.
-
-## Traducciones e idiomas
-
-La plantilla usa el i18n nativo de Astro en `astro.config.mjs` y una capa sencilla de traducciones en JSON.
-
-Idioma por defecto:
-
-```txt
-/
-```
-
-Otros idiomas:
-
-```txt
-/en/
-/fr/
-...
-```
-
-### Añadir una nueva traducción
-
-Añade la clave en todos los JSON dentro de:
-
-```txt
-src/i18n/translations/
-```
-
-Ejemplo:
-
-```json
-{
-  "home.title": "Título traducido"
-}
-```
-
-Después úsala en cualquier componente o página:
-
-```astro
----
-import { useTranslations } from '../i18n/ui';
-const t = useTranslations(locale);
----
-
-<h1>{t('home.title')}</h1>
-```
-
-### Añadir un nuevo idioma
-
-Ejemplo para añadir francés:
-
-1. Añade el idioma en `astro.config.mjs`:
-
-```js
-i18n: {
-  defaultLocale: 'es',
-  locales: ['es', 'en', 'fr'],
-  routing: {
-    prefixDefaultLocale: false,
-  },
-}
-```
-
-2. Añade el idioma en `src/config/site.ts`:
-
-```ts
-export const locales = ['es', 'en', 'fr'] as const;
-
-export const localeLabels = {
-  es: 'Español',
-  en: 'English',
-  fr: 'Français',
-};
-```
-
-3. Crea el fichero:
-
-```txt
-src/i18n/translations/fr.json
-```
-
-4. Importa y registra el JSON en `src/i18n/ui.ts`:
-
-```ts
-import fr from './translations/fr.json';
-
-const translations = {
-  es,
-  en,
-  fr,
-};
-```
-
-Con eso se generará `/fr/` usando `src/pages/[locale]/index.astro`.
-
-## GitHub Pages
-
-El despliegue está en `.github/workflows/pages.yml`.
-
-Por defecto, cuando corre en GitHub Actions, `astro.config.mjs` calcula automáticamente:
-
-- `site`: `https://OWNER.github.io`
-- `base`: `/NOMBRE_DEL_REPO`
-
-Puedes sobrescribirlo con variables de entorno:
-
-```env
-ASTRO_SITE=https://example.com
-ASTRO_BASE=/
-```
-
-Para un dominio propio normalmente usarías:
-
-```env
-ASTRO_SITE=https://example.com
-ASTRO_BASE=/
-```
-
-## CI
-
-`.github/workflows/ci.yml` ejecuta en pull requests:
-
-```sh
-npm ci
-npm test
-npm run build
-```
-
-Los tests son intencionadamente suaves: comprueban que la estructura mínima existe, que los scripts básicos están disponibles y que los workflows no desaparecen.
-
-## Configuración principal
-
-La configuración editable del sitio está en:
-
-```ts
-src/config/site.ts
-```
-
-Ahí puedes cambiar nombre, descripción, idiomas, autor y URL base del proyecto.
-
-## Notas
-
-Esta plantilla intenta ser útil sin ser pesada. Evita añadir dependencias de desarrollo obligatorias para que los proyectos derivados arranquen rápido y no fallen por configuración innecesaria.
+La integración de Firebase se carga de forma dinámica en el navegador desde los módulos oficiales de Firebase Web SDK para no añadir dependencias nuevas al lockfile de npm. Esto mantiene el proyecto ligero y evita romper `npm ci` en CI.
