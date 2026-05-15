@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/Container.astro';
-import AppHeader from '../../components/AppHeader.astro';
 import ConfiguratorApp from '../../components/ConfiguratorApp.astro';
 import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
 import { isLocale, useTranslations } from '../../i18n/ui';
@@ -19,7 +18,6 @@ const t = useTranslations(locale);
 
 <BaseLayout title={`${t('dashboard.configure')} · ${siteConfig.name}`} description={t('site.description')} locale={locale}>
   <Container class="py-4 sm:py-6">
-    <AppHeader locale={locale} />
     <ConfiguratorApp locale={locale} />
   </Container>
 </BaseLayout>
