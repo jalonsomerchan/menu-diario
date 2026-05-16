@@ -77,8 +77,15 @@ service cloud.firestore {
         && data.groupId is string
         && data.isGlobal == false
         && data.editable == true
-        && request.auth.uid in data.members
         && isGroupMember(data.groupId);
+    }
+
+    function keepsGroupDishScope() {
+      return resource.data.scope == 'group'
+        && request.resource.data.scope == 'group'
+        && request.resource.data.groupId == resource.data.groupId
+        && request.resource.data.isGlobal == resource.data.isGlobal
+        && request.resource.data.editable == resource.data.editable;
     }
 
     function isShoppingListScope(data) {
@@ -121,7 +128,8 @@ service cloud.firestore {
           && isValidGlobalDishWrite(request.resource.data))
         || (!isGlobalDishData(resource.data)
           && !isGlobalDishData(request.resource.data)
-          && (isGroupDishData(request.resource.data) || isOwnPersonalDish(request.resource.data)));
+          && ((keepsGroupDishScope() && isGroupDishData(resource.data) && isGroupDishData(request.resource.data))
+            || isOwnPersonalDish(request.resource.data)));
       allow delete: if false;
     }
 
