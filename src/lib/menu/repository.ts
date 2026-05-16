@@ -280,6 +280,19 @@ export function watchDishes(services: FirebaseServices, userId: string, callback
   return () => { unsubGlobal(); unsubOwn(); };
 }
 
+async function hasGlobalDish(services: FirebaseServices, normalizedName: string) {
+  const { db, firestoreModule } = services;
+  const snapshot = await firestoreModule.getDocs(
+    firestoreModule.query(
+      firestoreModule.collection(db, dishesCollection),
+      firestoreModule.where('scope', '==', 'global'),
+      firestoreModule.where('normalizedName', '==', normalizedName),
+      firestoreModule.limit(1)
+    )
+  );
+  return !snapshot.empty;
+}
+
 export async function upsertDish(services: FirebaseServices, userId: string, name: string, groupId?: string) {
   const cleanName = name.trim().replace(/\s+/g, ' ');
   if (!cleanName) return;
@@ -293,6 +306,7 @@ export async function upsertDish(services: FirebaseServices, userId: string, nam
     await firestoreModule.updateDoc(dishRef, { archived: false, archivedAt: null, timesUsed: firestoreModule.increment(1), lastUsedAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp() });
     return;
   }
+  if (await hasGlobalDish(services, normalizedName)) return;
   await firestoreModule.setDoc(dishRef, { name: cleanName, normalizedName, scope, groupId: groupId ?? null, source: 'menu', isGlobal: false, editable: true, createdBy: userId, members: [userId], timesUsed: 1, favorite: false, blocked: false, archived: false, archivedAt: null, quickTags: [], createdAt: firestoreModule.serverTimestamp(), lastUsedAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp() });
 }
 
