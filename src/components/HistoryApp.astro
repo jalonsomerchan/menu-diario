@@ -1,5 +1,6 @@
 ---
 import type { Locale } from '../config/site';
+import DayEditModal from './DayEditModal.astro';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
 interface Props { locale: Locale }
@@ -22,6 +23,7 @@ const labels = {
   moreActions: t('dashboard.moreActions'),
   save: t('dashboard.save'),
   cancel: t('dashboard.cancel'),
+  saveHint: t('menu.saveHint'),
   savePending: t('menu.savePending'),
   saveSaving: t('menu.saveSaving'),
   saveSaved: t('menu.saveSaved'),
@@ -67,18 +69,14 @@ const labels = {
     <div class="next-days next-days--timeline" data-history-days></div>
   </div>
 
-  <dialog class="quick-edit-modal quick-edit-modal--day" data-history-modal>
-    <form method="dialog" class="quick-edit-modal__box" data-history-edit-form>
-      <header>
-        <h2>{labels.quickEdit}</h2>
-        <button class="button button--ghost button--small" value="cancel" type="submit">{labels.cancel}</button>
-      </header>
-      <div data-history-edit-fields></div>
-      <footer>
-        <button class="button button--primary" value="save" type="submit">{labels.save}</button>
-      </footer>
-    </form>
-  </dialog>
+  <DayEditModal
+    eyebrow={labels.quickEdit}
+    title={labels.quickEdit}
+    cancelLabel={labels.cancel}
+    saveLabel={labels.save}
+    clearLabel={labels.deleteDay}
+    saveHint={labels.saveHint}
+  />
 </section>
 
 <script>

@@ -250,6 +250,7 @@ describe('project smoke checks', () => {
     assert.match(settingsApp, /data-settings-app/);
     assert.match(settingsApp, /settings-app\.ts/);
     assert.match(historyApp, /data-history-app/);
+    assert.match(historyApp, /<DayEditModal/);
     assert.match(historyApp, /dashboard\.showDishOptions/);
     assert.match(dishesApp, /data-dishes-app/);
     assert.match(dishesApp, /dishes\.globalBadge/);
@@ -315,6 +316,7 @@ describe('project smoke checks', () => {
     const dishesScript = readText('src/scripts/dishes-app.ts');
     const tuppersScript = readText('src/scripts/tuppers-app.ts');
     const styles = readText('src/styles/global.css');
+    const dayEditModalComponent = readText('src/components/DayEditModal.astro');
     const dishStyles = readText('src/styles/dishes.css');
     const rules = readText('firestore.rules');
     assert.match(repository, /ensureDefaultGroup/);
@@ -350,7 +352,12 @@ describe('project smoke checks', () => {
     assert.match(types, /skipNote/);
     assert.match(dayEditModal, /renderDayEditor/);
     assert.match(dayEditModal, /data-day-edit-modal/);
+    assert.match(dayEditModal, /data-day-edit-save/);
+    assert.match(dayEditModal, /returnFocusTo/);
     assert.match(dayEditModal, /applyRecommendedDishes/);
+    assert.match(dayEditModalComponent, /aria-labelledby=\"day-edit-modal-title\"/);
+    assert.match(dayEditModalComponent, /data-day-edit-number/);
+    assert.match(dayEditModalComponent, /day-edit-modal__close/);
     assert.match(dashboardScript, /createDayEditModalController/);
     assert.match(dashboardScript, /attachDishSuggestions/);
     assert.match(dashboardScript, /currentProfile\?\.groupId/);
@@ -362,7 +369,7 @@ describe('project smoke checks', () => {
     assert.match(configuratorScript, /data-config-edit/);
     assert.match(settingsScript, /addPendingGroupEmail/);
     assert.match(settingsScript, /leaveGroup/);
-    assert.match(historyScript, /renderDayEditor/);
+    assert.match(historyScript, /createDayEditModalController/);
     assert.match(historyScript, /attachDishSuggestions/);
     assert.match(historyScript, /watchUserMenus/);
     assert.match(historyScript, /currentProfile\?\.groupId/);
@@ -377,6 +384,7 @@ describe('project smoke checks', () => {
     assert.match(styles, /icon-button/);
     assert.match(styles, /day-skip-toggle/);
     assert.match(styles, /quick-edit-modal/);
+    assert.match(dayEditModalComponent, /day-edit-modal__box/);
     assert.match(styles, /confirm-dialog/);
     assert.match(styles, /next-day-card__number/);
     assert.doesNotMatch(dishesScript, /window\.confirm/);

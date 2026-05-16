@@ -1,10 +1,10 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
+import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { readDayDraft } from '../lib/menu/day-form';
 import { serializeDay } from '../lib/menu/day-state';
 import { getMonday, toIsoDate } from '../lib/menu/dates';
-import { renderDayEditor, renderPlateRow } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
@@ -31,9 +31,6 @@ if (root) {
   const list = root.querySelector<HTMLElement>('[data-history-days]');
   const fromInput = root.querySelector<HTMLInputElement>('[data-date-from]');
   const toInput = root.querySelector<HTMLInputElement>('[data-date-to]');
-  const modal = root.querySelector<HTMLDialogElement>('[data-history-modal]');
-  const editForm = root.querySelector<HTMLFormElement>('[data-history-edit-form]');
-  const editFields = root.querySelector<HTMLElement>('[data-history-edit-fields]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -97,6 +94,10 @@ if (root) {
     return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(new Date(`${isoDate}T00:00:00`));
   }
 
+  function formatDate(isoDate: string) {
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(`${isoDate}T00:00:00`));
+  }
+
   function getDayNumber(isoDate: string) {
     return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(new Date(`${isoDate}T00:00:00`));
   }
@@ -111,6 +112,10 @@ if (root) {
       if (menu.days[isoDate]) return { menu, day: normalizeDay(menu.days[isoDate]) };
     }
     return null;
+  }
+
+  function getEditingMenu() {
+    return menus.find((item) => item.id === editMenuId) ?? null;
   }
 
   function renderHistory() {
@@ -154,22 +159,8 @@ if (root) {
   }
 
   function openEdit(menuId: string, dayKey: string) {
-    const menu = menus.find((item) => item.id === menuId);
-    if (!menu || !modal || !editFields) return;
-
     editMenuId = menuId;
-    editFields.innerHTML = renderDayEditor({
-      dayKey,
-      dayNumber: getDayNumber(dayKey),
-      weekday: formatWeekday(dayKey),
-      day: normalizeDay(menu.days[dayKey]),
-      enabledMeals: getEnabledMeals(),
-      dishes,
-      labels,
-      compact: true,
-    });
-    editFields.querySelector<HTMLElement>('[data-day]')?.setAttribute('data-day-state', serializeDay(menu.days[dayKey]));
-    modal.showModal();
+    dayEditModal.open(dayKey);
   }
 
   function updateLocalDay(dayKey: string, nextDay: WeekMenu['days'][string]) {
@@ -213,12 +204,29 @@ if (root) {
     daySaveQueue.schedule(card.dataset.day ?? '', () => saveDay(card));
   }
 
-  function addPlate(card: HTMLElement, meal: MealSlot) {
-    const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
-    if (!list) return;
-    list.insertAdjacentHTML('beforeend', renderPlateRow(labels, meal, '', list.children.length, dishes));
-    list.querySelector<HTMLInputElement>('.plate-row:last-child input')?.focus();
-  }
+  const dayEditModal = createDayEditModalController({
+    root,
+    labels,
+    getDay: (dayKey) => normalizeDay(getEditingMenu()?.days[dayKey]),
+    getDishes: () => dishes,
+    getEnabledMeals,
+    getSavedDayState: (dayKey) => serializeDay(getEditingMenu()?.days[dayKey] ?? normalizeDay(undefined)),
+    getDayNumber,
+    getWeekday: formatWeekday,
+    getDateLabel: formatDate,
+    onScheduleSave: scheduleDaySave,
+    onFlushSave: (dayKey) => daySaveQueue.flush(dayKey),
+    onClearDay: async (dayKey) => {
+      if (getNetworkStatus() !== 'online' || !currentUser || !editMenuId) {
+        saveFeedback.error(labels.offlineReadOnly);
+        return false;
+      }
+
+      const services = await getFirebaseServices();
+      await clearMenuDay(services, editMenuId, currentUser.uid, dayKey);
+      return true;
+    },
+  });
 
   if (!hasFirebaseConfig()) {
     if (loading) loading.hidden = true;
@@ -249,61 +257,6 @@ if (root) {
 
           if (target.dataset.clearDay && target.dataset.menu) {
             await clearMenuDay(services, target.dataset.menu, currentUser.uid, target.dataset.clearDay);
-          }
-        });
-
-        editFields?.addEventListener('change', (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
-          const card = target.closest<HTMLElement>('[data-day]');
-          if (!card) return;
-          if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-            const wasSkipped = card.dataset.dayState ? JSON.parse(card.dataset.dayState).skipped : false;
-            if (target.checked !== wasSkipped) {
-              editFields.innerHTML = renderDayEditor({
-                dayKey: card.dataset.day ?? '',
-                dayNumber: getDayNumber(card.dataset.day ?? ''),
-                weekday: formatWeekday(card.dataset.day ?? ''),
-                day: readDayDraft(card, getEnabledMeals()),
-                enabledMeals: getEnabledMeals(),
-                dishes,
-                labels,
-                compact: true,
-              });
-              editFields.querySelector<HTMLElement>('[data-day]')?.setAttribute('data-day-state', card.dataset.dayState ?? '');
-            }
-          }
-          editFields.querySelectorAll<HTMLElement>('[data-day]').forEach((item) => scheduleDaySave(item));
-        });
-
-        editFields?.addEventListener('click', (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLElement)) return;
-          const button = target.closest<HTMLButtonElement>('button');
-          if (!button) return;
-          const card = button.closest<HTMLElement>('[data-day]');
-          if (!card) return;
-
-          if (button.dataset.addPlate) {
-            addPlate(card, button.dataset.addPlate as MealSlot);
-            return;
-          }
-
-          if (button.dataset.removePlate) {
-            button.closest('.plate-row')?.remove();
-            scheduleDaySave(card);
-          }
-        });
-
-        editForm?.addEventListener('submit', async (event) => {
-          const submitter = (event as SubmitEvent).submitter;
-          if (submitter instanceof HTMLButtonElement && submitter.value === 'save') {
-            event.preventDefault();
-            const card = editFields?.querySelector<HTMLElement>('[data-day]');
-            if (card) {
-              await daySaveQueue.flush(card.dataset.day ?? '');
-            }
-            modal?.close();
           }
         });
 
