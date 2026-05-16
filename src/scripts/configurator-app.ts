@@ -1,18 +1,23 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
-import { getMonday, toIsoDate } from '../lib/menu/dates';
+import { readDayDraft } from '../lib/menu/day-form';
+import { serializeDay } from '../lib/menu/day-state';
+import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
 import { renderDayEditor, renderPlateRow } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
   ensureUserProfile,
-  getOrCreateWeekMenu,
-  updateMenuPatch,
+  getOrCreateWeekMenus,
+  updateMenuDay,
   watchUserProfile,
-  watchWeekMenu,
+  watchWeekMenusByIds,
 } from '../lib/menu/repository';
 import type { Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import { getNetworkStatus } from '../lib/pwa/network-status';
+import { createDebouncedTaskMap } from '../lib/ui/debounced-task-map';
+import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-configurator-app]');
 
@@ -26,39 +31,77 @@ if (root) {
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
-  let currentMenuId = '';
   let currentMenu: WeekMenu | null = null;
+  let currentMenus: WeekMenu[] = [];
+  let currentMenuIdsByWeekStart: Record<string, string> = {};
   let dishes: Dish[] = [];
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  const saveFeedback = createSaveFeedback(status, {
+    pending: labels.savePending,
+    saving: labels.saveSaving,
+    saved: labels.saveSaved,
+  });
+  const daySaveQueue = createDebouncedTaskMap({
+    delay: 500,
+    onError: (error) => saveFeedback.error(formatError(error)),
+  });
 
   attachDishSuggestions(root, () => dishes);
 
   function showStatus(message: string, isError = false) {
-    if (!status) return;
-    status.hidden = false;
-    status.textContent = message;
-    status.dataset.variant = isError ? 'error' : 'info';
+    if (isError) {
+      saveFeedback.error(message);
+      return;
+    }
+    saveFeedback.info(message);
+  }
+
+  function formatError(error: unknown) {
+    if (error instanceof Error && error.message.toLowerCase().includes('permission')) {
+      return labels.permissionsError;
+    }
+    return error instanceof Error ? error.message : String(error);
   }
 
   function getEnabledMeals(): MealSlot[] {
     return currentProfile?.enabledMeals?.length ? currentProfile.enabledMeals : ['lunch'];
   }
 
-  function getDateOffset(daysFromToday: number) {
-    const date = new Date();
-    date.setHours(0, 0, 0, 0);
-    date.setDate(date.getDate() + daysFromToday);
-    return toIsoDate(date);
-  }
-
-  function getCurrentWeekStart() {
-    return toIsoDate(getMonday(new Date()));
-  }
-
   function getConfigDates() {
-    return Array.from({ length: 7 }, (_, index) => getDateOffset(index + 1));
+    return getUpcomingDates(new Date(), 1, 7);
+  }
+
+  function getRelevantWeekStarts() {
+    return getWeekStartsForDates(getConfigDates());
+  }
+
+  function getMenuIdForDay(dayKey: string) {
+    return currentMenuIdsByWeekStart[getWeekStartForDate(dayKey)] ?? '';
+  }
+
+  function getMenuForDay(dayKey: string) {
+    const weekStart = getWeekStartForDate(dayKey);
+    return currentMenus.find((menu) => menu.weekStart === weekStart) ?? null;
+  }
+
+  function buildDisplayMenu(menus: WeekMenu[]) {
+    const days = Object.fromEntries(getConfigDates().map((dayKey) => [dayKey, normalizeDay(getMenuForDay(dayKey)?.days?.[dayKey])]));
+    const firstWeekStart = getWeekStartForDate(getConfigDates()[0] ?? new Date().toISOString().slice(0, 10));
+    const primaryMenu = menus.find((menu) => menu.weekStart === firstWeekStart);
+
+    return {
+      id: primaryMenu?.id ?? '',
+      title: primaryMenu?.title ?? '',
+      ownerId: primaryMenu?.ownerId ?? currentUser?.uid ?? '',
+      members: primaryMenu?.members ?? (currentUser ? [currentUser.uid] : []),
+      inviteCode: primaryMenu?.inviteCode ?? '',
+      weekStart: firstWeekStart,
+      days,
+      updatedAt: primaryMenu?.updatedAt,
+      updatedBy: primaryMenu?.updatedBy,
+    } satisfies WeekMenu;
   }
 
   function formatWeekday(isoDate: string) {
@@ -95,29 +138,63 @@ if (root) {
         })
       )
       .join('');
+    getConfigDates().forEach((dayKey) => {
+      configDays.querySelector<HTMLElement>(`[data-day="${dayKey}"]`)?.setAttribute('data-day-state', serializeDay(menu.days[dayKey]));
+    });
   }
 
-  async function saveField(card: HTMLElement, path: string, value: string | boolean | string[]) {
-    if (!currentUser || !currentMenuId) return;
-    const services = await getFirebaseServices();
-    await updateMenuPatch(
-      services,
-      currentMenuId,
-      currentUser.uid,
-      {
-        dayKey: card.dataset.day ?? '',
-        path,
-        value,
-      },
-      currentProfile?.groupId
+  function updateLocalDay(dayKey: string, nextState: WeekMenu['days'][string]) {
+    currentMenu = currentMenu
+      ? {
+          ...currentMenu,
+          days: {
+            ...currentMenu.days,
+            [dayKey]: nextState,
+          },
+        }
+      : currentMenu;
+
+    currentMenus = currentMenus.map((menu) =>
+      menu.weekStart === getWeekStartForDate(dayKey)
+        ? {
+            ...menu,
+            days: {
+              ...menu.days,
+              [dayKey]: nextState,
+            },
+          }
+        : menu
     );
   }
 
-  async function savePlateList(card: HTMLElement, meal: MealSlot) {
-    const items = [...card.querySelectorAll<HTMLInputElement>(`[data-plate-input="${meal}"]`)]
-      .map((input) => input.value.trim())
-      .filter(Boolean);
-    await saveField(card, `meals.${meal}.items`, items);
+  async function saveDay(card: HTMLElement) {
+    if (getNetworkStatus() !== 'online') {
+      saveFeedback.error(labels.offlineReadOnly);
+      return;
+    }
+    if (!currentUser) return;
+    const dayKey = card.dataset.day ?? '';
+    const menuId = getMenuIdForDay(dayKey);
+    if (!menuId) return;
+
+    const nextDay = readDayDraft(card, getEnabledMeals());
+    const nextState = serializeDay(nextDay);
+    if (card.dataset.dayState === nextState) {
+      saveFeedback.saved();
+      return;
+    }
+
+    saveFeedback.saving();
+    const services = await getFirebaseServices();
+    const changed = await updateMenuDay(services, menuId, currentUser.uid, dayKey, nextDay, currentProfile?.groupId);
+    card.dataset.dayState = nextState;
+    updateLocalDay(dayKey, nextDay);
+    saveFeedback.saved(changed ? labels.saveSaved : labels.saveSaved);
+  }
+
+  function scheduleDaySave(card: HTMLElement) {
+    saveFeedback.pending();
+    daySaveQueue.schedule(card.dataset.day ?? '', () => saveDay(card));
   }
 
   function addPlate(card: HTMLElement, meal: MealSlot) {
@@ -140,17 +217,25 @@ if (root) {
 
           const card = target.closest<HTMLElement>('[data-day]');
           if (!card) return;
-
-          if (target.dataset.plateInput) {
-            savePlateList(card, target.dataset.plateInput as MealSlot).catch((error: Error) => showStatus(error.message, true));
-            return;
+          if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+            const wasSkipped = card.dataset.dayState ? JSON.parse(card.dataset.dayState).skipped : false;
+            if (target.checked !== wasSkipped) {
+              renderConfig(
+                currentMenu
+                  ? {
+                      ...currentMenu,
+                      days: {
+                        ...currentMenu.days,
+                        [card.dataset.day ?? '']: readDayDraft(card, getEnabledMeals()),
+                      },
+                    }
+                  : buildDisplayMenu(currentMenus)
+              );
+            }
           }
-
-          const field = target.dataset.field;
-          if (!field) return;
-
-          const value = target instanceof HTMLInputElement && target.type === 'checkbox' ? target.checked : target.value.trim();
-          saveField(card, field, value).catch((error: Error) => showStatus(error.message, true));
+          configDays.querySelectorAll<HTMLElement>('[data-day]').forEach((item) => {
+            if (item.dataset.day === card.dataset.day) scheduleDaySave(item);
+          });
         });
 
         configDays?.addEventListener('click', (event) => {
@@ -168,9 +253,8 @@ if (root) {
           }
 
           if (button.dataset.removePlate) {
-            const meal = button.dataset.removePlate as MealSlot;
             button.closest('.plate-row')?.remove();
-            savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
+            scheduleDaySave(card);
           }
         });
 
@@ -186,7 +270,8 @@ if (root) {
           }
 
           await ensureUserProfile(services, user, labels.guestSession);
-          currentMenuId = await getOrCreateWeekMenu(services, user.uid, getCurrentWeekStart(), locale);
+          currentMenuIdsByWeekStart = await getOrCreateWeekMenus(services, user.uid, getRelevantWeekStarts(), locale);
+          currentMenus = [];
 
           unsubscribeProfile = watchUserProfile(
             services,
@@ -202,28 +287,28 @@ if (root) {
                   dishes = nextDishes;
                   if (currentMenu) renderConfig(currentMenu);
                 },
-                (error) => showStatus(error.message, true),
+                (error) => showStatus(formatError(error), true),
                 false,
                 profile.groupId
               );
               if (currentMenu) renderConfig(currentMenu);
             },
-            (error) => showStatus(error.message, true)
+            (error) => showStatus(formatError(error), true)
           );
 
-          unsubscribeMenu = watchWeekMenu(
+          unsubscribeMenu = watchWeekMenusByIds(
             services,
-            currentMenuId,
-            (menu) => {
-              if (!menu) return;
-              currentMenu = menu;
+            Object.values(currentMenuIdsByWeekStart),
+            (menus) => {
+              currentMenus = menus;
+              currentMenu = buildDisplayMenu(menus);
               setVisible(true);
-              renderConfig(menu);
+              renderConfig(currentMenu);
             },
-            (error) => showStatus(error.message, true)
+            (error) => showStatus(formatError(error), true)
           );
         });
       })
-      .catch((error: Error) => showStatus(error.message, true));
+      .catch((error: Error) => showStatus(formatError(error), true));
   }
 }

@@ -22,6 +22,9 @@ const labels = {
   moreActions: t('dashboard.moreActions'),
   save: t('dashboard.save'),
   cancel: t('dashboard.cancel'),
+  savePending: t('menu.savePending'),
+  saveSaving: t('menu.saveSaving'),
+  saveSaved: t('menu.saveSaved'),
   breakfast: t('dashboard.breakfast'),
   lunch: t('dashboard.lunch'),
   dinner: t('dashboard.dinner'),
@@ -41,12 +44,14 @@ const labels = {
   notes: t('menu.notes'),
   todayEmpty: t('dashboard.todayEmpty'),
   skipSummary: t('dashboard.skipSummary'),
+  permissionsError: t('menu.permissionsError'),
+  offlineReadOnly: t('pwa.offlineReadOnly'),
   homePath,
 };
 ---
 
 <section class="history-app" data-history-app data-labels={JSON.stringify(labels)}>
-  <div class="menu-app__status" data-status hidden></div>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
   <div data-content hidden>
     <section class="settings-card app-panel">

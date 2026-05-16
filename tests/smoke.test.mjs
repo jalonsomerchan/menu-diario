@@ -62,9 +62,13 @@ describe('project smoke checks', () => {
       'src/i18n/ui.ts',
       'src/i18n/translations',
       'src/lib/menu/day-editor.ts',
+      'src/lib/menu/day-form.ts',
+      'src/lib/menu/day-state.ts',
       'src/lib/menu/dish-suggestions.ts',
       'src/lib/dishes/helpers.mjs',
       'src/lib/dishes/repository.ts',
+      'src/lib/ui/debounced-task-map.ts',
+      'src/lib/ui/save-feedback.ts',
       'src/utils/paths.ts',
       'src/styles/global.css',
       'src/styles/dishes.css',
@@ -295,12 +299,20 @@ describe('project smoke checks', () => {
     const settingsScript = readText('src/scripts/settings-app.ts');
     const historyScript = readText('src/scripts/history-app.ts');
     const headerScript = readText('src/scripts/app-header.ts');
+    const dates = readText('src/lib/menu/dates.ts');
+    const dishesScript = readText('src/scripts/dishes-app.ts');
+    const tuppersScript = readText('src/scripts/tuppers-app.ts');
     const styles = readText('src/styles/global.css');
     const dishStyles = readText('src/styles/dishes.css');
     const rules = readText('firestore.rules');
     assert.match(repository, /ensureDefaultGroup/);
+    assert.match(repository, /getOrCreateWeekMenus/);
+    assert.match(repository, /watchWeekMenusByIds/);
     assert.match(repository, /joinGroupByInviteCode/);
     assert.match(repository, /clearMenuDay/);
+    assert.match(dates, /getWeekStartForDate/);
+    assert.match(dates, /getUpcomingDates/);
+    assert.match(dates, /getWeekStartsForDates/);
     assert.match(dayEditor, /renderDayEditor/);
     assert.match(dayEditor, /renderPlateRow/);
     assert.match(dayEditor, /dish-combobox/);
@@ -350,8 +362,31 @@ describe('project smoke checks', () => {
     assert.match(styles, /icon-button/);
     assert.match(styles, /day-skip-toggle/);
     assert.match(styles, /quick-edit-modal/);
+    assert.match(styles, /confirm-dialog/);
     assert.match(styles, /next-day-card__number/);
+    assert.doesNotMatch(dishesScript, /window\.confirm/);
+    assert.doesNotMatch(tuppersScript, /window\.confirm/);
     assert.match(rules, /match \/groups/);
+  });
+
+  it('keeps debounced save helpers wired in editable apps', () => {
+    const dashboardScript = readText('src/scripts/dashboard-app.ts');
+    const configuratorScript = readText('src/scripts/configurator-app.ts');
+    const historyScript = readText('src/scripts/history-app.ts');
+    const dishesScript = readText('src/scripts/dishes-app.ts');
+    const menuRepository = readText('src/lib/menu/repository.ts');
+    const designSystem = readText('docs/design-system.md');
+
+    [dashboardScript, configuratorScript, historyScript].forEach((source) => {
+      assert.match(source, /createDebouncedTaskMap/);
+      assert.match(source, /updateMenuDay/);
+      assert.match(source, /readDayDraft/);
+      assert.doesNotMatch(source, /updateMenuPatch/);
+    });
+    assert.match(dishesScript, /createSaveFeedback/);
+    assert.match(menuRepository, /export async function updateMenuDay/);
+    assert.match(menuRepository, /getAddedDishNames/);
+    assert.match(designSystem, /Guardado y estado/);
   });
 
   it('includes GitHub workflows for CI and Pages', () => {

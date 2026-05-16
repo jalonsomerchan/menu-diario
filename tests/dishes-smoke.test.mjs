@@ -19,8 +19,10 @@ describe('dishes page smoke checks', () => {
       'src/pages/mis-platos.astro',
       'src/pages/[locale]/mis-platos.astro',
       'src/components/DishesApp.astro',
+      'src/components/ConfirmDialog.astro',
       'src/scripts/dishes-app.ts',
       'src/lib/dishes/helpers.mjs',
+      'src/lib/ui/confirm-dialog.ts',
       'src/lib/dishes/helpers.d.ts',
       'src/lib/dishes/repository.ts',
       'src/data/dish-tags.ts',
@@ -84,11 +86,13 @@ describe('dishes page smoke checks', () => {
     assert.match(dishesApp, /data-dish-filter/);
     assert.match(dishesApp, /data-dish-tag-filter/);
     assert.match(dishesApp, /data-dish-sort/);
+    assert.match(dishesApp, /<ConfirmDialog/);
     assert.match(dishesApp, /quickDishTags/);
     assert.match(dishesApp, /aria-live=\"polite\"/);
     assert.match(dishesScript, /createManualDish/);
     assert.match(dishesScript, /renameDish/);
     assert.match(dishesScript, /archiveDish/);
+    assert.doesNotMatch(dishesScript, /window\.confirm/);
     assert.match(dishesScript, /updateDishPreferences/);
     assert.match(dishesScript, /data-toggle-favorite/);
     assert.match(dishesScript, /data-toggle-blocked/);

@@ -1,6 +1,7 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
+import { createConfirmDialog } from '../lib/ui/confirm-dialog';
 import { toIsoDate } from '../lib/menu/dates';
 import { watchUserProfile } from '../lib/menu/repository';
 import type { Dish, FirebaseUser, MealSlot, UserProfile } from '../lib/menu/types';
@@ -34,6 +35,7 @@ if (root) {
   const list = root.querySelector<HTMLElement>('[data-tupper-list]');
   const filterButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-filter]')];
   const expiryAlert = root.querySelector<HTMLElement>('[data-expiry-alert]');
+  const confirmDialog = root.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -44,6 +46,7 @@ if (root) {
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let firebaseServices: Awaited<ReturnType<typeof getFirebaseServices>> | undefined;
+  const assignmentConfirmation = confirmDialog ? createConfirmDialog(confirmDialog) : null;
 
   const today = toIsoDate(new Date());
   if (preparedInput) preparedInput.value = today;
@@ -214,7 +217,18 @@ if (root) {
     if (!tupper || !target) return;
 
     const [dayKey, meal] = target.split('|') as [string, MealSlot];
-    const allowAppend = window.confirm(labels.appendConfirm);
+    const allowAppend = assignmentConfirmation
+      ? await assignmentConfirmation.open({
+          eyebrow: labels.assign,
+          title: labels.assignTitle,
+          description: labels.appendConfirm,
+          confirmLabel: labels.assign,
+          cancelLabel: labels.cancel,
+          confirmVariant: 'primary',
+          returnFocusTo: form.querySelector<HTMLButtonElement>('button[type="submit"]'),
+          initialFocus: 'cancel',
+        })
+      : false;
 
     try {
       await assignTupperToMeal(firebaseServices, currentUser, tupper, {

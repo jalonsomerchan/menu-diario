@@ -1,4 +1,5 @@
 import { getWeekDays, getWeekTitle } from './dates';
+import { getAddedDishNames, isSameDayMenu } from './day-state';
 import { emptyDay, normalizeDay } from './normalizers';
 import { recordMenuDishUsage } from '../dishes/repository';
 import type {
@@ -170,6 +171,14 @@ export async function getOrCreateWeekMenu(services: FirebaseServices, userId: st
   return snapshot.docs[0]?.id ?? createWeekMenu(services, userId, weekStart, locale);
 }
 
+export async function getOrCreateWeekMenus(services: FirebaseServices, userId: string, weekStarts: string[], locale: string) {
+  const uniqueWeekStarts = [...new Set(weekStarts)];
+  const entries = await Promise.all(
+    uniqueWeekStarts.map(async (weekStart) => [weekStart, await getOrCreateWeekMenu(services, userId, weekStart, locale)] as const)
+  );
+  return Object.fromEntries(entries);
+}
+
 export function watchUserMenus(services: FirebaseServices, userId: string, callback: (menus: WeekMenu[]) => void, onError: (error: Error) => void, maxResults = 30) {
   const { db, firestoreModule } = services;
   const menusQuery = firestoreModule.query(firestoreModule.collection(db, menusCollection), firestoreModule.where('members', 'array-contains', userId), firestoreModule.orderBy('weekStart', 'desc'), firestoreModule.limit(maxResults));
@@ -181,6 +190,35 @@ export function watchWeekMenu(services: FirebaseServices, menuId: string, callba
   return firestoreModule.onSnapshot(firestoreModule.doc(db, menusCollection, menuId), (snapshot: any) => { callback(snapshot.exists() ? mapWeekMenu(snapshot.id, snapshot.data()) : null); }, onError);
 }
 
+export function watchWeekMenusByIds(services: FirebaseServices, menuIds: string[], callback: (menus: WeekMenu[]) => void, onError: (error: Error) => void) {
+  if (menuIds.length === 0) {
+    callback([]);
+    return () => {};
+  }
+
+  const menus = new Map<string, WeekMenu>();
+  const emit = () => callback([...menus.values()].sort((a, b) => a.weekStart.localeCompare(b.weekStart)));
+  const unsubscribes = menuIds.map((menuId) =>
+    watchWeekMenu(
+      services,
+      menuId,
+      (menu) => {
+        if (menu) {
+          menus.set(menuId, menu);
+        } else {
+          menus.delete(menuId);
+        }
+        emit();
+      },
+      onError
+    )
+  );
+
+  return () => {
+    unsubscribes.forEach((unsubscribe) => unsubscribe());
+  };
+}
+
 export async function updateMenuPatch(services: FirebaseServices, menuId: string, userId: string, patch: MenuPatch, groupId?: string) {
   const path = patch.path ?? patch.slot;
   if (!path) return;
@@ -189,6 +227,38 @@ export async function updateMenuPatch(services: FirebaseServices, menuId: string
   if ((path.endsWith('.items') || path === 'lunchItems') && Array.isArray(patch.value)) {
     await Promise.all(patch.value.map((item) => recordMenuDishUsage(services, userId, item, groupId)));
   }
+}
+
+export async function updateMenuDay(
+  services: FirebaseServices,
+  menuId: string,
+  userId: string,
+  dayKey: string,
+  nextDay: Partial<DailyMenu>,
+  groupId?: string
+) {
+  const { db, firestoreModule } = services;
+  const menuRef = firestoreModule.doc(db, menusCollection, menuId);
+  const snapshot = await firestoreModule.getDoc(menuRef);
+  const previousDay = normalizeDay(snapshot.exists() ? snapshot.data()?.days?.[dayKey] : undefined);
+  const normalizedNextDay = normalizeDay(nextDay);
+
+  if (isSameDayMenu(previousDay, normalizedNextDay)) {
+    return false;
+  }
+
+  await firestoreModule.updateDoc(menuRef, {
+    [`days.${dayKey}`]: normalizedNextDay,
+    updatedAt: firestoreModule.serverTimestamp(),
+    updatedBy: userId,
+  });
+
+  const additions = getAddedDishNames(previousDay, normalizedNextDay);
+  if (additions.length) {
+    await Promise.all(additions.map((item) => recordMenuDishUsage(services, userId, item, groupId)));
+  }
+
+  return true;
 }
 
 export async function clearMenuDay(services: FirebaseServices, menuId: string, userId: string, dayKey: string) {

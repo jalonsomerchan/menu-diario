@@ -89,11 +89,13 @@ describe('Tuppers domain helpers', () => {
     assert.match(dashboard, /getLocalizedPath\('\/tuppers'/);
     assert.match(configurator, /getLocalizedPath\('\/tuppers'/);
     assert.match(app, /data-tuppers-app/);
+    assert.match(app, /<ConfirmDialog/);
     assert.match(app, /aria-live=\"polite\"/);
     assert.match(app, /data-expiry-alert/);
     assert.match(script, /watchTuppers/);
     assert.match(script, /assignTupperToMeal/);
-    assert.match(script, /window\.confirm\(labels\.appendConfirm\)/);
+    assert.match(script, /createConfirmDialog/);
+    assert.doesNotMatch(script, /window\.confirm/);
     assert.ok(rules.includes('match /tuppers/{tupperId}'));
   });
 

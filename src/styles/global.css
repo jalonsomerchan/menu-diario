@@ -84,6 +84,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .button:active { transform: translateY(1px); }
 .button--primary { background: var(--color-primary); color: #fff; box-shadow: 0 10px 22px color-mix(in srgb, var(--color-primary), transparent 78%); }
 .button--primary:hover { background: var(--color-primary-hover); }
+.button--danger { background: var(--color-danger); color: #fff; box-shadow: 0 10px 22px color-mix(in srgb, var(--color-danger), transparent 78%); }
+.button--danger:hover { background: color-mix(in srgb, var(--color-danger), #000 12%); }
 .button--secondary, .button--ghost { border-color: var(--color-border); background: var(--color-surface); color: var(--color-text); }
 .button--ghost { background: color-mix(in srgb, var(--color-surface), transparent 45%); }
 .button--small { min-height: 2.1rem; border-radius: var(--radius-md); padding: 0.42rem 0.7rem; font-size: 0.85rem; }
@@ -189,6 +191,13 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .quick-edit-modal__box [data-quick-fields], .quick-edit-modal__box [data-history-edit-fields] { display: grid; gap: 0.75rem; }
 .quick-edit-modal .day-card { border-radius: var(--radius-xl); }
 .quick-edit-modal label { display: grid; gap: 0.35rem; font-weight: 850; }
+.confirm-dialog { width: min(92vw, 30rem); border: 0; border-radius: var(--radius-2xl); background: transparent; padding: 0; }
+.confirm-dialog::backdrop { background: rgb(2 6 23 / 0.72); backdrop-filter: blur(3px); }
+.confirm-dialog__box { display: grid; gap: 1rem; border: 1px solid var(--color-border); border-radius: var(--radius-2xl); background: var(--color-surface); padding: 1.1rem; box-shadow: var(--shadow-md); }
+.confirm-dialog__header { display: grid; gap: 0.45rem; }
+.confirm-dialog__header h2 { margin: 0; font-size: clamp(1.5rem, 6vw, 2.2rem); line-height: 1; letter-spacing: -0.05em; }
+.confirm-dialog__description { margin: 0; color: var(--color-muted); }
+.confirm-dialog__actions { display: grid; gap: 0.65rem; }
 .history-search { display: grid; gap: 0.75rem; }
 .group-code { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .group-lists { display: grid; gap: 1rem; }
@@ -228,6 +237,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .site-header__locales { flex-wrap: nowrap; }
   .menu-app__auth, .auth-card, .dashboard-header, .section-heading { grid-template-columns: 1fr auto; align-items: center; }
   .history-search, .dishes-toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
+  .confirm-dialog__actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dishes-toolbar label:first-child { grid-column: 1 / -1; }
   .dishes-form__row { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
   .dishes-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }

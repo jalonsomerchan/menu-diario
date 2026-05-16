@@ -251,6 +251,10 @@
   background: var(--color-primary-soft);
 }
 
+.confirm-dialog[data-confirm-dialog] .button--danger {
+  width: 100%;
+}
+
 .dish-card__edit {
   display: grid;
   gap: 0.75rem;

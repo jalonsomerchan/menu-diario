@@ -1,4 +1,5 @@
 ---
+import ConfirmDialog from './ConfirmDialog.astro';
 import { quickDishTags } from '../data/dish-tags';
 import type { Locale } from '../config/site';
 import { getLocalizedPath, useTranslations, type TranslationKey } from '../i18n/ui';
@@ -44,7 +45,7 @@ const labels = {
   neverUsed: t('dishes.neverUsed'),
   noCreatedAt: t('dishes.noCreatedAt'),
   tags: t('dishes.tags'),
-  quickTags: t('dishes.quickTags'),
+  quickTagsLabel: t('dishes.quickTags'),
   removeTag: t('dishes.removeTag'),
   noQuickTags: t('dishes.noQuickTags'),
   edit: t('dishes.edit'),
@@ -63,6 +64,9 @@ const labels = {
   favoriteBadge: t('dishes.favoriteBadge'),
   blockedBadge: t('dishes.blockedBadge'),
   preferencesUpdated: t('dishes.preferencesUpdated'),
+  savePending: t('menu.savePending'),
+  saveSaving: t('menu.saveSaving'),
+  saveSaved: t('menu.saveSaved'),
   save: t('dashboard.save'),
   cancel: t('dashboard.cancel'),
   empty: t('dishes.empty'),
@@ -76,9 +80,12 @@ const labels = {
   duplicate: t('dishes.duplicate'),
   invalid: t('dishes.invalid'),
   notEditable: t('dishes.notEditable'),
-  confirmArchive: t('dishes.confirmArchive'),
+  confirmArchiveTitle: t('dishes.confirmArchiveTitle'),
+  confirmArchiveDescription: t('dishes.confirmArchiveDescription'),
+  confirmArchiveConfirm: t('dishes.confirmArchiveConfirm'),
+  confirmArchiveCancel: t('dishes.confirmArchiveCancel'),
   homePath,
-  quickTags: quickDishTags,
+  quickTagsList: quickDishTags,
   tagLabels,
 };
 ---
@@ -135,6 +142,12 @@ const labels = {
 
     <div class="dishes-list" data-dishes-list></div>
   </div>
+
+  <ConfirmDialog
+    dialogId="dishes-confirm"
+    cancelLabel={labels.confirmArchiveCancel}
+    confirmLabel={labels.confirmArchiveConfirm}
+  />
 </section>
 
 <script>

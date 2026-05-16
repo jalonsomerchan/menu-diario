@@ -1,23 +1,27 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
-import { getMonday, toIsoDate } from '../lib/menu/dates';
-import { renderDayEditor } from '../lib/menu/day-editor';
+import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates, toIsoDate } from '../lib/menu/dates';
+import { readDayDraft } from '../lib/menu/day-form';
+import { serializeDay } from '../lib/menu/day-state';
+import { renderDayEditor, renderPlateRow } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
   clearMenuDay,
   ensureUserProfile,
-  getOrCreateWeekMenu,
-  updateMenuPatch,
+  getOrCreateWeekMenus,
+  updateMenuDay,
   watchUserProfile,
-  watchWeekMenu,
+  watchWeekMenusByIds,
 } from '../lib/menu/repository';
-import type { DailyMenu, Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { notifyMenuChanged, requestChangeNotifications } from '../lib/notifications/browser';
 import { getNetworkStatus, watchNetworkStatus } from '../lib/pwa/network-status';
 import { readLastOfflineMenuCache, saveOfflineMenuCache } from '../lib/pwa/offline-cache';
 import { shouldBlockOfflineWrites } from '../lib/pwa/offline-sync';
+import { createDebouncedTaskMap } from '../lib/ui/debounced-task-map';
+import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-dashboard-app]');
 
@@ -39,7 +43,8 @@ if (root) {
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
   let currentMenu: WeekMenu | null = null;
-  let currentMenuId = '';
+  let currentMenus: WeekMenu[] = [];
+  let currentMenuIdsByWeekStart: Record<string, string> = {};
   let dishes: Dish[] = [];
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
@@ -47,6 +52,15 @@ if (root) {
   let firstMenuLoad = true;
   let isOnline = getNetworkStatus() === 'online';
   let isReadOnlyOffline = !isOnline;
+  const saveFeedback = createSaveFeedback(status, {
+    pending: labels.savePending,
+    saving: labels.saveSaving,
+    saved: labels.saveSaved,
+  });
+  const daySaveQueue = createDebouncedTaskMap({
+    delay: 500,
+    onError: (error) => saveFeedback.error(formatError(error)),
+  });
 
   attachDishSuggestions(root, () => dishes);
 
@@ -55,10 +69,18 @@ if (root) {
   }
 
   function showStatus(message: string, isError = false) {
-    if (!status) return;
-    status.hidden = false;
-    status.textContent = message;
-    status.dataset.variant = isError ? 'error' : 'info';
+    if (isError) {
+      saveFeedback.error(message);
+      return;
+    }
+    saveFeedback.info(message);
+  }
+
+  function formatError(error: unknown) {
+    if (error instanceof Error && error.message.toLowerCase().includes('permission')) {
+      return labels.permissionsError;
+    }
+    return error instanceof Error ? error.message : String(error);
   }
 
   function updateOfflineState(message = labels.offlineReadOnly) {
@@ -103,19 +125,42 @@ if (root) {
     return renderMealSummary(day.meals[meal]);
   }
 
-  function getDateOffset(daysFromToday: number) {
-    const date = new Date();
-    date.setHours(0, 0, 0, 0);
-    date.setDate(date.getDate() + daysFromToday);
-    return toIsoDate(date);
-  }
-
-  function getCurrentWeekStart() {
-    return toIsoDate(getMonday(new Date()));
-  }
-
   function getNextSevenDates() {
-    return Array.from({ length: 7 }, (_, index) => getDateOffset(index + 1));
+    return getUpcomingDates(new Date(), 1, 7);
+  }
+
+  function getRelevantWeekStarts() {
+    return getWeekStartsForDates([toIsoDate(new Date()), ...getNextSevenDates()]);
+  }
+
+  function getMenuIdForDay(dayKey: string) {
+    return currentMenuIdsByWeekStart[getWeekStartForDate(dayKey)] ?? '';
+  }
+
+  function getMenuForDay(dayKey: string) {
+    const weekStart = getWeekStartForDate(dayKey);
+    return currentMenus.find((menu) => menu.weekStart === weekStart) ?? null;
+  }
+
+  function buildDisplayMenu(menus: WeekMenu[]) {
+    const today = toIsoDate(new Date());
+    const days = Object.fromEntries(
+      [today, ...getNextSevenDates()].map((dayKey) => [dayKey, normalizeDay(getMenuForDay(dayKey)?.days?.[dayKey])])
+    );
+    const todayWeekStart = getWeekStartForDate(today);
+    const primaryMenu = menus.find((menu) => menu.weekStart === todayWeekStart);
+
+    return {
+      id: primaryMenu?.id ?? '',
+      title: primaryMenu?.title ?? '',
+      ownerId: primaryMenu?.ownerId ?? currentUser?.uid ?? '',
+      members: primaryMenu?.members ?? (currentUser ? [currentUser.uid] : []),
+      inviteCode: primaryMenu?.inviteCode ?? '',
+      weekStart: todayWeekStart,
+      days,
+      updatedAt: primaryMenu?.updatedAt,
+      updatedBy: primaryMenu?.updatedBy,
+    } satisfies WeekMenu;
   }
 
   function formatWeekday(isoDate: string) {
@@ -142,7 +187,7 @@ if (root) {
   function renderToday(menu: WeekMenu) {
     if (!todaySummary) return;
 
-    const day = normalizeDay(menu.days[getDateOffset(0)]);
+    const day = normalizeDay(menu.days[toIsoDate(new Date())]);
     const firstMeal = getEnabledMeals()[0] ?? 'lunch';
     const meal = day.meals[firstMeal];
     const items = day.skipped || meal.skipped || meal.items.length === 0 ? [renderDaySummary(day, firstMeal)] : meal.items;
@@ -208,15 +253,83 @@ if (root) {
       labels,
       compact: true,
     });
+    quickFields.querySelector<HTMLElement>('[data-day]')?.setAttribute(
+      'data-day-state',
+      serializeDay(currentMenu.days[dayKey] ?? normalizeDay(undefined))
+    );
     quickModal.showModal();
   }
 
+  function syncRenderedDayStates(container: ParentNode, dates: string[]) {
+    dates.forEach((dayKey) => {
+      const card = container.querySelector<HTMLElement>(`[data-day="${dayKey}"]`);
+      if (!card) return;
+      card.dataset.dayState = serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined));
+    });
+  }
+
+  function updateLocalDay(dayKey: string, nextDay: DailyMenu) {
+    currentMenu = currentMenu
+      ? {
+          ...currentMenu,
+          days: {
+            ...currentMenu.days,
+            [dayKey]: nextDay,
+          },
+        }
+      : currentMenu;
+
+    currentMenus = currentMenus.map((menu) =>
+      menu.weekStart === getWeekStartForDate(dayKey)
+        ? {
+            ...menu,
+            days: {
+              ...menu.days,
+              [dayKey]: nextDay,
+            },
+          }
+        : menu
+    );
+  }
+
+  async function saveDay(card: HTMLElement) {
+    if (shouldBlockOfflineWrites(isOnline)) {
+      saveFeedback.error(labels.offlineReadOnly);
+      return;
+    }
+
+    if (!currentUser) return;
+    const dayKey = card.dataset.day ?? '';
+    const menuId = getMenuIdForDay(dayKey);
+    if (!menuId) return;
+
+    const nextDay = readDayDraft(card, getEnabledMeals());
+    const nextState = serializeDay(nextDay);
+    if (card.dataset.dayState === nextState) {
+      saveFeedback.saved();
+      return;
+    }
+
+    saveFeedback.saving();
+    const services = await getFirebaseServices();
+    const changed = await updateMenuDay(services, menuId, currentUser.uid, dayKey, nextDay, currentProfile?.groupId);
+    card.dataset.dayState = nextState;
+    updateLocalDay(dayKey, nextDay);
+    saveFeedback.saved(changed ? labels.saveSaved : labels.saveSaved);
+  }
+
+  function scheduleDaySave(card: HTMLElement) {
+    saveFeedback.pending();
+    daySaveQueue.schedule(card.dataset.day ?? '', () => saveDay(card));
+  }
+
   function cacheCurrentMenu(menu = currentMenu) {
-    if (!menu || !currentUser || !currentMenuId) return;
+    const todayMenuId = getMenuIdForDay(toIsoDate(new Date()));
+    if (!menu || !currentUser || !todayMenuId) return;
 
     saveOfflineMenuCache({
       userId: currentUser.uid,
-      menuId: currentMenuId,
+      menuId: todayMenuId,
       menu,
       profile: {
         displayName: currentProfile?.displayName || currentUser.displayName || currentUser.email || labels.guestSession,
@@ -236,7 +349,8 @@ if (root) {
     }
 
     currentUser = { uid: cached.userId, displayName: cached.profile.displayName };
-    currentMenuId = cached.menuId;
+    currentMenuIdsByWeekStart = { [getWeekStartForDate(cached.menu.weekStart)]: cached.menuId };
+    currentMenus = [cached.menu];
     currentProfile = {
       id: cached.userId,
       displayName: cached.profile.displayName,
@@ -250,34 +364,6 @@ if (root) {
     updateOfflineState(`${labels.offlineCached} ${new Date(cached.savedAt).toLocaleString(locale)}. ${labels.offlineReadOnly}`);
   }
 
-  async function saveField(card: HTMLElement, path: string, value: string | boolean | string[]) {
-    if (shouldBlockOfflineWrites(isOnline)) {
-      showStatus(labels.offlineReadOnly, true);
-      return;
-    }
-
-    if (!currentUser || !currentMenuId) return;
-    const services = await getFirebaseServices();
-    await updateMenuPatch(
-      services,
-      currentMenuId,
-      currentUser.uid,
-      {
-        dayKey: card.dataset.day ?? '',
-        path,
-        value,
-      },
-      currentProfile?.groupId
-    );
-  }
-
-  async function savePlateList(card: HTMLElement, meal: MealSlot) {
-    const items = [...card.querySelectorAll<HTMLInputElement>(`[data-plate-input="${meal}"]`)]
-      .map((input) => input.value.trim())
-      .filter(Boolean);
-    await saveField(card, `meals.${meal}.items`, items);
-  }
-
   function addPlate(card: HTMLElement, meal: MealSlot) {
     if (isReadOnlyOffline) {
       showStatus(labels.offlineReadOnly, true);
@@ -287,14 +373,8 @@ if (root) {
     const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
     if (!list) return;
 
-    const row = document.createElement('div');
-    row.className = 'plate-row';
-    row.innerHTML = `
-      <label><span class="sr-only">${labels.addDish}</span><input type="text" value="" data-plate-input="${meal}" placeholder="${labels.dishPlaceholder}" autocomplete="off" /></label>
-      <button class="icon-button icon-button--danger" type="button" data-remove-plate="${meal}" aria-label="${labels.removePlate}"><span aria-hidden="true">×</span></button>
-    `;
-    list.append(row);
-    row.querySelector<HTMLInputElement>('input')?.focus();
+    list.insertAdjacentHTML('beforeend', renderPlateRow(labels, meal, '', list.children.length, dishes));
+    list.querySelector<HTMLInputElement>('.plate-row:last-child input')?.focus();
   }
 
   function renderDashboard(menu: WeekMenu) {
@@ -302,6 +382,7 @@ if (root) {
     setVisible(true);
     renderToday(menu);
     renderNextSeven(menu);
+    syncRenderedDayStates(nextDays ?? root, getNextSevenDates());
   }
 
   watchNetworkStatus((networkStatus) => {
@@ -341,12 +422,14 @@ if (root) {
             return;
           }
 
-          if (target.dataset.clearDay && currentUser && currentMenuId) {
+          if (target.dataset.clearDay && currentUser) {
             if (shouldBlockOfflineWrites(isOnline)) {
               showStatus(labels.offlineReadOnly, true);
               return;
             }
-            await clearMenuDay(services, currentMenuId, currentUser.uid, target.dataset.clearDay);
+            const menuId = getMenuIdForDay(target.dataset.clearDay);
+            if (!menuId) return;
+            await clearMenuDay(services, menuId, currentUser.uid, target.dataset.clearDay);
           }
         });
 
@@ -355,16 +438,23 @@ if (root) {
           if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
           const card = target.closest<HTMLElement>('[data-day]');
           if (!card) return;
-
-          if (target.dataset.plateInput) {
-            savePlateList(card, target.dataset.plateInput as MealSlot).catch((error: Error) => showStatus(error.message, true));
-            return;
+          if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+            const wasSkipped = card.dataset.dayState ? JSON.parse(card.dataset.dayState).skipped : false;
+            if (target.checked !== wasSkipped) {
+              quickFields.innerHTML = renderDayEditor({
+                dayKey: card.dataset.day ?? '',
+                dayNumber: getDayNumber(card.dataset.day ?? ''),
+                weekday: formatWeekday(card.dataset.day ?? ''),
+                day: readDayDraft(card, getEnabledMeals()),
+                enabledMeals: getEnabledMeals(),
+                dishes,
+                labels,
+                compact: true,
+              });
+              quickFields.querySelector<HTMLElement>('[data-day]')?.setAttribute('data-day-state', card.dataset.dayState ?? '');
+            }
           }
-
-          const field = target.dataset.field;
-          if (!field) return;
-          const value = target instanceof HTMLInputElement && target.type === 'checkbox' ? target.checked : target.value.trim();
-          saveField(card, field, value).catch((error: Error) => showStatus(error.message, true));
+          quickFields.querySelectorAll<HTMLElement>('[data-day]').forEach((item) => scheduleDaySave(item));
         });
 
         quickFields?.addEventListener('click', (event) => {
@@ -383,14 +473,18 @@ if (root) {
           if (button.dataset.removePlate) {
             const meal = button.dataset.removePlate as MealSlot;
             button.closest('.plate-row')?.remove();
-            savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
+            scheduleDaySave(card);
           }
         });
 
-        quickForm?.addEventListener('submit', (event) => {
+        quickForm?.addEventListener('submit', async (event) => {
           const submitter = (event as SubmitEvent).submitter;
           if (submitter instanceof HTMLButtonElement && submitter.value === 'save') {
             event.preventDefault();
+            const card = quickFields?.querySelector<HTMLElement>('[data-day]');
+            if (card) {
+              await daySaveQueue.flush(card.dataset.day ?? '');
+            }
             quickModal?.close();
           }
         });
@@ -409,7 +503,8 @@ if (root) {
           if (userLabel) userLabel.textContent = `${labels.hello} ${user.displayName || user.email || labels.guestSession}`;
 
           await ensureUserProfile(services, user, labels.guestSession);
-          currentMenuId = await getOrCreateWeekMenu(services, user.uid, getCurrentWeekStart(), locale);
+          currentMenuIdsByWeekStart = await getOrCreateWeekMenus(services, user.uid, getRelevantWeekStarts(), locale);
+          currentMenus = [];
           firstMenuLoad = true;
 
           unsubscribeProfile = watchUserProfile(
@@ -427,7 +522,7 @@ if (root) {
                   dishes = nextDishes;
                   if (currentMenu) renderDashboard(currentMenu);
                 },
-                (error) => showStatus(error.message, true),
+                (error) => showStatus(formatError(error), true),
                 false,
                 profile.groupId
               );
@@ -436,21 +531,22 @@ if (root) {
                 cacheCurrentMenu(currentMenu);
               }
             },
-            (error) => showStatus(error.message, true)
+            (error) => showStatus(formatError(error), true)
           );
 
-          unsubscribeMenu = watchWeekMenu(
+          unsubscribeMenu = watchWeekMenusByIds(
             services,
-            currentMenuId,
-            (menu) => {
-              if (!menu) return;
-              const changedByOtherUser = !firstMenuLoad && menu.updatedBy && menu.updatedBy !== currentUser?.uid;
-              renderDashboard(menu);
-              cacheCurrentMenu(menu);
+            Object.values(currentMenuIdsByWeekStart),
+            (menus) => {
+              currentMenus = menus;
+              const mergedMenu = buildDisplayMenu(menus);
+              const changedByOtherUser = !firstMenuLoad && menus.some((menu) => menu.updatedBy && menu.updatedBy !== currentUser?.uid);
+              renderDashboard(mergedMenu);
+              cacheCurrentMenu(mergedMenu);
               if (changedByOtherUser) notifyMenuChanged(labels.updated, labels.updatedBody);
-              firstMenuLoad = false;
+              firstMenuLoad = menus.length < Object.keys(currentMenuIdsByWeekStart).length;
             },
-            (error) => showStatus(error.message, true)
+            (error) => showStatus(formatError(error), true)
           );
         });
       })
@@ -459,7 +555,7 @@ if (root) {
           renderOfflineCache();
           return;
         }
-        showStatus(error.message, true);
+        showStatus(formatError(error), true);
       });
   }
 }

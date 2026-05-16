@@ -245,6 +245,8 @@ Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permi
 }
 ```
 
+Las vistas de próximos días pueden mezclar fechas de dos semanas distintas, pero cada fecha debe leerse y escribirse en el documento `weeklyMenus` de su `weekStart` real. Dashboard y planificación agrupan la UI por rango de días, no por un único documento mezclado.
+
 La forma normalizada del menú vive en `src/lib/menu/normalizers.ts`. La UI y el repositorio deben trabajar sobre `days[isoDate].meals.breakfast|lunch|dinner`, `skipped`, `reason`, `skipNote` y `notes`. Los campos legacy `lunch`, `lunchItems`, `noLunch`, `noLunchReason` y `noLunchDescription` se siguen aceptando solo como compatibilidad de lectura y se transforman al bloque `meals.lunch`.
 
 ### `dishes/{dishId}`

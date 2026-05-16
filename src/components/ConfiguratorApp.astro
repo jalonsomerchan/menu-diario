@@ -37,14 +37,19 @@ const labels = {
   reasonDescription: t('dashboard.reasonDescription'),
   notes: t('menu.notes'),
   saveHint: t('menu.saveHint'),
+  savePending: t('menu.savePending'),
+  saveSaving: t('menu.saveSaving'),
+  saveSaved: t('menu.saveSaved'),
+  permissionsError: t('menu.permissionsError'),
   guestSession: t('menu.guestSession'),
+  offlineReadOnly: t('pwa.offlineReadOnly'),
   tuppers: tt('nav'),
   homePath,
 };
 ---
 
 <section class="configurator-app" data-configurator-app data-labels={JSON.stringify(labels)}>
-  <div class="menu-app__status" data-status hidden></div>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>
