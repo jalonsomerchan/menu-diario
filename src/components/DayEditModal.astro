@@ -12,29 +12,227 @@ interface Props {
 const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveHint } = Astro.props;
 ---
 
-<dialog class="quick-edit-modal quick-edit-modal--day day-edit-modal" data-day-edit-modal>
+<dialog
+  class="quick-edit-modal quick-edit-modal--day day-edit-modal"
+  data-day-edit-modal
+  aria-labelledby="day-edit-modal-title"
+  aria-describedby="day-edit-modal-description"
+>
   <form method="dialog" class="quick-edit-modal__box day-edit-modal__box" data-day-edit-form>
     <header class="day-edit-modal__header">
+      <div class="day-edit-modal__date-badge" aria-hidden="true" data-day-edit-number></div>
       <div class="day-edit-modal__heading">
         <p class="menu-app__eyebrow" data-day-edit-eyebrow>{eyebrow}</p>
-        <h2 data-day-edit-title>{title}</h2>
-        <p data-day-edit-subtitle>{subtitle}</p>
+        <h2 id="day-edit-modal-title" data-day-edit-title>{title}</h2>
+        <p id="day-edit-modal-description" data-day-edit-subtitle>{subtitle}</p>
       </div>
-      <button class="button button--ghost button--small" value="cancel" type="submit">
-        {cancelLabel}
+      <button class="day-edit-modal__close" value="cancel" type="submit" aria-label={cancelLabel}>
+        <span aria-hidden="true">×</span>
       </button>
     </header>
 
     <div class="day-edit-modal__body" data-day-edit-fields></div>
 
     <footer class="day-edit-modal__footer">
-      <p class="day-edit-modal__hint">{saveHint}</p>
+      <p class="day-edit-modal__hint" data-day-edit-save-state>{saveHint}</p>
       <div class="day-edit-modal__actions">
         <button class="button button--ghost button--small" type="button" data-day-edit-clear>
           {clearLabel}
         </button>
-        <button class="button button--primary" value="save" type="submit">{saveLabel}</button>
+        <button class="button button--primary" value="save" type="submit" data-day-edit-save>
+          {saveLabel}
+        </button>
       </div>
     </footer>
   </form>
 </dialog>
+
+<style is:global>
+  .day-edit-modal {
+    width: min(94vw, 45rem);
+    margin: auto;
+  }
+
+  .day-edit-modal::backdrop {
+    background:
+      radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--color-primary), transparent 78%), transparent 26rem),
+      linear-gradient(180deg, rgb(2 6 23 / 0.68), rgb(15 23 42 / 0.86));
+    backdrop-filter: blur(10px);
+  }
+
+  .day-edit-modal__box {
+    gap: 0;
+    max-height: min(88vh, 48rem);
+    overflow: hidden;
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 68%);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--color-primary-soft), transparent 58%), transparent 18rem),
+      var(--color-surface);
+    box-shadow: 0 28px 86px rgb(15 23 42 / 0.32);
+  }
+
+  .day-edit-modal__header {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.8rem;
+    margin: -1.1rem -1.1rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 14%);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--color-surface), var(--color-primary-soft) 10%), var(--color-surface));
+    padding: 1rem 1.05rem 0.9rem;
+  }
+
+  .day-edit-modal__date-badge {
+    display: grid;
+    place-items: center;
+    width: clamp(3rem, 13vw, 4.25rem);
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 55%);
+    border-radius: 1.15rem;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    font-size: clamp(1.8rem, 8vw, 2.65rem);
+    font-weight: 150;
+    letter-spacing: -0.12em;
+    line-height: 0.9;
+    padding-right: 0.12em;
+  }
+
+  .day-edit-modal__heading {
+    display: grid;
+    min-width: 0;
+    gap: 0.22rem;
+  }
+
+  .day-edit-modal__heading h2 {
+    margin: 0;
+    font-size: clamp(1.7rem, 7vw, 2.65rem);
+    line-height: 0.95;
+    letter-spacing: -0.07em;
+    text-transform: lowercase;
+  }
+
+  .day-edit-modal__heading h2::first-letter {
+    text-transform: uppercase;
+  }
+
+  .day-edit-modal__heading p:last-child {
+    min-height: 1.2em;
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.92rem;
+    font-weight: 850;
+  }
+
+  .day-edit-modal__close {
+    display: grid;
+    place-items: center;
+    width: 2.55rem;
+    height: 2.55rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 4%);
+    color: var(--color-muted);
+    font-size: 1.55rem;
+    font-weight: 900;
+    line-height: 1;
+    transition:
+      background var(--transition-base),
+      color var(--transition-base),
+      transform var(--transition-base),
+      border-color var(--transition-base);
+  }
+
+  .day-edit-modal__close:hover {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 45%);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+
+  .day-edit-modal__close:active {
+    transform: scale(0.96);
+  }
+
+  .day-edit-modal__body {
+    display: grid;
+    gap: 0.75rem;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 1rem 0.05rem;
+  }
+
+  .day-edit-modal__footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    display: grid !important;
+    gap: 0.9rem;
+    margin: 0 -1.1rem -1.1rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 12%);
+    background:
+      linear-gradient(0deg, color-mix(in srgb, var(--color-surface), var(--color-primary-soft) 8%), var(--color-surface));
+    padding: 0.95rem 1.05rem calc(1rem + env(safe-area-inset-bottom));
+  }
+
+  .day-edit-modal__hint {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    font-weight: 850;
+  }
+
+  .day-edit-modal__hint[data-variant='saving'] {
+    color: var(--color-primary);
+  }
+
+  .day-edit-modal__actions {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .day-edit-modal .day-card--compact-editor {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .day-edit-modal .day-card__header {
+    display: none;
+  }
+
+  .day-edit-modal .meal-editor {
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 16%),
+      color-mix(in srgb, var(--color-surface-soft), transparent 8%)
+    );
+  }
+
+  .day-edit-modal .plate-row {
+    align-items: start;
+  }
+
+  .day-edit-modal .plate-row label {
+    position: relative;
+    gap: 0.35rem;
+  }
+
+  .day-edit-modal .button--primary[aria-busy='true'] {
+    opacity: 0.82;
+  }
+
+  @media (min-width: 640px) {
+    .day-edit-modal__actions {
+      grid-template-columns: auto minmax(11rem, auto);
+      justify-content: end;
+      align-items: center;
+    }
+  }
+</style>
