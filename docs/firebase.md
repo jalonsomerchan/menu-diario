@@ -360,7 +360,7 @@ Creado o gestionado por administración. Visible para usuarios autenticados y no
 
 #### Plato propio del grupo
 
-Creado desde menús, manualmente en **Mis platos** o duplicando un plato general. Visible y editable por miembros autorizados del grupo.
+Creado desde menús, manualmente en **Mis platos** o duplicando un plato general. Visible y editable por miembros autorizados del grupo. Los permisos dependen de `scope: group`, `groupId` y la pertenencia real del usuario a `groups/{groupId}.members`; el campo `members` del plato se mantiene solo como metadato legacy y no decide permisos.
 
 ```json
 {
@@ -395,6 +395,7 @@ Si una sesión todavía no tiene `groupId` o existen datos antiguos, la app mant
 - `scope`: `global`, `group` o `user`.
 - `groupId`: obligatorio para `scope: group`.
 - `createdBy`: UID que creó el documento o UID administrativo.
+- `members`: metadato legacy en platos; no debe usarse como fuente de permisos en `scope: group`.
 - `isGlobal`: redundante pero explícito para UI/reglas.
 - `editable`: `false` en globales, `true` en propios.
 - `source`: `admin`, `manual`, `menu`, `group`, `legacy` o `duplicated-global`.
@@ -442,7 +443,7 @@ Las reglas actuales permiten:
 
 - Leer `dishes` a usuarios autenticados.
 - Crear o modificar platos globales solo a usuarios con custom claim `admin == true`.
-- Crear o modificar platos `scope: group` solo si el usuario pertenece a `groups/{groupId}.members`.
+- Crear o modificar platos `scope: group` solo si el usuario pertenece a `groups/{groupId}.members`; no se exige que su UID esté duplicado en `dishes.members`.
 - Crear o modificar platos `scope: user` propios como compatibilidad con datos antiguos o ausencia temporal de grupo.
 - Bloquear borrados físicos de platos. El borrado funcional se hace con `archived` y `archivedAt`.
 
