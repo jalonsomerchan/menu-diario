@@ -1,10 +1,10 @@
 import { getWeekDays, getWeekTitle } from './dates';
+import { emptyDay, normalizeDay } from './normalizers';
 import type {
   DailyMenu,
   Dish,
   DishScope,
   FirebaseUser,
-  MealEntry,
   MealSlot,
   MenuGroup,
   MenuPatch,
@@ -23,46 +23,6 @@ type FirebaseServices = {
   db: any;
   firestoreModule: any;
 };
-
-function emptyMeal(): MealEntry {
-  return { items: [], skipped: false, reason: '', note: '' };
-}
-
-function emptyDay(): DailyMenu {
-  return {
-    meals: {
-      breakfast: emptyMeal(),
-      lunch: emptyMeal(),
-      dinner: emptyMeal(),
-    },
-    skipped: false,
-    reason: '',
-    skipNote: '',
-    notes: '',
-  };
-}
-
-function normalizeMeal(data?: Partial<MealEntry>): MealEntry {
-  return { ...emptyMeal(), ...data, items: Array.isArray(data?.items) ? data.items : [], skipped: Boolean(data?.skipped), reason: data?.reason ?? '', note: data?.note ?? '' };
-}
-
-function normalizeDay(data: Partial<DailyMenu> = {}): DailyMenu {
-  const legacyLunchItems = data.lunchItems ?? (data.lunch ? [data.lunch].filter(Boolean) : []);
-  const meals = data.meals ?? {};
-  return {
-    ...emptyDay(),
-    ...data,
-    meals: {
-      breakfast: normalizeMeal(meals.breakfast),
-      lunch: normalizeMeal({ ...(meals.lunch ?? {}), items: meals.lunch?.items ?? legacyLunchItems, skipped: meals.lunch?.skipped ?? Boolean(data.noLunch), reason: meals.lunch?.reason ?? data.noLunchReason ?? '', note: meals.lunch?.note ?? data.noLunchDescription ?? '' }),
-      dinner: normalizeMeal({ ...(meals.dinner ?? {}), items: meals.dinner?.items ?? (data.dinner ? [data.dinner].filter(Boolean) : []) }),
-    },
-    skipped: Boolean(data.skipped),
-    reason: data.reason ?? '',
-    skipNote: data.skipNote ?? '',
-    notes: data.notes ?? '',
-  };
-}
 
 function buildEmptyDays(weekStart: string) {
   return Object.fromEntries(getWeekDays(weekStart).map((day) => [day.key, emptyDay()]));

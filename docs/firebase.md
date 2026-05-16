@@ -245,6 +245,8 @@ Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permi
 }
 ```
 
+La forma normalizada del menú vive en `src/lib/menu/normalizers.ts`. La UI y el repositorio deben trabajar sobre `days[isoDate].meals.breakfast|lunch|dinner`, `skipped`, `reason`, `skipNote` y `notes`. Los campos legacy `lunch`, `lunchItems`, `noLunch`, `noLunchReason` y `noLunchDescription` se siguen aceptando solo como compatibilidad de lectura y se transforman al bloque `meals.lunch`.
+
 ### `dishes/{dishId}`
 
 El catálogo de platos usa **una sola colección** `dishes`. Se eligió este modelo para no duplicar consultas, normalización, deduplicación, UI, sugerencias y futuras funciones de IA. La separación se hace con campos explícitos de ámbito y permisos.

@@ -2,6 +2,7 @@ import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getMonday, toIsoDate } from '../lib/menu/dates';
 import { renderDayEditor } from '../lib/menu/day-editor';
+import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
   clearMenuDay,
@@ -12,7 +13,7 @@ import {
   watchUserProfile,
   watchWeekMenu,
 } from '../lib/menu/repository';
-import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { notifyMenuChanged, requestChangeNotifications } from '../lib/notifications/browser';
 import { getNetworkStatus, watchNetworkStatus } from '../lib/pwa/network-status';
 import { readLastOfflineMenuCache, saveOfflineMenuCache } from '../lib/pwa/offline-cache';
@@ -66,44 +67,6 @@ if (root) {
 
     offlineBanner.hidden = isOnline;
     if (offlineMessage) offlineMessage.textContent = message;
-  }
-
-  function emptyMeal(): MealEntry {
-    return { items: [], skipped: false, reason: '', note: '' };
-  }
-
-  function normalizeMeal(meal?: Partial<MealEntry>): MealEntry {
-    return {
-      ...emptyMeal(),
-      ...meal,
-      items: Array.isArray(meal?.items) ? meal.items : [],
-      skipped: Boolean(meal?.skipped),
-      reason: meal?.reason ?? '',
-      note: meal?.note ?? '',
-    };
-  }
-
-  function normalizeDay(day?: Partial<DailyMenu>): DailyMenu {
-    return {
-      meals: {
-        breakfast: normalizeMeal(day?.meals?.breakfast),
-        lunch: normalizeMeal({
-          ...(day?.meals?.lunch ?? {}),
-          items: day?.meals?.lunch?.items ?? day?.lunchItems ?? (day?.lunch ? [day.lunch] : []),
-          skipped: day?.meals?.lunch?.skipped ?? Boolean(day?.noLunch),
-          reason: day?.meals?.lunch?.reason ?? day?.noLunchReason ?? '',
-          note: day?.meals?.lunch?.note ?? day?.noLunchDescription ?? '',
-        }),
-        dinner: normalizeMeal({
-          ...(day?.meals?.dinner ?? {}),
-          items: day?.meals?.dinner?.items ?? (day?.dinner ? [day.dinner] : []),
-        }),
-      },
-      skipped: Boolean(day?.skipped),
-      reason: day?.reason ?? '',
-      skipNote: day?.skipNote ?? '',
-      notes: day?.notes ?? '',
-    };
   }
 
   function getEnabledMeals(): MealSlot[] {

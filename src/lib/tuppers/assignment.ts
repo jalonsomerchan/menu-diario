@@ -1,4 +1,5 @@
-import type { DailyMenu, MealEntry, MealSlot, WeekMenu } from '../menu/types';
+import { normalizeMeal } from '../menu/normalizers';
+import type { MealEntry, MealSlot, WeekMenu } from '../menu/types';
 import type { TupperItem } from './types';
 
 export type TupperAssignmentResult = {
@@ -6,8 +7,6 @@ export type TupperAssignmentResult = {
   nextItems: string[];
   reason?: 'meal-has-items' | 'meal-skipped' | 'day-skipped';
 };
-
-const emptyMeal: MealEntry = { items: [], skipped: false, reason: '', note: '' };
 
 export function buildTupperMenuLabel(tupper: Pick<TupperItem, 'name'>) {
   return `Tupper: ${tupper.name}`;
@@ -40,15 +39,4 @@ export function planTupperAssignment(
   }
 
   return { canAssign: true, nextItems: [...currentMeal.items, label] };
-}
-
-function normalizeMeal(meal?: Partial<MealEntry>): MealEntry {
-  return {
-    ...emptyMeal,
-    ...meal,
-    items: Array.isArray(meal?.items) ? meal.items : [],
-    skipped: Boolean(meal?.skipped),
-    reason: meal?.reason ?? '',
-    note: meal?.note ?? '',
-  };
 }
