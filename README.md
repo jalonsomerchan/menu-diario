@@ -2,7 +2,7 @@
 
 Menu Diario es una webapp mobile first para apuntar qué vas a comer cada día, planificar desayunos, comidas y cenas, guardar histórico, ver próximos menús y reutilizar platos ya escritos.
 
-La aplicación está construida sobre Astro y usa Firebase Authentication y Firestore desde el navegador. Está pensada para funcionar bien en móvil, conservar compatibilidad con GitHub Pages y mantener una base ligera, traducible y modular.
+La aplicación está construida sobre Astro y usa Firebase Authentication, Firestore, App Check y una base preparada para Firebase AI Logic/Gemini desde el navegador. Está pensada para funcionar bien en móvil, instalarse como PWA, conservar compatibilidad con GitHub Pages y mantener una base ligera, traducible y modular.
 
 ## Flujo principal
 
@@ -12,15 +12,7 @@ La aplicación está construida sobre Astro y usa Firebase Authentication y Fire
 - `/platos`: catálogo de platos generales y platos propios.
 - `/ajustes`: grupo, preferencias y opciones compartidas.
 
-En móvil, el dashboard muestra una tarjeta principal tipo resumen:
-
-```text
-Hola Jorge
-Hoy para comer:
-- Pasta
-```
-
-Debajo aparecen accesos a **Ajustes**, **Configurar** y **Mis platos**, y después una lista de los próximos 7 días. Esa lista empieza siempre **mañana**, no el lunes.
+En móvil, el dashboard muestra una tarjeta principal tipo resumen y una lista de los próximos 7 días empezando siempre mañana. Cada tarjeta permite editar el día en `/configurar` cuando hay conexión.
 
 ## Características principales
 
@@ -46,8 +38,10 @@ Debajo aparecen accesos a **Ajustes**, **Configurar** y **Mis platos**, y despu�
 - TypeScript.
 - Firebase Authentication.
 - Cloud Firestore.
+- Firebase App Check.
 - Firebase AI Logic preparado para Gemini.
 - Web Notifications API.
+- Service Worker y Web App Manifest con APIs nativas.
 - Tests smoke con `node:test`.
 - GitHub Actions para CI y GitHub Pages.
 
@@ -86,11 +80,19 @@ npm ci
 cp .env.example .env
 ```
 
-3. Rellena las variables `PUBLIC_FIREBASE_*` con la configuración de tu app web de Firebase.
+3. Rellena las variables `PUBLIC_FIREBASE_*` con la configuración pública de tu app web de Firebase.
 
-4. Deja la IA desactivada por defecto o activa `PUBLIC_AI_ENABLED=true` cuando Firebase AI Logic y App Check estén listos.
+4. Deja App Check desactivado al principio o actívalo solo cuando tengas `localhost` registrado o un token de depuración local controlado:
 
-5. Arranca el entorno local:
+```env
+PUBLIC_FIREBASE_APPCHECK_ENABLED=false
+PUBLIC_FIREBASE_APPCHECK_SITE_KEY=
+PUBLIC_FIREBASE_APPCHECK_REQUIRED_FOR_AI=false
+```
+
+5. Deja la IA desactivada por defecto o activa `PUBLIC_AI_ENABLED=true` cuando Firebase AI Logic y App Check estén listos.
+
+6. Arranca el entorno local:
 
 ```sh
 npm run dev
@@ -114,7 +116,10 @@ PUBLIC_FIREBASE_STORAGE_BUCKET
 PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 PUBLIC_FIREBASE_APP_ID
 PUBLIC_FIREBASE_MEASUREMENT_ID
-PUBLIC_REPOSITORY_URL
+PUBLIC_FIREBASE_APPCHECK_ENABLED
+PUBLIC_FIREBASE_APPCHECK_SITE_KEY
+PUBLIC_FIREBASE_APPCHECK_AUTO_REFRESH
+PUBLIC_FIREBASE_APPCHECK_REQUIRED_FOR_AI
 PUBLIC_AI_ENABLED
 PUBLIC_AI_MENU_SUGGESTIONS_ENABLED
 PUBLIC_AI_REMOTE_CONFIG_ENABLED
@@ -125,6 +130,7 @@ PUBLIC_FIREBASE_AI_MAX_OUTPUT_TOKENS
 PUBLIC_FIREBASE_AI_TIMEOUT_MS
 PUBLIC_AI_MAX_SESSION_REQUESTS
 PUBLIC_AI_MAX_USER_DAILY_REQUESTS
+PUBLIC_REPOSITORY_URL
 ```
 
 `PUBLIC_REPOSITORY_URL` es opcional. `ASTRO_SITE` y `ASTRO_BASE` también son opcionales porque el workflow y `astro.config.mjs` calculan `site` y `base` automáticamente. Si quieres forzarlas:
@@ -134,7 +140,7 @@ ASTRO_SITE=https://jalonsomerchan.github.io
 ASTRO_BASE=/menu-diario
 ```
 
-Las claves públicas de Firebase identifican la app web, pero **no sustituyen a unas reglas correctas de Firestore, App Check y límites de backend**. No subas nunca un `.env` real.
+Las claves públicas de Firebase identifican la app web, pero **no sustituyen a reglas correctas de Firestore, App Check, límites de backend ni monitorización**. No subas nunca un `.env` real ni un token de depuración de App Check.
 
 ## Configuración de Firebase
 
@@ -143,11 +149,11 @@ Activa en Firebase Console:
 1. Authentication con Google.
 2. Authentication Anonymous si quieres permitir invitados.
 3. Firestore Database.
-4. Firebase AI Logic si vas a activar funciones de IA.
-5. App Check para proteger llamadas desde cliente.
+4. Firebase App Check con proveedor web, preferiblemente reCAPTCHA Enterprise.
+5. Firebase AI Logic si vas a activar funciones de IA.
 6. Authorized domains:
-   - `localhost`
-   - `jalonsomerchan.github.io`
+   - `localhost`.
+   - `jalonsomerchan.github.io`.
    - tu dominio personalizado, si lo usas.
 
 Publica las reglas de `firestore.rules` en:
@@ -156,7 +162,47 @@ Publica las reglas de `firestore.rules` en:
 Firebase Console > Firestore Database > Rules
 ```
 
-La documentación del modelo de datos, índices, reglas, siembra de platos generales y preparación de Firebase AI vive en `docs/firebase.md`.
+La documentación del modelo de datos, reglas, índices, App Check y preparación de Firebase AI vive en:
+
+- `docs/firebase.md`.
+- `docs/app-check.md`.
+
+## PWA y modo offline
+
+La PWA se apoya en APIs nativas y ficheros pequeños:
+
+- `src/pages/manifest.webmanifest.ts`: manifest instalable y respetuoso con `BASE_URL`.
+- `src/pages/sw.js.ts`: service worker con precache de rutas principales y caché ligera de assets del mismo origen.
+- `src/scripts/pwa-register.ts`: registro del service worker con `scope` basado en `import.meta.env.BASE_URL`.
+- `src/lib/pwa/`: estado online/offline, caché local versionada y estado de sincronización.
+
+El dashboard guarda el último menú cargado correctamente en `localStorage` con versión. Si se abre sin conexión, muestra ese menú en modo solo lectura con un aviso accesible y traducido. En esta fase **no se permite editar offline**: no hay cola local de cambios para evitar conflictos silenciosos si Firestore cambió mientras el dispositivo estaba sin conexión.
+
+La guía completa está en `docs/pwa-offline.md`.
+
+## App Check y activación gradual
+
+La app inicializa App Check en `src/lib/firebase/app-check.ts` antes de exponer Auth y Firestore desde `src/lib/firebase/client.ts`.
+
+Estrategia recomendada:
+
+1. Desarrollo local: `PUBLIC_FIREBASE_APPCHECK_ENABLED=false`.
+2. Monitorización: `PUBLIC_FIREBASE_APPCHECK_ENABLED=true`, enforcement desactivado en Firebase.
+3. Firestore: activar enforcement cuando las métricas muestren tráfico válido.
+4. IA: activar `PUBLIC_FIREBASE_APPCHECK_REQUIRED_FOR_AI=true` y enforcement de Firebase AI Logic antes de exponer funciones costosas.
+5. Producción: añadir límites reales en backend si se incorporan Cloud Functions o endpoints propios.
+
+## Firebase AI Logic / Gemini
+
+La base de IA vive en `src/lib/ai/` y está desactivada por defecto. Incluye:
+
+- Wrapper `generateGeminiJson` con timeout, validación JSON y logs no sensibles.
+- Feature flags por entorno y preparación para Remote Config.
+- Errores normalizados y estados de UI traducibles.
+- Límite por sesión y por usuario/día en cliente.
+- Comprobación de App Check antes de Gemini cuando `PUBLIC_FIREBASE_APPCHECK_REQUIRED_FOR_AI=true`.
+
+Los límites de cliente (`PUBLIC_AI_MAX_SESSION_REQUESTS` y `PUBLIC_AI_MAX_USER_DAILY_REQUESTS`) solo reducen abuso accidental y mejoran UX. No son una protección real porque el usuario controla el navegador.
 
 ## Modelo de datos principal
 
@@ -207,8 +253,6 @@ La documentación del modelo de datos, índices, reglas, siembra de platos gener
   }
 }
 ```
-
-Aunque la colección mantiene el nombre `weeklyMenus`, el documento activo se usa como bloque de planificación móvil y permite guardar los días próximos aunque no empiecen en lunes.
 
 ### `dishes/{dishId}`
 
@@ -262,16 +306,23 @@ src/components/DashboardApp.astro      Dashboard rápido
 src/components/ConfiguratorApp.astro   Configurador de menús
 src/components/DishesApp.astro         Catálogo de platos
 src/scripts/dashboard-app.ts           Lógica del dashboard
-src/scripts/configurator-app.ts        Lógica de configuración
+src/scripts/configurator-app.ts        Lógica de ajustes/configuración
 src/scripts/dishes-app.ts              Lógica de platos generales y propios
 src/lib/dishes/                        Repositorio, normalización y deduplicación de platos
+src/scripts/pwa-register.ts            Registro del service worker
+src/pages/sw.js.ts                     Service worker dinámico y base-aware
+src/lib/firebase/                      Inicialización de Firebase y App Check
 src/lib/menu/repository.ts             Operaciones de Firestore
 src/lib/menu/types.ts                  Tipos del dominio
+src/lib/pwa/                           Helpers de conexión, caché offline y sync state
 src/lib/ai/                            Base Firebase AI Logic/Gemini
 src/i18n/translations/*.json           Textos traducibles
 src/styles/global.css                  Tokens visuales, light/dark y UI mobile first
+src/styles/pwa.css                     Estados offline y PWA
 docs/firebase.md                       Modelo de datos, reglas e índices
 firestore.rules                        Reglas de seguridad
+docs/app-check.md                      Configuración y depuración de App Check
+docs/pwa-offline.md                    Instalación, caché, offline y límites
 ```
 
 ## Tests y validación
@@ -293,4 +344,27 @@ Los tests smoke comprueban que:
 - El catálogo distingue platos generales y propios, permisos de edición, normalización y deduplicación.
 - Las reglas de Firestore contienen controles para admin, grupo y platos globales.
 - La base de Firebase AI conserva flags, configuración, validación JSON y estados de error.
+- App Check mantiene variables, inicialización, documentación y errores traducidos.
+- La PWA mantiene manifest instalable, service worker con `base`, estado offline traducido y caché local versionada.
 - Las rutas siguen siendo compatibles con GitHub Pages.
+
+## Documentación para agentes IA
+
+Antes de modificar el proyecto, una IA debe leer:
+
+- `agents.md`.
+- `docs/ai-checklist.md`.
+- `docs/template-usage.md`.
+- `docs/i18n-guide.md`.
+- `docs/github-pages.md`.
+- `docs/testing-guide.md`.
+- `docs/design-system.md`.
+- `docs/firebase.md`.
+- `docs/app-check.md`.
+- `docs/pwa-offline.md`.
+
+## Notas técnicas
+
+La integración de Firebase se carga dinámicamente en el navegador desde los módulos oficiales versionados de Firebase Web SDK. Así se evita añadir dependencias nuevas al lockfile de npm y se mantiene el proyecto ligero.
+
+No se incluye ningún secreto en el repositorio. El fichero `.env` está ignorado por Git y solo debe existir en local o en el entorno de despliegue.

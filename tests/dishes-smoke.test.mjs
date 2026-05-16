@@ -64,17 +64,19 @@ describe('dishes page smoke checks', () => {
   it('wires the dishes UI, navigation and settings entry point', () => {
     const defaultRoute = readText('src/pages/mis-platos.astro');
     const localizedRoute = readText('src/pages/[locale]/mis-platos.astro');
-    const appHeader = readText('src/components/AppHeader.astro');
+    const header = readText('src/components/Header.astro');
     const settingsApp = readText('src/components/SettingsApp.astro');
     const dishesApp = readText('src/components/DishesApp.astro');
     const dishesScript = readText('src/scripts/dishes-app.ts');
     const layout = readText('src/layouts/BaseLayout.astro');
 
     assert.match(defaultRoute, /<DishesApp/);
+    assert.doesNotMatch(defaultRoute, /<AppHeader/);
     assert.match(localizedRoute, /getStaticPaths/);
     assert.match(localizedRoute, /<DishesApp/);
-    assert.match(appHeader, /appNav\.dishes/);
-    assert.match(appHeader, /getLocalizedPath\('\/mis-platos'/);
+    assert.doesNotMatch(localizedRoute, /<AppHeader/);
+    assert.match(header, /appNav\.dishes/);
+    assert.match(header, /getLocalizedPath\('\/mis-platos'/);
     assert.match(settingsApp, /dishes\.manageFromSettings/);
     assert.match(dishesApp, /data-dishes-app/);
     assert.match(dishesApp, /data-dish-form/);

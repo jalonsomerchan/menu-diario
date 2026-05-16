@@ -45,13 +45,16 @@ describe('project smoke checks', () => {
       'src/pages/configurar.astro',
       'src/pages/ajustes.astro',
       'src/pages/historico.astro',
+
       'src/pages/platos.astro',
+      'src/pages/mis-platos.astro',
       'src/pages/[locale]/index.astro',
       'src/pages/[locale]/dashboard.astro',
       'src/pages/[locale]/configurar.astro',
       'src/pages/[locale]/ajustes.astro',
       'src/pages/[locale]/historico.astro',
       'src/pages/[locale]/platos.astro',
+      'src/pages/[locale]/mis-platos.astro',
       'src/pages/404.astro',
       'src/pages/manifest.webmanifest.ts',
       'src/pages/robots.txt.ts',
@@ -77,6 +80,7 @@ describe('project smoke checks', () => {
         assert.equal(existsSync(join(root, `src/components/${component}.astro`)), true, `${component}.astro should exist`);
       }
     );
+    assert.equal(existsSync(join(root, 'src/components/AppHeader.astro')), false);
   });
 
   it('keeps project metadata and expected npm scripts available', () => {
@@ -136,6 +140,7 @@ describe('project smoke checks', () => {
         'dishes.groupBadge',
         'dishes.duplicateAsGroup',
         'dishes.notEditable',
+        'appNav.closeMenu',
         'menu.signInGoogle',
       ].forEach((key) => {
         assert.ok(translations[key], `${locale}.json should include ${key}`);
@@ -145,11 +150,14 @@ describe('project smoke checks', () => {
 
   it('keeps routing and assets compatible with root and subpath deployments', () => {
     const layout = readText('src/layouts/BaseLayout.astro');
+    const header = readText('src/components/Header.astro');
     const manifest = readText('src/pages/manifest.webmanifest.ts');
     const robots = readText('src/pages/robots.txt.ts');
     const i18nHelper = readText('src/i18n/ui.ts');
     const pathHelpers = readText('src/utils/paths.ts');
     [layout, manifest, robots, i18nHelper].forEach((source) => {
+
+    [layout, header, manifest, robots, i18nHelper].forEach((source) => {
       assert.match(source, /withBasePath|getLocalizedPath|stripBasePath/);
       assert.doesNotMatch(source, /href=\"\//);
       assert.doesNotMatch(source, /src=\"\//);
@@ -159,6 +167,49 @@ describe('project smoke checks', () => {
     assert.match(pathHelpers, /getAbsoluteUrl/);
     assert.match(manifest, /start_url/);
     assert.match(robots, /sitemap-index\.xml/);
+  });
+
+  it('uses one reusable header across main pages', () => {
+    const layout = readText('src/layouts/BaseLayout.astro');
+    const header = readText('src/components/Header.astro');
+    const headerScript = readText('src/scripts/app-header.ts');
+    const styles = readText('src/styles/global.css');
+    const pages = [
+      'src/pages/index.astro',
+      'src/pages/dashboard.astro',
+      'src/pages/configurar.astro',
+      'src/pages/ajustes.astro',
+      'src/pages/historico.astro',
+      'src/pages/mis-platos.astro',
+      'src/pages/[locale]/dashboard.astro',
+      'src/pages/[locale]/configurar.astro',
+      'src/pages/[locale]/ajustes.astro',
+      'src/pages/[locale]/historico.astro',
+      'src/pages/[locale]/mis-platos.astro',
+    ].map(readText);
+
+    assert.match(layout, /<Header locale=\{locale\}/);
+    assert.match(header, /data-site-header/);
+    assert.match(header, /data-site-menu-toggle/);
+    assert.match(header, /aria-expanded=\"false\"/);
+    assert.match(header, /aria-controls=\{panelId\}/);
+    assert.match(header, /getLocalizedPath\('\/dashboard'/);
+    assert.match(header, /getLocalizedPath\('\/configurar'/);
+    assert.match(header, /getLocalizedPath\('\/mis-platos'/);
+    assert.match(header, /getLocalizedPath\('\/historico'/);
+    assert.match(header, /getLocalizedPath\('\/ajustes'/);
+    assert.match(headerScript, /data-site-header/);
+    assert.match(headerScript, /data-site-menu-toggle/);
+    assert.match(headerScript, /Escape/);
+    assert.match(headerScript, /closest\('a'\)/);
+    assert.match(headerScript, /data-global-theme/);
+    assert.match(styles, /site-header__toggle/);
+    assert.match(styles, /site-header\[data-menu-open='true'\]/);
+
+    pages.forEach((source) => {
+      assert.doesNotMatch(source, /<AppHeader/);
+      assert.doesNotMatch(source, /from ['\"].*AppHeader\.astro['\"]/);
+    });
   });
 
   it('keeps app navigation and feature wiring available', () => {
@@ -176,9 +227,7 @@ describe('project smoke checks', () => {
     const historyApp = readText('src/components/HistoryApp.astro');
     const dishesApp = readText('src/components/DishesApp.astro');
     assert.match(home, /<AuthGate/);
-    assert.match(dashboard, /<AppHeader/);
     assert.match(dashboard, /<DashboardApp/);
-    assert.match(configure, /<AppHeader/);
     assert.match(configure, /<ConfiguratorApp/);
     assert.match(settings, /<SettingsApp/);
     assert.match(history, /<HistoryApp/);
@@ -303,8 +352,9 @@ describe('project smoke checks', () => {
     assert.match(historyScript, /watchUserMenus/);
     assert.match(historyScript, /currentProfile\?\.groupId/);
     assert.match(headerScript, /data-app-menu-toggle/);
+    assert.match(headerScript, /data-site-menu-toggle/);
     assert.match(headerScript, /data-global-theme/);
-    assert.match(styles, /app-header__toggle/);
+    assert.match(styles, /site-header__toggle/);
     assert.match(styles, /day-actions/);
     assert.match(styles, /dish-suggestions/);
     assert.match(styles, /dish-badge--global/);
@@ -331,14 +381,19 @@ describe('project smoke checks', () => {
   it('keeps useful project documentation available', () => {
     const readme = readText('README.md');
     const firebaseDocs = readText('docs/firebase.md');
+    const navigationDocs = readText('docs/navigation.md');
+
     assert.match(readme, /Menu Diario/);
     assert.match(readme, /Catálogo dual/);
     assert.match(firebaseDocs, /enabledMeals/);
     assert.match(firebaseDocs, /theme/);
     assert.match(firebaseDocs, /Plato general/);
+    assert.match(navigationDocs, /Header único/);
+    assert.match(navigationDocs, /getLocalizedPath/);
     assert.equal(existsSync(join(root, 'agents.md')), true);
     assert.equal(existsSync(join(root, 'docs/design-system.md')), true);
     assert.equal(existsSync(join(root, 'docs/firebase.md')), true);
+    assert.equal(existsSync(join(root, 'docs/navigation.md')), true);
     assert.equal(existsSync(join(root, 'firestore.rules')), true);
   });
 });

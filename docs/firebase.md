@@ -1,6 +1,6 @@
 # Firebase para Menu Diario
 
-Esta webapp usa Firebase Auth y Firestore desde el navegador. Las variables `PUBLIC_FIREBASE_*` son públicas y deben protegerse con reglas de seguridad correctas.
+Esta webapp usa Firebase Auth, Firestore, App Check y una base preparada para Firebase AI Logic/Gemini desde el navegador. Las variables `PUBLIC_FIREBASE_*` son públicas y deben protegerse con reglas de seguridad, App Check, límites operativos y monitorización.
 
 ## Servicios necesarios
 
@@ -8,19 +8,74 @@ Activa en Firebase Console:
 
 - Authentication: Google y Anonymous.
 - Firestore Database.
+- App Check para la app web.
 - Firebase AI Logic cuando se activen funciones con Gemini.
-- App Check antes de exponer funciones de IA a usuarios reales.
-- Authorized domains: el dominio donde se despliegue la webapp.
+- Authorized domains: `localhost`, `jalonsomerchan.github.io` y el dominio personalizado si existe.
+
+La guía detallada de App Check vive en `docs/app-check.md`.
+
+## Inicialización cliente
+
+`src/lib/firebase/client.ts` carga dinámicamente los módulos oficiales del Firebase Web SDK y llama a `initializeFirebaseAppCheck(app)` antes de exponer Auth y Firestore. Esto permite activar App Check por entorno sin añadir dependencias npm ni romper despliegues en GitHub Pages.
+
+Archivos principales:
+
+```text
+src/lib/firebase/config.ts     Configuración pública de Firebase y App Check
+src/lib/firebase/app-check.ts  Inicialización, estado y helpers de App Check
+src/lib/firebase/client.ts     App, Auth y Firestore con carga dinámica
+```
+
+## Variables de entorno
+
+Configura `.env` desde `.env.example` y no subas nunca valores reales privados. Las claves públicas identifican la app web, pero no son una frontera de seguridad.
+
+```env
+PUBLIC_FIREBASE_API_KEY=
+PUBLIC_FIREBASE_AUTH_DOMAIN=
+PUBLIC_FIREBASE_PROJECT_ID=
+PUBLIC_FIREBASE_STORAGE_BUCKET=
+PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+PUBLIC_FIREBASE_APP_ID=
+PUBLIC_FIREBASE_MEASUREMENT_ID=
+PUBLIC_FIREBASE_APPCHECK_ENABLED=false
+PUBLIC_FIREBASE_APPCHECK_SITE_KEY=
+PUBLIC_FIREBASE_APPCHECK_AUTO_REFRESH=true
+PUBLIC_FIREBASE_APPCHECK_REQUIRED_FOR_AI=false
+PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN=
+```
+
+`PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN` solo debe usarse en desarrollo local controlado. No lo rellenes en `.env.example`, README ni documentación compartida.
+
+## App Check
+
+La integración usa `ReCaptchaEnterpriseProvider` e inicializa App Check con `isTokenAutoRefreshEnabled` según `PUBLIC_FIREBASE_APPCHECK_AUTO_REFRESH`. El SDK de Firebase recomienda inicializar App Check antes de acceder a otros servicios de Firebase y activar explícitamente el auto-refresh cuando se quiera renovar tokens automáticamente.
+
+Configuración recomendada:
+
+- **Localhost:** empieza con `PUBLIC_FIREBASE_APPCHECK_ENABLED=false`. Actívalo cuando `localhost` esté registrado o cuando uses un token local de depuración.
+- **GitHub Pages:** registra `jalonsomerchan.github.io`, configura las variables públicas en Actions Variables y prueba primero sin enforcement.
+- **Dominio propio:** registra el host real en Auth y App Check; `ASTRO_BASE` solo afecta a rutas, no al dominio validado por App Check.
+
+Activación gradual:
+
+1. App Check desactivado en cliente y enforcement desactivado en Firebase.
+2. `PUBLIC_FIREBASE_APPCHECK_ENABLED=true` con enforcement desactivado para observar métricas.
+3. Enforcement de Firestore cuando Auth, grupos, platos y menús funcionen con tráfico verificado.
+4. `PUBLIC_FIREBASE_APPCHECK_REQUIRED_FOR_AI=true` y enforcement de Firebase AI Logic antes de exponer funciones costosas.
+5. Añadir límites de backend si se incorporan Cloud Functions o endpoints propios.
+
+Para comprobarlo, revisa DevTools, busca errores `[firebase] app-check`, confirma tráfico verificado en Firebase Console y prueba Firestore/AI con enforcement apagado antes de encenderlo.
 
 ## Firebase AI Logic y Gemini
 
-La base técnica de IA vive en `src/lib/ai/` y está preparada para usarse desde futuras funciones concretas sin añadir dependencias npm. Sigue el mismo patrón que Auth y Firestore: carga dinámica de módulos oficiales versionados del Firebase Web SDK desde el navegador.
+La base técnica de IA vive en `src/lib/ai/` y está preparada para usarse desde futuras funciones concretas sin añadir dependencias npm.
 
 Archivos principales:
 
 ```text
 src/lib/ai/config.ts         Modelos, temperatura, topP, tokens, timeouts y prompts base
-src/lib/ai/client.ts         Wrapper mínimo para Gemini con JSON validado y timeout
+src/lib/ai/client.ts         Wrapper mínimo para Gemini con JSON validado, timeout y App Check opcional obligatorio
 src/lib/ai/errors.ts         Errores normalizados y logs no sensibles
 src/lib/ai/flags.ts          Feature flags por entorno y Remote Config
 src/lib/ai/json.ts           Helpers para pedir y validar JSON estructurado
@@ -29,7 +84,77 @@ src/lib/ai/remote-config.ts  Preparación opcional para Firebase Remote Config
 src/lib/ai/ui-state.ts       Estados comunes traducibles de UI
 ```
 
+
 La IA queda desactivada por defecto. Las sugerencias inteligentes deben usar el catálogo visible completo: platos generales (`scope: global`) y platos propios (`scope: group` o `scope: user`) ya cargados por `watchDishes`.
+
+
+```env
+PUBLIC_AI_ENABLED=true
+PUBLIC_AI_MENU_SUGGESTIONS_ENABLED=true
+PUBLIC_FIREBASE_AI_MODEL=gemini-2.5-flash-lite
+PUBLIC_FIREBASE_AI_TEMPERATURE=0.35
+PUBLIC_FIREBASE_AI_TOP_P=0.9
+PUBLIC_FIREBASE_AI_MAX_OUTPUT_TOKENS=768
+PUBLIC_FIREBASE_AI_TIMEOUT_MS=15000
+PUBLIC_AI_MAX_SESSION_REQUESTS=8
+PUBLIC_AI_MAX_USER_DAILY_REQUESTS=20
+```
+
+Si se quiere gobernar el apagado/encendido desde Remote Config:
+
+```env
+PUBLIC_AI_REMOTE_CONFIG_ENABLED=true
+```
+
+Claves remotas preparadas:
+
+```text
+ai_enabled
+ai_menu_suggestions_enabled
+```
+
+Remote Config debe considerarse una capa de operación del producto, no una frontera de seguridad. Una función crítica no debe depender solo de flags de cliente.
+
+### Protección de IA con App Check
+
+`generateGeminiJson` llama a `assertFirebaseAppCheckReadyForAi()` antes de invocar Gemini cuando `PUBLIC_FIREBASE_APPCHECK_REQUIRED_FOR_AI=true`. Si App Check no está listo, se devuelve el error normalizado `app-check-unavailable`, que la UI puede mostrar con la clave traducible `ai.appCheckUnavailable`.
+
+### Límites cliente
+
+`src/lib/ai/limits.ts` aplica límites básicos con `sessionStorage`:
+
+- `PUBLIC_AI_MAX_SESSION_REQUESTS` limita una sesión del navegador.
+- `PUBLIC_AI_MAX_USER_DAILY_REQUESTS` limita un usuario o invitado durante el día local registrado.
+
+Estos límites solo mejoran UX y reducen abuso accidental. no son una protección real porque el usuario controla el cliente. Si más adelante la app añade Cloud Functions, deben repetirse los límites en backend por `uid`, IP, App Check y coste acumulado.
+
+### Uso recomendado para futuras funciones
+
+Cada función concreta debe construir un prompt pequeño y validar la forma exacta antes de usar la respuesta:
+
+```ts
+import { buildJsonPrompt, generateGeminiJson } from '../lib/ai';
+
+const isSuggestionResponse = (value: unknown): value is { suggestions: string[] } =>
+  Boolean(
+    value &&
+      typeof value === 'object' &&
+      Array.isArray((value as { suggestions?: unknown }).suggestions) &&
+      (value as { suggestions: unknown[] }).suggestions.every((item) => typeof item === 'string')
+  );
+
+const result = await generateGeminiJson({
+  userId: user.uid,
+  prompt: buildJsonPrompt([
+    'Suggest three simple lunch ideas.',
+    'Return { "suggestions": string[] }.',
+  ]),
+  validator: isSuggestionResponse,
+});
+```
+
+No uses la respuesta de Gemini directamente en Firestore ni en la UI sin pasar antes por un validador.
+
 
 ## Error `Missing or insufficient permissions`
 
@@ -53,6 +178,8 @@ Después pulsa **Publish**. La app necesita permiso para:
 - Leer platos generales y platos propios visibles para su grupo.
 - Crear y actualizar platos propios, pero no platos generales desde la UI normal.
 
+Si el error aparece solo tras activar enforcement, revisa también `docs/app-check.md`, dominios registrados y métricas de App Check.
+
 ## Colecciones
 
 ### `users/{userId}`
@@ -70,8 +197,6 @@ Perfil mínimo y preferencias del usuario autenticado.
   "updatedAt": "serverTimestamp"
 }
 ```
-
-`enabledMeals` puede incluir `breakfast`, `lunch` y `dinner`. `theme` puede ser `system`, `light` o `dark`.
 
 ### `groups/{groupId}`
 
@@ -122,10 +247,6 @@ Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permi
   "updatedBy": "uid"
 }
 ```
-
-Cuando `days.{fecha}.skipped` es `true`, la interfaz oculta platos y notas del día y muestra `reason` y `skipNote`. Los campos `meals.*.skipped` se mantienen para compatibilidad y para posibles saltos por comida concreta.
-
-El histórico reutiliza estos documentos buscando menús donde el usuario es miembro y mostrando los días anteriores del rango seleccionado.
 
 ### `dishes/{dishId}`
 
@@ -250,6 +371,7 @@ await getAuth().setCustomUserClaims(uid, { admin: true });
 ```
 
 No ejecutes ese código en cliente ni guardes credenciales de servicio en el repo.
+App Check debe aplicarse desde Firebase Console con enforcement por servicio; no se expresa dentro de `firestore.rules`.
 
 ## Índices
 
@@ -291,3 +413,4 @@ Estas reglas están pensadas para que la app funcione en una primera versión cl
 - Añadir validaciones estrictas por campos permitidos en `dishes` si la app pasa a producción con más roles.
 - Usar códigos de invitación más largos o con caducidad.
 - Repetir en backend cualquier cuota de IA si se añaden Cloud Functions o endpoints propios.
+- Mantener App Check enforcement para Firestore y Firebase AI Logic cuando el tráfico legítimo esté verificado.
