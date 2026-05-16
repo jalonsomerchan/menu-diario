@@ -185,6 +185,30 @@ export function watchUserMenus(services: FirebaseServices, userId: string, callb
   return firestoreModule.onSnapshot(menusQuery, (snapshot: any) => callback(snapshot.docs.map((item: any) => mapWeekMenu(item.id, item.data()))), onError);
 }
 
+export function watchUserMenusByWeekRange(
+  services: FirebaseServices,
+  userId: string,
+  startWeek: string,
+  endWeek: string,
+  callback: (menus: WeekMenu[]) => void,
+  onError: (error: Error) => void
+) {
+  const { db, firestoreModule } = services;
+  const menusQuery = firestoreModule.query(
+    firestoreModule.collection(db, menusCollection),
+    firestoreModule.where('members', 'array-contains', userId),
+    firestoreModule.where('weekStart', '>=', startWeek),
+    firestoreModule.where('weekStart', '<=', endWeek),
+    firestoreModule.orderBy('weekStart', 'asc')
+  );
+
+  return firestoreModule.onSnapshot(
+    menusQuery,
+    (snapshot: any) => callback(snapshot.docs.map((item: any) => mapWeekMenu(item.id, item.data()))),
+    onError
+  );
+}
+
 export function watchWeekMenu(services: FirebaseServices, menuId: string, callback: (menu: WeekMenu | null) => void, onError: (error: Error) => void) {
   const { db, firestoreModule } = services;
   return firestoreModule.onSnapshot(firestoreModule.doc(db, menusCollection, menuId), (snapshot: any) => { callback(snapshot.exists() ? mapWeekMenu(snapshot.id, snapshot.data()) : null); }, onError);

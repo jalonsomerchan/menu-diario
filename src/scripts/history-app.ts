@@ -3,7 +3,8 @@ import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { serializeDay } from '../lib/menu/day-state';
-import { getMonday, toIsoDate } from '../lib/menu/dates';
+import { getDatesInRange, getMonday, getWeekStartForDate, normalizeDateRange, toIsoDate } from '../lib/menu/dates';
+import { getHistoryDayStatus, matchesHistoryFilters, type HistoryStatusFilter } from '../lib/menu/history';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
@@ -11,7 +12,7 @@ import {
   ensureUserProfile,
   getOrCreateWeekMenu,
   updateMenuDay,
-  watchUserMenus,
+  watchUserMenusByWeekRange,
   watchUserProfile,
 } from '../lib/menu/repository';
 import type { Dish, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
@@ -29,6 +30,9 @@ if (root) {
   const list = root.querySelector<HTMLElement>('[data-history-days]');
   const fromInput = root.querySelector<HTMLInputElement>('[data-date-from]');
   const toInput = root.querySelector<HTMLInputElement>('[data-date-to]');
+  const queryInput = root.querySelector<HTMLInputElement>('[data-history-query]');
+  const statusInput = root.querySelector<HTMLSelectElement>('[data-history-status]');
+  const weekdayInput = root.querySelector<HTMLSelectElement>('[data-history-weekday]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -38,6 +42,7 @@ if (root) {
   let unsubscribeMenus: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  let activeRange = { start: '', end: '' };
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -84,6 +89,23 @@ if (root) {
     return toIsoDate(getMonday(new Date()));
   }
 
+  function getDefaultRange() {
+    return normalizeDateRange(getDateOffset(-30), getDateOffset(-1));
+  }
+
+  function getSelectedRange() {
+    const fallback = getDefaultRange();
+    return normalizeDateRange(fromInput?.value || fallback.start, toInput?.value || fallback.end);
+  }
+
+  function getSelectedFilters() {
+    return {
+      query: queryInput?.value.trim() ?? '',
+      status: (statusInput?.value as HistoryStatusFilter | '') || 'all',
+      weekday: weekdayInput?.value || 'all',
+    };
+  }
+
   function formatWeekday(isoDate: string) {
     return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(new Date(`${isoDate}T00:00:00`));
   }
@@ -112,42 +134,90 @@ if (root) {
     return menus.find((item) => item.id === editMenuId) ?? null;
   }
 
-  function renderHistory() {
-    if (!list || !fromInput || !toInput) return;
-    const from = fromInput.value || getDateOffset(-30);
-    const to = toInput.value || getDateOffset(-1);
-    const rows: string[] = [];
-    const cursor = new Date(`${from}T00:00:00`);
-    const end = new Date(`${to}T00:00:00`);
+  function ensureLocalMenu(menuId: string, dayKey: string) {
+    const weekStart = getWeekStartForDate(dayKey);
+    const existing = menus.find((menu) => menu.id === menuId);
+    if (existing) return existing;
 
-    while (cursor <= end) {
-      const isoDate = toIsoDate(cursor);
-      const found = findDay(isoDate);
-      if (found) {
-        const summaries = getEnabledMeals()
-          .map((meal) => `<div class="day-meal-row"><span>${escapeHtml(mealLabel(meal))}:</span><strong>${escapeHtml(found.day.skipped ? labels.skipSummary : renderMealSummary(found.day.meals[meal]))}</strong></div>`)
-          .join('');
-        rows.unshift(`
-          <article class="next-day-card next-day-card--mockup" data-day="${isoDate}" data-menu="${found.menu.id}">
-            <div class="next-day-card__number">${escapeHtml(getDayNumber(isoDate))}</div>
-            <div class="next-day-card__body">
-              <header>
-                <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
-                <details class="day-actions">
-                  <summary aria-label="${escapeHtml(labels.moreActions)}">⋯</summary>
-                  <div>
-                    <button type="button" data-history-edit="${isoDate}" data-menu="${found.menu.id}">${escapeHtml(labels.editDay)}</button>
-                    <button type="button" data-clear-day="${isoDate}" data-menu="${found.menu.id}">${escapeHtml(labels.deleteDay)}</button>
-                  </div>
-                </details>
-              </header>
-              ${summaries}
-            </div>
-          </article>
-        `);
-      }
-      cursor.setDate(cursor.getDate() + 1);
+    const nextMenu: WeekMenu = {
+      id: menuId,
+      title: '',
+      ownerId: currentUser?.uid ?? '',
+      members: currentUser ? [currentUser.uid] : [],
+      inviteCode: '',
+      weekStart,
+      days: {},
+    };
+
+    menus = [...menus, nextMenu].sort((first, second) => first.weekStart.localeCompare(second.weekStart));
+    return nextMenu;
+  }
+
+  async function resolveMenuIdForDay(dayKey: string, menuId = '') {
+    if (menuId) {
+      ensureLocalMenu(menuId, dayKey);
+      return menuId;
     }
+
+    if (!currentUser) return '';
+
+    const weekStart = getWeekStartForDate(dayKey);
+    const existingMenu = menus.find((menu) => menu.weekStart === weekStart);
+    if (existingMenu) {
+      return existingMenu.id;
+    }
+
+    const services = await getFirebaseServices();
+    const nextMenuId = await getOrCreateWeekMenu(services, currentUser.uid, weekStart, locale);
+    ensureLocalMenu(nextMenuId, dayKey);
+    return nextMenuId;
+  }
+
+  function renderHistory() {
+    if (!list) return;
+    const filters = getSelectedFilters();
+    const rows: string[] = [];
+    const enabledMeals = getEnabledMeals();
+
+    getDatesInRange(activeRange.start, activeRange.end).forEach((isoDate) => {
+      const found = findDay(isoDate);
+      const day = found?.day;
+
+      if (!matchesHistoryFilters(isoDate, day, enabledMeals, filters)) {
+        return;
+      }
+
+      const dayStatus = getHistoryDayStatus(day, enabledMeals);
+      const normalizedDay = normalizeDay(day);
+      const summaries = enabledMeals
+        .map((meal) => {
+          const summary = dayStatus === 'skipped' ? labels.skipSummary : renderMealSummary(normalizedDay.meals[meal]);
+          return `<div class="day-meal-row"><span>${escapeHtml(mealLabel(meal))}:</span><strong>${escapeHtml(summary)}</strong></div>`;
+        })
+        .join('');
+
+      rows.unshift(`
+        <article class="next-day-card next-day-card--mockup" data-day="${isoDate}" data-menu="${escapeHtml(found?.menu.id ?? '')}" data-day-status="${escapeHtml(dayStatus)}">
+          <div class="next-day-card__number">${escapeHtml(getDayNumber(isoDate))}</div>
+          <div class="next-day-card__body">
+            <header>
+              <div class="next-day-card__title">
+                <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
+                <p>${escapeHtml(formatDate(isoDate))}</p>
+              </div>
+              <details class="day-actions">
+                <summary aria-label="${escapeHtml(labels.moreActions)}">⋯</summary>
+                <div>
+                  <button type="button" data-history-edit="${isoDate}" data-menu="${escapeHtml(found?.menu.id ?? '')}">${escapeHtml(labels.editDay)}</button>
+                  ${found?.menu.id ? `<button type="button" data-clear-day="${isoDate}" data-menu="${escapeHtml(found.menu.id)}">${escapeHtml(labels.deleteDay)}</button>` : ''}
+                </div>
+              </details>
+            </header>
+            ${summaries}
+          </div>
+        </article>
+      `);
+    });
 
     list.innerHTML = rows.length ? rows.join('') : `<p class="menu-list__empty">${escapeHtml(labels.empty)}</p>`;
   }
@@ -158,6 +228,12 @@ if (root) {
   }
 
   function updateLocalDay(dayKey: string, nextDay: WeekMenu['days'][string]) {
+    if (!editMenuId) return;
+
+    if (!menus.some((menu) => menu.id === editMenuId)) {
+      ensureLocalMenu(editMenuId, dayKey);
+    }
+
     menus = menus.map((menu) =>
       menu.id === editMenuId
         ? {
@@ -191,6 +267,37 @@ if (root) {
     saveFeedback.saved(changed ? labels.saveSaved : labels.saveSaved);
   }
 
+  function subscribeRange() {
+    if (!currentUser) return;
+    const nextRange = getSelectedRange();
+    activeRange = nextRange;
+    unsubscribeMenus?.();
+    unsubscribeMenus = undefined;
+    menus = [];
+    renderHistory();
+
+    const startWeek = getWeekStartForDate(nextRange.start);
+    const endWeek = getWeekStartForDate(nextRange.end);
+
+    getFirebaseServices()
+      .then((services) => {
+        unsubscribeMenus = watchUserMenusByWeekRange(
+          services,
+          currentUser.uid,
+          startWeek,
+          endWeek,
+          (nextMenus) => {
+            menus = nextMenus;
+            if (loading) loading.hidden = true;
+            if (content) content.hidden = false;
+            renderHistory();
+          },
+          (error) => showStatus(formatError(error), true)
+        );
+      })
+      .catch((error: Error) => showStatus(formatError(error), true));
+  }
+
   const dayEditModal = createDayEditModalController({
     root,
     labels,
@@ -222,24 +329,28 @@ if (root) {
   } else {
     getFirebaseServices()
       .then((services) => {
-        const today = new Date();
-        if (toInput) toInput.value = getDateOffset(-1);
-        if (fromInput) {
-          today.setDate(today.getDate() - 30);
-          fromInput.value = toIsoDate(today);
-        }
+        const defaultRange = getDefaultRange();
+        activeRange = defaultRange;
+        if (toInput) toInput.value = defaultRange.end;
+        if (fromInput) fromInput.value = defaultRange.start;
 
         root.querySelector('[data-history-form]')?.addEventListener('submit', (event) => {
           event.preventDefault();
-          renderHistory();
+          subscribeRange();
         });
+
+        queryInput?.addEventListener('input', () => renderHistory());
+        statusInput?.addEventListener('change', () => renderHistory());
+        weekdayInput?.addEventListener('change', () => renderHistory());
 
         list?.addEventListener('click', async (event) => {
           const target = event.target;
           if (!(target instanceof HTMLButtonElement) || !currentUser) return;
 
-          if (target.dataset.historyEdit && target.dataset.menu) {
-            openEdit(target.dataset.menu, target.dataset.historyEdit);
+          if (target.dataset.historyEdit) {
+            const menuId = await resolveMenuIdForDay(target.dataset.historyEdit, target.dataset.menu);
+            if (!menuId) return;
+            openEdit(menuId, target.dataset.historyEdit);
             return;
           }
 
@@ -271,22 +382,11 @@ if (root) {
               unsubscribeDishes = watchUserDishes(services, user.uid, (nextDishes) => {
                 dishes = nextDishes;
               }, (error) => showStatus(formatError(error), true), false, profile.groupId);
-              if (menus.length) renderHistory();
+              renderHistory();
             },
             (error) => showStatus(formatError(error), true)
           );
-          unsubscribeMenus = watchUserMenus(
-            services,
-            user.uid,
-            (nextMenus) => {
-              menus = nextMenus;
-              if (loading) loading.hidden = true;
-              if (content) content.hidden = false;
-              renderHistory();
-            },
-            (error) => showStatus(formatError(error), true),
-            60
-          );
+          subscribeRange();
         });
       })
       .catch((error: Error) => showStatus(formatError(error), true));

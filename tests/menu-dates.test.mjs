@@ -2,9 +2,11 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
+  getDatesInRange,
   getUpcomingDates,
   getWeekStartForDate,
   getWeekStartsForDates,
+  normalizeDateRange,
 } from '../src/lib/menu/dates.ts';
 
 describe('menu dates', () => {
@@ -40,5 +42,17 @@ describe('menu dates', () => {
     assert.equal(getWeekStartForDate('2026-05-16'), '2026-05-11');
     assert.equal(getWeekStartForDate('2026-05-17'), '2026-05-11');
     assert.equal(getWeekStartForDate('2026-05-18'), '2026-05-18');
+  });
+
+  it('normalizes reversed date ranges before iterating them', () => {
+    assert.deepEqual(normalizeDateRange('2026-05-20', '2026-05-18'), {
+      start: '2026-05-18',
+      end: '2026-05-20',
+    });
+    assert.deepEqual(getDatesInRange('2026-05-20', '2026-05-18'), [
+      '2026-05-18',
+      '2026-05-19',
+      '2026-05-20',
+    ]);
   });
 });

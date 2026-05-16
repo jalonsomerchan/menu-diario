@@ -15,6 +15,22 @@ const labels = {
   description: t('history.description'),
   from: t('history.from'),
   to: t('history.to'),
+  query: t('history.query'),
+  queryPlaceholder: t('history.queryPlaceholder'),
+  status: t('history.status'),
+  statusAll: t('history.statusAll'),
+  statusPlanned: t('history.statusPlanned'),
+  statusSkipped: t('history.statusSkipped'),
+  statusEmpty: t('history.statusEmpty'),
+  weekday: t('history.weekday'),
+  weekdayAll: t('history.weekdayAll'),
+  weekdayMonday: t('history.weekdayMonday'),
+  weekdayTuesday: t('history.weekdayTuesday'),
+  weekdayWednesday: t('history.weekdayWednesday'),
+  weekdayThursday: t('history.weekdayThursday'),
+  weekdayFriday: t('history.weekdayFriday'),
+  weekdaySaturday: t('history.weekdaySaturday'),
+  weekdaySunday: t('history.weekdaySunday'),
   search: t('history.search'),
   empty: t('history.empty'),
   editDay: t('dashboard.editDay'),
@@ -48,6 +64,7 @@ const labels = {
   skipSummary: t('dashboard.skipSummary'),
   permissionsError: t('menu.permissionsError'),
   offlineReadOnly: t('pwa.offlineReadOnly'),
+  guestSession: t('menu.guestSession'),
   homePath,
 };
 ---
@@ -63,7 +80,32 @@ const labels = {
       <form class="history-search" data-history-form>
         <label>{labels.from}<input type="date" data-date-from /></label>
         <label>{labels.to}<input type="date" data-date-to /></label>
-        <button class="button button--primary" type="submit">{labels.search}</button>
+        <label>{labels.query}<input type="search" data-history-query placeholder={labels.queryPlaceholder} /></label>
+        <label>
+          {labels.status}
+          <select data-history-status>
+            <option value="all">{labels.statusAll}</option>
+            <option value="planned">{labels.statusPlanned}</option>
+            <option value="skipped">{labels.statusSkipped}</option>
+            <option value="empty">{labels.statusEmpty}</option>
+          </select>
+        </label>
+        <label>
+          {labels.weekday}
+          <select data-history-weekday>
+            <option value="all">{labels.weekdayAll}</option>
+            <option value="1">{labels.weekdayMonday}</option>
+            <option value="2">{labels.weekdayTuesday}</option>
+            <option value="3">{labels.weekdayWednesday}</option>
+            <option value="4">{labels.weekdayThursday}</option>
+            <option value="5">{labels.weekdayFriday}</option>
+            <option value="6">{labels.weekdaySaturday}</option>
+            <option value="7">{labels.weekdaySunday}</option>
+          </select>
+        </label>
+        <div class="history-search__actions">
+          <button class="button button--primary" type="submit">{labels.search}</button>
+        </div>
       </form>
     </section>
     <div class="next-days next-days--timeline" data-history-days></div>

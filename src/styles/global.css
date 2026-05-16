@@ -125,7 +125,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .settings-card, .today-card { display: grid; gap: 1rem; padding: 1.1rem; }
 .settings-card label, .meal-preferences { display: grid; gap: 0.55rem; min-width: 0; margin: 0; border: 0; padding: 0; color: var(--color-muted); font-size: 0.88rem; font-weight: 800; }
 .meal-preferences label { display: flex; align-items: center; gap: 0.5rem; color: var(--color-text); }
-.settings-card select, .settings-card input, .day-card textarea, .day-card select, .day-card input[type='text'], .quick-edit-modal textarea, .history-search input { width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-raised); color: var(--color-text); padding: 0.8rem; }
+.settings-card select, .settings-card input, .day-card textarea, .day-card select, .day-card input[type='text'], .quick-edit-modal textarea, .history-search input, .history-search select { width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-raised); color: var(--color-text); padding: 0.8rem; }
 .section-heading { display: grid; gap: 0.8rem; margin-bottom: 1rem; }
 .section-heading--simple h1, .section-heading--simple h2 { margin-bottom: 0; }
 .menu-lists, .next-days, .menu-days { display: grid; gap: 1rem; margin-bottom: 1rem; }
@@ -136,7 +136,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .next-day-card__number { display: grid; place-items: center; min-width: 0; border-right: 1px solid var(--color-border); background: var(--color-surface-soft); color: var(--color-primary); font-size: clamp(2.7rem, 13vw, 4.6rem); font-weight: 100; letter-spacing: -0.12em; line-height: 0.9; padding-right: 0.12em; }
 .next-day-card__body { position: relative; display: grid; align-content: start; gap: 0.7rem; min-width: 0; padding: 1rem; }
 .next-day-card header, .next-day-card__body header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.next-day-card__title { min-width: 0; }
 .next-day-card h3 { margin: 0; font-size: clamp(1.45rem, 7vw, 2.35rem); line-height: 1; letter-spacing: -0.04em; text-transform: uppercase; }
+.next-day-card__title p { margin: 0.2rem 0 0; color: var(--color-muted); font-size: 0.88rem; font-weight: 800; text-transform: uppercase; }
 .day-meal-row { display: grid; gap: 0.15rem; }
 .day-meal-row span { color: var(--color-muted); font-size: 0.9rem; font-weight: 900; text-transform: uppercase; }
 .day-meal-row strong { font-size: 1.05rem; }
@@ -245,6 +247,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .dish-editor-dialog__body { display: grid; gap: 0.9rem; }
 .dish-editor-dialog__footer { display: grid; gap: 0.65rem; align-items: center; }
 .history-search { display: grid; gap: 0.75rem; }
+.history-search__actions { display: grid; }
+.history-search__actions .button { width: 100%; }
 .group-code { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .group-lists { display: grid; gap: 1rem; }
 .group-lists ul { margin: 0; padding-left: 1.1rem; color: var(--color-muted); }

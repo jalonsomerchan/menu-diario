@@ -35,6 +35,41 @@ export function getUpcomingDates(baseDate = new Date(), startOffset = 0, count =
   return Array.from({ length: count }, (_, index) => getDateOffset(baseDate, startOffset + index));
 }
 
+export function normalizeDateRange(start: string, end: string) {
+  if (!start && !end) {
+    return { start: '', end: '' };
+  }
+
+  if (!start) {
+    return { start: end, end };
+  }
+
+  if (!end) {
+    return { start, end: start };
+  }
+
+  return start <= end ? { start, end } : { start: end, end: start };
+}
+
+export function getDatesInRange(start: string, end: string) {
+  const normalized = normalizeDateRange(start, end);
+
+  if (!normalized.start || !normalized.end) {
+    return [];
+  }
+
+  const dates: string[] = [];
+  const cursor = new Date(`${normalized.start}T00:00:00`);
+  const limit = new Date(`${normalized.end}T00:00:00`);
+
+  while (cursor <= limit) {
+    dates.push(toIsoDate(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return dates;
+}
+
 export function getUpcomingDateRange(baseDate = new Date(), startOffset = 0, count = 7) {
   const dates = getUpcomingDates(baseDate, startOffset, count);
   return {
