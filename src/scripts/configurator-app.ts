@@ -58,6 +58,7 @@ if (root) {
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  let lastAiDebugSignature = '';
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -194,6 +195,48 @@ if (root) {
     return hasFirebaseConfig() && isMenuSuggestionsAvailable(getAiFeatureFlags());
   }
 
+  function getAiButtonDebugState(pendingMeals: ReturnType<typeof getPendingMeals>) {
+    const flags = getAiFeatureFlags();
+    const firebaseConfigured = hasFirebaseConfig();
+    const menuSuggestionsAvailable = isMenuSuggestionsAvailable(flags);
+    const reasons = [];
+
+    if (!firebaseConfigured) reasons.push('missing-firebase-config');
+    if (!flags.aiEnabled) reasons.push('PUBLIC_AI_ENABLED=false');
+    if (!flags.menuSuggestionsEnabled) reasons.push('PUBLIC_AI_MENU_SUGGESTIONS_ENABLED=false');
+    if (!menuSuggestionsAvailable) reasons.push('menu-suggestions-disabled');
+    if (pendingMeals.length === 0) reasons.push('no-pending-meals');
+    if (dishes.length === 0) reasons.push('no-dishes-loaded');
+
+    return {
+      disabled: reasons.length > 0,
+      reasons,
+      flags,
+      firebaseConfigured,
+      pendingMeals: pendingMeals.length,
+      dishes: dishes.length,
+      currentMenuLoaded: Boolean(currentMenu),
+      profileLoaded: Boolean(currentProfile),
+      enabledMeals: getEnabledMeals(),
+    };
+  }
+
+  function debugAiButtonState(pendingMeals: ReturnType<typeof getPendingMeals>) {
+    const debugState = getAiButtonDebugState(pendingMeals);
+    const signature = JSON.stringify(debugState);
+
+    if (signature !== lastAiDebugSignature) {
+      lastAiDebugSignature = signature;
+      console.info('[Menu Diario] AI suggestions button debug', debugState);
+    }
+
+    if (aiGenerateButton) {
+      aiGenerateButton.title = debugState.disabled
+        ? `AI disabled: ${debugState.reasons.join(', ')}`
+        : 'AI enabled';
+    }
+  }
+
   function renderAiResults() {
     if (!aiResults || !aiHelper) return;
 
@@ -202,8 +245,9 @@ if (root) {
     pendingAiRecommendations = pendingAiRecommendations.filter((item) =>
       pendingKeySet.has(`${item.dayKey}::${item.meal}`)
     );
+    debugAiButtonState(pendingMeals);
     if (aiGenerateButton) {
-      aiGenerateButton.disabled = !isAiReady() || pendingMeals.length === 0 || dishes.length === 0;
+      aiGenerateButton.disabled = getAiButtonDebugState(pendingMeals).disabled;
     }
 
     aiHelper.textContent = isAiReady() ? labels.aiPendingHint : labels.aiMissingConfig;
