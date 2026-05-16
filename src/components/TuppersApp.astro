@@ -1,0 +1,151 @@
+---
+import type { Locale } from '../config/site';
+import { useTupperTranslations } from '../i18n/tuppers';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const tt = useTupperTranslations(locale);
+const dashboardPath = getLocalizedPath('/dashboard', locale);
+const labels = {
+  configMissing: t('menu.configMissing'),
+  loading: t('dashboard.loading'),
+  title: tt('title'),
+  description: tt('description'),
+  expiryAlert: tt('expiryAlert'),
+  createTitle: tt('createTitle'),
+  name: tt('name'),
+  namePlaceholder: tt('namePlaceholder'),
+  dish: tt('dish'),
+  freeTextDish: tt('freeTextDish'),
+  preparedAt: tt('preparedAt'),
+  expiresAt: tt('expiresAt'),
+  portions: tt('portions'),
+  location: tt('location'),
+  locationFridge: tt('locationFridge'),
+  locationFreezer: tt('locationFreezer'),
+  locationOther: tt('locationOther'),
+  notes: tt('notes'),
+  create: tt('create'),
+  created: tt('created'),
+  filters: tt('filters'),
+  filterAll: tt('filterAll'),
+  filterExpiring: tt('filterExpiring'),
+  filterExpired: tt('filterExpired'),
+  filterFreezer: tt('filterFreezer'),
+  filterFridge: tt('filterFridge'),
+  filterDone: tt('filterDone'),
+  empty: tt('empty'),
+  expiring: tt('expiring'),
+  expired: tt('expired'),
+  fresh: tt('fresh'),
+  done: tt('done'),
+  assignTitle: tt('assignTitle'),
+  assignDay: tt('assignDay'),
+  assignMeal: tt('assignMeal'),
+  assign: tt('assign'),
+  assigned: tt('assigned'),
+  appendConfirm: tt('appendConfirm'),
+  assignmentBlocked: tt('assignmentBlocked'),
+  consume: tt('consume'),
+  discard: tt('discard'),
+  freeze: tt('freeze'),
+  defrost: tt('defrost'),
+  archive: tt('archive'),
+  consumed: tt('consumed'),
+  discarded: tt('discarded'),
+  frozen: tt('frozen'),
+  defrosted: tt('defrosted'),
+  archived: tt('archived'),
+  breakfast: t('dashboard.breakfast'),
+  lunch: t('dashboard.lunch'),
+  dinner: t('dashboard.dinner'),
+  backDashboard: t('dashboard.backDashboard'),
+  dashboardPath,
+};
+---
+
+<section class="tuppers-app" data-tuppers-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status hidden aria-live="polite"></div>
+  <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
+
+  <div data-content hidden>
+    <header class="tuppers-hero app-panel">
+      <p class="menu-app__eyebrow">{labels.backDashboard}</p>
+      <h1>{labels.title}</h1>
+      <p>{labels.description}</p>
+      <a class="button button--ghost button--small" href={dashboardPath}>{labels.backDashboard}</a>
+    </header>
+
+    <section class="expiry-banner" data-expiry-alert hidden role="status" aria-live="polite">
+      <strong>{labels.expiryAlert}</strong>
+    </section>
+
+    <section class="app-panel tuppers-form-card" aria-labelledby="tuppers-create-title">
+      <h2 id="tuppers-create-title">{labels.createTitle}</h2>
+      <form data-tupper-form class="tuppers-form">
+        <label>
+          <span>{labels.dish}</span>
+          <select data-dish-select>
+            <option value="">{labels.freeTextDish}</option>
+          </select>
+        </label>
+        <label>
+          <span>{labels.name}</span>
+          <input name="name" data-name required minlength="2" placeholder={labels.namePlaceholder} autocomplete="off" />
+        </label>
+        <label>
+          <span>{labels.preparedAt}</span>
+          <input name="preparedAt" data-prepared type="date" required />
+        </label>
+        <label>
+          <span>{labels.expiresAt}</span>
+          <input name="expiresAt" data-expires type="date" required />
+        </label>
+        <label>
+          <span>{labels.portions}</span>
+          <input name="portions" data-portions type="number" min="1" step="1" inputmode="numeric" />
+        </label>
+        <label>
+          <span>{labels.location}</span>
+          <select name="location" data-location>
+            <option value="fridge">{labels.locationFridge}</option>
+            <option value="freezer">{labels.locationFreezer}</option>
+            <option value="other">{labels.locationOther}</option>
+          </select>
+        </label>
+        <label class="tuppers-form__wide">
+          <span>{labels.notes}</span>
+          <textarea name="notes" data-notes rows="3"></textarea>
+        </label>
+        <button class="button button--primary tuppers-form__wide" type="submit">{labels.create}</button>
+      </form>
+    </section>
+
+    <section class="dashboard-section" aria-labelledby="tuppers-list-title">
+      <div class="section-heading section-heading--simple">
+        <div>
+          <p class="menu-app__eyebrow">{labels.filters}</p>
+          <h2 id="tuppers-list-title">{labels.title}</h2>
+        </div>
+      </div>
+      <div class="tupper-filters" data-filters role="group" aria-label={labels.filters}>
+        <button type="button" data-filter="all" aria-pressed="true">{labels.filterAll}</button>
+        <button type="button" data-filter="expiring">{labels.filterExpiring}</button>
+        <button type="button" data-filter="expired">{labels.filterExpired}</button>
+        <button type="button" data-filter="freezer">{labels.filterFreezer}</button>
+        <button type="button" data-filter="fridge">{labels.filterFridge}</button>
+        <button type="button" data-filter="done">{labels.filterDone}</button>
+      </div>
+      <div class="tupper-list" data-tupper-list></div>
+    </section>
+  </div>
+</section>
+
+<script>
+  import '../scripts/tuppers-app.ts';
+</script>

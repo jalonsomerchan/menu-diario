@@ -1,5 +1,6 @@
 ---
 import type { Locale } from '../config/site';
+import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
 interface Props {
@@ -8,8 +9,10 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
+const tuppersPath = getLocalizedPath('/tuppers', locale);
 
 const labels = {
   configMissing: t('menu.configMissing'),
@@ -54,6 +57,8 @@ const labels = {
   offlineReadOnly: t('pwa.offlineReadOnly'),
   offlineNoCache: t('pwa.offlineNoCache'),
   backOnline: t('pwa.backOnline'),
+  tuppers: tt('nav'),
+  tuppersExpiryAlert: tt('expiryAlert'),
   homePath,
   configurePath,
 };
@@ -72,6 +77,12 @@ const labels = {
       <p class="today-hero__hello" data-user-label>{labels.hello}</p>
       <h1>{labels.todayForLunch}</h1>
       <ul data-today-summary></ul>
+      <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
+    </section>
+
+    <section class="expiry-banner" role="status" aria-live="polite">
+      <strong>{labels.tuppersExpiryAlert}</strong>
+      <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
     </section>
 
     <section class="dashboard-section">

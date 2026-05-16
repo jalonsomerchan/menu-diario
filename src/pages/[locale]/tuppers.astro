@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Container from '../../components/Container.astro';
+import TuppersApp from '../../components/TuppersApp.astro';
+import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
+import { useTupperTranslations } from '../../i18n/tuppers';
+import { isLocale } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return locales
+    .filter((locale) => locale !== defaultLocale)
+    .map((locale) => ({ params: { locale } }));
+}
+
+const localeParam = Astro.params.locale;
+const locale: Locale = isLocale(localeParam) ? localeParam : defaultLocale;
+const tt = useTupperTranslations(locale);
+---
+
+<BaseLayout title={`${tt('title')} · ${siteConfig.name}`} description={tt('description')} locale={locale}>
+  <Container class="py-4 sm:py-6">
+    <TuppersApp locale={locale} />
+  </Container>
+</BaseLayout>
