@@ -1,6 +1,7 @@
 ---
 import type { Locale } from '../config/site';
 import DayEditModal from './DayEditModal.astro';
+import { usePlanningTranslations } from '../i18n/planning';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -10,6 +11,7 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const tp = usePlanningTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const shoppingPath = getLocalizedPath('/compra', locale);
@@ -18,8 +20,8 @@ const tuppersPath = getLocalizedPath('/tuppers', locale);
 const labels = {
   configMissing: t('menu.configMissing'),
   loading: t('dashboard.loading'),
-  configure: t('dashboard.configure'),
-  configureHint: t('dashboard.configureHint'),
+  configure: tp('title'),
+  configureHint: tp('hint'),
   cancel: t('dashboard.cancel'),
   save: t('dashboard.save'),
   deleteDay: t('dashboard.deleteDay'),
