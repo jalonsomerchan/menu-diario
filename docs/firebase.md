@@ -84,9 +84,7 @@ src/lib/ai/remote-config.ts  Preparación opcional para Firebase Remote Config
 src/lib/ai/ui-state.ts       Estados comunes traducibles de UI
 ```
 
-
 La IA queda desactivada por defecto. Las sugerencias inteligentes deben usar el catálogo visible completo: platos generales (`scope: global`) y platos propios (`scope: group` o `scope: user`) ya cargados por `watchDishes`.
-
 
 ```env
 PUBLIC_AI_ENABLED=true
@@ -154,7 +152,6 @@ const result = await generateGeminiJson({
 ```
 
 No uses la respuesta de Gemini directamente en Firestore ni en la UI sin pasar antes por un validador.
-
 
 ## Error `Missing or insufficient permissions`
 
@@ -349,6 +346,8 @@ Al sembrar, añade estos campos si no vienen en el JSON:
   "updatedAt": "serverTimestamp"
 }
 ```
+
+Equivalente en objetos JavaScript para scripts locales: `timesUsed: 0`.
 
 El id recomendado es `global_` + `encodeURIComponent(normalizedName)` saneado igual que `getDishId`, o cualquier id estable documentado.
 
