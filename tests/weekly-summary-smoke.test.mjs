@@ -20,6 +20,7 @@ describe('weekly summary smoke checks', () => {
       'src/pages/[locale]/resumen-semanal.astro',
       'src/components/WeeklySummaryApp.astro',
       'src/scripts/weekly-summary-app.ts',
+      'src/styles/weekly-summary.css',
       'src/lib/menu/weekly-stats.mjs',
       'src/lib/menu/weekly-stats.d.ts',
     ].forEach((path) => assert.equal(existsSync(join(root, path)), true, `${path} should exist`));
@@ -63,12 +64,15 @@ describe('weekly summary smoke checks', () => {
   it('keeps statistics logic outside the component and prepares integrations', () => {
     const component = readText('src/components/WeeklySummaryApp.astro');
     const script = readText('src/scripts/weekly-summary-app.ts');
+    const styles = readText('src/styles/weekly-summary.css');
     const helpers = readText('src/lib/menu/weekly-stats.mjs');
     const docs = readText('docs/navigation.md');
 
     assert.match(component, /data-weekly-summary-app/);
-    assert.match(component, /weekly-summary-card/);
     assert.match(component, /weekly-summary-readiness/);
+    assert.match(component, /weekly-summary\.css/);
+    assert.match(styles, /weekly-summary-card/);
+    assert.match(styles, /weekly-summary-panel--highlight/);
     assert.doesNotMatch(component, /summarizeWeek\(/);
     assert.match(script, /buildWeeklySummary/);
     assert.match(script, /watchUserMenus/);
