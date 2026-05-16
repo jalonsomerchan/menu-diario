@@ -1,4 +1,4 @@
-import { AiClientError } from './errors';
+import { AiClientError } from './errors.ts';
 
 export type JsonValidator<T> = (value: unknown) => value is T;
 

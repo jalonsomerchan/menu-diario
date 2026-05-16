@@ -90,6 +90,7 @@ La IA queda desactivada por defecto. Las sugerencias inteligentes deben usar el 
 ```env
 PUBLIC_AI_ENABLED=true
 PUBLIC_AI_MENU_SUGGESTIONS_ENABLED=true
+PUBLIC_AI_SHOPPING_LIST_ENABLED=true
 PUBLIC_FIREBASE_AI_MODEL=gemini-2.5-flash-lite
 PUBLIC_FIREBASE_AI_TEMPERATURE=0.35
 PUBLIC_FIREBASE_AI_TOP_P=0.9
@@ -110,6 +111,7 @@ Claves remotas preparadas:
 ```text
 ai_enabled
 ai_menu_suggestions_enabled
+ai_shopping_list_enabled
 ```
 
 Remote Config debe considerarse una capa de operación del producto, no una frontera de seguridad. Una función crítica no debe depender solo de flags de cliente.
@@ -139,6 +141,19 @@ Semántica actual al aplicar recomendaciones con platos generales:
 - no se crea una copia local automática solo por usar una recomendación IA.
 
 Si más adelante se añaden más flujos de IA, deben consolidarse sobre `src/lib/ai/` y evitar bases paralelas.
+
+### Lista de la compra con IA
+
+La ruta `/compra` reutiliza la misma base Gemini para convertir próximas comidas en una propuesta revisable de ingredientes o productos.
+
+- Lee las próximas comidas configuradas y respeta comidas activas, días completos marcados como no apuntados y comidas saltadas.
+- Prioriza ingredientes definidos en recetas cuando un plato los incluya en Firestore como `ingredients`.
+- Usa tuppers activos solo como contexto opcional para evitar compras duplicadas, nunca como certeza.
+- Pide JSON estricto y lo valida antes de pintar nada en pantalla o guardar datos.
+- No envía emails, UID, nombres de miembros ni códigos de invitación.
+- Solo incluye notas cortas y no sensibles si aportan contexto útil.
+
+La regeneración reemplaza solo la propuesta IA actual. Los elementos manuales del usuario se conservan durante la edición y también cuando se vuelve a guardar una lista existente.
 
 ### Protección de IA con App Check
 
@@ -271,6 +286,41 @@ Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permi
   "updatedBy": "uid"
 }
 ```
+
+### `shoppingLists/{listId}`
+
+Lista de compra guardada por usuario o grupo para un rango próximo de fechas.
+
+```json
+{
+  "ownerId": "uid",
+  "groupId": "group-id",
+  "scope": "group",
+  "source": "mixed",
+  "rangeStart": "2026-05-18",
+  "rangeEnd": "2026-05-24",
+  "items": [
+    {
+      "id": "vegetables:tomate",
+      "name": "Tomate",
+      "normalizedName": "tomate",
+      "category": "vegetables",
+      "quantity": "4 unidades",
+      "status": "to-buy",
+      "forMeals": ["2026-05-18 lunch"],
+      "source": "ai",
+      "confidence": "medium",
+      "createdAt": "serverTimestamp",
+      "updatedAt": "serverTimestamp"
+    }
+  ],
+  "createdAt": "serverTimestamp",
+  "updatedAt": "serverTimestamp",
+  "updatedBy": "uid"
+}
+```
+
+Las reglas permiten leer o actualizar la lista al propietario y, si `scope` es `group`, a miembros del grupo. App Check y límites de cliente siguen siendo medidas de contención parcial: no sustituyen controles de backend si más adelante se añaden funciones server-side para IA o sincronización avanzada.
 
 Las vistas de próximos días pueden mezclar fechas de dos semanas distintas, pero cada fecha debe leerse y escribirse en el documento `weeklyMenus` de su `weekStart` real. Dashboard y planificación agrupan la UI por rango de días, no por un único documento mezclado.
 

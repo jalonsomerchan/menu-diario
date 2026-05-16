@@ -12,6 +12,7 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
+const shoppingPath = getLocalizedPath('/compra', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
 
 const labels = {
@@ -73,6 +74,7 @@ const labels = {
   guestSession: t('menu.guestSession'),
   offlineReadOnly: t('pwa.offlineReadOnly'),
   tuppers: tt('nav'),
+  shopping: t('appNav.shopping'),
   homePath,
 };
 ---
@@ -106,7 +108,10 @@ const labels = {
           <p class="menu-app__eyebrow">{labels.configureHint}</p>
           <h1>{labels.configure}</h1>
         </div>
-        <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
+        <div class="flex flex-wrap gap-2">
+          <a class="button button--ghost button--small" href={shoppingPath}>{labels.shopping}</a>
+          <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
+        </div>
       </div>
       <div class="menu-days menu-days--cards" data-config-days></div>
     </section>

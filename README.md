@@ -19,6 +19,7 @@ En móvil, el dashboard muestra una tarjeta principal tipo resumen y una lista d
 - **Dashboard rápido**: resumen de hoy y próximos 7 días.
 - **Configurador separado**: edición de días en `/configurar` y edición rápida desde dashboard e histórico.
 - **IA para comidas pendientes**: desde `/configurar` puede proponer platos solo para huecos vacíos usando el catálogo visible y Firebase AI Logic cuando la feature está activada.
+- **Lista de la compra con IA**: desde `/compra` puede transformar próximas comidas en una lista editable, guardar el resultado y exportar solo lo que falta por comprar.
 - **Próximos 7 días desde mañana**: el dashboard y el configurador no dependen de que la semana empiece en lunes.
 - **Preferencias por usuario**: cada usuario elige si quiere configurar desayuno, comida y/o cena.
 - **Tema por usuario**: sistema, claro u oscuro. Por defecto usa la preferencia del navegador.
@@ -123,6 +124,7 @@ PUBLIC_FIREBASE_APPCHECK_AUTO_REFRESH
 PUBLIC_FIREBASE_APPCHECK_REQUIRED_FOR_AI
 PUBLIC_AI_ENABLED
 PUBLIC_AI_MENU_SUGGESTIONS_ENABLED
+PUBLIC_AI_SHOPPING_LIST_ENABLED
 PUBLIC_AI_REMOTE_CONFIG_ENABLED
 PUBLIC_FIREBASE_AI_MODEL
 PUBLIC_FIREBASE_AI_TEMPERATURE
@@ -205,13 +207,17 @@ La base de IA vive en `src/lib/ai/` y está desactivada por defecto. Incluye:
 
 Los límites de cliente (`PUBLIC_AI_MAX_SESSION_REQUESTS` y `PUBLIC_AI_MAX_USER_DAILY_REQUESTS`) solo reducen abuso accidental y mejoran UX. No son una protección real porque el usuario controla el navegador.
 
-La primera función concreta conectada a esta base es la recomendación de comidas pendientes en `/configurar`. Solo analiza:
+Las primeras funciones concretas conectadas a esta base son la recomendación de comidas pendientes en `/configurar` y la lista de la compra en `/compra`.
+
+La recomendación de comidas pendientes solo analiza:
 
 - huecos vacíos de los próximos días,
 - locale activo,
 - nombres de platos visibles en el catálogo.
 
 No envía emails, identificadores de usuario, notas personales ni otros textos libres del menú. Si más adelante se amplían funciones de IA, conviene consolidarlas sobre la misma base `src/lib/ai/` en lugar de crear flujos paralelos.
+
+La lista de la compra reutiliza la misma capa, pide JSON estricto validado, prioriza ingredientes reales si el plato los define y usa tuppers activos solo como contexto opcional. App Check y los límites de cliente ayudan a contener abuso accidental, pero no sustituyen protecciones backend si la funcionalidad crece.
 
 ## Modelo de datos principal
 

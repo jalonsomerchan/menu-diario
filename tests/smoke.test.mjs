@@ -42,6 +42,7 @@ describe('project smoke checks', () => {
       'astro.config.mjs',
       'src/pages/index.astro',
       'src/pages/dashboard.astro',
+      'src/pages/compra.astro',
       'src/pages/configurar.astro',
       'src/pages/ajustes.astro',
       'src/pages/admin/platos.astro',
@@ -50,6 +51,7 @@ describe('project smoke checks', () => {
       'src/pages/platos.astro',
       'src/pages/[locale]/index.astro',
       'src/pages/[locale]/dashboard.astro',
+      'src/pages/[locale]/compra.astro',
       'src/pages/[locale]/configurar.astro',
       'src/pages/[locale]/ajustes.astro',
       'src/pages/[locale]/admin/platos.astro',
@@ -84,7 +86,7 @@ describe('project smoke checks', () => {
   });
 
   it('keeps shared and app components available', () => {
-    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'DayEditModal', 'DishEditDialog', 'AdminGlobalDishesApp', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp'].forEach((component) => {
+    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'DayEditModal', 'DishEditDialog', 'AdminGlobalDishesApp', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp', 'ShoppingApp'].forEach((component) => {
       assert.equal(existsSync(join(root, `src/components/${component}.astro`)), true, `${component}.astro should exist`);
     });
     assert.equal(existsSync(join(root, 'src/components/AppHeader.astro')), false);
@@ -146,6 +148,7 @@ describe('project smoke checks', () => {
         'history.title',
         'group.title',
         'appNav.settings',
+        'appNav.shopping',
         'appNav.adminDishes',
         'appNav.openMenu',
         'appNav.closeMenu',
@@ -160,6 +163,10 @@ describe('project smoke checks', () => {
         'adminDishes.importTitle',
         'adminDishes.importResult',
         'menu.signInGoogle',
+        'shopping.title',
+        'shopping.generate',
+        'shopping.statusToBuy',
+        'shopping.categoryVegetables',
       ].forEach((key) => {
         assert.ok(translations[key], `${locale}.json should include ${key}`);
       });
@@ -193,11 +200,13 @@ describe('project smoke checks', () => {
     const pages = [
       'src/pages/index.astro',
       'src/pages/dashboard.astro',
+      'src/pages/compra.astro',
       'src/pages/configurar.astro',
       'src/pages/ajustes.astro',
       'src/pages/historico.astro',
       'src/pages/mis-platos.astro',
       'src/pages/[locale]/dashboard.astro',
+      'src/pages/[locale]/compra.astro',
       'src/pages/[locale]/configurar.astro',
       'src/pages/[locale]/ajustes.astro',
       'src/pages/[locale]/historico.astro',
@@ -209,6 +218,7 @@ describe('project smoke checks', () => {
     assert.match(header, /aria-expanded=\"false\"/);
     assert.match(header, /aria-controls=\{panelId\}/);
     assert.match(header, /getLocalizedPath\('\/dashboard'/);
+    assert.match(header, /getLocalizedPath\('\/compra'/);
     assert.match(header, /getLocalizedPath\('\/configurar'/);
     assert.match(header, /getLocalizedPath\('\/mis-platos'/);
     assert.match(header, /getLocalizedPath\('\/historico'/);
@@ -229,6 +239,7 @@ describe('project smoke checks', () => {
   it('keeps app navigation and feature wiring available', () => {
     const home = readText('src/pages/index.astro');
     const dashboard = readText('src/pages/dashboard.astro');
+    const shoppingPage = readText('src/pages/compra.astro');
     const configure = readText('src/pages/configurar.astro');
     const settings = readText('src/pages/ajustes.astro');
     const history = readText('src/pages/historico.astro');
@@ -239,6 +250,7 @@ describe('project smoke checks', () => {
     const settingsApp = readText('src/components/SettingsApp.astro');
     const historyApp = readText('src/components/HistoryApp.astro');
     const dishesApp = readText('src/components/DishesApp.astro');
+    const shoppingApp = readText('src/components/ShoppingApp.astro');
     const header = readText('src/components/Header.astro');
     const appHeaderScript = readText('src/scripts/app-header.ts');
     const adminPage = readText('src/pages/admin/platos.astro');
@@ -247,6 +259,7 @@ describe('project smoke checks', () => {
     const adminScript = readText('src/scripts/admin-global-dishes-app.ts');
     assert.match(home, /<AuthGate/);
     assert.match(dashboard, /<DashboardApp/);
+    assert.match(shoppingPage, /<ShoppingApp/);
     assert.match(configure, /<ConfiguratorApp/);
     assert.match(settings, /<SettingsApp/);
     assert.match(history, /<HistoryApp/);
@@ -271,6 +284,8 @@ describe('project smoke checks', () => {
     assert.match(historyApp, /<DayEditModal/);
     assert.match(historyApp, /dashboard\.showDishOptions/);
     assert.match(dishesApp, /data-dishes-app/);
+    assert.match(shoppingApp, /data-shopping-app/);
+    assert.match(shoppingApp, /shopping-app\.ts/);
     assert.match(dishesApp, /dishes\.globalBadge/);
     assert.match(header, /data-admin-link/);
     assert.match(header, /appNav\.adminDishes/);

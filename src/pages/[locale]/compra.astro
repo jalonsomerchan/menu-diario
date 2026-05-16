@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Container from '../../components/Container.astro';
+import ShoppingApp from '../../components/ShoppingApp.astro';
+import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
+import { isLocale, useTranslations } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return locales
+    .filter((locale) => locale !== defaultLocale)
+    .map((locale) => ({ params: { locale } }));
+}
+
+const localeParam = Astro.params.locale;
+const locale: Locale = isLocale(localeParam) ? localeParam : defaultLocale;
+const t = useTranslations(locale);
+---
+
+<BaseLayout title={`${t('shopping.title')} · ${siteConfig.name}`} description={t('shopping.description')} locale={locale}>
+  <Container class="py-4 sm:py-6">
+    <ShoppingApp locale={locale} />
+  </Container>
+</BaseLayout>

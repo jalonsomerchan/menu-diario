@@ -15,6 +15,7 @@ const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
+const shoppingPath = getLocalizedPath('/compra', locale);
 const summaryPath = getLocalizedPath('/resumen-semanal', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
 const dishesPath = getLocalizedPath('/mis-platos', locale);
@@ -51,6 +52,7 @@ const labels = {
         <a href={homePath}>{t('nav.home')}</a>
         <a href={dashboardPath}><Icon name="mdi:home-outline" aria-hidden="true" />{t('appNav.dashboard')}</a>
         <a href={configurePath}><Icon name="mdi:calendar-edit" aria-hidden="true" />{t('appNav.configure')}</a>
+        <a href={shoppingPath}><Icon name="mdi:cart-outline" aria-hidden="true" />{t('appNav.shopping')}</a>
         <a href={summaryPath}><Icon name="mdi:chart-box-outline" aria-hidden="true" />{t('appNav.summary')}</a>
         <a href={tuppersPath}><Icon name="mdi:food-takeout-box-outline" aria-hidden="true" />{tt('nav')}</a>
         <a href={dishesPath}><Icon name="mdi:silverware-fork-knife" aria-hidden="true" />{t('appNav.dishes')}</a>

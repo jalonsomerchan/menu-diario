@@ -1,7 +1,7 @@
 export { aiClientLimits, aiGenerationConfig, aiModels, aiPromptConfig } from './config';
 export { generateGeminiJson } from './client';
 export { AiClientError, getAiErrorCode, logAiError } from './errors';
-export { getAiFeatureFlags, isAiAvailable, isMenuSuggestionsAvailable } from './flags';
+export { getAiFeatureFlags, isAiAvailable, isMenuSuggestionsAvailable, isShoppingListAiAvailable } from './flags';
 export { buildJsonPrompt, parseJsonObject, parseValidatedJson } from './json';
 export {
   assignPendingMealRecommendations,
@@ -9,6 +9,7 @@ export {
   getPendingMealSlots,
   isPendingMealRecommendationResponse,
 } from './pending-meal-recommendations';
+export { buildShoppingListContext, buildShoppingListPrompt, isShoppingListAiResponse } from './shopping-list';
 export { assertAiClientLimit, readLimitSnapshot, registerAiClientUse } from './limits';
 export { getAiFeatureFlagsFromRemoteConfig } from './remote-config';
 export { getAiRetryLabelKey, getAiUiMessageKey, getAiUiStateFromError } from './ui-state';
@@ -28,4 +29,5 @@ export type {
   PendingMealRecommendationResponse,
   PendingMealSlot,
 } from './pending-meal-recommendations';
+export type { ShoppingAiResponse } from '../shopping/types';
 export type { AiUiState } from './ui-state';

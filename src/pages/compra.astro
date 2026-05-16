@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/Container.astro';
+import ShoppingApp from '../components/ShoppingApp.astro';
+import { defaultLocale, siteConfig } from '../config/site';
+import { useTranslations } from '../i18n/ui';
+
+const locale = defaultLocale;
+const t = useTranslations(locale);
+---
+
+<BaseLayout title={`${t('shopping.title')} · ${siteConfig.name}`} description={t('shopping.description')} locale={locale}>
+  <Container class="py-4 sm:py-6">
+    <ShoppingApp locale={locale} />
+  </Container>
+</BaseLayout>

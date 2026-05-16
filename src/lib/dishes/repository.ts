@@ -10,6 +10,20 @@ const userScope: DishScope = 'user';
 
 function toDate(value: any): Date | undefined { return value?.toDate?.() ?? value; }
 function toStringArray(value: unknown): string[] { return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []; }
+function toIngredientArray(value: unknown): Array<string | { name: string; quantity?: string; category?: string }> {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (typeof item === 'string') return item.trim() ? [item.trim()] : [];
+    if (!item || typeof item !== 'object' || typeof item.name !== 'string' || !item.name.trim()) return [];
+    return [
+      {
+        name: item.name.trim(),
+        quantity: typeof item.quantity === 'string' ? item.quantity.trim() : '',
+        category: typeof item.category === 'string' ? item.category.trim() : '',
+      },
+    ];
+  });
+}
 function ownScope(groupId?: string): DishScope { return groupId ? groupScope : userScope; }
 function ownOwnerId(userId: string, groupId?: string) { return groupId || userId; }
 
@@ -29,6 +43,7 @@ function normalizeSource(data: Record<string, any>, scope: DishScope): DishSourc
 export function mapDish(id: string, data: Record<string, any>): Dish {
   const scope = normalizeScope(data);
   const isGlobal = scope === globalScope;
+  const ingredients = toIngredientArray(data.ingredients);
   return {
     id,
     name: data.name,
@@ -48,6 +63,7 @@ export function mapDish(id: string, data: Record<string, any>): Dish {
     archived: Boolean(data.archived),
     archivedAt: toDate(data.archivedAt),
     duplicatedFrom: data.duplicatedFrom,
+    ...(ingredients.length ? { ingredients } : {}),
     createdAt: toDate(data.createdAt),
     lastUsedAt: toDate(data.lastUsedAt),
     updatedAt: toDate(data.updatedAt),

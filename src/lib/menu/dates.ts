@@ -35,6 +35,15 @@ export function getUpcomingDates(baseDate = new Date(), startOffset = 0, count =
   return Array.from({ length: count }, (_, index) => getDateOffset(baseDate, startOffset + index));
 }
 
+export function getUpcomingDateRange(baseDate = new Date(), startOffset = 0, count = 7) {
+  const dates = getUpcomingDates(baseDate, startOffset, count);
+  return {
+    dates,
+    rangeStart: dates[0] ?? '',
+    rangeEnd: dates.at(-1) ?? '',
+  };
+}
+
 export function getWeekStartsForDates(dates: string[]) {
   return [...new Set(dates.map((date) => getWeekStartForDate(date)))];
 }
