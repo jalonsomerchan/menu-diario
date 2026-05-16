@@ -1,6 +1,6 @@
 import { getMonday, toIsoDate } from '../menu/dates';
-import { getOrCreateWeekMenu, updateMenuPatch, upsertDish, watchWeekMenu } from '../menu/repository';
-import type { Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../menu/types';
+import { getOrCreateWeekMenu, updateMenuPatch, upsertDish } from '../menu/repository';
+import type { Dish, FirebaseUser, UserProfile, WeekMenu } from '../menu/types';
 import { planTupperAssignment } from './assignment';
 import { sortTuppersByPriority } from './expiry';
 import type { TupperAssignment, TupperFormData, TupperItem, TupperLocation, TupperStatus } from './types';
@@ -51,10 +51,6 @@ function normalizeStatus(value: unknown): TupperStatus {
   return value === 'assigned' || value === 'consumed' || value === 'discarded' || value === 'archived' ? value : 'active';
 }
 
-function getMembers(userId: string, profile?: UserProfile | null) {
-  return profile?.groupId ? [userId, profile.groupId] : [userId];
-}
-
 export function watchTuppers(
   services: FirebaseServices,
   userId: string,
@@ -98,7 +94,7 @@ export async function createTupper(
     dishId: data.dishId || '',
     createdBy: user.uid,
     groupId: profile?.groupId ?? '',
-    members: getMembers(user.uid, profile),
+    members: [user.uid],
     preparedAt: data.preparedAt,
     expiresAt: data.expiresAt,
     portions: data.portions ?? null,
@@ -154,7 +150,7 @@ export async function assignTupperToMeal(
   });
 }
 
-async function readWeekMenu(services: FirebaseServices, menuId: string) {
+async function readWeekMenu(services: FirebaseServices, menuId: string): Promise<WeekMenu> {
   const { db, firestoreModule } = services;
   const snapshot = await firestoreModule.getDoc(firestoreModule.doc(db, 'weeklyMenus', menuId));
 
@@ -162,18 +158,7 @@ async function readWeekMenu(services: FirebaseServices, menuId: string) {
     throw new Error('menu-not-found');
   }
 
-  let resolved: WeekMenu | null = null;
-  const unsubscribe = watchWeekMenu(
-    services,
-    menuId,
-    (menu) => {
-      resolved = menu;
-    },
-    () => undefined
-  );
-  unsubscribe?.();
-
-  return resolved ?? ({ id: menuId, ...snapshot.data() } as WeekMenu);
+  return { id: menuId, ...snapshot.data() } as WeekMenu;
 }
 
 function getWeekStart(dayKey: string) {
