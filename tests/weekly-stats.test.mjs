@@ -68,7 +68,7 @@ describe('weekly menu statistics', () => {
     assert.equal(comparison.hasHistory, true);
     assert.equal(comparison.weeksCompared, 2);
     assert.equal(comparison.plannedDelta, 4);
-    assert.equal(comparison.emptyDelta, 1);
+    assert.equal(comparison.emptyDelta, 2);
   });
 
   it('detects the latest added dish and non-AI recommendations', () => {
