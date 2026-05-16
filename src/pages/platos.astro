@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/Container.astro';
+import DishesApp from '../components/DishesApp.astro';
+import { defaultLocale, siteConfig } from '../config/site';
+import { useTranslations } from '../i18n/ui';
+
+const locale = defaultLocale;
+const t = useTranslations(locale);
+const pageTitle = `${t('dishes.title')} · ${siteConfig.name}`;
+---
+
+<BaseLayout title={pageTitle} description={t('dishes.description')} locale={locale}>
+  <Container class="py-4 sm:py-6">
+    <DishesApp locale={locale} />
+  </Container>
+</BaseLayout>
