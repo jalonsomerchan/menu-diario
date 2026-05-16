@@ -38,6 +38,7 @@ if (root) {
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const content = root.querySelector<HTMLElement>('[data-content]');
   const configDays = root.querySelector<HTMLElement>('[data-config-days]');
+  const loadMoreButton = root.querySelector<HTMLButtonElement>('[data-config-load-more]');
   const aiGenerateButton = root.querySelector<HTMLButtonElement>('[data-ai-generate]');
   const aiHelper = root.querySelector<HTMLElement>('[data-ai-helper]');
   const aiStatus = root.querySelector<HTMLElement>('[data-ai-status]');
@@ -48,6 +49,7 @@ if (root) {
   let currentMenu: WeekMenu | null = null;
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
+  let visibleDayCount = 7;
   let dishes: Dish[] = [];
   let pendingAiRecommendations: Array<{
     dayKey: string;
@@ -91,7 +93,7 @@ if (root) {
   }
 
   function getConfigDates() {
-    return getUpcomingDates(new Date(), 1, 7);
+    return getUpcomingDates(new Date(), 0, visibleDayCount);
   }
 
   function getPendingMeals() {
@@ -112,8 +114,9 @@ if (root) {
   }
 
   function buildDisplayMenu(menus: WeekMenu[]) {
-    const days = Object.fromEntries(getConfigDates().map((dayKey) => [dayKey, normalizeDay(getMenuForDay(dayKey)?.days?.[dayKey])]));
-    const firstWeekStart = getWeekStartForDate(getConfigDates()[0] ?? new Date().toISOString().slice(0, 10));
+    const dates = getConfigDates();
+    const days = Object.fromEntries(dates.map((dayKey) => [dayKey, normalizeDay(getMenuForDay(dayKey)?.days?.[dayKey])]));
+    const firstWeekStart = getWeekStartForDate(dates[0] ?? new Date().toISOString().slice(0, 10));
     const primaryMenu = menus.find((menu) => menu.weekStart === firstWeekStart);
 
     return {
@@ -217,6 +220,7 @@ if (root) {
       dishes: dishes.length,
       currentMenuLoaded: Boolean(currentMenu),
       profileLoaded: Boolean(currentProfile),
+      visibleDayCount,
       enabledMeals: getEnabledMeals(),
     };
   }
@@ -434,6 +438,36 @@ if (root) {
     renderAiResults();
   }
 
+  async function watchVisibleMenus(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
+    if (!currentUser) return;
+
+    if (loadMoreButton) {
+      loadMoreButton.disabled = true;
+      loadMoreButton.setAttribute('aria-busy', 'true');
+    }
+
+    try {
+      currentMenuIdsByWeekStart = await getOrCreateWeekMenus(services, currentUser.uid, getRelevantWeekStarts(), locale);
+      unsubscribeMenu?.();
+      unsubscribeMenu = watchWeekMenusByIds(
+        services,
+        Object.values(currentMenuIdsByWeekStart),
+        (menus) => {
+          currentMenus = menus;
+          currentMenu = buildDisplayMenu(menus);
+          setVisible(true);
+          renderConfig(currentMenu);
+        },
+        (error) => showStatus(formatError(error), true)
+      );
+    } finally {
+      if (loadMoreButton) {
+        loadMoreButton.disabled = false;
+        loadMoreButton.setAttribute('aria-busy', 'false');
+      }
+    }
+  }
+
   if (!hasFirebaseConfig()) {
     setVisible(false);
     showStatus(labels.configMissing, true);
@@ -501,6 +535,11 @@ if (root) {
           }
         });
 
+        loadMoreButton?.addEventListener('click', async () => {
+          visibleDayCount += 7;
+          await watchVisibleMenus(services);
+        });
+
         configDays?.addEventListener('click', (event) => {
           const target = event.target;
           if (!(target instanceof HTMLElement)) return;
@@ -531,8 +570,8 @@ if (root) {
           }
 
           await ensureUserProfile(services, user, labels.guestSession);
-          currentMenuIdsByWeekStart = await getOrCreateWeekMenus(services, user.uid, getRelevantWeekStarts(), locale);
           currentMenus = [];
+          visibleDayCount = 7;
 
           unsubscribeProfile = watchUserProfile(
             services,
@@ -557,17 +596,7 @@ if (root) {
             (error) => showStatus(formatError(error), true)
           );
 
-          unsubscribeMenu = watchWeekMenusByIds(
-            services,
-            Object.values(currentMenuIdsByWeekStart),
-            (menus) => {
-              currentMenus = menus;
-              currentMenu = buildDisplayMenu(menus);
-              setVisible(true);
-              renderConfig(currentMenu);
-            },
-            (error) => showStatus(formatError(error), true)
-          );
+          await watchVisibleMenus(services);
         });
       })
       .catch((error: Error) => showStatus(formatError(error), true));
