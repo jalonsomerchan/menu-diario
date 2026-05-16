@@ -25,9 +25,8 @@ import {
   watchUserProfile,
   watchWeekMenusByIds,
 } from '../lib/menu/repository';
-import type { Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
-import { createDebouncedTaskMap } from '../lib/ui/debounced-task-map';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-configurator-app]');
@@ -58,10 +57,6 @@ if (root) {
     pending: labels.savePending,
     saving: labels.saveSaving,
     saved: labels.saveSaved,
-  });
-  const daySaveQueue = createDebouncedTaskMap({
-    delay: 500,
-    onError: (error) => saveFeedback.error(formatError(error)),
   });
 
   attachDishSuggestions(root, () => dishes);
@@ -312,19 +307,16 @@ if (root) {
     );
   }
 
-  async function saveDay(card: HTMLElement) {
+  async function saveDay(dayKey: string, nextDay: DailyMenu, card?: HTMLElement) {
     if (getNetworkStatus() !== 'online') {
-      saveFeedback.error(labels.offlineReadOnly);
-      return;
+      throw new Error(labels.offlineReadOnly);
     }
     if (!currentUser) return;
-    const dayKey = card.dataset.day ?? '';
     const menuId = getMenuIdForDay(dayKey);
     if (!menuId) return;
-
-    const nextDay = readDayDraft(card, getEnabledMeals());
     const nextState = serializeDay(nextDay);
-    if (card.dataset.dayState === nextState) {
+    const savedState = serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined));
+    if (savedState === nextState) {
       saveFeedback.saved();
       return;
     }
@@ -332,14 +324,9 @@ if (root) {
     saveFeedback.saving();
     const services = await getFirebaseServices();
     const changed = await updateMenuDay(services, menuId, currentUser.uid, dayKey, nextDay, currentProfile?.groupId);
-    card.dataset.dayState = nextState;
+    card?.setAttribute('data-day-state', nextState);
     updateLocalDay(dayKey, nextDay);
     saveFeedback.saved(changed ? labels.saveSaved : labels.saveSaved);
-  }
-
-  function scheduleDaySave(card: HTMLElement) {
-    saveFeedback.pending();
-    daySaveQueue.schedule(card.dataset.day ?? '', () => saveDay(card));
   }
 
   const dayEditModal = createDayEditModalController({
@@ -352,8 +339,9 @@ if (root) {
     getDayNumber,
     getWeekday: formatWeekday,
     getDateLabel: formatDate,
-    onScheduleSave: scheduleDaySave,
-    onFlushSave: (dayKey) => daySaveQueue.flush(dayKey),
+    canWrite: () => getNetworkStatus() === 'online',
+    getWriteErrorMessage: () => labels.offlineReadOnly,
+    onSaveDay: (dayKey, nextDay, card) => saveDay(dayKey, nextDay, card),
     onClearDay: async (dayKey) => {
       if (getNetworkStatus() !== 'online' || !currentUser) {
         saveFeedback.error(labels.offlineReadOnly);

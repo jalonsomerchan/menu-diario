@@ -304,6 +304,7 @@ describe('project smoke checks', () => {
   it('keeps data layer helpers and UI styles wired', () => {
     const repository = readText('src/lib/menu/repository.ts');
     const dayEditor = readText('src/lib/menu/day-editor.ts');
+    const dayEditDraft = readText('src/lib/menu/day-edit-draft.mjs');
     const dayEditModal = readText('src/lib/menu/day-edit-modal.ts');
     const suggestionHelper = readText('src/lib/menu/dish-suggestions.ts');
     const types = readText('src/lib/menu/types.ts');
@@ -337,7 +338,12 @@ describe('project smoke checks', () => {
     assert.match(dayEditor, /data-add-plate/);
     assert.match(dayEditor, /data-remove-plate/);
     assert.match(dayEditor, /data-field=\"skipped\"/);
+    assert.match(dayEditor, /data-day-mode/);
+    assert.match(dayEditor, /data-day-skip-fields/);
+    assert.match(dayEditor, /data-day-meals-block/);
     assert.doesNotMatch(dayEditor, /<datalist/);
+    assert.match(dayEditDraft, /setDaySkippedDraft/);
+    assert.match(dayEditDraft, /applyRecommendedMealDraft/);
     assert.match(suggestionHelper, /attachDishSuggestions/);
     assert.match(suggestionHelper, /suggestionLimit = 6/);
     assert.match(suggestionHelper, /focusin/);
@@ -353,11 +359,20 @@ describe('project smoke checks', () => {
     assert.match(dayEditModal, /renderDayEditor/);
     assert.match(dayEditModal, /data-day-edit-modal/);
     assert.match(dayEditModal, /data-day-edit-save/);
+    assert.match(dayEditModal, /readDayDraft/);
+    assert.match(dayEditModal, /fields\.addEventListener\('input'/);
+    assert.match(dayEditModal, /target\.dataset\.field === 'skipped'/);
+    assert.match(dayEditModal, /setDaySkippedDraft/);
+    assert.match(dayEditModal, /await options\.onSaveDay/);
+    assert.match(dayEditModal, /modal\.close\(\)/);
     assert.match(dayEditModal, /returnFocusTo/);
     assert.match(dayEditModal, /applyRecommendedDishes/);
     assert.match(dayEditModalComponent, /aria-labelledby=\"day-edit-modal-title\"/);
     assert.match(dayEditModalComponent, /data-day-edit-number/);
     assert.match(dayEditModalComponent, /day-edit-modal__close/);
+    assert.match(dayEditModalComponent, /data-day-edit-cancel-footer/);
+    assert.match(dayEditModalComponent, /data-day-edit-save-state/);
+    assert.match(dayEditModalComponent, /aria-live=\"polite\"/);
     assert.match(dashboardScript, /createDayEditModalController/);
     assert.match(dashboardScript, /attachDishSuggestions/);
     assert.match(dashboardScript, /currentProfile\?\.groupId/);
@@ -392,7 +407,7 @@ describe('project smoke checks', () => {
     assert.match(rules, /match \/groups/);
   });
 
-  it('keeps debounced save helpers wired in editable apps', () => {
+  it('keeps explicit day-save helpers wired in editable apps', () => {
     const dashboardScript = readText('src/scripts/dashboard-app.ts');
     const configuratorScript = readText('src/scripts/configurator-app.ts');
     const historyScript = readText('src/scripts/history-app.ts');
@@ -401,9 +416,10 @@ describe('project smoke checks', () => {
     const designSystem = readText('docs/design-system.md');
 
     [dashboardScript, configuratorScript, historyScript].forEach((source) => {
-      assert.match(source, /createDebouncedTaskMap/);
       assert.match(source, /updateMenuDay/);
-      assert.match(source, /readDayDraft/);
+      assert.match(source, /onSaveDay/);
+      assert.match(source, /getWriteErrorMessage/);
+      assert.doesNotMatch(source, /createDebouncedTaskMap/);
       assert.doesNotMatch(source, /updateMenuPatch/);
     });
     assert.match(dishesScript, /createSaveFeedback/);

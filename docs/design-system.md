@@ -1203,6 +1203,13 @@ Patrón reutilizable recomendado para listados densos:
 - Usar `<dialog>` nativo cuando encaje con la app para reducir dependencia y complejidad.
 - En móvil, garantizar objetivos táctiles de al menos `44px` y evitar tarjetas altas con demasiado contenido.
 
+Para modales con formularios complejos:
+
+- Mantener un borrador local mientras el modal está abierto.
+- Reflejar cambios estructurales de la UI en el momento, por ejemplo al activar o desactivar un bloque condicional.
+- No depender solo de `change` o `blur` para persistir texto; el botón principal debe serializar el estado completo visible antes de cerrar.
+- Si un bloque se oculta temporalmente, conservar sus datos salvo que la UX pida borrarlos de forma explícita.
+
 ---
 
 ## 15. Estados de interfaz

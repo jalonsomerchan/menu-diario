@@ -1,4 +1,5 @@
 import { readDayDraft } from './day-form';
+import { applyRecommendedMealDraft, setDaySkippedDraft } from './day-edit-draft.mjs';
 import { renderDayEditor, renderPlateRow } from './day-editor';
 import { normalizeDay } from './normalizers';
 import { serializeDay } from './day-state';
@@ -16,8 +17,9 @@ type DayEditModalControllerOptions = {
   getDayNumber: (dayKey: string) => string;
   getWeekday: (dayKey: string) => string;
   getDateLabel?: (dayKey: string) => string | undefined;
-  onScheduleSave: (card: HTMLElement) => void;
-  onFlushSave: (dayKey: string) => Promise<void>;
+  canWrite: () => boolean;
+  getWriteErrorMessage: () => string;
+  onSaveDay: (dayKey: string, nextDay: DailyMenu, card: HTMLElement) => Promise<boolean | void>;
   onClearDay: (dayKey: string) => Promise<boolean | void>;
 };
 
@@ -34,8 +36,11 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   const dayNumber = options.root.querySelector<HTMLElement>('[data-day-edit-number]');
   const saveButton = options.root.querySelector<HTMLButtonElement>('[data-day-edit-save]');
   const saveState = options.root.querySelector<HTMLElement>('[data-day-edit-save-state]');
+  const clearButton = options.root.querySelector<HTMLButtonElement>('[data-day-edit-clear]');
   const defaultSaveState = saveState?.textContent ?? '';
+  const pendingSaveState = saveState?.dataset.pendingLabel ?? options.labels.savePending ?? defaultSaveState;
   let activeDayKey = '';
+  let draftDay = normalizeDay(undefined);
   let returnFocusTo: HTMLElement | null = null;
 
   if (!modal || !form || !fields) {
@@ -59,16 +64,42 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     }
   }
 
+  function setSaveMessage(message: string, variant: 'idle' | 'pending' | 'saving' | 'saved' | 'error' = 'idle') {
+    if (!saveState) return;
+    saveState.textContent = message;
+    saveState.dataset.variant = variant;
+    if (variant === 'error') {
+      saveState.setAttribute('role', 'alert');
+    } else {
+      saveState.setAttribute('role', 'status');
+    }
+  }
+
   function setSaveBusy(isBusy: boolean) {
     if (saveButton) {
       saveButton.disabled = isBusy;
       saveButton.setAttribute('aria-busy', String(isBusy));
     }
-
-    if (saveState) {
-      saveState.textContent = isBusy ? options.labels.saveSaving || defaultSaveState : defaultSaveState;
-      saveState.dataset.variant = isBusy ? 'saving' : 'idle';
+    if (clearButton) clearButton.disabled = isBusy || !options.canWrite();
+    if (isBusy) {
+      setSaveMessage(options.labels.saveSaving || defaultSaveState, 'saving');
     }
+  }
+
+  function setEditableState(canWrite: boolean) {
+    const controls = fields.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLButtonElement>(
+      'input, textarea, select, button'
+    );
+    controls.forEach((control) => {
+      control.disabled = !canWrite;
+      if (!canWrite) {
+        control.setAttribute('aria-disabled', 'true');
+      } else {
+        control.removeAttribute('aria-disabled');
+      }
+    });
+    if (saveButton) saveButton.disabled = !canWrite;
+    if (clearButton) clearButton.disabled = !canWrite;
   }
 
   function getEditorCard() {
@@ -77,6 +108,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
 
   function render(dayKey: string, day: DailyMenu) {
     activeDayKey = dayKey;
+    draftDay = normalizeDay(day);
     setHeading(dayKey);
     setSaveBusy(false);
     fields.innerHTML = renderDayEditor({
@@ -84,13 +116,15 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
       dayNumber: options.getDayNumber(dayKey),
       weekday: options.getWeekday(dayKey),
       dateLabel: options.getDateLabel?.(dayKey),
-      day,
+      day: draftDay,
       enabledMeals: options.getEnabledMeals(),
       dishes: options.getDishes(),
       labels: options.labels,
       compact: true,
     });
     getEditorCard()?.setAttribute('data-day-state', options.getSavedDayState(dayKey));
+    setEditableState(options.canWrite());
+    setSaveMessage(options.canWrite() ? defaultSaveState : options.getWriteErrorMessage(), options.canWrite() ? 'idle' : 'error');
   }
 
   function open(dayKey: string, config: OpenDayEditModalOptions = {}) {
@@ -99,48 +133,64 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     if (!modal.open) {
       modal.showModal();
     }
-    fields.querySelector<HTMLElement>('input, textarea, select, button')?.focus();
+    const firstField =
+      fields.querySelector<HTMLElement>('input:not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled])') ??
+      form.querySelector<HTMLElement>('[data-day-edit-cancel], [data-day-edit-cancel-footer]');
+    firstField?.focus();
   }
 
   function applyRecommendedDishes(dayKey: string, meal: MealSlot, dishes: string[]) {
-    const currentDay = normalizeDay(options.getDay(dayKey));
-    const nextDay = normalizeDay({
-      ...currentDay,
-      skipped: false,
-      reason: '',
-      skipNote: '',
-      meals: {
-        ...currentDay.meals,
-        [meal]: {
-          ...currentDay.meals[meal],
-          skipped: false,
-          reason: '',
-          note: '',
-          items: dishes,
-        },
-      },
-    });
+    const currentDay = activeDayKey === dayKey ? draftDay : normalizeDay(options.getDay(dayKey));
+    const nextDay = applyRecommendedMealDraft(currentDay, meal, dishes);
 
     open(dayKey, { day: nextDay });
   }
 
-  fields.addEventListener('change', (event) => {
+  function refreshDraftFromDom(card: HTMLElement) {
+    draftDay = readDayDraft(card, options.getEnabledMeals(), draftDay);
+    return draftDay;
+  }
+
+  function markDirty() {
+    if (!options.canWrite()) {
+      setSaveMessage(options.getWriteErrorMessage(), 'error');
+      return;
+    }
+    setSaveMessage(pendingSaveState, 'pending');
+  }
+
+  function focusModeField(skipped: boolean) {
+    const selector = skipped ? '[data-field="reason"]' : '[data-plate-input], [data-field="notes"]';
+    fields.querySelector<HTMLElement>(selector)?.focus();
+  }
+
+  function rerenderDraft(nextDay: DailyMenu, shouldFocusModeField = false) {
+    render(activeDayKey, nextDay);
+    if (shouldFocusModeField) {
+      requestAnimationFrame(() => focusModeField(Boolean(nextDay.skipped)));
+    }
+  }
+
+  function handleDraftMutation(event: Event) {
     const target = event.target;
     if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
 
     const card = target.closest<HTMLElement>('[data-day]');
     if (!card) return;
 
-    if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-      const nextDay = readDayDraft(card, options.getEnabledMeals());
-      render(card.dataset.day ?? activeDayKey, nextDay);
+    const nextDay = refreshDraftFromDom(card);
+    if (target instanceof HTMLInputElement && target.type === 'checkbox' && target.dataset.field === 'skipped') {
+      rerenderDraft(setDaySkippedDraft(nextDay, target.checked), true);
+      markDirty();
+      return;
     }
 
-    const nextCard = getEditorCard();
-    if (nextCard) {
-      options.onScheduleSave(nextCard);
-    }
-  });
+    draftDay = nextDay;
+    markDirty();
+  }
+
+  fields.addEventListener('input', handleDraftMutation);
+  fields.addEventListener('change', handleDraftMutation);
 
   fields.addEventListener('click', (event) => {
     const target = event.target;
@@ -161,13 +211,15 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
         'beforeend',
         renderPlateRow(options.labels, meal, '', list.children.length, options.getDishes())
       );
+      markDirty();
       list.querySelector<HTMLInputElement>('.plate-row:last-child input')?.focus();
       return;
     }
 
     if (button.dataset.removePlate) {
       button.closest('.plate-row')?.remove();
-      options.onScheduleSave(card);
+      refreshDraftFromDom(card);
+      markDirty();
     }
   });
 
@@ -175,12 +227,29 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
 
-    const clearButton = target.closest<HTMLButtonElement>('[data-day-edit-clear]');
-    if (!clearButton || !activeDayKey) return;
+    const cancelButton = target.closest<HTMLButtonElement>('[data-day-edit-cancel], [data-day-edit-cancel-footer]');
+    if (cancelButton) {
+      modal.close('cancel');
+      return;
+    }
 
-    const cleared = await options.onClearDay(activeDayKey);
-    if (cleared !== false) {
-      modal.close();
+    const clearAction = target.closest<HTMLButtonElement>('[data-day-edit-clear]');
+    if (!clearAction || !activeDayKey) return;
+
+    if (!options.canWrite()) {
+      setSaveMessage(options.getWriteErrorMessage(), 'error');
+      return;
+    }
+    try {
+      const cleared = await options.onClearDay(activeDayKey);
+      if (cleared !== false) {
+        modal.close();
+        return;
+      }
+      setSaveMessage(options.getWriteErrorMessage(), 'error');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setSaveMessage(message, 'error');
     }
   });
 
@@ -192,16 +261,27 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
 
     event.preventDefault();
     const card = getEditorCard();
-    if (card) {
-      options.onScheduleSave(card);
+    if (!card) return;
+    if (!options.canWrite()) {
+      setSaveMessage(options.getWriteErrorMessage(), 'error');
+      return;
     }
 
     try {
+      draftDay = readDayDraft(card, options.getEnabledMeals(), draftDay);
       setSaveBusy(true);
-      await options.onFlushSave(activeDayKey);
+      await options.onSaveDay(activeDayKey, draftDay, card);
+      setSaveMessage(options.labels.saveSaved || defaultSaveState, 'saved');
       modal.close();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setSaveMessage(message, 'error');
     } finally {
-      setSaveBusy(false);
+      if (saveButton) {
+        saveButton.disabled = !options.canWrite();
+        saveButton.setAttribute('aria-busy', 'false');
+      }
+      if (clearButton) clearButton.disabled = !options.canWrite();
     }
   });
 
