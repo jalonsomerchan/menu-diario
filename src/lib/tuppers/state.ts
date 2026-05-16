@@ -1,6 +1,8 @@
 import { getTupperExpiryState } from './expiry';
 import type { TupperFilter, TupperItem, TupperStatus } from './types';
 
+export type TupperAction = 'consume' | 'discard' | 'archive' | 'freeze' | 'defrost';
+
 const doneStatuses: TupperStatus[] = ['assigned', 'consumed', 'discarded', 'archived'];
 
 export function filterTuppers(tuppers: TupperItem[], filter: TupperFilter, today = new Date()) {
@@ -16,7 +18,7 @@ export function filterTuppers(tuppers: TupperItem[], filter: TupperFilter, today
   });
 }
 
-export function nextTupperStatus(current: TupperStatus, action: 'consume' | 'discard' | 'archive' | 'freeze' | 'defrost') {
+export function nextTupperStatus(current: TupperStatus, action: TupperAction) {
   if (action === 'consume') return 'consumed';
   if (action === 'discard') return 'discarded';
   if (action === 'archive') return 'archived';
@@ -24,7 +26,7 @@ export function nextTupperStatus(current: TupperStatus, action: 'consume' | 'dis
   return current;
 }
 
-export function nextTupperLocation(current: TupperItem['location'], action: 'freeze' | 'defrost') {
+export function nextTupperLocation(current: TupperItem['location'], action: TupperAction) {
   if (action === 'freeze') return 'freezer';
   if (action === 'defrost') return current === 'freezer' ? 'fridge' : current;
 
