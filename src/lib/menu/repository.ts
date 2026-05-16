@@ -1,10 +1,10 @@
 import { getWeekDays, getWeekTitle } from './dates';
+import { getAddedDishNames, isSameDayMenu } from './day-state';
+import { emptyDay, normalizeDay } from './normalizers';
+import { recordMenuDishUsage } from '../dishes/repository';
 import type {
   DailyMenu,
-  Dish,
-  DishScope,
   FirebaseUser,
-  MealEntry,
   MealSlot,
   MenuGroup,
   MenuPatch,
@@ -14,7 +14,6 @@ import type {
 } from './types';
 
 const menusCollection = 'weeklyMenus';
-const dishesCollection = 'dishes';
 const groupsCollection = 'groups';
 const defaultEnabledMeals: MealSlot[] = ['lunch'];
 const mealSlots: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
@@ -23,46 +22,6 @@ type FirebaseServices = {
   db: any;
   firestoreModule: any;
 };
-
-function emptyMeal(): MealEntry {
-  return { items: [], skipped: false, reason: '', note: '' };
-}
-
-function emptyDay(): DailyMenu {
-  return {
-    meals: {
-      breakfast: emptyMeal(),
-      lunch: emptyMeal(),
-      dinner: emptyMeal(),
-    },
-    skipped: false,
-    reason: '',
-    skipNote: '',
-    notes: '',
-  };
-}
-
-function normalizeMeal(data?: Partial<MealEntry>): MealEntry {
-  return { ...emptyMeal(), ...data, items: Array.isArray(data?.items) ? data.items : [], skipped: Boolean(data?.skipped), reason: data?.reason ?? '', note: data?.note ?? '' };
-}
-
-function normalizeDay(data: Partial<DailyMenu> = {}): DailyMenu {
-  const legacyLunchItems = data.lunchItems ?? (data.lunch ? [data.lunch].filter(Boolean) : []);
-  const meals = data.meals ?? {};
-  return {
-    ...emptyDay(),
-    ...data,
-    meals: {
-      breakfast: normalizeMeal(meals.breakfast),
-      lunch: normalizeMeal({ ...(meals.lunch ?? {}), items: meals.lunch?.items ?? legacyLunchItems, skipped: meals.lunch?.skipped ?? Boolean(data.noLunch), reason: meals.lunch?.reason ?? data.noLunchReason ?? '', note: meals.lunch?.note ?? data.noLunchDescription ?? '' }),
-      dinner: normalizeMeal({ ...(meals.dinner ?? {}), items: meals.dinner?.items ?? (data.dinner ? [data.dinner].filter(Boolean) : []) }),
-    },
-    skipped: Boolean(data.skipped),
-    reason: data.reason ?? '',
-    skipNote: data.skipNote ?? '',
-    notes: data.notes ?? '',
-  };
-}
 
 function buildEmptyDays(weekStart: string) {
   return Object.fromEntries(getWeekDays(weekStart).map((day) => [day.key, emptyDay()]));
@@ -78,18 +37,6 @@ function normalizeEmail(email = '') {
 
 function uniqueValues(values: string[]) {
   return [...new Set(values.filter(Boolean))];
-}
-
-function normalizeDishName(name: string) {
-  return name.trim().toLocaleLowerCase('es-ES').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ');
-}
-
-function getDishId(ownerId: string, normalizedName: string, scope: DishScope = 'group') {
-  return `${scope}_${ownerId}_${encodeURIComponent(normalizedName).replaceAll('%', '_')}`.slice(0, 1400);
-}
-
-function stringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 }
 
 function normalizeEnabledMeals(value: unknown): MealSlot[] {
@@ -114,34 +61,6 @@ function mapWeekMenu(id: string, data: Record<string, any>): WeekMenu {
     days: Object.fromEntries(Object.entries(rawDays).map(([key, value]) => [key, normalizeDay(value as Partial<DailyMenu>)])),
     updatedAt: data.updatedAt?.toDate?.(),
     updatedBy: data.updatedBy,
-  };
-}
-
-function mapDish(id: string, data: Record<string, any>): Dish {
-  const scope: DishScope = data.scope === 'global' || data.isGlobal === true ? 'global' : data.groupId ? 'group' : data.scope ?? 'user';
-  const isGlobal = scope === 'global';
-  return {
-    id,
-    name: data.name,
-    normalizedName: data.normalizedName,
-    scope,
-    source: data.source ?? (isGlobal ? 'admin' : scope === 'group' ? 'group' : 'legacy'),
-    groupId: data.groupId,
-    createdBy: data.createdBy,
-    members: stringArray(data.members),
-    isGlobal,
-    editable: data.editable ?? !isGlobal,
-    timesUsed: data.timesUsed ?? 0,
-    tags: stringArray(data.tags),
-    quickTags: stringArray(data.quickTags),
-    favorite: Boolean(data.favorite),
-    blocked: Boolean(data.blocked),
-    archived: Boolean(data.archived),
-    archivedAt: data.archivedAt?.toDate?.(),
-    duplicatedFrom: data.duplicatedFrom,
-    createdAt: data.createdAt?.toDate?.(),
-    lastUsedAt: data.lastUsedAt?.toDate?.(),
-    updatedAt: data.updatedAt?.toDate?.(),
   };
 }
 
@@ -252,6 +171,14 @@ export async function getOrCreateWeekMenu(services: FirebaseServices, userId: st
   return snapshot.docs[0]?.id ?? createWeekMenu(services, userId, weekStart, locale);
 }
 
+export async function getOrCreateWeekMenus(services: FirebaseServices, userId: string, weekStarts: string[], locale: string) {
+  const uniqueWeekStarts = [...new Set(weekStarts)];
+  const entries = await Promise.all(
+    uniqueWeekStarts.map(async (weekStart) => [weekStart, await getOrCreateWeekMenu(services, userId, weekStart, locale)] as const)
+  );
+  return Object.fromEntries(entries);
+}
+
 export function watchUserMenus(services: FirebaseServices, userId: string, callback: (menus: WeekMenu[]) => void, onError: (error: Error) => void, maxResults = 30) {
   const { db, firestoreModule } = services;
   const menusQuery = firestoreModule.query(firestoreModule.collection(db, menusCollection), firestoreModule.where('members', 'array-contains', userId), firestoreModule.orderBy('weekStart', 'desc'), firestoreModule.limit(maxResults));
@@ -263,51 +190,33 @@ export function watchWeekMenu(services: FirebaseServices, menuId: string, callba
   return firestoreModule.onSnapshot(firestoreModule.doc(db, menusCollection, menuId), (snapshot: any) => { callback(snapshot.exists() ? mapWeekMenu(snapshot.id, snapshot.data()) : null); }, onError);
 }
 
-export function watchDishes(services: FirebaseServices, userId: string, callback: (dishes: Dish[]) => void, onError: (error: Error) => void, groupId?: string) {
-  const { db, firestoreModule } = services;
-  const lists: Dish[][] = [[], []];
-  const emit = () => {
-    const merged = new Map<string, Dish>();
-    lists.flat().forEach((dish) => { if (!dish.archived) merged.set(dish.id, dish); });
-    callback([...merged.values()].sort((a, b) => Number(Boolean(b.favorite)) - Number(Boolean(a.favorite)) || b.timesUsed - a.timesUsed || a.name.localeCompare(b.name)));
-  };
-  const globalQuery = firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('scope', '==', 'global'), firestoreModule.limit(50));
-  const ownQuery = groupId
-    ? firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('scope', '==', 'group'), firestoreModule.where('groupId', '==', groupId), firestoreModule.limit(100))
-    : firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('createdBy', '==', userId), firestoreModule.limit(100));
-  const unsubGlobal = firestoreModule.onSnapshot(globalQuery, (snapshot: any) => { lists[0] = snapshot.docs.map((item: any) => mapDish(item.id, item.data())); emit(); }, onError);
-  const unsubOwn = firestoreModule.onSnapshot(ownQuery, (snapshot: any) => { lists[1] = snapshot.docs.map((item: any) => mapDish(item.id, item.data())); emit(); }, onError);
-  return () => { unsubGlobal(); unsubOwn(); };
-}
+export function watchWeekMenusByIds(services: FirebaseServices, menuIds: string[], callback: (menus: WeekMenu[]) => void, onError: (error: Error) => void) {
+  if (menuIds.length === 0) {
+    callback([]);
+    return () => {};
+  }
 
-async function hasGlobalDish(services: FirebaseServices, normalizedName: string) {
-  const { db, firestoreModule } = services;
-  const snapshot = await firestoreModule.getDocs(
-    firestoreModule.query(
-      firestoreModule.collection(db, dishesCollection),
-      firestoreModule.where('scope', '==', 'global'),
-      firestoreModule.where('normalizedName', '==', normalizedName),
-      firestoreModule.limit(1)
+  const menus = new Map<string, WeekMenu>();
+  const emit = () => callback([...menus.values()].sort((a, b) => a.weekStart.localeCompare(b.weekStart)));
+  const unsubscribes = menuIds.map((menuId) =>
+    watchWeekMenu(
+      services,
+      menuId,
+      (menu) => {
+        if (menu) {
+          menus.set(menuId, menu);
+        } else {
+          menus.delete(menuId);
+        }
+        emit();
+      },
+      onError
     )
   );
-  return !snapshot.empty;
-}
 
-export async function upsertDish(services: FirebaseServices, userId: string, name: string, groupId?: string) {
-  const cleanName = name.trim().replace(/\s+/g, ' ');
-  if (!cleanName) return;
-  const { db, firestoreModule } = services;
-  const normalizedName = normalizeDishName(cleanName);
-  const scope: DishScope = groupId ? 'group' : 'user';
-  const ownerId = groupId || userId;
-  const dishRef = firestoreModule.doc(db, dishesCollection, getDishId(ownerId, normalizedName, scope));
-  const snapshot = await firestoreModule.getDoc(dishRef);
-  if (snapshot.exists()) {
-    await firestoreModule.updateDoc(dishRef, { archived: false, archivedAt: null, timesUsed: firestoreModule.increment(1), lastUsedAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp() });
-    return;
-  }
-  if (await hasGlobalDish(services, normalizedName)) return;
-  await firestoreModule.setDoc(dishRef, { name: cleanName, normalizedName, scope, groupId: groupId ?? null, source: 'menu', isGlobal: false, editable: true, createdBy: userId, members: [userId], timesUsed: 1, favorite: false, blocked: false, archived: false, archivedAt: null, quickTags: [], createdAt: firestoreModule.serverTimestamp(), lastUsedAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp() });
+  return () => {
+    unsubscribes.forEach((unsubscribe) => unsubscribe());
+  };
 }
 
 export async function updateMenuPatch(services: FirebaseServices, menuId: string, userId: string, patch: MenuPatch, groupId?: string) {
@@ -316,8 +225,40 @@ export async function updateMenuPatch(services: FirebaseServices, menuId: string
   const { db, firestoreModule } = services;
   await firestoreModule.updateDoc(firestoreModule.doc(db, menusCollection, menuId), { [`days.${patch.dayKey}.${path}`]: patch.value, updatedAt: firestoreModule.serverTimestamp(), updatedBy: userId });
   if ((path.endsWith('.items') || path === 'lunchItems') && Array.isArray(patch.value)) {
-    await Promise.all(patch.value.map((item) => upsertDish(services, userId, item, groupId)));
+    await Promise.all(patch.value.map((item) => recordMenuDishUsage(services, userId, item, groupId)));
   }
+}
+
+export async function updateMenuDay(
+  services: FirebaseServices,
+  menuId: string,
+  userId: string,
+  dayKey: string,
+  nextDay: Partial<DailyMenu>,
+  groupId?: string
+) {
+  const { db, firestoreModule } = services;
+  const menuRef = firestoreModule.doc(db, menusCollection, menuId);
+  const snapshot = await firestoreModule.getDoc(menuRef);
+  const previousDay = normalizeDay(snapshot.exists() ? snapshot.data()?.days?.[dayKey] : undefined);
+  const normalizedNextDay = normalizeDay(nextDay);
+
+  if (isSameDayMenu(previousDay, normalizedNextDay)) {
+    return false;
+  }
+
+  await firestoreModule.updateDoc(menuRef, {
+    [`days.${dayKey}`]: normalizedNextDay,
+    updatedAt: firestoreModule.serverTimestamp(),
+    updatedBy: userId,
+  });
+
+  const additions = getAddedDishNames(previousDay, normalizedNextDay);
+  if (additions.length) {
+    await Promise.all(additions.map((item) => recordMenuDishUsage(services, userId, item, groupId)));
+  }
+
+  return true;
 }
 
 export async function clearMenuDay(services: FirebaseServices, menuId: string, userId: string, dayKey: string) {

@@ -239,6 +239,20 @@ Usar una escala consistente:
 
 ### 4.3 Reglas de legibilidad
 
+## 5. Diálogos de confirmación
+
+Las confirmaciones importantes no deben depender de `window.confirm()`.
+
+Reglas:
+
+- Usar un `<dialog>` accesible con `aria-labelledby` y `aria-describedby`.
+- Definir siempre título, descripción, acción de confirmar y acción de cancelar mediante textos traducibles.
+- En acciones destructivas, el botón principal debe usar estilo de peligro y el foco inicial debe ir a cancelar.
+- Al cerrar, el foco debe volver al botón o control que abrió el diálogo.
+- Debe cerrarse con `Escape` y mantener soporte completo para light mode y dark mode.
+
+En este proyecto el patrón reutilizable vive en `src/components/ConfirmDialog.astro` y `src/lib/ui/confirm-dialog.ts`.
+
 - El texto principal debe tener al menos `16px`.
 - En móvil, evitar párrafos demasiado anchos o densos.
 - En escritorio, limitar el ancho de lectura a `65ch` o `72ch`.
@@ -1689,6 +1703,26 @@ Cuando un agente modifique o cree una web, debe seguir estas instrucciones:
     - Qué se ha cambiado.
     - Qué componentes se han tocado.
     - Cómo se ha respetado SEO, responsive, dark/light y accesibilidad.
+
+---
+
+## Guardado y estado
+
+En pantallas con edición frecuente no se debe escribir en cada `change` sin control.
+
+Regla recomendada:
+
+- Formularios largos o edición de un día completo: debounce corto y guardado agrupado por bloque lógico, por ejemplo un día de menú completo.
+- Acciones claramente intencionales: guardado explícito por submit o por botón.
+- Toggles rápidos o chips: permitir acción inmediata solo si el valor realmente cambia.
+
+Además:
+
+- No escribir en Firestore si el valor normalizado no ha cambiado.
+- Reutilizar helpers compartidos para debounce, comparación y mensajes de estado.
+- Mostrar siempre estados accesibles con `aria-live`: cambios pendientes, guardando, guardado y error.
+- Mantener mensajes claros para offline/read-only y errores de permisos.
+- Si una edición afecta a varios campos del mismo bloque, guardar el bloque completo cuando sea razonable para reducir escrituras y estados intermedios incoherentes.
 
 ---
 

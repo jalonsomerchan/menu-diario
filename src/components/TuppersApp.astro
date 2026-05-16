@@ -1,4 +1,5 @@
 ---
+import ConfirmDialog from './ConfirmDialog.astro';
 import type { Locale } from '../config/site';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
@@ -49,6 +50,7 @@ const labels = {
   assignMeal: tt('assignMeal'),
   assign: tt('assign'),
   assigned: tt('assigned'),
+  cancel: t('dashboard.cancel'),
   appendConfirm: tt('appendConfirm'),
   assignmentBlocked: tt('assignmentBlocked'),
   consume: tt('consume'),
@@ -144,6 +146,12 @@ const labels = {
       <div class="tupper-list" data-tupper-list></div>
     </section>
   </div>
+
+  <ConfirmDialog
+    dialogId="tuppers-confirm"
+    cancelLabel={labels.cancel}
+    confirmLabel={labels.assign}
+  />
 </section>
 
 <script>

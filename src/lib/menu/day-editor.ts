@@ -1,3 +1,4 @@
+import { emptyMeal } from './normalizers';
 import type { DailyMenu, Dish, MealEntry, MealSlot } from './types';
 
 type DayEditorLabels = Record<string, string>;
@@ -16,10 +17,6 @@ type DayEditorOptions = {
 
 function escapeHtml(value = '') {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-}
-
-function emptyMeal(): MealEntry {
-  return { items: [], skipped: false, reason: '', note: '' };
 }
 
 function mealLabel(labels: DayEditorLabels, meal: MealSlot) {

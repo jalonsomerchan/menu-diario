@@ -1,0 +1,31 @@
+---
+interface Props {
+  dialogId?: string;
+  cancelLabel: string;
+  confirmLabel: string;
+}
+
+const { dialogId = 'confirm-dialog', cancelLabel, confirmLabel } = Astro.props;
+const titleId = `${dialogId}-title`;
+const descriptionId = `${dialogId}-description`;
+---
+
+<dialog
+  class="confirm-dialog"
+  data-confirm-dialog
+  aria-modal="true"
+  aria-labelledby={titleId}
+  aria-describedby={descriptionId}
+>
+  <form method="dialog" class="confirm-dialog__box">
+    <header class="confirm-dialog__header">
+      <p class="menu-app__eyebrow" data-confirm-dialog-eyebrow hidden></p>
+      <h2 id={titleId} data-confirm-dialog-title></h2>
+    </header>
+    <p id={descriptionId} class="confirm-dialog__description" data-confirm-dialog-description></p>
+    <footer class="confirm-dialog__actions">
+      <button class="button button--ghost" type="submit" value="cancel" data-confirm-dialog-cancel>{cancelLabel}</button>
+      <button class="button button--danger" type="submit" value="confirm" data-confirm-dialog-confirm>{confirmLabel}</button>
+    </footer>
+  </form>
+</dialog>

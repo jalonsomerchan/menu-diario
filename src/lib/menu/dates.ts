@@ -3,7 +3,10 @@ import type { WeekDay } from './types';
 const fallbackDayLabels = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 export function toIsoDate(date: Date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function getMonday(input = new Date()) {
@@ -14,6 +17,26 @@ export function getMonday(input = new Date()) {
   date.setHours(0, 0, 0, 0);
 
   return date;
+}
+
+export function getWeekStartForDate(input: Date | string = new Date()) {
+  const date = typeof input === 'string' ? new Date(`${input}T00:00:00`) : new Date(input);
+  return toIsoDate(getMonday(date));
+}
+
+export function getDateOffset(baseDate = new Date(), offset = 0) {
+  const date = new Date(baseDate);
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + offset);
+  return toIsoDate(date);
+}
+
+export function getUpcomingDates(baseDate = new Date(), startOffset = 0, count = 7) {
+  return Array.from({ length: count }, (_, index) => getDateOffset(baseDate, startOffset + index));
+}
+
+export function getWeekStartsForDates(dates: string[]) {
+  return [...new Set(dates.map((date) => getWeekStartForDate(date)))];
 }
 
 export function shiftWeek(weekStart: string, amount: number) {

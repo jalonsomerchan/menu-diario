@@ -3,6 +3,8 @@ import { hasFirebaseConfig } from '../lib/firebase/config';
 import { archiveDish, createManualDish, duplicateGlobalDish, renameDish, updateDishPreferences, watchUserDishes } from '../lib/dishes/repository';
 import { filterDishes, isEditableDish, sortDishes } from '../lib/dishes/helpers.mjs';
 import { ensureUserProfile, watchUserProfile } from '../lib/menu/repository';
+import { createConfirmDialog } from '../lib/ui/confirm-dialog';
+import { createSaveFeedback } from '../lib/ui/save-feedback';
 import type { Dish, FirebaseUser, UserProfile } from '../lib/menu/types';
 
 type DishFilterMode = 'all' | 'favorites' | 'blocked';
@@ -23,7 +25,8 @@ if (root) {
   const filterSelect = root.querySelector<HTMLSelectElement>('[data-dish-filter]');
   const tagFilterSelect = root.querySelector<HTMLSelectElement>('[data-dish-tag-filter]');
   const list = root.querySelector<HTMLElement>('[data-dishes-list]');
-  const quickTags = Array.isArray(labels.quickTags) ? labels.quickTags : [];
+  const confirmDialog = root.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
+  const quickTags = Array.isArray(labels.quickTagsList) ? labels.quickTagsList : [];
   const tagLabels = labels.tagLabels ?? {};
 
   let currentUser: FirebaseUser | null = null;
@@ -31,16 +34,23 @@ if (root) {
   let dishes: Dish[] = [];
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  const archiveConfirmation = confirmDialog ? createConfirmDialog(confirmDialog) : null;
+  const saveFeedback = createSaveFeedback(status, {
+    pending: labels.savePending,
+    saving: labels.saveSaving,
+    saved: labels.saveSaved,
+  });
 
   function escapeHtml(value = '') {
     return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
   }
 
   function showStatus(message: string, isError = false) {
-    if (!status) return;
-    status.hidden = false;
-    status.textContent = message;
-    status.dataset.variant = isError ? 'error' : 'info';
+    if (isError) {
+      saveFeedback.error(message);
+      return;
+    }
+    saveFeedback.info(message);
   }
 
   function setVisible(isReady: boolean) {
@@ -105,8 +115,8 @@ if (root) {
       .join('');
 
     return `
-      <section class="dish-card__quick-tags" aria-label="${escapeHtml(labels.quickTags)}">
-        <p>${escapeHtml(labels.quickTags)}</p>
+      <section class="dish-card__quick-tags" aria-label="${escapeHtml(labels.quickTagsLabel)}">
+        <p>${escapeHtml(labels.quickTagsLabel)}</p>
         <div class="dish-tag-list" data-selected-tags>${selectedMarkup}</div>
         ${availableMarkup ? `<div class="dish-tag-actions">${availableMarkup}</div>` : ''}
       </section>
@@ -198,11 +208,12 @@ if (root) {
 
   async function submitNewDish() {
     if (!currentUser || !nameInput) return;
+    saveFeedback.saving();
     const services = await getFirebaseServices();
     await createManualDish(services, currentUser.uid, nameInput.value, currentProfile?.groupId);
     nameInput.value = '';
     nameInput.focus();
-    showStatus(labels.added);
+    saveFeedback.saved(labels.added);
   }
 
   function findDish(card: HTMLElement) {
@@ -224,14 +235,40 @@ if (root) {
     card.querySelector<HTMLElement>('[data-card-actions]')!.hidden = false;
   }
 
+  async function confirmArchive(button: HTMLButtonElement) {
+    if (!archiveConfirmation) return false;
+    return archiveConfirmation.open({
+      eyebrow: labels.archive,
+      title: labels.confirmArchiveTitle,
+      description: labels.confirmArchiveDescription,
+      confirmLabel: labels.confirmArchiveConfirm,
+      cancelLabel: labels.confirmArchiveCancel,
+      confirmVariant: 'danger',
+      returnFocusTo: button,
+    });
+  }
+
   async function savePreferences(card: HTMLElement, dish: Dish, nextValues: { favorite?: boolean; blocked?: boolean; quickTags?: string[] }) {
     if (!isEditableDish(dish)) {
       showStatus(labels.notEditable, true);
       return;
     }
+    const currentQuickTags = dish.quickTags ?? [];
+    const sameQuickTags =
+      nextValues.quickTags === undefined ||
+      (nextValues.quickTags.length === currentQuickTags.length && nextValues.quickTags.every((tag, index) => tag === currentQuickTags[index]));
+    if (
+      (nextValues.favorite === undefined || nextValues.favorite === dish.favorite) &&
+      (nextValues.blocked === undefined || nextValues.blocked === dish.blocked) &&
+      sameQuickTags
+    ) {
+      saveFeedback.saved();
+      return;
+    }
+    saveFeedback.saving();
     const services = await getFirebaseServices();
     await updateDishPreferences(services, card.dataset.dishId ?? '', nextValues);
-    showStatus(labels.preferencesUpdated);
+    saveFeedback.saved(labels.preferencesUpdated);
   }
 
   function getNextQuickTags(dish: Dish, tag: string, shouldAdd: boolean) {
@@ -256,7 +293,7 @@ if (root) {
         filterSelect?.addEventListener('change', renderDishes);
         tagFilterSelect?.addEventListener('change', renderDishes);
 
-        list?.addEventListener('click', (event) => {
+        list?.addEventListener('click', async (event) => {
           const target = event.target;
           if (!(target instanceof HTMLElement)) return;
           const card = target.closest<HTMLElement>('[data-dish-id]');
@@ -286,18 +323,22 @@ if (root) {
           }
 
           if (target.closest('[data-duplicate-global]') && currentUser) {
+            saveFeedback.saving();
             duplicateGlobalDish(services, currentUser.uid, dish, currentProfile?.groupId)
-              .then(() => showStatus(labels.duplicated))
+              .then(() => saveFeedback.saved(labels.duplicated))
               .catch((error: Error) => showStatus(errorMessage(error), true));
             return;
           }
 
           if (target.closest('[data-edit-dish]')) openEditor(card, dish);
           if (target.closest('[data-cancel-edit]')) closeEditor(card);
-          if (target.closest('[data-archive-dish]')) {
-            if (!window.confirm(labels.confirmArchive)) return;
+          const archiveButton = target.closest<HTMLButtonElement>('[data-archive-dish]');
+          if (archiveButton) {
+            const confirmed = await confirmArchive(archiveButton);
+            if (!confirmed) return;
+            saveFeedback.saving();
             archiveDish(services, card.dataset.dishId ?? '')
-              .then(() => showStatus(labels.archived))
+              .then(() => saveFeedback.saved(labels.archived))
               .catch((error: Error) => showStatus(errorMessage(error), true));
           }
         });
@@ -310,9 +351,15 @@ if (root) {
           const dish = card ? findDish(card) : undefined;
           const input = form.querySelector<HTMLInputElement>('[data-edit-name]');
           if (!card || !dish || !currentUser || !input) return;
+          if (input.value.trim() === dish.name.trim()) {
+            closeEditor(card);
+            saveFeedback.saved();
+            return;
+          }
 
+          saveFeedback.saving();
           renameDish(services, currentUser.uid, dish, input.value)
-            .then(() => showStatus(labels.updated))
+            .then(() => saveFeedback.saved(labels.updated))
             .catch((error: Error) => showStatus(errorMessage(error), true));
         });
 

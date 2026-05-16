@@ -1,5 +1,6 @@
 ---
 import type { Locale } from '../config/site';
+import DayEditModal from './DayEditModal.astro';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -31,6 +32,9 @@ const labels = {
   moreActions: t('dashboard.moreActions'),
   save: t('dashboard.save'),
   cancel: t('dashboard.cancel'),
+  savePending: t('menu.savePending'),
+  saveSaving: t('menu.saveSaving'),
+  saveSaved: t('menu.saveSaved'),
   breakfast: t('dashboard.breakfast'),
   lunch: t('dashboard.lunch'),
   dinner: t('dashboard.dinner'),
@@ -51,6 +55,7 @@ const labels = {
   skipSummary: t('dashboard.skipSummary'),
   updated: t('menu.updated'),
   updatedBody: t('menu.updatedBody'),
+  permissionsError: t('menu.permissionsError'),
   guestSession: t('menu.guestSession'),
   offlineTitle: t('pwa.offlineTitle'),
   offlineCached: t('pwa.offlineCached'),
@@ -65,7 +70,7 @@ const labels = {
 ---
 
 <section class="dashboard-app dashboard-app--compact" data-dashboard-app data-labels={JSON.stringify(labels)}>
-  <div class="menu-app__status" data-status hidden></div>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
   <div class="offline-banner" data-offline-banner hidden role="status" aria-live="polite">
     <strong data-offline-title>{labels.offlineTitle}</strong>
     <span data-offline-message>{labels.offlineReadOnly}</span>
@@ -94,18 +99,14 @@ const labels = {
     </section>
   </div>
 
-  <dialog class="quick-edit-modal quick-edit-modal--day" data-quick-modal>
-    <form method="dialog" class="quick-edit-modal__box" data-quick-form>
-      <header>
-        <h2>{labels.quickEdit}</h2>
-        <button class="button button--ghost button--small" value="cancel" type="submit">{labels.cancel}</button>
-      </header>
-      <div data-quick-fields></div>
-      <footer>
-        <button class="button button--primary" value="save" type="submit">{labels.save}</button>
-      </footer>
-    </form>
-  </dialog>
+  <DayEditModal
+    eyebrow={labels.quickEdit}
+    title={labels.quickEdit}
+    cancelLabel={labels.cancel}
+    saveLabel={labels.save}
+    clearLabel={labels.deleteDay}
+    saveHint={labels.saveHint}
+  />
 </section>
 
 <script>

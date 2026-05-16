@@ -84,6 +84,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .button:active { transform: translateY(1px); }
 .button--primary { background: var(--color-primary); color: #fff; box-shadow: 0 10px 22px color-mix(in srgb, var(--color-primary), transparent 78%); }
 .button--primary:hover { background: var(--color-primary-hover); }
+.button--danger { background: var(--color-danger); color: #fff; box-shadow: 0 10px 22px color-mix(in srgb, var(--color-danger), transparent 78%); }
+.button--danger:hover { background: color-mix(in srgb, var(--color-danger), #000 12%); }
 .button--secondary, .button--ghost { border-color: var(--color-border); background: var(--color-surface); color: var(--color-text); }
 .button--ghost { background: color-mix(in srgb, var(--color-surface), transparent 45%); }
 .button--small { min-height: 2.1rem; border-radius: var(--radius-md); padding: 0.42rem 0.7rem; font-size: 0.85rem; }
@@ -189,6 +191,42 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .quick-edit-modal__box [data-quick-fields], .quick-edit-modal__box [data-history-edit-fields] { display: grid; gap: 0.75rem; }
 .quick-edit-modal .day-card { border-radius: var(--radius-xl); }
 .quick-edit-modal label { display: grid; gap: 0.35rem; font-weight: 850; }
+
+.day-edit-modal::backdrop { background: linear-gradient(180deg, rgb(2 6 23 / 0.7), rgb(15 23 42 / 0.84)); backdrop-filter: blur(8px); }
+.day-edit-modal__box { gap: 1.2rem; padding: 1.1rem; border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 76%); background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface), #fff 3%), var(--color-surface)); box-shadow: 0 22px 70px rgb(15 23 42 / 0.26); }
+.day-edit-modal__header, .day-edit-modal__footer { position: sticky; z-index: 3; }
+.day-edit-modal__header { top: -1.1rem; padding: 0.1rem 0 0.8rem; border-bottom: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 12%); background: linear-gradient(180deg, var(--color-surface) 76%, color-mix(in srgb, var(--color-surface), transparent 12%)); }
+.day-edit-modal__heading { display: grid; gap: 0.28rem; min-width: 0; }
+.day-edit-modal__heading h2 { font-size: clamp(1.6rem, 6vw, 2.4rem); line-height: 0.95; letter-spacing: -0.06em; text-transform: lowercase; }
+.day-edit-modal__heading h2::first-letter { text-transform: uppercase; }
+.day-edit-modal__heading p:last-child { margin: 0; color: var(--color-muted); font-size: 0.92rem; font-weight: 800; }
+.day-edit-modal__body { display: grid; gap: 0.75rem; }
+.day-edit-modal__footer { bottom: -1.1rem; display: grid !important; gap: 0.9rem; padding: 0.85rem 0 0.15rem; border-top: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%); background: linear-gradient(0deg, var(--color-surface) 72%, color-mix(in srgb, var(--color-surface), transparent 12%)); }
+.day-edit-modal__hint { margin: 0; color: var(--color-muted); font-size: 0.88rem; font-weight: 800; }
+.day-edit-modal__actions { display: grid; gap: 0.65rem; }
+.day-edit-modal .day-card--compact-editor { border: 0; background: transparent; padding: 0; }
+.day-edit-modal .day-card__header { margin-bottom: 0.2rem; }
+.day-edit-modal .day-card__date-number { color: color-mix(in srgb, var(--color-primary), var(--color-text) 12%); font-size: clamp(4rem, 18vw, 5.8rem); }
+.day-edit-modal .day-card__title h3 { font-size: clamp(1.8rem, 8vw, 2.7rem); }
+.day-edit-modal .meal-editor { border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 8%); background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 14%), color-mix(in srgb, var(--color-surface-soft), transparent 8%)); }
+.day-edit-modal .plate-row { align-items: start; }
+.day-edit-modal .plate-row label { position: relative; gap: 0.35rem; }
+.day-edit-modal .dish-combobox { display: grid; grid-template-columns: minmax(0, 1fr) 2.85rem; width: 100%; overflow: hidden; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%); border-radius: var(--radius-lg); background: var(--color-surface-raised); box-shadow: inset 0 1px 0 color-mix(in srgb, #fff, transparent 90%); transition: border-color var(--transition-base), box-shadow var(--transition-base); }
+.day-edit-modal .dish-combobox:focus-within { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 28%); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary), transparent 82%), inset 0 1px 0 color-mix(in srgb, #fff, transparent 92%); }
+.day-edit-modal .dish-combobox input { min-height: 3rem; border: 0; border-radius: 0; background: transparent; padding: 0.72rem 0.9rem; font-size: 1rem; font-weight: 850; outline: 0; }
+.day-edit-modal .dish-combobox__toggle { display: grid; min-width: 2.85rem; place-items: center; border: 0; border-left: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 5%); background: color-mix(in srgb, var(--color-surface-raised), var(--color-surface-soft) 42%); color: var(--color-muted); font-size: 0.9rem; font-weight: 950; transition: background var(--transition-base), color var(--transition-base); }
+.day-edit-modal .dish-combobox__toggle:hover, .day-edit-modal .dish-combobox__toggle:focus-visible { background: var(--color-primary-soft); color: var(--color-primary); outline: 0; }
+.day-edit-modal .dish-suggestions { position: relative; z-index: 20; display: grid; gap: 0.1rem; width: 100%; max-height: 11rem; overflow-y: auto; margin-top: 0.35rem; border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 74%); border-radius: var(--radius-lg); background: var(--color-surface-raised); box-shadow: 0 16px 34px rgb(15 23 42 / 0.14); padding: 0.3rem; }
+.day-edit-modal .dish-suggestions[hidden] { display: none; }
+.day-edit-modal .dish-suggestions button { display: flex; align-items: center; width: 100%; min-height: 2.55rem; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--color-text); padding: 0.58rem 0.72rem; text-align: left; font-size: 0.95rem; font-weight: 800; }
+.day-edit-modal .dish-suggestions button:hover, .day-edit-modal .dish-suggestions button:focus-visible { background: var(--color-primary-soft); color: var(--color-primary); outline: 0; }
+.confirm-dialog { width: min(92vw, 30rem); border: 0; border-radius: var(--radius-2xl); background: transparent; padding: 0; }
+.confirm-dialog::backdrop { background: rgb(2 6 23 / 0.72); backdrop-filter: blur(3px); }
+.confirm-dialog__box { display: grid; gap: 1rem; border: 1px solid var(--color-border); border-radius: var(--radius-2xl); background: var(--color-surface); padding: 1.1rem; box-shadow: var(--shadow-md); }
+.confirm-dialog__header { display: grid; gap: 0.45rem; }
+.confirm-dialog__header h2 { margin: 0; font-size: clamp(1.5rem, 6vw, 2.2rem); line-height: 1; letter-spacing: -0.05em; }
+.confirm-dialog__description { margin: 0; color: var(--color-muted); }
+.confirm-dialog__actions { display: grid; gap: 0.65rem; }
 .history-search { display: grid; gap: 0.75rem; }
 .group-code { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .group-lists { display: grid; gap: 1rem; }
@@ -228,6 +266,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .site-header__locales { flex-wrap: nowrap; }
   .menu-app__auth, .auth-card, .dashboard-header, .section-heading { grid-template-columns: 1fr auto; align-items: center; }
   .history-search, .dishes-toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
+  .confirm-dialog__actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .day-edit-modal__footer { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .day-edit-modal__actions { grid-template-columns: repeat(2, minmax(0, max-content)); justify-content: end; }
   .dishes-toolbar label:first-child { grid-column: 1 / -1; }
   .dishes-form__row { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
   .dishes-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }

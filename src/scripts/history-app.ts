@@ -1,18 +1,24 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
+import { watchUserDishes } from '../lib/dishes/repository';
+import { readDayDraft } from '../lib/menu/day-form';
+import { serializeDay } from '../lib/menu/day-state';
 import { getMonday, toIsoDate } from '../lib/menu/dates';
 import { renderDayEditor, renderPlateRow } from '../lib/menu/day-editor';
+import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
   clearMenuDay,
   ensureUserProfile,
   getOrCreateWeekMenu,
-  updateMenuPatch,
-  watchDishes,
+  updateMenuDay,
   watchUserMenus,
   watchUserProfile,
 } from '../lib/menu/repository';
-import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { Dish, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import { getNetworkStatus } from '../lib/pwa/network-status';
+import { createDebouncedTaskMap } from '../lib/ui/debounced-task-map';
+import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-history-app]');
 
@@ -37,6 +43,15 @@ if (root) {
   let unsubscribeMenus: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  const saveFeedback = createSaveFeedback(status, {
+    pending: labels.savePending,
+    saving: labels.saveSaving,
+    saved: labels.saveSaved,
+  });
+  const daySaveQueue = createDebouncedTaskMap({
+    delay: 500,
+    onError: (error) => saveFeedback.error(formatError(error)),
+  });
 
   attachDishSuggestions(root, () => dishes);
 
@@ -45,32 +60,18 @@ if (root) {
   }
 
   function showStatus(message: string, isError = false) {
-    if (!status) return;
-    status.hidden = false;
-    status.textContent = message;
-    status.dataset.variant = isError ? 'error' : 'info';
+    if (isError) {
+      saveFeedback.error(message);
+      return;
+    }
+    saveFeedback.info(message);
   }
 
-  function emptyMeal(): MealEntry {
-    return { items: [], skipped: false, reason: '', note: '' };
-  }
-
-  function normalizeMeal(meal?: Partial<MealEntry>): MealEntry {
-    return { ...emptyMeal(), ...meal, items: Array.isArray(meal?.items) ? meal.items : [] };
-  }
-
-  function normalizeDay(day?: Partial<DailyMenu>): DailyMenu {
-    return {
-      meals: {
-        breakfast: normalizeMeal(day?.meals?.breakfast),
-        lunch: normalizeMeal({ ...(day?.meals?.lunch ?? {}), items: day?.meals?.lunch?.items ?? day?.lunchItems ?? (day?.lunch ? [day.lunch] : []) }),
-        dinner: normalizeMeal({ ...(day?.meals?.dinner ?? {}), items: day?.meals?.dinner?.items ?? (day?.dinner ? [day.dinner] : []) }),
-      },
-      skipped: Boolean(day?.skipped),
-      reason: day?.reason ?? '',
-      skipNote: day?.skipNote ?? '',
-      notes: day?.notes ?? '',
-    };
+  function formatError(error: unknown) {
+    if (error instanceof Error && error.message.toLowerCase().includes('permission')) {
+      return labels.permissionsError;
+    }
+    return error instanceof Error ? error.message : String(error);
   }
 
   function getEnabledMeals(): MealSlot[] {
@@ -167,30 +168,49 @@ if (root) {
       labels,
       compact: true,
     });
+    editFields.querySelector<HTMLElement>('[data-day]')?.setAttribute('data-day-state', serializeDay(menu.days[dayKey]));
     modal.showModal();
   }
 
-  async function saveField(card: HTMLElement, path: string, value: string | boolean | string[]) {
-    if (!currentUser || !editMenuId) return;
-    const services = await getFirebaseServices();
-    await updateMenuPatch(
-      services,
-      editMenuId,
-      currentUser.uid,
-      {
-        dayKey: card.dataset.day ?? '',
-        path,
-        value,
-      },
-      currentProfile?.groupId
+  function updateLocalDay(dayKey: string, nextDay: WeekMenu['days'][string]) {
+    menus = menus.map((menu) =>
+      menu.id === editMenuId
+        ? {
+            ...menu,
+            days: {
+              ...menu.days,
+              [dayKey]: nextDay,
+            },
+          }
+        : menu
     );
   }
 
-  async function savePlateList(card: HTMLElement, meal: MealSlot) {
-    const items = [...card.querySelectorAll<HTMLInputElement>(`[data-plate-input="${meal}"]`)]
-      .map((input) => input.value.trim())
-      .filter(Boolean);
-    await saveField(card, `meals.${meal}.items`, items);
+  async function saveDay(card: HTMLElement) {
+    if (getNetworkStatus() !== 'online') {
+      saveFeedback.error(labels.offlineReadOnly);
+      return;
+    }
+    if (!currentUser || !editMenuId) return;
+    const dayKey = card.dataset.day ?? '';
+    const nextDay = readDayDraft(card, getEnabledMeals());
+    const nextState = serializeDay(nextDay);
+    if (card.dataset.dayState === nextState) {
+      saveFeedback.saved();
+      return;
+    }
+
+    saveFeedback.saving();
+    const services = await getFirebaseServices();
+    const changed = await updateMenuDay(services, editMenuId, currentUser.uid, dayKey, nextDay, currentProfile?.groupId);
+    card.dataset.dayState = nextState;
+    updateLocalDay(dayKey, nextDay);
+    saveFeedback.saved(changed ? labels.saveSaved : labels.saveSaved);
+  }
+
+  function scheduleDaySave(card: HTMLElement) {
+    saveFeedback.pending();
+    daySaveQueue.schedule(card.dataset.day ?? '', () => saveDay(card));
   }
 
   function addPlate(card: HTMLElement, meal: MealSlot) {
@@ -237,16 +257,23 @@ if (root) {
           if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
           const card = target.closest<HTMLElement>('[data-day]');
           if (!card) return;
-
-          if (target.dataset.plateInput) {
-            savePlateList(card, target.dataset.plateInput as MealSlot).catch((error: Error) => showStatus(error.message, true));
-            return;
+          if (target instanceof HTMLInputElement && target.type === 'checkbox') {
+            const wasSkipped = card.dataset.dayState ? JSON.parse(card.dataset.dayState).skipped : false;
+            if (target.checked !== wasSkipped) {
+              editFields.innerHTML = renderDayEditor({
+                dayKey: card.dataset.day ?? '',
+                dayNumber: getDayNumber(card.dataset.day ?? ''),
+                weekday: formatWeekday(card.dataset.day ?? ''),
+                day: readDayDraft(card, getEnabledMeals()),
+                enabledMeals: getEnabledMeals(),
+                dishes,
+                labels,
+                compact: true,
+              });
+              editFields.querySelector<HTMLElement>('[data-day]')?.setAttribute('data-day-state', card.dataset.dayState ?? '');
+            }
           }
-
-          const field = target.dataset.field;
-          if (!field) return;
-          const value = target instanceof HTMLInputElement && target.type === 'checkbox' ? target.checked : target.value.trim();
-          saveField(card, field, value).catch((error: Error) => showStatus(error.message, true));
+          editFields.querySelectorAll<HTMLElement>('[data-day]').forEach((item) => scheduleDaySave(item));
         });
 
         editFields?.addEventListener('click', (event) => {
@@ -263,16 +290,19 @@ if (root) {
           }
 
           if (button.dataset.removePlate) {
-            const meal = button.dataset.removePlate as MealSlot;
             button.closest('.plate-row')?.remove();
-            savePlateList(card, meal).catch((error: Error) => showStatus(error.message, true));
+            scheduleDaySave(card);
           }
         });
 
-        editForm?.addEventListener('submit', (event) => {
+        editForm?.addEventListener('submit', async (event) => {
           const submitter = (event as SubmitEvent).submitter;
           if (submitter instanceof HTMLButtonElement && submitter.value === 'save') {
             event.preventDefault();
+            const card = editFields?.querySelector<HTMLElement>('[data-day]');
+            if (card) {
+              await daySaveQueue.flush(card.dataset.day ?? '');
+            }
             modal?.close();
           }
         });
@@ -297,12 +327,12 @@ if (root) {
             (profile) => {
               currentProfile = profile;
               unsubscribeDishes?.();
-              unsubscribeDishes = watchDishes(services, user.uid, (nextDishes) => {
+              unsubscribeDishes = watchUserDishes(services, user.uid, (nextDishes) => {
                 dishes = nextDishes;
-              }, (error) => showStatus(error.message, true), profile.groupId);
+              }, (error) => showStatus(formatError(error), true), false, profile.groupId);
               if (menus.length) renderHistory();
             },
-            (error) => showStatus(error.message, true)
+            (error) => showStatus(formatError(error), true)
           );
           unsubscribeMenus = watchUserMenus(
             services,
@@ -313,11 +343,11 @@ if (root) {
               if (content) content.hidden = false;
               renderHistory();
             },
-            (error) => showStatus(error.message, true),
+            (error) => showStatus(formatError(error), true),
             60
           );
         });
       })
-      .catch((error: Error) => showStatus(error.message, true));
+      .catch((error: Error) => showStatus(formatError(error), true));
   }
 }

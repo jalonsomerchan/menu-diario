@@ -26,7 +26,7 @@ function normalizeSource(data: Record<string, any>, scope: DishScope): DishSourc
   return 'legacy';
 }
 
-function mapDish(id: string, data: Record<string, any>): Dish {
+export function mapDish(id: string, data: Record<string, any>): Dish {
   const scope = normalizeScope(data);
   const isGlobal = scope === globalScope;
   return {
@@ -51,6 +51,67 @@ function mapDish(id: string, data: Record<string, any>): Dish {
     createdAt: toDate(data.createdAt),
     lastUsedAt: toDate(data.lastUsedAt),
     updatedAt: toDate(data.updatedAt),
+  };
+}
+
+function ownQuery(services: FirebaseServices, userId: string, groupId?: string) {
+  const { db, firestoreModule } = services;
+  return groupId
+    ? firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('scope', '==', groupScope), firestoreModule.where('groupId', '==', groupId), firestoreModule.limit(150))
+    : firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('createdBy', '==', userId), firestoreModule.limit(150));
+}
+
+function ownDishRef(services: FirebaseServices, userId: string, normalizedName: string, groupId?: string) {
+  const { db, firestoreModule } = services;
+  return firestoreModule.doc(db, dishesCollection, getDishId(ownOwnerId(userId, groupId), normalizedName, ownScope(groupId)));
+}
+
+function ownDishPayload(
+  services: FirebaseServices,
+  input: {
+    userId: string;
+    groupId?: string;
+    cleanName: string;
+    normalizedName: string;
+    source: DishSource;
+    existing?: Record<string, any>;
+    preserveSource?: boolean;
+    timesUsed: number | any;
+    lastUsedAt?: Date | any | null;
+    favorite?: boolean;
+    blocked?: boolean;
+    archived?: boolean;
+    archivedAt?: Date | any | null;
+    tags?: string[];
+    quickTags?: string[];
+    duplicatedFrom?: string | null;
+  }
+) {
+  const { firestoreModule } = services;
+  const scope = ownScope(input.groupId);
+  const existing = input.existing ?? {};
+
+  return {
+    name: input.cleanName,
+    normalizedName: input.normalizedName,
+    scope,
+    groupId: input.groupId ?? null,
+    source: input.preserveSource ? normalizeSource(existing, scope) : input.source,
+    isGlobal: false,
+    editable: true,
+    createdBy: input.userId,
+    members: toStringArray(existing.members).length ? toStringArray(existing.members) : [input.userId],
+    timesUsed: input.timesUsed,
+    favorite: input.favorite ?? Boolean(existing.favorite),
+    blocked: input.blocked ?? Boolean(existing.blocked),
+    archived: input.archived ?? false,
+    archivedAt: input.archivedAt ?? null,
+    tags: input.tags ?? toStringArray(existing.tags),
+    quickTags: input.quickTags ?? toStringArray(existing.quickTags),
+    duplicatedFrom: input.duplicatedFrom ?? existing.duplicatedFrom ?? null,
+    createdAt: existing.createdAt ?? firestoreModule.serverTimestamp(),
+    lastUsedAt: input.lastUsedAt ?? existing.lastUsedAt ?? null,
+    updatedAt: firestoreModule.serverTimestamp(),
   };
 }
 
@@ -83,11 +144,9 @@ async function findGlobalDuplicate(services: FirebaseServices, normalizedName: s
 }
 
 async function findOwnDuplicate(services: FirebaseServices, normalizedName: string, groupId?: string, userId?: string, excludeId?: string) {
-  const { db, firestoreModule } = services;
-  const ownQuery = groupId
-    ? firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('scope', '==', groupScope), firestoreModule.where('groupId', '==', groupId), firestoreModule.where('normalizedName', '==', normalizedName), firestoreModule.limit(1))
-    : firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('createdBy', '==', userId ?? ''), firestoreModule.where('normalizedName', '==', normalizedName), firestoreModule.limit(1));
-  return getFirstDishByQuery(services, ownQuery, excludeId);
+  const { firestoreModule } = services;
+  const filteredQuery = firestoreModule.query(ownQuery(services, userId ?? '', groupId), firestoreModule.where('normalizedName', '==', normalizedName), firestoreModule.limit(1));
+  return getFirstDishByQuery(services, filteredQuery, excludeId);
 }
 
 async function findVisibleDuplicate(services: FirebaseServices, normalizedName: string, groupId?: string, userId?: string, excludeId?: string) {
@@ -100,11 +159,9 @@ export function watchCatalogDishes(services: FirebaseServices, options: { userId
   const lists: Dish[][] = [[], []];
   const emit = () => callback(mergeDishLists(lists, includeArchived));
   const globalQuery = firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('scope', '==', globalScope), firestoreModule.limit(150));
-  const ownQuery = options.groupId
-    ? firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('scope', '==', groupScope), firestoreModule.where('groupId', '==', options.groupId), firestoreModule.limit(150))
-    : firestoreModule.query(firestoreModule.collection(db, dishesCollection), firestoreModule.where('createdBy', '==', options.userId), firestoreModule.limit(150));
+  const ownScopedQuery = ownQuery(services, options.userId, options.groupId);
   const unsubGlobal = subscribeToDishQuery(services, globalQuery, (dishes) => { lists[0] = dishes; emit(); }, onError);
-  const unsubOwn = subscribeToDishQuery(services, ownQuery, (dishes) => { lists[1] = dishes; emit(); }, onError);
+  const unsubOwn = subscribeToDishQuery(services, ownScopedQuery, (dishes) => { lists[1] = dishes; emit(); }, onError);
   return () => { unsubGlobal(); unsubOwn(); };
 }
 
@@ -116,62 +173,104 @@ export async function createManualDish(services: FirebaseServices, userId: strin
   const cleanName = name.trim().replace(/\s+/g, ' ');
   const normalizedName = normalizeDishName(cleanName);
   if (normalizedName.length < 2) throw new Error('dish-invalid-name');
-  const { db, firestoreModule } = services;
-  const scope = ownScope(groupId);
-  const dishRef = firestoreModule.doc(db, dishesCollection, getDishId(ownOwnerId(userId, groupId), normalizedName, scope));
+  const { firestoreModule } = services;
+  const dishRef = ownDishRef(services, userId, normalizedName, groupId);
   const snapshot = await firestoreModule.getDoc(dishRef);
   const duplicate = snapshot.exists() && !snapshot.data().archived ? mapDish(snapshot.id, snapshot.data()) : await findVisibleDuplicate(services, normalizedName, groupId, userId);
   if (duplicate && duplicate.id !== dishRef.id) throw new Error(duplicate.isGlobal ? 'dish-duplicate-global' : 'dish-duplicate');
   if (snapshot.exists() && !snapshot.data().archived) throw new Error('dish-duplicate');
-  await firestoreModule.setDoc(dishRef, {
-    name: cleanName,
-    normalizedName,
-    scope,
-    groupId: groupId ?? null,
-    source: 'manual',
-    isGlobal: false,
-    editable: true,
-    createdBy: userId,
-    members: [userId],
-    timesUsed: snapshot.exists() ? snapshot.data().timesUsed ?? 0 : 0,
-    favorite: snapshot.exists() ? Boolean(snapshot.data().favorite) : false,
-    blocked: snapshot.exists() ? Boolean(snapshot.data().blocked) : false,
-    archived: false,
-    archivedAt: null,
-    tags: snapshot.exists() ? toStringArray(snapshot.data().tags) : [],
-    quickTags: snapshot.exists() ? toStringArray(snapshot.data().quickTags) : [],
-    createdAt: snapshot.exists() ? snapshot.data().createdAt : firestoreModule.serverTimestamp(),
-    updatedAt: firestoreModule.serverTimestamp(),
-  }, { merge: true });
+  await firestoreModule.setDoc(
+    dishRef,
+    ownDishPayload(services, {
+      userId,
+      groupId,
+      cleanName,
+      normalizedName,
+      source: 'manual',
+      existing: snapshot.exists() ? snapshot.data() : undefined,
+      timesUsed: snapshot.exists() ? snapshot.data().timesUsed ?? 0 : 0,
+      archived: false,
+      archivedAt: null,
+    }),
+    { merge: true }
+  );
+}
+
+export async function recordMenuDishUsage(services: FirebaseServices, userId: string, name: string, groupId?: string) {
+  const cleanName = name.trim().replace(/\s+/g, ' ');
+  if (!cleanName) return;
+
+  const { firestoreModule } = services;
+  const normalizedName = normalizeDishName(cleanName);
+  const dishRef = ownDishRef(services, userId, normalizedName, groupId);
+  const snapshot = await firestoreModule.getDoc(dishRef);
+
+  if (snapshot.exists()) {
+    await firestoreModule.setDoc(
+      dishRef,
+      ownDishPayload(services, {
+        userId,
+        groupId,
+        cleanName,
+        normalizedName,
+        source: 'menu',
+        existing: snapshot.data(),
+        preserveSource: true,
+        timesUsed: firestoreModule.increment(1),
+        lastUsedAt: firestoreModule.serverTimestamp(),
+        archived: false,
+        archivedAt: null,
+      }),
+      { merge: true }
+    );
+    return;
+  }
+
+  if (await findGlobalDuplicate(services, normalizedName)) return;
+
+  await firestoreModule.setDoc(
+    dishRef,
+    ownDishPayload(services, {
+      userId,
+      groupId,
+      cleanName,
+      normalizedName,
+      source: 'menu',
+      timesUsed: 1,
+      lastUsedAt: firestoreModule.serverTimestamp(),
+      archived: false,
+      archivedAt: null,
+      tags: [],
+      quickTags: [],
+    }),
+    { merge: true }
+  );
 }
 
 export async function duplicateGlobalDish(services: FirebaseServices, userId: string, dish: Dish, groupId?: string) {
   if (!dish.isGlobal) throw new Error('dish-not-global');
   const ownDuplicate = await findOwnDuplicate(services, dish.normalizedName, groupId, userId, dish.id);
   if (ownDuplicate) throw new Error('dish-duplicate');
-  const { db, firestoreModule } = services;
-  const scope = ownScope(groupId);
-  await firestoreModule.setDoc(firestoreModule.doc(db, dishesCollection, getDishId(ownOwnerId(userId, groupId), dish.normalizedName, scope)), {
-    name: dish.name,
-    normalizedName: dish.normalizedName,
-    scope,
-    groupId: groupId ?? null,
-    source: 'duplicated-global',
-    isGlobal: false,
-    editable: true,
-    createdBy: userId,
-    members: [userId],
-    timesUsed: 0,
-    favorite: Boolean(dish.favorite),
-    blocked: false,
-    archived: false,
-    archivedAt: null,
-    tags: dish.tags ?? [],
-    quickTags: dish.quickTags ?? [],
-    duplicatedFrom: dish.id,
-    createdAt: firestoreModule.serverTimestamp(),
-    updatedAt: firestoreModule.serverTimestamp(),
-  }, { merge: true });
+  const { firestoreModule } = services;
+  await firestoreModule.setDoc(
+    ownDishRef(services, userId, dish.normalizedName, groupId),
+    ownDishPayload(services, {
+      userId,
+      groupId,
+      cleanName: dish.name,
+      normalizedName: dish.normalizedName,
+      source: 'duplicated-global',
+      timesUsed: 0,
+      favorite: Boolean(dish.favorite),
+      blocked: false,
+      archived: false,
+      archivedAt: null,
+      tags: dish.tags ?? [],
+      quickTags: dish.quickTags ?? [],
+      duplicatedFrom: dish.id,
+    }),
+    { merge: true }
+  );
 }
 
 export async function renameDish(services: FirebaseServices, userId: string, dish: Dish, nextName: string) {
@@ -184,30 +283,31 @@ export async function renameDish(services: FirebaseServices, userId: string, dis
   if (normalizedName !== dish.normalizedName) {
     const duplicate = await findVisibleDuplicate(services, normalizedName, groupId, userId, dish.id);
     if (duplicate) throw new Error(duplicate.isGlobal ? 'dish-duplicate-global' : 'dish-duplicate');
-    const scope = ownScope(groupId);
-    const nextRef = firestoreModule.doc(db, dishesCollection, getDishId(ownOwnerId(userId, groupId), normalizedName, scope));
-    await firestoreModule.setDoc(nextRef, {
-      name: cleanName,
-      normalizedName,
-      scope,
-      groupId: groupId ?? null,
-      source: dish.source ?? 'group',
-      isGlobal: false,
-      editable: true,
-      createdBy: userId,
-      members: dish.members?.length ? dish.members : [userId],
-      timesUsed: dish.timesUsed ?? 0,
-      tags: dish.tags ?? [],
-      quickTags: dish.quickTags ?? [],
-      favorite: Boolean(dish.favorite),
-      blocked: Boolean(dish.blocked),
-      archived: false,
-      archivedAt: null,
-      createdAt: dish.createdAt ?? firestoreModule.serverTimestamp(),
-      lastUsedAt: dish.lastUsedAt ?? null,
-      duplicatedFrom: dish.duplicatedFrom ?? null,
-      updatedAt: firestoreModule.serverTimestamp(),
-    }, { merge: true });
+    const nextRef = ownDishRef(services, userId, normalizedName, groupId);
+    await firestoreModule.setDoc(
+      nextRef,
+      ownDishPayload(services, {
+        userId,
+        groupId,
+        cleanName,
+        normalizedName,
+        source: dish.source ?? 'group',
+        timesUsed: dish.timesUsed ?? 0,
+        favorite: Boolean(dish.favorite),
+        blocked: Boolean(dish.blocked),
+        archived: false,
+        archivedAt: null,
+        tags: dish.tags ?? [],
+        quickTags: dish.quickTags ?? [],
+        duplicatedFrom: dish.duplicatedFrom ?? null,
+        lastUsedAt: dish.lastUsedAt ?? null,
+        existing: {
+          members: dish.members,
+          createdAt: dish.createdAt,
+        },
+      }),
+      { merge: true }
+    );
     await archiveDish(services, dish.id);
     return;
   }

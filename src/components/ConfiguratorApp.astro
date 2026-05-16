@@ -1,5 +1,6 @@
 ---
 import type { Locale } from '../config/site';
+import DayEditModal from './DayEditModal.astro';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -18,9 +19,33 @@ const labels = {
   loading: t('dashboard.loading'),
   configure: t('dashboard.configure'),
   configureHint: t('dashboard.configureHint'),
+  cancel: t('dashboard.cancel'),
+  deleteDay: t('dashboard.deleteDay'),
+  editDay: t('dashboard.editDay'),
+  aiLoading: t('ai.loading'),
+  aiError: t('ai.error'),
+  aiMissingConfig: t('ai.missingConfig'),
+  aiPendingTitle: t('ai.pendingMealsTitle'),
+  aiPendingDescription: t('ai.pendingMealsDescription'),
+  aiPendingHint: t('ai.pendingMealsHint'),
+  aiPendingGenerate: t('ai.pendingMealsGenerate'),
+  aiPendingEmpty: t('ai.pendingMealsEmpty'),
+  aiPendingNoCatalog: t('ai.pendingMealsNoCatalog'),
+  aiPendingNoResults: t('ai.pendingMealsNoResults'),
+  aiPendingApply: t('ai.pendingMealsApply'),
+  aiPendingApplied: t('ai.pendingMealsApplied'),
+  aiPendingMealLabel: t('ai.pendingMealsMealLabel'),
+  aiPendingReasonLabel: t('ai.pendingMealsReasonLabel'),
+  'ai.loading': t('ai.loading'),
+  'ai.error': t('ai.error'),
+  'ai.quotaExhausted': t('ai.quotaExhausted'),
+  'ai.missingConfig': t('ai.missingConfig'),
+  'ai.appCheckUnavailable': t('ai.appCheckUnavailable'),
+  'ai.invalidResponse': t('ai.invalidResponse'),
   breakfast: t('dashboard.breakfast'),
   lunch: t('dashboard.lunch'),
   dinner: t('dashboard.dinner'),
+  todayEmpty: t('dashboard.todayEmpty'),
   addDish: t('dashboard.addDish'),
   addPlate: t('dashboard.addPlate'),
   removePlate: t('dashboard.removePlate'),
@@ -37,17 +62,40 @@ const labels = {
   reasonDescription: t('dashboard.reasonDescription'),
   notes: t('menu.notes'),
   saveHint: t('menu.saveHint'),
+  savePending: t('menu.savePending'),
+  saveSaving: t('menu.saveSaving'),
+  saveSaved: t('menu.saveSaved'),
+  permissionsError: t('menu.permissionsError'),
   guestSession: t('menu.guestSession'),
+  offlineReadOnly: t('pwa.offlineReadOnly'),
   tuppers: tt('nav'),
   homePath,
 };
 ---
 
 <section class="configurator-app" data-configurator-app data-labels={JSON.stringify(labels)}>
-  <div class="menu-app__status" data-status hidden></div>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>
+    <section class="dashboard-section app-panel ai-meals-panel" aria-labelledby="ai-pending-meals-title">
+      <div class="section-heading section-heading--simple ai-meals-panel__header">
+        <div>
+          <p class="menu-app__eyebrow">{labels.aiPendingHint}</p>
+          <h2 id="ai-pending-meals-title">{labels.aiPendingTitle}</h2>
+          <p>{labels.aiPendingDescription}</p>
+        </div>
+        <button class="button button--primary button--small" type="button" data-ai-generate>
+          {labels.aiPendingGenerate}
+        </button>
+      </div>
+      <p class="ai-meals-panel__helper" data-ai-helper>{labels.aiPendingHint}</p>
+      <div class="ai-meals-panel__status" data-ai-status role="status" aria-live="polite"></div>
+      <div class="ai-meals-panel__results" data-ai-results>
+        <p class="ai-meals-panel__empty">{labels.aiPendingEmpty}</p>
+      </div>
+    </section>
+
     <section id="configurador" class="dashboard-section">
       <div class="section-heading section-heading--simple">
         <div>
@@ -59,6 +107,15 @@ const labels = {
       <div class="menu-days menu-days--cards" data-config-days></div>
     </section>
   </div>
+
+  <DayEditModal
+    eyebrow={labels.configureHint}
+    title={labels.configure}
+    cancelLabel={labels.cancel}
+    saveLabel={labels.save}
+    clearLabel={labels.deleteDay}
+    saveHint={labels.saveHint}
+  />
 </section>
 
 <style is:global>
@@ -166,4 +223,101 @@ const labels = {
     color: var(--color-primary);
     outline: 0;
   }
+
+  .ai-meals-panel {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .ai-meals-panel__header {
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .ai-meals-panel__helper,
+  .ai-meals-panel__status {
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .ai-meals-panel__status[data-variant='error'] {
+    color: var(--color-danger);
+  }
+
+  .ai-meals-panel__results {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .ai-meals-panel__empty {
+    margin: 0;
+    border: 1px dashed color-mix(in srgb, var(--color-border), var(--color-text) 10%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface), var(--color-surface-soft) 58%);
+    padding: 0.95rem 1rem;
+    color: var(--color-muted);
+  }
+
+  .ai-meals-panel__card {
+    display: grid;
+    gap: 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 14%);
+    border-radius: var(--radius-xl);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-raised), var(--color-primary-soft) 16%),
+      var(--color-surface-raised)
+    );
+    padding: 1rem;
+    box-shadow: var(--shadow-xs);
+  }
+
+  .ai-meals-panel__card header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .ai-meals-panel__card h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 900;
+  }
+
+  .ai-meals-panel__badge {
+    border-radius: var(--radius-full);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    padding: 0.3rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 900;
+  }
+
+  .ai-meals-panel__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ai-meals-panel__list li {
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 22%);
+    padding: 0.45rem 0.75rem;
+    font-weight: 850;
+  }
+
+  .ai-meals-panel__reason {
+    margin: 0;
+    color: var(--color-muted);
+  }
 </style>
+
+<script>
+  import '../scripts/configurator-app.ts';
+</script>
