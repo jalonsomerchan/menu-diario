@@ -42,6 +42,7 @@ if (root) {
   let unsubscribeTuppers: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  let firebaseServices: Awaited<ReturnType<typeof getFirebaseServices>> | undefined;
 
   const today = toIsoDate(new Date());
   if (preparedInput) preparedInput.value = today;
@@ -142,6 +143,16 @@ if (root) {
     `;
   }
 
+  function actionMessage(action: string) {
+    if (action === 'consume') return labels.consumed;
+    if (action === 'discard') return labels.discarded;
+    if (action === 'freeze') return labels.frozen;
+    if (action === 'defrost') return labels.defrosted;
+    if (action === 'archive') return labels.archived;
+
+    return labels.created;
+  }
+
   dishSelect?.addEventListener('change', () => {
     const selected = dishSelect.selectedOptions[0];
     if (selected?.dataset.name && nameInput) nameInput.value = selected.dataset.name;
@@ -157,10 +168,10 @@ if (root) {
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!currentUser) return;
+    if (!currentUser || !firebaseServices) return;
 
     try {
-      await createTupper(getFirebaseServicesCached, currentUser, currentProfile, {
+      await createTupper(firebaseServices, currentUser, currentProfile, {
         name: nameInput?.value ?? '',
         dishId: dishSelect?.value || undefined,
         preparedAt: preparedInput?.value ?? '',
@@ -180,21 +191,21 @@ if (root) {
 
   list?.addEventListener('click', async (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-action]');
-    if (!button) return;
+    if (!button || !firebaseServices) return;
     const tupper = getTupperFromElement(button);
     if (!tupper) return;
 
     const action = button.dataset.action as 'consume' | 'discard' | 'archive' | 'freeze' | 'defrost';
-    await updateTupperState(getFirebaseServicesCached, tupper, {
+    await updateTupperState(firebaseServices, tupper, {
       status: nextTupperStatus(tupper.status, action),
       location: nextTupperLocation(tupper.location, action),
     });
-    showStatus(labels[`${action}d`] ?? labels.created);
+    showStatus(actionMessage(action));
   });
 
   list?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!currentUser) return;
+    if (!currentUser || !firebaseServices) return;
     const form = event.target;
     if (!(form instanceof HTMLFormElement)) return;
     const tupper = getTupperFromElement(form);
@@ -205,7 +216,7 @@ if (root) {
     const allowAppend = window.confirm(labels.appendConfirm);
 
     try {
-      await assignTupperToMeal(getFirebaseServicesCached, currentUser, tupper, {
+      await assignTupperToMeal(firebaseServices, currentUser, tupper, {
         dayKey,
         meal,
         locale,
@@ -222,15 +233,13 @@ if (root) {
     return tuppers.find((tupper) => tupper.id === id);
   }
 
-  let getFirebaseServicesCached: Awaited<ReturnType<typeof getFirebaseServices>>;
-
   if (!hasFirebaseConfig()) {
     if (loading) loading.hidden = true;
     showStatus(labels.configMissing, true);
   } else {
     getFirebaseServices()
       .then((services) => {
-        getFirebaseServicesCached = services;
+        firebaseServices = services;
         services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
           currentUser = user;
           unsubscribeTuppers?.();
