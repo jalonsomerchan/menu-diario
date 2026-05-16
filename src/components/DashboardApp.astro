@@ -58,6 +58,7 @@ const labels = {
   offlineNoCache: t('pwa.offlineNoCache'),
   backOnline: t('pwa.backOnline'),
   tuppers: tt('nav'),
+  tuppersExpiryAlert: tt('expiryAlert'),
   homePath,
   configurePath,
 };
@@ -76,6 +77,11 @@ const labels = {
       <p class="today-hero__hello" data-user-label>{labels.hello}</p>
       <h1>{labels.todayForLunch}</h1>
       <ul data-today-summary></ul>
+      <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
+    </section>
+
+    <section class="expiry-banner" role="status" aria-live="polite">
+      <strong>{labels.tuppersExpiryAlert}</strong>
       <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
     </section>
 
