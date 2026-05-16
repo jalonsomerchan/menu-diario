@@ -31,7 +31,12 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   const fields = options.root.querySelector<HTMLElement>('[data-day-edit-fields]');
   const title = options.root.querySelector<HTMLElement>('[data-day-edit-title]');
   const subtitle = options.root.querySelector<HTMLElement>('[data-day-edit-subtitle]');
+  const dayNumber = options.root.querySelector<HTMLElement>('[data-day-edit-number]');
+  const saveButton = options.root.querySelector<HTMLButtonElement>('[data-day-edit-save]');
+  const saveState = options.root.querySelector<HTMLElement>('[data-day-edit-save-state]');
+  const defaultSaveState = saveState?.textContent ?? '';
   let activeDayKey = '';
+  let returnFocusTo: HTMLElement | null = null;
 
   if (!modal || !form || !fields) {
     return {
@@ -48,11 +53,32 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     if (subtitle) {
       subtitle.textContent = options.getDateLabel?.(dayKey) ?? '';
     }
+
+    if (dayNumber) {
+      dayNumber.textContent = options.getDayNumber(dayKey);
+    }
+  }
+
+  function setSaveBusy(isBusy: boolean) {
+    if (saveButton) {
+      saveButton.disabled = isBusy;
+      saveButton.setAttribute('aria-busy', String(isBusy));
+    }
+
+    if (saveState) {
+      saveState.textContent = isBusy ? options.labels.saveSaving || defaultSaveState : defaultSaveState;
+      saveState.dataset.variant = isBusy ? 'saving' : 'idle';
+    }
+  }
+
+  function getEditorCard() {
+    return fields.querySelector<HTMLElement>('[data-day]');
   }
 
   function render(dayKey: string, day: DailyMenu) {
     activeDayKey = dayKey;
     setHeading(dayKey);
+    setSaveBusy(false);
     fields.innerHTML = renderDayEditor({
       dayKey,
       dayNumber: options.getDayNumber(dayKey),
@@ -64,16 +90,16 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
       labels: options.labels,
       compact: true,
     });
-    fields
-      .querySelector<HTMLElement>('[data-day]')
-      ?.setAttribute('data-day-state', options.getSavedDayState(dayKey));
+    getEditorCard()?.setAttribute('data-day-state', options.getSavedDayState(dayKey));
   }
 
   function open(dayKey: string, config: OpenDayEditModalOptions = {}) {
+    returnFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     render(dayKey, normalizeDay(config.day ?? options.getDay(dayKey)));
     if (!modal.open) {
       modal.showModal();
     }
+    fields.querySelector<HTMLElement>('input, textarea, select, button')?.focus();
   }
 
   function applyRecommendedDishes(dayKey: string, meal: MealSlot, dishes: string[]) {
@@ -110,7 +136,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
       render(card.dataset.day ?? activeDayKey, nextDay);
     }
 
-    const nextCard = fields.querySelector<HTMLElement>('[data-day]');
+    const nextCard = getEditorCard();
     if (nextCard) {
       options.onScheduleSave(nextCard);
     }
@@ -165,8 +191,23 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     }
 
     event.preventDefault();
-    await options.onFlushSave(activeDayKey);
-    modal.close();
+    const card = getEditorCard();
+    if (card) {
+      options.onScheduleSave(card);
+    }
+
+    try {
+      setSaveBusy(true);
+      await options.onFlushSave(activeDayKey);
+      modal.close();
+    } finally {
+      setSaveBusy(false);
+    }
+  });
+
+  modal.addEventListener('close', () => {
+    returnFocusTo?.focus();
+    returnFocusTo = null;
   });
 
   return {
