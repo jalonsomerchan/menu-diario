@@ -14,12 +14,12 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
 ---
 
 <dialog
-  class="quick-edit-modal quick-edit-modal--day day-edit-modal"
+  class="app-dialog app-dialog--editor quick-edit-modal quick-edit-modal--day day-edit-modal"
   data-day-edit-modal
   aria-labelledby="day-edit-modal-title"
   aria-describedby="day-edit-modal-description"
 >
-  <form method="dialog" class="quick-edit-modal__box day-edit-modal__box" data-day-edit-form>
+  <form method="dialog" class="app-dialog__surface quick-edit-modal__box day-edit-modal__box" data-day-edit-form>
     <header class="day-edit-modal__header">
       <div class="day-edit-modal__date-badge" aria-hidden="true" data-day-edit-number></div>
       <div class="day-edit-modal__heading">

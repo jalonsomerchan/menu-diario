@@ -5,7 +5,7 @@ import type { TupperItem } from './types';
 export type TupperAssignmentResult = {
   canAssign: boolean;
   nextItems: string[];
-  reason?: 'meal-has-items' | 'meal-skipped' | 'day-skipped';
+  reason?: 'meal-has-items' | 'meal-skipped' | 'day-skipped' | 'already-in-meal';
 };
 
 export function buildTupperMenuLabel(tupper: Pick<TupperItem, 'name'>) {
@@ -34,9 +34,24 @@ export function planTupperAssignment(
   }
 
   const label = buildTupperMenuLabel(tupper);
+  if (currentMeal.items.includes(label)) {
+    return { canAssign: false, nextItems: currentMeal.items, reason: 'already-in-meal' };
+  }
+
   if (currentMeal.items.length > 0 && !options.allowAppend) {
     return { canAssign: false, nextItems: currentMeal.items, reason: 'meal-has-items' };
   }
 
   return { canAssign: true, nextItems: [...currentMeal.items, label] };
+}
+
+export function removeTupperFromMealItems(items: string[], tupper: Pick<TupperItem, 'name'>) {
+  const label = buildTupperMenuLabel(tupper);
+  const index = items.indexOf(label);
+
+  if (index === -1) {
+    return items;
+  }
+
+  return items.filter((_, itemIndex) => itemIndex !== index);
 }

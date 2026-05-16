@@ -164,16 +164,18 @@ const labels = {
     </section>
   </div>
 
-  <dialog class="admin-dishes-dialog" data-editor-dialog aria-labelledby="admin-dishes-editor-title">
-    <form class="admin-dishes-dialog__surface" data-editor-form>
-      <header class="admin-dishes-dialog__header">
-        <div>
+  <dialog class="app-dialog app-dialog--editor admin-dishes-dialog" data-editor-dialog aria-labelledby="admin-dishes-editor-title">
+    <form class="app-dialog__surface admin-dishes-dialog__surface" data-editor-form>
+      <header class="app-dialog__header admin-dishes-dialog__header">
+        <div class="app-dialog__heading">
           <p class="menu-app__eyebrow">{labels.badge}</p>
           <h2 id="admin-dishes-editor-title">{labels.editorTitle}</h2>
         </div>
-        <button class="button button--ghost button--small" type="button" data-editor-cancel>{labels.cancel}</button>
+        <button class="app-dialog__dismiss" type="button" data-editor-cancel aria-label={labels.cancel}>
+          <span aria-hidden="true">×</span>
+        </button>
       </header>
-      <div class="admin-dishes-dialog__body">
+      <div class="app-dialog__body admin-dishes-dialog__body">
         <label>{labels.name}
           <input type="text" name="name" minlength="2" maxlength="90" required />
         </label>
@@ -188,9 +190,12 @@ const labels = {
           <span>{labels.archived}</span>
         </label>
       </div>
-      <footer class="admin-dishes-dialog__footer">
+      <footer class="app-dialog__footer admin-dishes-dialog__footer">
         <p class="admin-dishes-dialog__status" data-editor-status role="status" aria-live="polite">{labels.savePending}</p>
-        <button class="button button--primary" type="submit" data-editor-save>{labels.save}</button>
+        <div class="admin-dishes-dialog__footer-actions">
+          <button class="button button--ghost button--small" type="button" data-editor-cancel>{labels.cancel}</button>
+          <button class="button button--primary" type="submit" data-editor-save>{labels.save}</button>
+        </div>
       </footer>
     </form>
   </dialog>
@@ -315,30 +320,21 @@ const labels = {
     border-color: var(--color-danger);
   }
 
-  .admin-dishes-dialog {
-    width: min(100% - 1rem, 34rem);
-    border: 0;
-    background: transparent;
-    padding: 0;
-  }
-
-  .admin-dishes-dialog::backdrop {
-    background: rgb(2 6 23 / 0.72);
-    backdrop-filter: blur(6px);
-  }
-
   .admin-dishes-dialog__surface {
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-2xl);
-    background: var(--color-surface);
-    padding: 1rem;
-    box-shadow: var(--shadow-lg);
+    gap: 0;
   }
 
   .admin-dishes-dialog__status {
     margin: 0;
     color: var(--color-muted);
     font-weight: 800;
+  }
+
+  .admin-dishes-dialog__footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
   }
 
   @media (min-width: 760px) {

@@ -29,8 +29,16 @@ function planAssignment(menu, dayKey, meal, tupper, allowAppend = false) {
   if (day?.skipped) return { canAssign: false, reason: 'day-skipped' };
   const currentMeal = day?.meals?.[meal] ?? { items: [], skipped: false };
   if (currentMeal.skipped) return { canAssign: false, reason: 'meal-skipped' };
+  if (currentMeal.items.includes(`Tupper: ${tupper.name}`)) return { canAssign: false, reason: 'already-in-meal' };
   if (currentMeal.items.length > 0 && !allowAppend) return { canAssign: false, reason: 'meal-has-items' };
   return { canAssign: true, nextItems: [...currentMeal.items, `Tupper: ${tupper.name}`] };
+}
+
+function removeTupperFromItems(items, tupper) {
+  const label = `Tupper: ${tupper.name}`;
+  const index = items.indexOf(label);
+  if (index === -1) return items;
+  return items.filter((_, itemIndex) => itemIndex !== index);
 }
 
 describe('Tuppers domain helpers', () => {
@@ -60,6 +68,27 @@ describe('Tuppers domain helpers', () => {
       canAssign: true,
       nextItems: ['Pasta', 'Tupper: Lentejas'],
     });
+    assert.deepEqual(
+      planAssignment(
+        {
+          days: {
+            '2026-05-17': {
+              meals: {
+                lunch: { items: ['Pasta', 'Tupper: Lentejas'], skipped: false },
+              },
+            },
+          },
+        },
+        '2026-05-17',
+        'lunch',
+        { name: 'Lentejas' }
+      ),
+      {
+        canAssign: false,
+        reason: 'already-in-meal',
+      }
+    );
+    assert.deepEqual(removeTupperFromItems(['Pasta', 'Tupper: Lentejas'], { name: 'Lentejas' }), ['Pasta']);
   });
 
   it('keeps Tuppers routes, UI, repository and rules wired', () => {
@@ -92,8 +121,12 @@ describe('Tuppers domain helpers', () => {
     assert.match(app, /<ConfirmDialog/);
     assert.match(app, /aria-live=\"polite\"/);
     assert.match(app, /data-expiry-alert/);
+    assert.match(app, /tt\('unassign'\)/);
     assert.match(script, /watchTuppers/);
     assert.match(script, /assignTupperToMeal/);
+    assert.match(script, /removeTupperFromMeal/);
+    assert.match(script, /assignment-move-required/);
+    assert.match(script, /data-action="unassign"/);
     assert.match(script, /createConfirmDialog/);
     assert.doesNotMatch(script, /window\.confirm/);
     assert.ok(rules.includes('match /tuppers/{tupperId}'));
@@ -105,6 +138,7 @@ describe('Tuppers domain helpers', () => {
 
     assert.match(docs, /colección `tuppers`/);
     assert.match(docs, /No sobrescribe platos existentes/i);
+    assert.match(docs, /quitar una asignación/i);
     assert.match(docs, /recomendador inteligente/i);
     assert.match(docs, /lista de la compra/i);
     assert.match(i18n, /es:/);

@@ -34,6 +34,9 @@ Todas las webs deben cumplir estos principios:
 8. **Modo claro y oscuro obligatorio**  
    Toda interfaz nueva debe funcionar correctamente en light y dark mode.
 
+9. **Diálogos coherentes**  
+   Los modales de confirmación y edición deben compartir una misma base visual: backdrop consistente, encabezado claro, acción principal destacada, acción de cierre visible y espaciado equivalente entre proyectos y pantallas.
+
 ---
 
 ## 2. Identidad visual común

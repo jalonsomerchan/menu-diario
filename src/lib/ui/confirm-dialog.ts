@@ -14,6 +14,7 @@ export function createConfirmDialog(dialog: HTMLDialogElement) {
   const description = dialog.querySelector<HTMLElement>('[data-confirm-dialog-description]');
   const eyebrow = dialog.querySelector<HTMLElement>('[data-confirm-dialog-eyebrow]');
   const cancelButton = dialog.querySelector<HTMLButtonElement>('[data-confirm-dialog-cancel]');
+  const closeButton = dialog.querySelector<HTMLButtonElement>('[data-confirm-dialog-close]');
   const confirmButton = dialog.querySelector<HTMLButtonElement>('[data-confirm-dialog-confirm]');
 
   if (!title || !description || !cancelButton || !confirmButton) {
@@ -41,6 +42,7 @@ export function createConfirmDialog(dialog: HTMLDialogElement) {
 
         const handleClose = () => {
           dialog.removeEventListener('click', handleBackdropClick);
+          closeButton?.removeEventListener('click', handleCloseButton);
           returnFocusTo?.focus();
           resolve(dialog.returnValue === 'confirm');
         };
@@ -49,8 +51,11 @@ export function createConfirmDialog(dialog: HTMLDialogElement) {
           if (event.target === dialog) dialog.close('cancel');
         };
 
+        const handleCloseButton = () => dialog.close('cancel');
+
         dialog.addEventListener('close', handleClose, { once: true });
         dialog.addEventListener('click', handleBackdropClick);
+        closeButton?.addEventListener('click', handleCloseButton, { once: true });
         dialog.showModal();
 
         requestAnimationFrame(() => {

@@ -180,6 +180,22 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .dish-suggestions button { flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 55%); border-radius: 999px; background: color-mix(in srgb, var(--color-primary-soft), transparent 25%); color: var(--color-text); padding: 0.42rem 0.7rem; font-size: 0.82rem; font-weight: 800; }
 .day-skip-toggle { border-top: 1px solid var(--color-border); padding-top: 0.9rem; }
 
+.app-dialog { width: min(94vw, 38rem); border: 0; border-radius: var(--radius-2xl); background: transparent; padding: 0; }
+.app-dialog--editor { width: min(94vw, 42rem); }
+.app-dialog--confirm { width: min(92vw, 32rem); }
+.app-dialog::backdrop { background: linear-gradient(180deg, rgb(2 6 23 / 0.72), rgb(15 23 42 / 0.84)); backdrop-filter: blur(8px); }
+.app-dialog__surface { display: grid; gap: 0; overflow: hidden; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 18%); border-radius: var(--radius-2xl); background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface), #fff 3%), var(--color-surface)); box-shadow: 0 24px 70px rgb(15 23 42 / 0.26); }
+.app-dialog__header,
+.app-dialog__footer { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.app-dialog__header { padding: 1rem 1rem 0.9rem; border-bottom: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 12%); background: linear-gradient(180deg, var(--color-surface) 78%, color-mix(in srgb, var(--color-surface), transparent 12%)); }
+.app-dialog__heading { display: grid; gap: 0.28rem; min-width: 0; }
+.app-dialog__heading h2 { margin: 0; font-size: clamp(1.55rem, 6vw, 2.3rem); line-height: 0.98; letter-spacing: -0.05em; }
+.app-dialog__body { display: grid; gap: 0.85rem; padding: 1rem; }
+.app-dialog__footer { padding: 0.95rem 1rem calc(1rem + env(safe-area-inset-bottom)); border-top: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%); background: linear-gradient(0deg, var(--color-surface) 72%, color-mix(in srgb, var(--color-surface), transparent 12%)); }
+.app-dialog__dismiss { display: grid; flex: 0 0 auto; place-items: center; width: 2.55rem; height: 2.55rem; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 8%); border-radius: 999px; background: color-mix(in srgb, var(--color-surface-raised), transparent 4%); color: var(--color-muted); font-size: 1.5rem; font-weight: 900; line-height: 1; transition: background var(--transition-base), color var(--transition-base), border-color var(--transition-base), transform var(--transition-base); }
+.app-dialog__dismiss:hover { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 45%); background: var(--color-primary-soft); color: var(--color-primary); }
+.app-dialog__dismiss:active { transform: scale(0.96); }
+
 .quick-edit-modal { width: min(94vw, 38rem); border: 0; border-radius: var(--radius-2xl); background: transparent; padding: 0; }
 .quick-edit-modal--day { width: min(96vw, 42rem); }
 .quick-edit-modal::backdrop { background: rgb(2 6 23 / 0.72); backdrop-filter: blur(3px); }
@@ -220,13 +236,14 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .day-edit-modal .dish-suggestions[hidden] { display: none; }
 .day-edit-modal .dish-suggestions button { display: flex; align-items: center; width: 100%; min-height: 2.55rem; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--color-text); padding: 0.58rem 0.72rem; text-align: left; font-size: 0.95rem; font-weight: 800; }
 .day-edit-modal .dish-suggestions button:hover, .day-edit-modal .dish-suggestions button:focus-visible { background: var(--color-primary-soft); color: var(--color-primary); outline: 0; }
-.confirm-dialog { width: min(92vw, 30rem); border: 0; border-radius: var(--radius-2xl); background: transparent; padding: 0; }
-.confirm-dialog::backdrop { background: rgb(2 6 23 / 0.72); backdrop-filter: blur(3px); }
-.confirm-dialog__box { display: grid; gap: 1rem; border: 1px solid var(--color-border); border-radius: var(--radius-2xl); background: var(--color-surface); padding: 1.1rem; box-shadow: var(--shadow-md); }
-.confirm-dialog__header { display: grid; gap: 0.45rem; }
-.confirm-dialog__header h2 { margin: 0; font-size: clamp(1.5rem, 6vw, 2.2rem); line-height: 1; letter-spacing: -0.05em; }
+.confirm-dialog__box { gap: 0; }
+.confirm-dialog__header h2 { margin: 0; }
 .confirm-dialog__description { margin: 0; color: var(--color-muted); }
 .confirm-dialog__actions { display: grid; gap: 0.65rem; }
+.dish-editor-dialog__surface { gap: 0; }
+.dish-editor-dialog__description { margin: 0; color: var(--color-muted); }
+.dish-editor-dialog__body { display: grid; gap: 0.9rem; }
+.dish-editor-dialog__footer { display: grid; gap: 0.65rem; align-items: center; }
 .history-search { display: grid; gap: 0.75rem; }
 .group-code { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .group-lists { display: grid; gap: 1rem; }
@@ -267,6 +284,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .menu-app__auth, .auth-card, .dashboard-header, .section-heading { grid-template-columns: 1fr auto; align-items: center; }
   .history-search, .dishes-toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
   .confirm-dialog__actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dish-editor-dialog__footer { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .day-edit-modal__footer { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
   .day-edit-modal__actions { grid-template-columns: repeat(2, minmax(0, max-content)); justify-content: end; }
   .dishes-toolbar label:first-child { grid-column: 1 / -1; }
