@@ -75,6 +75,7 @@ a { color: inherit; }
 img, picture, svg, video { display: block; max-width: 100%; }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: 0.55; }
 :focus-visible { outline: 3px solid color-mix(in srgb, var(--color-primary), transparent 35%); outline-offset: 3px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
@@ -194,6 +195,28 @@ button { cursor: pointer; }
 .group-lists ul { margin: 0; padding-left: 1.1rem; color: var(--color-muted); }
 .menu-list__empty { margin: 0; color: var(--color-muted); }
 
+.dishes-app__content, .dishes-list, .dish-card__main, .dish-card__actions, .dish-card__quick-tags { display: grid; gap: 0.9rem; }
+.dishes-hero, .dishes-form-card, .dishes-empty, .dish-card { padding: 1rem; }
+.dishes-toolbar { display: grid; gap: 0.75rem; margin-block: 1rem; }
+.dishes-toolbar label, .dishes-form label, .dish-card__edit label { display: grid; gap: 0.4rem; color: var(--color-muted); font-size: 0.86rem; font-weight: 850; }
+.dishes-toolbar input, .dishes-toolbar select, .dishes-form input, .dish-card__edit input { width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-raised); color: var(--color-text); padding: 0.75rem; }
+.dishes-form__row { display: grid; gap: 0.6rem; }
+.dish-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.dish-card__header h2 { margin: 0; font-size: clamp(1.25rem, 5vw, 1.75rem); line-height: 1.05; }
+.dish-favorite { display: grid; place-items: center; min-width: 2.4rem; min-height: 2.4rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface-soft); color: var(--color-accent); font-size: 1.25rem; }
+.dish-card dl { display: grid; gap: 0.45rem; margin: 0; }
+.dish-card dl div { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.35rem; }
+.dish-card dt { color: var(--color-muted); font-size: 0.8rem; font-weight: 850; }
+.dish-card dd { margin: 0; font-weight: 850; text-align: right; }
+.dish-card__badges, .dish-tag-list, .dish-tag-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.dish-badge, .dish-tag-chip, .dish-tag-add, .dish-tags-empty { border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface-soft); padding: 0.32rem 0.58rem; font-size: 0.78rem; font-weight: 900; }
+.dish-badge--global { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 45%); background: var(--color-primary-soft); color: var(--color-primary); }
+.dish-badge--group { border-color: color-mix(in srgb, var(--color-accent), var(--color-border) 45%); background: var(--color-accent-soft); color: var(--color-text); }
+.dish-badge--readonly, .dish-badge--blocked { border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 62%); background: var(--color-danger-soft); color: var(--color-danger); }
+.dish-card__readonly, .dish-card__tags, .dishes-hero__future { margin: 0; color: var(--color-muted); }
+.dish-tag-chip { display: inline-flex; align-items: center; gap: 0.35rem; }
+.dish-tag-chip button, .dish-tag-add { border-color: var(--color-border); background: var(--color-surface); color: var(--color-text); }
+
 @media (min-width: 720px) {
   .site-header__container { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 1rem; }
   .site-header__toggle { display: none; }
@@ -204,7 +227,10 @@ button { cursor: pointer; }
   .site-header__actions { display: flex; align-items: center; justify-content: end; }
   .site-header__locales { flex-wrap: nowrap; }
   .menu-app__auth, .auth-card, .dashboard-header, .section-heading { grid-template-columns: 1fr auto; align-items: center; }
-  .history-search { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
+  .history-search, .dishes-toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
+  .dishes-toolbar label:first-child { grid-column: 1 / -1; }
+  .dishes-form__row { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+  .dishes-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .group-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .today-hero { min-height: 16rem; padding: 2rem; }
   .menu-lists, .next-days { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -213,5 +239,5 @@ button { cursor: pointer; }
 
 @media (min-width: 1024px) {
   .dashboard-app--compact { max-width: 76rem; }
-  .menu-days, .next-days { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .menu-days, .next-days, .dishes-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

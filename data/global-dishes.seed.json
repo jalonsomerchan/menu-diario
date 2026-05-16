@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Lentejas con verduras",
+    "normalizedName": "lentejas con verduras",
+    "scope": "global",
+    "source": "admin",
+    "isGlobal": true,
+    "editable": false,
+    "tags": ["legumbre"],
+    "quickTags": ["cheap", "healthy", "batch-cooking"]
+  },
+  {
+    "name": "Tortilla de patatas",
+    "normalizedName": "tortilla de patatas",
+    "scope": "global",
+    "source": "admin",
+    "isGlobal": true,
+    "editable": false,
+    "tags": ["huevo"],
+    "quickTags": ["cheap", "kids"]
+  },
+  {
+    "name": "Pasta con tomate",
+    "normalizedName": "pasta con tomate",
+    "scope": "global",
+    "source": "admin",
+    "isGlobal": true,
+    "editable": false,
+    "tags": ["pasta"],
+    "quickTags": ["quick", "cheap", "kids"]
+  },
+  {
+    "name": "Ensalada completa",
+    "normalizedName": "ensalada completa",
+    "scope": "global",
+    "source": "admin",
+    "isGlobal": true,
+    "editable": false,
+    "tags": ["ensalada"],
+    "quickTags": ["quick", "healthy"]
+  }
+]
