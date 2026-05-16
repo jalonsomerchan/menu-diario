@@ -1,0 +1,416 @@
+---
+import type { Locale } from '../config/site';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dashboardPath = getLocalizedPath('/dashboard', locale);
+const configurePath = getLocalizedPath('/configurar', locale);
+
+const labels = {
+  title: t('shopping.title'),
+  description: t('shopping.description'),
+  loginTitle: t('shopping.loginTitle'),
+  loginDescription: t('shopping.loginDescription'),
+  signInGoogle: t('menu.signInGoogle'),
+  signInGuest: t('menu.signInGuest'),
+  configMissing: t('menu.configMissing'),
+  loading: t('dashboard.loading'),
+  guestSession: t('menu.guestSession'),
+  savePending: t('menu.savePending'),
+  saveSaving: t('menu.saveSaving'),
+  saveSaved: t('menu.saveSaved'),
+  permissionsError: t('menu.permissionsError'),
+  dashboardPath,
+  configurePath,
+  dashboardLabel: t('appNav.dashboard'),
+  configureLabel: t('appNav.configure'),
+  helper: t('shopping.helper'),
+  mealsTitle: t('shopping.mealsTitle'),
+  mealsDescription: t('shopping.mealsDescription'),
+  breakfast: t('dashboard.breakfast'),
+  lunch: t('dashboard.lunch'),
+  dinner: t('dashboard.dinner'),
+  emptyMeals: t('shopping.emptyMeals'),
+  emptyPlannedMeals: t('shopping.emptyPlannedMeals'),
+  inventoryHint: t('shopping.inventoryHint'),
+  draftTitle: t('shopping.draftTitle'),
+  draftDescription: t('shopping.draftDescription'),
+  generate: t('shopping.generate'),
+  regenerate: t('shopping.regenerate'),
+  regenerateConfirm: t('shopping.regenerateConfirm'),
+  addManualItem: t('shopping.addManualItem'),
+  saveList: t('shopping.saveList'),
+  copy: t('shopping.copy'),
+  share: t('shopping.share'),
+  download: t('shopping.download'),
+  copied: t('shopping.copied'),
+  shared: t('shopping.shared'),
+  exported: t('shopping.exported'),
+  saved: t('shopping.saved'),
+  updated: t('shopping.updated'),
+  generating: t('shopping.generating'),
+  invalidResponse: t('shopping.invalidResponse'),
+  noToBuyItems: t('shopping.noToBuyItems'),
+  previewHint: t('shopping.previewHint'),
+  itemName: t('shopping.itemName'),
+  itemQuantity: t('shopping.itemQuantity'),
+  itemCategory: t('shopping.itemCategory'),
+  itemMeals: t('shopping.itemMeals'),
+  itemConfidence: t('shopping.itemConfidence'),
+  itemStatus: t('shopping.itemStatus'),
+  removeItem: t('shopping.removeItem'),
+  statusOwned: t('shopping.statusOwned'),
+  statusToBuy: t('shopping.statusToBuy'),
+  statusDismissed: t('shopping.statusDismissed'),
+  sourceAi: t('shopping.sourceAi'),
+  sourceManual: t('shopping.sourceManual'),
+  confidenceLow: t('shopping.confidenceLow'),
+  confidenceMedium: t('shopping.confidenceMedium'),
+  confidenceHigh: t('shopping.confidenceHigh'),
+  exportTitle: t('shopping.exportTitle'),
+  exportEmpty: t('shopping.exportEmpty'),
+  groupScope: t('shopping.groupScope'),
+  userScope: t('shopping.userScope'),
+  aiDisabled: t('ai.disabled'),
+  aiMissingConfig: t('ai.missingConfig'),
+  aiLoading: t('ai.loading'),
+  aiError: t('ai.error'),
+  aiQuota: t('ai.quotaExhausted'),
+  aiInvalid: t('ai.invalidResponse'),
+  aiAppCheck: t('ai.appCheckUnavailable'),
+  'ai.disabled': t('ai.disabled'),
+  'ai.loading': t('ai.loading'),
+  'ai.error': t('ai.error'),
+  'ai.quotaExhausted': t('ai.quotaExhausted'),
+  'ai.missingConfig': t('ai.missingConfig'),
+  'ai.invalidResponse': t('ai.invalidResponse'),
+  'ai.appCheckUnavailable': t('ai.appCheckUnavailable'),
+  categoryVegetables: t('shopping.categoryVegetables'),
+  categoryFruit: t('shopping.categoryFruit'),
+  categoryMeat: t('shopping.categoryMeat'),
+  categoryFish: t('shopping.categoryFish'),
+  categoryDairy: t('shopping.categoryDairy'),
+  categoryEggs: t('shopping.categoryEggs'),
+  categoryBakery: t('shopping.categoryBakery'),
+  categoryPantry: t('shopping.categoryPantry'),
+  categoryFrozen: t('shopping.categoryFrozen'),
+  categoryDrinks: t('shopping.categoryDrinks'),
+  categorySnacks: t('shopping.categorySnacks'),
+  categoryHousehold: t('shopping.categoryHousehold'),
+  categoryOther: t('shopping.categoryOther'),
+  newItemName: t('shopping.newItemName'),
+};
+---
+
+<section class="shopping-app" data-shopping-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
+
+  <div class="menu-app__auth" data-auth-panel>
+    <div>
+      <p class="menu-app__eyebrow">{labels.title}</p>
+      <h1>{labels.loginTitle}</h1>
+      <p>{labels.loginDescription}</p>
+    </div>
+    <div class="menu-app__auth-actions">
+      <button class="button button--primary" type="button" data-google-login>{labels.signInGoogle}</button>
+      <button class="button button--secondary" type="button" data-guest-login>{labels.signInGuest}</button>
+    </div>
+  </div>
+
+  <div class="shopping-app__loading" data-loading>{labels.loading}</div>
+
+  <div class="shopping-app__workspace" data-workspace hidden>
+    <section class="shopping-hero app-panel">
+      <div>
+        <p class="menu-app__eyebrow">{labels.helper}</p>
+        <h1>{labels.title}</h1>
+        <p>{labels.description}</p>
+      </div>
+      <div class="shopping-hero__actions">
+        <a class="button button--ghost button--small" href={dashboardPath}>{labels.dashboardLabel}</a>
+        <a class="button button--ghost button--small" href={configurePath}>{labels.configureLabel}</a>
+      </div>
+    </section>
+
+    <section class="shopping-panel app-panel" aria-labelledby="shopping-meals-title">
+      <header class="shopping-panel__header">
+        <div>
+          <p class="menu-app__eyebrow" data-scope-label>{labels.userScope}</p>
+          <h2 id="shopping-meals-title">{labels.mealsTitle}</h2>
+          <p>{labels.mealsDescription}</p>
+        </div>
+        <span class="shopping-panel__badge" data-inventory-hint>{labels.inventoryHint}</span>
+      </header>
+      <div class="shopping-meals" data-meals></div>
+    </section>
+
+    <section class="shopping-panel app-panel" aria-labelledby="shopping-draft-title">
+      <header class="shopping-panel__header shopping-panel__header--stack">
+        <div>
+          <p class="menu-app__eyebrow">{labels.previewHint}</p>
+          <h2 id="shopping-draft-title">{labels.draftTitle}</h2>
+          <p>{labels.draftDescription}</p>
+        </div>
+        <div class="shopping-toolbar">
+          <button class="button button--primary button--small" type="button" data-generate>{labels.generate}</button>
+          <button class="button button--secondary button--small" type="button" data-add-item>{labels.addManualItem}</button>
+          <button class="button button--ghost button--small" type="button" data-save>{labels.saveList}</button>
+        </div>
+        <div class="shopping-toolbar">
+          <button class="button button--ghost button--small" type="button" data-copy>{labels.copy}</button>
+          <button class="button button--ghost button--small" type="button" data-share>{labels.share}</button>
+          <button class="button button--ghost button--small" type="button" data-download>{labels.download}</button>
+        </div>
+      </header>
+      <p class="shopping-ai-status" data-ai-status role="status" aria-live="polite"></p>
+      <div class="shopping-draft" data-draft></div>
+    </section>
+  </div>
+</section>
+
+<datalist id="shopping-categories">
+  <option value={labels.categoryVegetables}></option>
+  <option value={labels.categoryFruit}></option>
+  <option value={labels.categoryMeat}></option>
+  <option value={labels.categoryFish}></option>
+  <option value={labels.categoryDairy}></option>
+  <option value={labels.categoryEggs}></option>
+  <option value={labels.categoryBakery}></option>
+  <option value={labels.categoryPantry}></option>
+  <option value={labels.categoryFrozen}></option>
+  <option value={labels.categoryDrinks}></option>
+  <option value={labels.categorySnacks}></option>
+  <option value={labels.categoryHousehold}></option>
+  <option value={labels.categoryOther}></option>
+</datalist>
+
+<style is:global>
+  .shopping-app {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .shopping-app__loading[hidden],
+  .shopping-app__workspace[hidden],
+  .shopping-app__auth[hidden] {
+    display: none;
+  }
+
+  .shopping-app__loading {
+    color: var(--color-muted);
+    font-weight: 700;
+  }
+
+  .shopping-hero,
+  .shopping-panel {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .shopping-hero__actions,
+  .shopping-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .shopping-panel__header {
+    display: grid;
+    gap: 0.9rem;
+    align-items: start;
+  }
+
+  .shopping-panel__badge {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    padding: 0.42rem 0.8rem;
+    font-size: 0.88rem;
+    font-weight: 800;
+  }
+
+  .shopping-meals,
+  .shopping-draft {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .shopping-empty,
+  .shopping-ai-status {
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .shopping-ai-status[data-variant='error'] {
+    color: var(--color-danger);
+  }
+
+  .shopping-meal-card,
+  .shopping-category,
+  .shopping-item {
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 8%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 8%);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .shopping-meal-card {
+    padding: 1rem;
+  }
+
+  .shopping-meal-card h3,
+  .shopping-category summary,
+  .shopping-item legend {
+    font-weight: 900;
+  }
+
+  .shopping-category summary {
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    list-style: none;
+    padding: 1rem;
+  }
+
+  .shopping-category summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .shopping-category__count {
+    color: var(--color-muted);
+    font-size: 0.92rem;
+    font-weight: 700;
+  }
+
+  .shopping-category__items {
+    display: grid;
+    gap: 0.85rem;
+    padding: 0 1rem 1rem;
+  }
+
+  .shopping-item {
+    display: grid;
+    gap: 0.85rem;
+    padding: 0.95rem;
+  }
+
+  .shopping-item__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .shopping-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-soft);
+    color: var(--color-muted);
+    padding: 0.3rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+
+  .shopping-fields {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .shopping-fields label,
+  .shopping-status fieldset {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .shopping-fields input,
+  .shopping-fields textarea {
+    min-height: 2.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-text);
+    padding: 0.7rem 0.85rem;
+  }
+
+  .shopping-fields textarea {
+    min-height: 4rem;
+    resize: vertical;
+  }
+
+  .shopping-fields input:focus-visible,
+  .shopping-fields textarea:focus-visible,
+  .shopping-status input:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-primary), transparent 35%);
+    outline-offset: 2px;
+  }
+
+  .shopping-status fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .shopping-status__options {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .shopping-status__option {
+    display: flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: 0.65rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-soft);
+    padding: 0.7rem 0.8rem;
+  }
+
+  .shopping-item__footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .shopping-item__remove {
+    min-height: 2.75rem;
+  }
+
+  @media (min-width: 48rem) {
+    .shopping-panel__header {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .shopping-panel__header--stack {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .shopping-fields {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .shopping-fields label[data-field-meals] {
+      grid-column: 1 / -1;
+    }
+
+    .shopping-status__options {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>
+
+<script>
+  import '../scripts/shopping-app.ts';
+</script>

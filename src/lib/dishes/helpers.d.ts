@@ -19,8 +19,11 @@ export type DishFilterOptions = {
 
 export const dishSortModes: DishSortMode[];
 export const dishFilterModes: DishFilterMode[];
+export function cleanDishName(name: unknown): string;
 export function normalizeDishName(name: unknown): string;
 export function getDishId(userId: string, normalizedName: string): string;
+export function createGlobalDishId(normalizedName: string): string;
+export function normalizeStringList(values: unknown): string[];
 export function isSuggestableDish<T extends DishLike>(dish: T): boolean;
 export function hasDishTag<T extends DishLike>(dish: T, tag: string): boolean;
 export function filterDishes<T extends DishLike>(dishes: T[], query: string, options?: DishFilterOptions): T[];

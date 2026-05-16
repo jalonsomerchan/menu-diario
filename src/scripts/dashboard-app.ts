@@ -3,9 +3,8 @@ import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates, toIsoDate } from '../lib/menu/dates';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
-import { readDayDraft } from '../lib/menu/day-form';
 import { serializeDay } from '../lib/menu/day-state';
-import { renderDayEditor, renderPlateRow } from '../lib/menu/day-editor';
+import { renderPlateRow } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
@@ -21,7 +20,6 @@ import { notifyMenuChanged, requestChangeNotifications } from '../lib/notificati
 import { getNetworkStatus, watchNetworkStatus } from '../lib/pwa/network-status';
 import { readLastOfflineMenuCache, saveOfflineMenuCache } from '../lib/pwa/offline-cache';
 import { shouldBlockOfflineWrites } from '../lib/pwa/offline-sync';
-import { createDebouncedTaskMap } from '../lib/ui/debounced-task-map';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-dashboard-app]');
@@ -54,10 +52,6 @@ if (root) {
     pending: labels.savePending,
     saving: labels.saveSaving,
     saved: labels.saveSaved,
-  });
-  const daySaveQueue = createDebouncedTaskMap({
-    delay: 500,
-    onError: (error) => saveFeedback.error(formatError(error)),
   });
 
   attachDishSuggestions(root, () => dishes);
@@ -273,20 +267,17 @@ if (root) {
     );
   }
 
-  async function saveDay(card: HTMLElement) {
+  async function saveDay(dayKey: string, nextDay: DailyMenu, card?: HTMLElement) {
     if (shouldBlockOfflineWrites(isOnline)) {
-      saveFeedback.error(labels.offlineReadOnly);
-      return;
+      throw new Error(labels.offlineReadOnly);
     }
 
     if (!currentUser) return;
-    const dayKey = card.dataset.day ?? '';
     const menuId = getMenuIdForDay(dayKey);
     if (!menuId) return;
-
-    const nextDay = readDayDraft(card, getEnabledMeals());
     const nextState = serializeDay(nextDay);
-    if (card.dataset.dayState === nextState) {
+    const savedState = serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined));
+    if (savedState === nextState) {
       saveFeedback.saved();
       return;
     }
@@ -294,14 +285,9 @@ if (root) {
     saveFeedback.saving();
     const services = await getFirebaseServices();
     const changed = await updateMenuDay(services, menuId, currentUser.uid, dayKey, nextDay, currentProfile?.groupId);
-    card.dataset.dayState = nextState;
+    card?.setAttribute('data-day-state', nextState);
     updateLocalDay(dayKey, nextDay);
     saveFeedback.saved(changed ? labels.saveSaved : labels.saveSaved);
-  }
-
-  function scheduleDaySave(card: HTMLElement) {
-    saveFeedback.pending();
-    daySaveQueue.schedule(card.dataset.day ?? '', () => saveDay(card));
   }
 
   function cacheCurrentMenu(menu = currentMenu) {
@@ -375,8 +361,9 @@ if (root) {
     getSavedDayState: (dayKey) => serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined)),
     getDayNumber,
     getWeekday: formatWeekday,
-    onScheduleSave: scheduleDaySave,
-    onFlushSave: (dayKey) => daySaveQueue.flush(dayKey),
+    canWrite: () => !shouldBlockOfflineWrites(isOnline),
+    getWriteErrorMessage: () => labels.offlineReadOnly,
+    onSaveDay: (dayKey, nextDay, card) => saveDay(dayKey, nextDay, card),
     onClearDay: async (dayKey) => {
       if (shouldBlockOfflineWrites(isOnline) || !currentUser) {
         showStatus(labels.offlineReadOnly, true);

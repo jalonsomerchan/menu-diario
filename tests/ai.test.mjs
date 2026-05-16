@@ -24,6 +24,7 @@ describe('Firebase AI foundation', () => {
       'src/lib/ai/json.ts',
       'src/lib/ai/limits.ts',
       'src/lib/ai/pending-meal-recommendations.ts',
+      'src/lib/ai/shopping-list.ts',
       'src/lib/ai/remote-config.ts',
       'src/lib/ai/ui-state.ts',
     ].forEach((path) => {
@@ -39,6 +40,7 @@ describe('Firebase AI foundation', () => {
     [
       'PUBLIC_AI_ENABLED=false',
       'PUBLIC_AI_MENU_SUGGESTIONS_ENABLED=false',
+      'PUBLIC_AI_SHOPPING_LIST_ENABLED=false',
       'PUBLIC_AI_REMOTE_CONFIG_ENABLED=false',
       'PUBLIC_FIREBASE_AI_MODEL=gemini-2.5-flash-lite',
       'PUBLIC_FIREBASE_AI_TEMPERATURE=0.35',
@@ -55,6 +57,7 @@ describe('Firebase AI foundation', () => {
     assert.match(flags, /PUBLIC_AI_ENABLED/);
     assert.match(flags, /ai_enabled/);
     assert.match(flags, /ai_menu_suggestions_enabled/);
+    assert.match(flags, /ai_shopping_list_enabled/);
   });
 
   it('keeps Gemini wrapper guarded by flags, config, timeout, JSON validation and safe logs', () => {
@@ -85,6 +88,7 @@ describe('Firebase AI foundation', () => {
     const en = readJson('src/i18n/translations/en.json');
     const keys = [
       'ai.loading',
+      'ai.disabled',
       'ai.error',
       'ai.quotaExhausted',
       'ai.missingConfig',
@@ -99,9 +103,14 @@ describe('Firebase AI foundation', () => {
       'ai.pendingMealsNoResults',
       'ai.pendingMealsApply',
       'ai.pendingMealsApplied',
+      'shopping.title',
+      'shopping.generate',
+      'shopping.statusToBuy',
+      'shopping.categoryVegetables',
     ];
 
     assert.match(uiState, /quota-exhausted/);
+    assert.match(uiState, /disabled/);
     assert.match(uiState, /missing-config/);
     assert.match(uiState, /invalid-response/);
     assert.match(pendingMealRecommendations, /getPendingMealSlots/);
@@ -121,12 +130,15 @@ describe('Firebase AI foundation', () => {
     assert.match(firebaseDocs, /App Check/);
     assert.match(firebaseDocs, /Firebase AI Logic/);
     assert.match(firebaseDocs, /Remote Config/);
+    assert.match(firebaseDocs, /shopping list|lista de la compra/i);
     assert.match(firebaseDocs, /sessionStorage/);
     assert.match(firebaseDocs, /no son una protección real/);
     assert.match(firebaseDocs, /comidas pendientes/);
     assert.match(firebaseDocs, /no incluye emails ni notas personales/);
+    assert.match(firebaseDocs, /shoppingLists/);
     assert.match(readme, /Firebase AI Logic/);
     assert.match(readme, /PUBLIC_AI_ENABLED/);
     assert.match(readme, /comidas pendientes/);
+    assert.match(readme, /lista de la compra/i);
   });
 });

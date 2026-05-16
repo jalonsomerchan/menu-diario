@@ -21,20 +21,35 @@
 .dishes-hero h1,
 .dishes-form-card h2,
 .dishes-empty h2,
-.dish-card h2 {
+.dish-row h2,
+.dish-editor-dialog h2 {
   margin: 0;
-  font-size: clamp(1.6rem, 7vw, 3rem);
   line-height: 1;
   letter-spacing: -0.05em;
 }
 
+.dishes-hero h1,
+.dishes-form-card h2,
+.dishes-empty h2 {
+  font-size: clamp(1.6rem, 7vw, 3rem);
+}
+
+.dish-row h2,
+.dish-editor-dialog h2 {
+  font-size: clamp(1.05rem, 4vw, 1.45rem);
+}
+
 .dishes-hero p,
-.dishes-empty p {
+.dishes-empty p,
+.dish-editor-dialog__description,
+.dish-editor-note,
+.dish-editor-status {
   margin: 0;
   color: var(--color-muted);
 }
 
-.dishes-hero__future {
+.dishes-hero__future,
+.dish-editor-note {
   border-radius: var(--radius-lg);
   background: var(--color-primary-soft);
   padding: 0.8rem;
@@ -49,8 +64,7 @@
 
 .dishes-form label,
 .dishes-toolbar label,
-.dish-card__edit label,
-.dish-card__quick-tags {
+.dish-editor-field {
   display: grid;
   gap: 0.35rem;
   color: var(--color-muted);
@@ -66,13 +80,18 @@
 .dishes-form input,
 .dishes-toolbar input,
 .dishes-toolbar select,
-.dish-card__edit input {
+.dish-editor-field input {
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface-raised);
   color: var(--color-text);
   padding: 0.8rem;
+}
+
+.dish-editor-field input[readonly] {
+  background: color-mix(in srgb, var(--color-surface-raised), transparent 10%);
+  color: var(--color-muted);
 }
 
 .dishes-toolbar {
@@ -83,25 +102,39 @@
   box-shadow: var(--shadow-sm);
 }
 
-.dish-card {
+.dish-row {
   display: grid;
-  gap: 1rem;
-  padding: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
 }
 
-.dish-card__header {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 0.75rem;
+.dish-row__main {
+  min-width: 0;
+}
+
+.dish-row__main h2 {
+  overflow-wrap: anywhere;
+}
+
+.dish-row__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-self: end;
+}
+
+.dish-row__edit {
+  min-height: 2.75rem;
 }
 
 .dish-favorite {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   flex: 0 0 auto;
   border: 1px solid var(--color-border);
   border-radius: 999px;
@@ -112,87 +145,140 @@
   line-height: 1;
 }
 
-.dish-favorite[aria-pressed='true'] {
+.dish-favorite--readonly {
+  cursor: default;
+}
+
+.dish-favorite[aria-pressed='true'],
+.dish-favorite--readonly[aria-label] {
   border-color: color-mix(in srgb, #d69b00, var(--color-border) 35%);
   background: color-mix(in srgb, #ffd35c, transparent 76%);
   color: #b77900;
 }
 
-.dish-card__main {
-  display: grid;
-  gap: 0.85rem;
+.dish-editor-dialog {
+  width: min(100% - 1.2rem, 42rem);
+  max-height: calc(100dvh - 1.5rem);
+  border: 0;
+  border-radius: var(--radius-2xl);
+  background: transparent;
+  padding: 0;
+  color: var(--color-text);
 }
 
-.dish-card dl {
+.dish-editor-dialog::backdrop {
+  background: rgb(15 23 42 / 0.62);
+  backdrop-filter: blur(6px);
+}
+
+.dish-editor-dialog__surface {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.6rem;
+  gap: 1rem;
+  max-height: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  background: var(--color-surface);
+  padding: 1rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.dish-editor-dialog__header,
+.dish-editor-grid,
+.dish-editor-section {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dish-editor-dialog__body {
+  overflow: auto;
+}
+
+.dish-editor-grid {
+  gap: 1rem;
+}
+
+.dish-editor-section {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-surface-raised), transparent 6%);
+  padding: 0.9rem;
+}
+
+.dish-editor-section__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dish-editor-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-weight: 750;
+}
+
+.dish-editor-toggle input {
+  width: 1.05rem;
+  height: 1.05rem;
   margin: 0;
 }
 
-.dish-card dt {
+.dish-editor-stats,
+.dish-editor-meta {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.dish-editor-stats div,
+.dish-editor-meta div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.dish-editor-stats dt,
+.dish-editor-meta dt {
   color: var(--color-muted);
   font-size: 0.76rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
-.dish-card dd {
-  margin: 0.1rem 0 0;
+.dish-editor-stats dd,
+.dish-editor-meta dd {
+  margin: 0;
   font-weight: 850;
 }
 
-.dish-card__badges,
 .dish-tag-list,
-.dish-tag-actions {
+.dish-tag-actions,
+.dish-editor-dialog__footer {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: 0.55rem;
 }
 
+.dish-tag-chip,
 .dish-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 55%);
-  border-radius: 999px;
-  background: var(--color-primary-soft);
-  color: var(--color-text);
-  padding: 0.38rem 0.62rem;
-  font-size: 0.8rem;
-  font-weight: 850;
-}
-
-.dish-badge--blocked {
-  border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 55%);
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
-}
-
-.dish-card__quick-tags {
-  border: 0;
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--color-surface-raised), transparent 12%);
-  padding: 0.75rem;
-}
-
-.dish-card__quick-tags p {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 0.78rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.dish-tag-chip {
-  display: inline-flex;
-  align-items: stretch;
-  overflow: hidden;
+  min-height: 2rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 999px;
   background: color-mix(in srgb, var(--color-surface-raised), #000 4%);
   color: var(--color-text);
   font-weight: 750;
+}
+
+.dish-badge {
+  padding: 0.32rem 0.7rem;
+}
+
+.dish-tag-chip {
+  overflow: hidden;
 }
 
 .dish-tag-chip button {
@@ -212,12 +298,12 @@
   display: inline-flex;
   align-items: center;
   min-height: 2rem;
-  padding: 0.32rem 0.55rem;
+  padding: 0.32rem 0.7rem;
 }
 
 .dish-tag-add {
   border: 1px dashed var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 999px;
   background: transparent;
   color: var(--color-muted);
   cursor: pointer;
@@ -229,40 +315,22 @@
   font-size: 0.9rem;
 }
 
-.dish-card__tags {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 0.9rem;
+.dish-editor-dialog__footer {
+  justify-content: flex-end;
+  padding-top: 0.25rem;
 }
 
-.dish-card__tags span {
-  color: var(--color-text);
-  font-weight: 850;
-}
-
-.dish-card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
-.dish-card__actions [aria-pressed='true'] {
-  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%);
-  background: var(--color-primary-soft);
+.dish-editor-dialog__footer .button {
+  min-height: 2.75rem;
 }
 
 .confirm-dialog[data-confirm-dialog] .button--danger {
   width: 100%;
 }
 
-.dish-card__edit {
-  display: grid;
-  gap: 0.75rem;
-}
-
 @media (min-width: 720px) {
   .dishes-app {
-    max-width: 76rem;
+    max-width: 68rem;
   }
 
   .dishes-form__row {
@@ -275,11 +343,16 @@
     align-items: end;
   }
 
-  .dishes-list {
+  .dish-editor-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .dish-card dl {
+  .dish-editor-field,
+  .dish-editor-note {
+    grid-column: 1 / -1;
+  }
+
+  .dish-editor-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

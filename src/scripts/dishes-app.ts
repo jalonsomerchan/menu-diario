@@ -1,7 +1,9 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
-import { archiveDish, createManualDish, duplicateGlobalDish, renameDish, updateDishPreferences, watchUserDishes } from '../lib/dishes/repository';
+import { archiveDish, createManualDish, duplicateGlobalDish, saveDishEdits, updateDishPreferences, watchUserDishes } from '../lib/dishes/repository';
+import { getDishEditorState, getNextQuickTags, hasSameQuickTags } from '../lib/dishes/editor-state.mjs';
 import { filterDishes, isEditableDish, sortDishes } from '../lib/dishes/helpers.mjs';
+import { renderCompactDishRow, renderDishEditorBody } from '../lib/dishes/render.mjs';
 import { ensureUserProfile, watchUserProfile } from '../lib/menu/repository';
 import { createConfirmDialog } from '../lib/ui/confirm-dialog';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
@@ -9,6 +11,7 @@ import type { Dish, FirebaseUser, UserProfile } from '../lib/menu/types';
 
 type DishFilterMode = 'all' | 'favorites' | 'blocked';
 type DishSortMode = 'most-used' | 'recent' | 'oldest' | 'name';
+type DishEditorDraft = { name: string; favorite: boolean; blocked: boolean; quickTags: string[] };
 
 const root = document.querySelector<HTMLElement>('[data-dishes-app]');
 
@@ -26,14 +29,24 @@ if (root) {
   const tagFilterSelect = root.querySelector<HTMLSelectElement>('[data-dish-tag-filter]');
   const list = root.querySelector<HTMLElement>('[data-dishes-list]');
   const confirmDialog = root.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
-  const quickTags = Array.isArray(labels.quickTagsList) ? labels.quickTagsList : [];
-  const tagLabels = labels.tagLabels ?? {};
+  const editorDialog = root.querySelector<HTMLDialogElement>('[data-dish-editor-dialog]');
+  const editorForm = root.querySelector<HTMLFormElement>('[data-dish-editor-form]');
+  const editorBody = root.querySelector<HTMLElement>('[data-dish-editor-body]');
+  const editorTitle = root.querySelector<HTMLElement>('[data-dish-editor-title]');
+  const editorEyebrow = root.querySelector<HTMLElement>('[data-dish-editor-eyebrow]');
+  const editorDescription = root.querySelector<HTMLElement>('[data-dish-editor-description]');
+  const cancelEditorButton = root.querySelector<HTMLButtonElement>('[data-dish-editor-cancel]');
+  const archiveEditorButton = root.querySelector<HTMLButtonElement>('[data-dish-editor-archive]');
+  const duplicateEditorButton = root.querySelector<HTMLButtonElement>('[data-dish-editor-duplicate]');
+  const saveEditorButton = root.querySelector<HTMLButtonElement>('[data-dish-editor-save]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
   let dishes: Dish[] = [];
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  let editorDishId: string | null = null;
+  let returnFocusTo: HTMLElement | null = null;
   const archiveConfirmation = confirmDialog ? createConfirmDialog(confirmDialog) : null;
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
@@ -71,56 +84,8 @@ if (root) {
     return sortDishes(filtered, (sortSelect?.value as DishSortMode) ?? 'most-used') as Dish[];
   }
 
-  function getTagLabel(tag: string) {
-    return tagLabels[tag] ?? tag;
-  }
-
-  function renderTags(dish: Dish) {
-    const tags = dish.tags ?? [];
-    if (!tags.length) return '';
-    return `<p class="dish-card__tags"><span>${escapeHtml(labels.tags)}:</span> ${tags.map((tag) => escapeHtml(getTagLabel(tag))).join(', ')}</p>`;
-  }
-
-  function renderBadges(dish: Dish) {
-    const badges = [];
-    badges.push(`<span class="dish-badge ${dish.isGlobal ? 'dish-badge--global' : 'dish-badge--group'}">${escapeHtml(dish.isGlobal ? labels.globalBadge : labels.groupBadge)}</span>`);
-    if (!isEditableDish(dish)) badges.push(`<span class="dish-badge dish-badge--readonly">${escapeHtml(labels.readOnlyBadge)}</span>`);
-    if (dish.blocked) badges.push(`<span class="dish-badge dish-badge--blocked">⊘ ${escapeHtml(labels.blockedBadge)}</span>`);
-    return `<div class="dish-card__badges">${badges.join('')}</div>`;
-  }
-
-  function renderQuickTags(dish: Dish) {
-    if (!quickTags.length || !isEditableDish(dish)) return '';
-
-    const selectedTags = dish.quickTags ?? [];
-    const availableTags = quickTags.filter((tag: string) => !selectedTags.includes(tag));
-    const selectedMarkup = selectedTags.length
-      ? selectedTags
-          .map(
-            (tag: string) => `
-              <span class="dish-tag-chip">
-                <button type="button" data-remove-quick-tag="${escapeHtml(tag)}" aria-label="${escapeHtml(labels.removeTag)} ${escapeHtml(getTagLabel(tag))}">×</button>
-                <span>${escapeHtml(getTagLabel(tag))}</span>
-              </span>
-            `
-          )
-          .join('')
-      : `<span class="dish-tags-empty">${escapeHtml(labels.noQuickTags)}</span>`;
-
-    const availableMarkup = availableTags
-      .map(
-        (tag: string) =>
-          `<button class="dish-tag-add" type="button" data-add-quick-tag="${escapeHtml(tag)}">+ ${escapeHtml(getTagLabel(tag))}</button>`
-      )
-      .join('');
-
-    return `
-      <section class="dish-card__quick-tags" aria-label="${escapeHtml(labels.quickTagsLabel)}">
-        <p>${escapeHtml(labels.quickTagsLabel)}</p>
-        <div class="dish-tag-list" data-selected-tags>${selectedMarkup}</div>
-        ${availableMarkup ? `<div class="dish-tag-actions">${availableMarkup}</div>` : ''}
-      </section>
-    `;
+  function findDishById(dishId?: string | null) {
+    return dishes.find((dish) => dish.id === dishId);
   }
 
   function renderEmpty() {
@@ -130,71 +95,69 @@ if (root) {
     return `<article class="app-panel dishes-empty"><h2>${escapeHtml(title)}</h2>${hint}</article>`;
   }
 
-  function renderActions(dish: Dish) {
-    if (dish.isGlobal) {
-      return `
-        <p class="dish-card__readonly">${escapeHtml(labels.globalReadOnly)}</p>
-        <div class="dish-card__actions" data-card-actions>
-          <button class="button button--secondary button--small" type="button" data-duplicate-global>${escapeHtml(labels.duplicateAsGroup)}</button>
-        </div>
-      `;
-    }
-
-    return `
-      <div class="dish-card__actions" data-card-actions>
-        <button class="button button--secondary button--small" type="button" data-toggle-blocked aria-pressed="${dish.blocked ? 'true' : 'false'}">${escapeHtml(dish.blocked ? labels.unblock : labels.block)}</button>
-        <button class="button button--secondary button--small" type="button" data-edit-dish>${escapeHtml(labels.edit)}</button>
-        <button class="button button--ghost button--small" type="button" data-archive-dish>${escapeHtml(labels.archive)}</button>
-      </div>
-    `;
-  }
-
   function renderDishes() {
     if (!list) return;
     const visibleDishes = getVisibleDishes();
+    list.innerHTML = visibleDishes.length ? visibleDishes.map((dish) => renderCompactDishRow(dish, labels)).join('') : renderEmpty();
+  }
 
-    if (!visibleDishes.length) {
-      list.innerHTML = renderEmpty();
+  function getEditorDraft(dish: Dish): DishEditorDraft {
+    const nameField = editorForm?.querySelector<HTMLInputElement>('input[name="name"]');
+    const favoriteField = editorForm?.querySelector<HTMLInputElement>('input[name="favorite"]');
+    const blockedField = editorForm?.querySelector<HTMLInputElement>('input[name="blocked"]');
+    const quickTags = Array.from(editorForm?.querySelectorAll<HTMLElement>('[data-remove-quick-tag]') ?? []).map(
+      (button) => button.dataset.removeQuickTag ?? ''
+    );
+
+    return {
+      name: nameField?.value ?? dish.name,
+      favorite: favoriteField?.checked ?? Boolean(dish.favorite),
+      blocked: blockedField?.checked ?? Boolean(dish.blocked),
+      quickTags,
+    };
+  }
+
+  function focusEditor() {
+    const initialFocus =
+      editorDialog?.querySelector<HTMLElement>('[data-editor-initial-focus]') ??
+      (duplicateEditorButton?.hidden ? cancelEditorButton : duplicateEditorButton);
+    initialFocus?.focus();
+  }
+
+  function syncEditor(dish: Dish, draft?: DishEditorDraft) {
+    if (!editorBody || !editorTitle || !editorDescription || !saveEditorButton || !archiveEditorButton || !duplicateEditorButton || !editorEyebrow) return;
+
+    const state = getDishEditorState(dish);
+    editorBody.innerHTML = renderDishEditorBody(dish, labels, formatDate, draft);
+    editorTitle.textContent = labels.editTitle.replace('{dish}', dish.name);
+    editorEyebrow.textContent = dish.isGlobal ? labels.globalBadge : labels.groupBadge;
+    editorDescription.textContent = state.canEdit ? labels.editableHint : state.isReadOnlyGlobal ? labels.globalReadOnlyModal : labels.notEditable;
+    saveEditorButton.hidden = !state.canEdit;
+    archiveEditorButton.hidden = !state.canArchive;
+    duplicateEditorButton.hidden = !state.canDuplicate;
+  }
+
+  function closeEditor(result = 'cancel') {
+    editorDialog?.close(result);
+  }
+
+  function openEditor(dish: Dish, trigger?: HTMLElement | null) {
+    if (!editorDialog) return;
+    editorDishId = dish.id;
+    returnFocusTo = trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    syncEditor(dish);
+    editorDialog.showModal();
+    requestAnimationFrame(() => focusEditor());
+  }
+
+  function syncOpenEditor() {
+    if (!editorDialog?.open || !editorDishId) return;
+    const dish = findDishById(editorDishId);
+    if (!dish || dish.archived) {
+      closeEditor('saved');
       return;
     }
-
-    list.innerHTML = visibleDishes
-      .map((dish) => {
-        const lastUsed = dish.lastUsedAt ? formatDate(dish.lastUsedAt) : labels.neverUsed;
-        const createdAt = dish.createdAt ? formatDate(dish.createdAt) : labels.noCreatedAt;
-        const favoriteText = dish.favorite ? labels.unmarkFavorite : labels.markFavorite;
-        const favoriteDisabled = isEditableDish(dish) ? '' : 'disabled';
-
-        return `
-          <article class="dish-card app-panel" data-dish-id="${escapeHtml(dish.id)}">
-            <div class="dish-card__header">
-              <h2>${escapeHtml(dish.name)}</h2>
-              <button class="dish-favorite" type="button" data-toggle-favorite aria-pressed="${dish.favorite ? 'true' : 'false'}" aria-label="${escapeHtml(favoriteText)}" ${favoriteDisabled}>
-                <span aria-hidden="true">${dish.favorite ? '★' : '☆'}</span>
-              </button>
-            </div>
-            <div class="dish-card__main">
-              ${renderBadges(dish)}
-              <dl>
-                <div><dt>${escapeHtml(labels.timesUsed)}</dt><dd>${dish.timesUsed}</dd></div>
-                <div><dt>${escapeHtml(labels.lastUsed)}</dt><dd>${escapeHtml(lastUsed)}</dd></div>
-                <div><dt>${escapeHtml(labels.createdAt)}</dt><dd>${escapeHtml(createdAt)}</dd></div>
-              </dl>
-              ${renderTags(dish)}
-              ${renderQuickTags(dish)}
-            </div>
-            <form class="dish-card__edit" data-edit-form hidden>
-              <label>${escapeHtml(labels.addName)}<input type="text" data-edit-name value="${escapeHtml(dish.name)}" minlength="2" maxlength="90" /></label>
-              <div class="dish-card__actions">
-                <button class="button button--primary button--small" type="submit">${escapeHtml(labels.save)}</button>
-                <button class="button button--ghost button--small" type="button" data-cancel-edit>${escapeHtml(labels.cancel)}</button>
-              </div>
-            </form>
-            ${renderActions(dish)}
-          </article>
-        `;
-      })
-      .join('');
+    syncEditor(dish, getEditorDraft(dish));
   }
 
   function errorMessage(error: Error) {
@@ -206,33 +169,13 @@ if (root) {
     return error.message;
   }
 
-  async function submitNewDish() {
+  async function submitNewDish(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
     if (!currentUser || !nameInput) return;
     saveFeedback.saving();
-    const services = await getFirebaseServices();
     await createManualDish(services, currentUser.uid, nameInput.value, currentProfile?.groupId);
     nameInput.value = '';
     nameInput.focus();
     saveFeedback.saved(labels.added);
-  }
-
-  function findDish(card: HTMLElement) {
-    return dishes.find((dish) => dish.id === card.dataset.dishId);
-  }
-
-  function openEditor(card: HTMLElement, dish: Dish) {
-    if (!isEditableDish(dish)) {
-      showStatus(labels.notEditable, true);
-      return;
-    }
-    card.querySelector<HTMLElement>('[data-edit-form]')!.hidden = false;
-    card.querySelector<HTMLElement>('[data-card-actions]')!.hidden = true;
-    card.querySelector<HTMLInputElement>('[data-edit-name]')?.focus();
-  }
-
-  function closeEditor(card: HTMLElement) {
-    card.querySelector<HTMLElement>('[data-edit-form]')!.hidden = true;
-    card.querySelector<HTMLElement>('[data-card-actions]')!.hidden = false;
   }
 
   async function confirmArchive(button: HTMLButtonElement) {
@@ -248,33 +191,18 @@ if (root) {
     });
   }
 
-  async function savePreferences(card: HTMLElement, dish: Dish, nextValues: { favorite?: boolean; blocked?: boolean; quickTags?: string[] }) {
+  async function saveFavoritePreference(services: Awaited<ReturnType<typeof getFirebaseServices>>, dish: Dish, favorite: boolean) {
     if (!isEditableDish(dish)) {
       showStatus(labels.notEditable, true);
       return;
     }
-    const currentQuickTags = dish.quickTags ?? [];
-    const sameQuickTags =
-      nextValues.quickTags === undefined ||
-      (nextValues.quickTags.length === currentQuickTags.length && nextValues.quickTags.every((tag, index) => tag === currentQuickTags[index]));
-    if (
-      (nextValues.favorite === undefined || nextValues.favorite === dish.favorite) &&
-      (nextValues.blocked === undefined || nextValues.blocked === dish.blocked) &&
-      sameQuickTags
-    ) {
+    if (favorite === Boolean(dish.favorite)) {
       saveFeedback.saved();
       return;
     }
     saveFeedback.saving();
-    const services = await getFirebaseServices();
-    await updateDishPreferences(services, card.dataset.dishId ?? '', nextValues);
+    await updateDishPreferences(services, dish.id, { favorite });
     saveFeedback.saved(labels.preferencesUpdated);
-  }
-
-  function getNextQuickTags(dish: Dish, tag: string, shouldAdd: boolean) {
-    const currentTags = dish.quickTags ?? [];
-    if (shouldAdd) return [...new Set([...currentTags, tag])];
-    return currentTags.filter((item) => item !== tag);
   }
 
   if (!hasFirebaseConfig()) {
@@ -285,7 +213,7 @@ if (root) {
       .then((services) => {
         form?.addEventListener('submit', (event) => {
           event.preventDefault();
-          submitNewDish().catch((error: Error) => showStatus(errorMessage(error), true));
+          submitNewDish(services).catch((error: Error) => showStatus(errorMessage(error), true));
         });
 
         searchInput?.addEventListener('input', renderDishes);
@@ -293,73 +221,124 @@ if (root) {
         filterSelect?.addEventListener('change', renderDishes);
         tagFilterSelect?.addEventListener('change', renderDishes);
 
-        list?.addEventListener('click', async (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLElement)) return;
-          const card = target.closest<HTMLElement>('[data-dish-id]');
-          const dish = card ? findDish(card) : undefined;
-          if (!card || !dish) return;
-
-          const addedTag = target.closest<HTMLElement>('[data-add-quick-tag]')?.dataset.addQuickTag;
-          if (addedTag) {
-            savePreferences(card, dish, { quickTags: getNextQuickTags(dish, addedTag, true) }).catch((error: Error) => showStatus(errorMessage(error), true));
-            return;
-          }
-
-          const removedTag = target.closest<HTMLElement>('[data-remove-quick-tag]')?.dataset.removeQuickTag;
-          if (removedTag) {
-            savePreferences(card, dish, { quickTags: getNextQuickTags(dish, removedTag, false) }).catch((error: Error) => showStatus(errorMessage(error), true));
-            return;
-          }
-
-          if (target.closest('[data-toggle-favorite]')) {
-            savePreferences(card, dish, { favorite: !dish.favorite }).catch((error: Error) => showStatus(errorMessage(error), true));
-            return;
-          }
-
-          if (target.closest('[data-toggle-blocked]')) {
-            savePreferences(card, dish, { blocked: !dish.blocked }).catch((error: Error) => showStatus(errorMessage(error), true));
-            return;
-          }
-
-          if (target.closest('[data-duplicate-global]') && currentUser) {
-            saveFeedback.saving();
-            duplicateGlobalDish(services, currentUser.uid, dish, currentProfile?.groupId)
-              .then(() => saveFeedback.saved(labels.duplicated))
-              .catch((error: Error) => showStatus(errorMessage(error), true));
-            return;
-          }
-
-          if (target.closest('[data-edit-dish]')) openEditor(card, dish);
-          if (target.closest('[data-cancel-edit]')) closeEditor(card);
-          const archiveButton = target.closest<HTMLButtonElement>('[data-archive-dish]');
-          if (archiveButton) {
-            const confirmed = await confirmArchive(archiveButton);
-            if (!confirmed) return;
-            saveFeedback.saving();
-            archiveDish(services, card.dataset.dishId ?? '')
-              .then(() => saveFeedback.saved(labels.archived))
-              .catch((error: Error) => showStatus(errorMessage(error), true));
-          }
+        editorDialog?.addEventListener('close', () => {
+          editorDishId = null;
+          editorBody && (editorBody.innerHTML = '');
+          returnFocusTo?.focus();
+          returnFocusTo = null;
         });
 
-        list?.addEventListener('submit', (event) => {
+        editorDialog?.addEventListener('click', (event) => {
+          if (event.target === editorDialog) closeEditor();
+        });
+
+        cancelEditorButton?.addEventListener('click', () => closeEditor());
+
+        list?.addEventListener('click', (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) return;
+
+          const card = target.closest<HTMLElement>('[data-dish-id]');
+          const dish = findDishById(card?.dataset.dishId);
+          if (!card || !dish) return;
+
+          if (target.closest('[data-toggle-favorite]')) {
+            saveFavoritePreference(services, dish, !dish.favorite).catch((error: Error) => showStatus(errorMessage(error), true));
+            return;
+          }
+
+          const editButton = target.closest<HTMLElement>('[data-edit-dish]');
+          if (editButton) openEditor(dish, editButton);
+        });
+
+        editorBody?.addEventListener('click', (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement) || !editorDishId) return;
+          const dish = findDishById(editorDishId);
+          if (!dish || !getDishEditorState(dish).canEditQuickTags) return;
+
+          const addedTag = target.closest<HTMLElement>('[data-add-quick-tag]')?.dataset.addQuickTag;
+          const removedTag = target.closest<HTMLElement>('[data-remove-quick-tag]')?.dataset.removeQuickTag;
+          if (!addedTag && !removedTag) return;
+
+          const draft = getEditorDraft(dish);
+          draft.quickTags = getNextQuickTags({ ...dish, quickTags: draft.quickTags }, addedTag ?? removedTag ?? '', Boolean(addedTag));
+          syncEditor(dish, draft);
+          requestAnimationFrame(() => focusEditor());
+        });
+
+        archiveEditorButton?.addEventListener('click', async () => {
+          if (!editorDishId) return;
+          const dish = findDishById(editorDishId);
+          if (!dish) return;
+
+          const confirmed = await confirmArchive(archiveEditorButton);
+          if (!confirmed) return;
+
+          saveFeedback.saving();
+          archiveDish(services, dish.id)
+            .then(() => {
+              saveFeedback.saved(labels.archived);
+              closeEditor('saved');
+            })
+            .catch((error: Error) => showStatus(errorMessage(error), true));
+        });
+
+        duplicateEditorButton?.addEventListener('click', () => {
+          if (!editorDishId || !currentUser) return;
+          const dish = findDishById(editorDishId);
+          if (!dish) return;
+
+          saveFeedback.saving();
+          duplicateGlobalDish(services, currentUser.uid, dish, currentProfile?.groupId)
+            .then(() => {
+              saveFeedback.saved(labels.duplicated);
+              closeEditor('saved');
+            })
+            .catch((error: Error) => showStatus(errorMessage(error), true));
+        });
+
+        editorForm?.addEventListener('submit', (event) => {
           event.preventDefault();
-          const form = event.target;
-          if (!(form instanceof HTMLFormElement)) return;
-          const card = form.closest<HTMLElement>('[data-dish-id]');
-          const dish = card ? findDish(card) : undefined;
-          const input = form.querySelector<HTMLInputElement>('[data-edit-name]');
-          if (!card || !dish || !currentUser || !input) return;
-          if (input.value.trim() === dish.name.trim()) {
-            closeEditor(card);
+          if (!editorDishId || !currentUser) return;
+          const dish = findDishById(editorDishId);
+          if (!dish) return;
+
+          const state = getDishEditorState(dish);
+          if (!state.canEdit) {
+            showStatus(labels.notEditable, true);
+            return;
+          }
+
+          const draft = getEditorDraft(dish);
+          const nextName = draft.name.trim().replace(/\s+/g, ' ');
+          const nextFavorite = draft.favorite;
+          const nextBlocked = draft.blocked;
+          const nextQuickTags = draft.quickTags;
+
+          const changed =
+            nextName !== dish.name.trim() ||
+            nextFavorite !== Boolean(dish.favorite) ||
+            nextBlocked !== Boolean(dish.blocked) ||
+            !hasSameQuickTags(nextQuickTags, dish.quickTags ?? []);
+
+          if (!changed) {
+            closeEditor('cancel');
             saveFeedback.saved();
             return;
           }
 
           saveFeedback.saving();
-          renameDish(services, currentUser.uid, dish, input.value)
-            .then(() => saveFeedback.saved(labels.updated))
+          saveDishEdits(services, currentUser.uid, dish, {
+            name: nextName,
+            favorite: nextFavorite,
+            blocked: nextBlocked,
+            quickTags: nextQuickTags,
+          })
+            .then(() => {
+              saveFeedback.saved(labels.updated);
+              closeEditor('saved');
+            })
             .catch((error: Error) => showStatus(errorMessage(error), true));
         });
 
@@ -388,6 +367,7 @@ if (root) {
                   dishes = nextDishes;
                   setVisible(true);
                   renderDishes();
+                  syncOpenEditor();
                 },
                 (error) => showStatus(errorMessage(error), true),
                 false,

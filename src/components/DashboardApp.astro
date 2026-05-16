@@ -13,6 +13,7 @@ const t = useTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
+const shoppingPath = getLocalizedPath('/compra', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
 
 const labels = {
@@ -32,6 +33,7 @@ const labels = {
   moreActions: t('dashboard.moreActions'),
   save: t('dashboard.save'),
   cancel: t('dashboard.cancel'),
+  saveHint: t('menu.saveHint'),
   savePending: t('menu.savePending'),
   saveSaving: t('menu.saveSaving'),
   saveSaved: t('menu.saveSaved'),
@@ -63,6 +65,7 @@ const labels = {
   offlineNoCache: t('pwa.offlineNoCache'),
   backOnline: t('pwa.backOnline'),
   tuppers: tt('nav'),
+  shopping: t('appNav.shopping'),
   tuppersExpiryAlert: tt('expiryAlert'),
   homePath,
   configurePath,
@@ -82,7 +85,10 @@ const labels = {
       <p class="today-hero__hello" data-user-label>{labels.hello}</p>
       <h1>{labels.todayForLunch}</h1>
       <ul data-today-summary></ul>
-      <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
+      <div class="flex flex-wrap gap-2">
+        <a class="button button--ghost button--small" href={shoppingPath}>{labels.shopping}</a>
+        <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
+      </div>
     </section>
 
     <section class="expiry-banner" role="status" aria-live="polite">
@@ -106,6 +112,7 @@ const labels = {
     saveLabel={labels.save}
     clearLabel={labels.deleteDay}
     saveHint={labels.saveHint}
+    savePendingLabel={labels.savePending}
   />
 </section>
 

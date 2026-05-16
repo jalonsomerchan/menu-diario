@@ -58,6 +58,8 @@ Usa esta lista antes de terminar cualquier tarea en este template.
 - ¿App Check se inicializa antes de usar Firestore, Auth o Firebase AI Logic cuando aplica?
 - ¿La IA sigue detrás de feature flags y con límites básicos de cliente?
 - ¿Los errores de App Check/Firebase AI tienen estados traducibles?
+- ¿La nueva función reutiliza `src/lib/ai/` en lugar de crear otra integración paralela?
+- ¿El prompt evita emails, UID, miembros del grupo, códigos de invitación y notas sensibles innecesarias?
 - ¿La documentación explica localhost, GitHub Pages, dominio propio, activación gradual y depuración?
 
 ## 8. Tests y documentación

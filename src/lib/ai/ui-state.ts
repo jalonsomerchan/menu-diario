@@ -4,6 +4,7 @@ import { getAiErrorCode, type AiErrorCode } from './errors';
 export const aiUiStates = [
   'idle',
   'loading',
+  'disabled',
   'error',
   'quota-exhausted',
   'missing-config',
@@ -15,6 +16,7 @@ export type AiUiState = (typeof aiUiStates)[number];
 
 const stateMessages: Record<Exclude<AiUiState, 'idle'>, TranslationKey> = {
   loading: 'ai.loading',
+  disabled: 'ai.disabled',
   error: 'ai.error',
   'quota-exhausted': 'ai.quotaExhausted',
   'missing-config': 'ai.missingConfig',
@@ -23,7 +25,7 @@ const stateMessages: Record<Exclude<AiUiState, 'idle'>, TranslationKey> = {
 };
 
 const errorStateMap: Record<AiErrorCode, Exclude<AiUiState, 'idle' | 'loading'>> = {
-  disabled: 'missing-config',
+  disabled: 'disabled',
   'missing-config': 'missing-config',
   'app-check-unavailable': 'app-check-unavailable',
   'quota-exhausted': 'quota-exhausted',

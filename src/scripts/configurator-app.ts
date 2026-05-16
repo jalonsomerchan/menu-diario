@@ -25,9 +25,8 @@ import {
   watchUserProfile,
   watchWeekMenusByIds,
 } from '../lib/menu/repository';
-import type { Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
-import { createDebouncedTaskMap } from '../lib/ui/debounced-task-map';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-configurator-app]');
@@ -39,6 +38,7 @@ if (root) {
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const content = root.querySelector<HTMLElement>('[data-content]');
   const configDays = root.querySelector<HTMLElement>('[data-config-days]');
+  const loadMoreButton = root.querySelector<HTMLButtonElement>('[data-config-load-more]');
   const aiGenerateButton = root.querySelector<HTMLButtonElement>('[data-ai-generate]');
   const aiHelper = root.querySelector<HTMLElement>('[data-ai-helper]');
   const aiStatus = root.querySelector<HTMLElement>('[data-ai-status]');
@@ -49,19 +49,22 @@ if (root) {
   let currentMenu: WeekMenu | null = null;
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
+  let visibleDayCount = 7;
   let dishes: Dish[] = [];
-  let pendingAiRecommendations: Array<{ dayKey: string; meal: MealSlot; dishes: string[]; reason: string }> = [];
+  let pendingAiRecommendations: Array<{
+    dayKey: string;
+    meal: MealSlot;
+    dishes: Array<{ id: string; name: string; scope: Dish['scope']; isGlobal: boolean }>;
+    reason: string;
+  }> = [];
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  let lastAiDebugSignature = '';
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
     saved: labels.saveSaved,
-  });
-  const daySaveQueue = createDebouncedTaskMap({
-    delay: 500,
-    onError: (error) => saveFeedback.error(formatError(error)),
   });
 
   attachDishSuggestions(root, () => dishes);
@@ -90,7 +93,7 @@ if (root) {
   }
 
   function getConfigDates() {
-    return getUpcomingDates(new Date(), 1, 7);
+    return getUpcomingDates(new Date(), 0, visibleDayCount);
   }
 
   function getPendingMeals() {
@@ -111,8 +114,9 @@ if (root) {
   }
 
   function buildDisplayMenu(menus: WeekMenu[]) {
-    const days = Object.fromEntries(getConfigDates().map((dayKey) => [dayKey, normalizeDay(getMenuForDay(dayKey)?.days?.[dayKey])]));
-    const firstWeekStart = getWeekStartForDate(getConfigDates()[0] ?? new Date().toISOString().slice(0, 10));
+    const dates = getConfigDates();
+    const days = Object.fromEntries(dates.map((dayKey) => [dayKey, normalizeDay(getMenuForDay(dayKey)?.days?.[dayKey])]));
+    const firstWeekStart = getWeekStartForDate(dates[0] ?? new Date().toISOString().slice(0, 10));
     const primaryMenu = menus.find((menu) => menu.weekStart === firstWeekStart);
 
     return {
@@ -147,6 +151,12 @@ if (root) {
 
   function mealLabel(meal: MealSlot) {
     return labels[meal] ?? meal;
+  }
+
+  function getDishOriginLabel(dish: { scope: Dish['scope']; isGlobal: boolean }) {
+    if (dish.isGlobal || dish.scope === 'global') return labels.aiPendingDishOriginGlobal;
+    if (dish.scope === 'group') return labels.aiPendingDishOriginGroup;
+    return labels.aiPendingDishOriginUser;
   }
 
   function reasonLabel(reason = '') {
@@ -188,6 +198,49 @@ if (root) {
     return hasFirebaseConfig() && isMenuSuggestionsAvailable(getAiFeatureFlags());
   }
 
+  function getAiButtonDebugState(pendingMeals: ReturnType<typeof getPendingMeals>) {
+    const flags = getAiFeatureFlags();
+    const firebaseConfigured = hasFirebaseConfig();
+    const menuSuggestionsAvailable = isMenuSuggestionsAvailable(flags);
+    const reasons = [];
+
+    if (!firebaseConfigured) reasons.push('missing-firebase-config');
+    if (!flags.aiEnabled) reasons.push('PUBLIC_AI_ENABLED=false');
+    if (!flags.menuSuggestionsEnabled) reasons.push('PUBLIC_AI_MENU_SUGGESTIONS_ENABLED=false');
+    if (!menuSuggestionsAvailable) reasons.push('menu-suggestions-disabled');
+    if (pendingMeals.length === 0) reasons.push('no-pending-meals');
+    if (dishes.length === 0) reasons.push('no-dishes-loaded');
+
+    return {
+      disabled: reasons.length > 0,
+      reasons,
+      flags,
+      firebaseConfigured,
+      pendingMeals: pendingMeals.length,
+      dishes: dishes.length,
+      currentMenuLoaded: Boolean(currentMenu),
+      profileLoaded: Boolean(currentProfile),
+      visibleDayCount,
+      enabledMeals: getEnabledMeals(),
+    };
+  }
+
+  function debugAiButtonState(pendingMeals: ReturnType<typeof getPendingMeals>) {
+    const debugState = getAiButtonDebugState(pendingMeals);
+    const signature = JSON.stringify(debugState);
+
+    if (signature !== lastAiDebugSignature) {
+      lastAiDebugSignature = signature;
+      console.info('[Menu Diario] AI suggestions button debug', debugState);
+    }
+
+    if (aiGenerateButton) {
+      aiGenerateButton.title = debugState.disabled
+        ? `AI disabled: ${debugState.reasons.join(', ')}`
+        : 'AI enabled';
+    }
+  }
+
   function renderAiResults() {
     if (!aiResults || !aiHelper) return;
 
@@ -196,8 +249,9 @@ if (root) {
     pendingAiRecommendations = pendingAiRecommendations.filter((item) =>
       pendingKeySet.has(`${item.dayKey}::${item.meal}`)
     );
+    debugAiButtonState(pendingMeals);
     if (aiGenerateButton) {
-      aiGenerateButton.disabled = !isAiReady() || pendingMeals.length === 0 || dishes.length === 0;
+      aiGenerateButton.disabled = getAiButtonDebugState(pendingMeals).disabled;
     }
 
     aiHelper.textContent = isAiReady() ? labels.aiPendingHint : labels.aiMissingConfig;
@@ -232,7 +286,16 @@ if (root) {
               <span class="ai-meals-panel__badge">${escapeHtml(labels.aiPendingMealLabel)}</span>
             </header>
             <ul class="ai-meals-panel__list">
-              ${recommendation.dishes.map((dish) => `<li>${escapeHtml(dish)}</li>`).join('')}
+              ${recommendation.dishes
+                .map(
+                  (dish) => `
+                    <li>
+                      <span>${escapeHtml(dish.name)}</span>
+                      <span class="ai-meals-panel__dish-origin">${escapeHtml(getDishOriginLabel(dish))}</span>
+                    </li>
+                  `
+                )
+                .join('')}
             </ul>
             ${
               recommendation.reason
@@ -312,19 +375,16 @@ if (root) {
     );
   }
 
-  async function saveDay(card: HTMLElement) {
+  async function saveDay(dayKey: string, nextDay: DailyMenu, card?: HTMLElement) {
     if (getNetworkStatus() !== 'online') {
-      saveFeedback.error(labels.offlineReadOnly);
-      return;
+      throw new Error(labels.offlineReadOnly);
     }
     if (!currentUser) return;
-    const dayKey = card.dataset.day ?? '';
     const menuId = getMenuIdForDay(dayKey);
     if (!menuId) return;
-
-    const nextDay = readDayDraft(card, getEnabledMeals());
     const nextState = serializeDay(nextDay);
-    if (card.dataset.dayState === nextState) {
+    const savedState = serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined));
+    if (savedState === nextState) {
       saveFeedback.saved();
       return;
     }
@@ -332,14 +392,9 @@ if (root) {
     saveFeedback.saving();
     const services = await getFirebaseServices();
     const changed = await updateMenuDay(services, menuId, currentUser.uid, dayKey, nextDay, currentProfile?.groupId);
-    card.dataset.dayState = nextState;
+    card?.setAttribute('data-day-state', nextState);
     updateLocalDay(dayKey, nextDay);
     saveFeedback.saved(changed ? labels.saveSaved : labels.saveSaved);
-  }
-
-  function scheduleDaySave(card: HTMLElement) {
-    saveFeedback.pending();
-    daySaveQueue.schedule(card.dataset.day ?? '', () => saveDay(card));
   }
 
   const dayEditModal = createDayEditModalController({
@@ -352,8 +407,9 @@ if (root) {
     getDayNumber,
     getWeekday: formatWeekday,
     getDateLabel: formatDate,
-    onScheduleSave: scheduleDaySave,
-    onFlushSave: (dayKey) => daySaveQueue.flush(dayKey),
+    canWrite: () => getNetworkStatus() === 'online',
+    getWriteErrorMessage: () => labels.offlineReadOnly,
+    onSaveDay: (dayKey, nextDay, card) => saveDay(dayKey, nextDay, card),
     onClearDay: async (dayKey) => {
       if (getNetworkStatus() !== 'online' || !currentUser) {
         saveFeedback.error(labels.offlineReadOnly);
@@ -372,10 +428,44 @@ if (root) {
     const recommendation = pendingAiRecommendations[index];
     if (!recommendation) return;
 
-    dayEditModal.applyRecommendedDishes(recommendation.dayKey, recommendation.meal, recommendation.dishes);
+    dayEditModal.applyRecommendedDishes(
+      recommendation.dayKey,
+      recommendation.meal,
+      recommendation.dishes.map((dish) => dish.name)
+    );
     pendingAiRecommendations = pendingAiRecommendations.filter((_, itemIndex) => itemIndex !== index);
     showAiStatus(labels.aiPendingApplied);
     renderAiResults();
+  }
+
+  async function watchVisibleMenus(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
+    if (!currentUser) return;
+
+    if (loadMoreButton) {
+      loadMoreButton.disabled = true;
+      loadMoreButton.setAttribute('aria-busy', 'true');
+    }
+
+    try {
+      currentMenuIdsByWeekStart = await getOrCreateWeekMenus(services, currentUser.uid, getRelevantWeekStarts(), locale);
+      unsubscribeMenu?.();
+      unsubscribeMenu = watchWeekMenusByIds(
+        services,
+        Object.values(currentMenuIdsByWeekStart),
+        (menus) => {
+          currentMenus = menus;
+          currentMenu = buildDisplayMenu(menus);
+          setVisible(true);
+          renderConfig(currentMenu);
+        },
+        (error) => showStatus(formatError(error), true)
+      );
+    } finally {
+      if (loadMoreButton) {
+        loadMoreButton.disabled = false;
+        loadMoreButton.setAttribute('aria-busy', 'false');
+      }
+    }
   }
 
   if (!hasFirebaseConfig()) {
@@ -445,6 +535,11 @@ if (root) {
           }
         });
 
+        loadMoreButton?.addEventListener('click', async () => {
+          visibleDayCount += 7;
+          await watchVisibleMenus(services);
+        });
+
         configDays?.addEventListener('click', (event) => {
           const target = event.target;
           if (!(target instanceof HTMLElement)) return;
@@ -475,8 +570,8 @@ if (root) {
           }
 
           await ensureUserProfile(services, user, labels.guestSession);
-          currentMenuIdsByWeekStart = await getOrCreateWeekMenus(services, user.uid, getRelevantWeekStarts(), locale);
           currentMenus = [];
+          visibleDayCount = 7;
 
           unsubscribeProfile = watchUserProfile(
             services,
@@ -501,17 +596,7 @@ if (root) {
             (error) => showStatus(formatError(error), true)
           );
 
-          unsubscribeMenu = watchWeekMenusByIds(
-            services,
-            Object.values(currentMenuIdsByWeekStart),
-            (menus) => {
-              currentMenus = menus;
-              currentMenu = buildDisplayMenu(menus);
-              setVisible(true);
-              renderConfig(currentMenu);
-            },
-            (error) => showStatus(formatError(error), true)
-          );
+          await watchVisibleMenus(services);
         });
       })
       .catch((error: Error) => showStatus(formatError(error), true));

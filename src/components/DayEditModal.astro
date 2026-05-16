@@ -7,18 +7,19 @@ interface Props {
   saveLabel: string;
   clearLabel: string;
   saveHint: string;
+  savePendingLabel: string;
 }
 
-const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveHint } = Astro.props;
+const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveHint, savePendingLabel } = Astro.props;
 ---
 
 <dialog
-  class="quick-edit-modal quick-edit-modal--day day-edit-modal"
+  class="app-dialog app-dialog--editor quick-edit-modal quick-edit-modal--day day-edit-modal"
   data-day-edit-modal
   aria-labelledby="day-edit-modal-title"
   aria-describedby="day-edit-modal-description"
 >
-  <form method="dialog" class="quick-edit-modal__box day-edit-modal__box" data-day-edit-form>
+  <form method="dialog" class="app-dialog__surface quick-edit-modal__box day-edit-modal__box" data-day-edit-form>
     <header class="day-edit-modal__header">
       <div class="day-edit-modal__date-badge" aria-hidden="true" data-day-edit-number></div>
       <div class="day-edit-modal__heading">
@@ -26,7 +27,7 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
         <h2 id="day-edit-modal-title" data-day-edit-title>{title}</h2>
         <p id="day-edit-modal-description" data-day-edit-subtitle>{subtitle}</p>
       </div>
-      <button class="day-edit-modal__close" value="cancel" type="submit" aria-label={cancelLabel}>
+      <button class="day-edit-modal__close" type="button" data-day-edit-cancel aria-label={cancelLabel}>
         <span aria-hidden="true">×</span>
       </button>
     </header>
@@ -34,8 +35,11 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     <div class="day-edit-modal__body" data-day-edit-fields></div>
 
     <footer class="day-edit-modal__footer">
-      <p class="day-edit-modal__hint" data-day-edit-save-state>{saveHint}</p>
+      <p class="day-edit-modal__hint" data-day-edit-save-state role="status" aria-live="polite" data-idle-label={saveHint} data-pending-label={savePendingLabel}>{saveHint}</p>
       <div class="day-edit-modal__actions">
+        <button class="button button--ghost button--small" type="button" data-day-edit-cancel-footer>
+          {cancelLabel}
+        </button>
         <button class="button button--ghost button--small" type="button" data-day-edit-clear>
           {clearLabel}
         </button>
@@ -188,6 +192,18 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
 
   .day-edit-modal__hint[data-variant='saving'] {
     color: var(--color-primary);
+  }
+
+  .day-edit-modal__hint[data-variant='pending'] {
+    color: var(--color-warning);
+  }
+
+  .day-edit-modal__hint[data-variant='saved'] {
+    color: var(--color-success);
+  }
+
+  .day-edit-modal__hint[data-variant='error'] {
+    color: var(--color-danger);
   }
 
   .day-edit-modal__actions {

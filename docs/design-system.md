@@ -34,6 +34,9 @@ Todas las webs deben cumplir estos principios:
 8. **Modo claro y oscuro obligatorio**  
    Toda interfaz nueva debe funcionar correctamente en light y dark mode.
 
+9. **Diálogos coherentes**  
+   Los modales de confirmación y edición deben compartir una misma base visual: backdrop consistente, encabezado claro, acción principal destacada, acción de cierre visible y espaciado equivalente entre proyectos y pantallas.
+
 ---
 
 ## 2. Identidad visual común
@@ -1195,6 +1198,21 @@ Un modal debe:
 - Devolver el foco al elemento que lo abrió.
 - Bloquear interacción con el fondo.
 
+Patrón reutilizable recomendado para listados densos:
+
+- Mantener la vista principal compacta y orientada a escaneo.
+- Dejar en la fila o tarjeta compacta solo el dato primario y una o dos acciones rápidas.
+- Mover metadatos, toggles secundarios, estadísticas y acciones destructivas a un modal accesible.
+- Usar `<dialog>` nativo cuando encaje con la app para reducir dependencia y complejidad.
+- En móvil, garantizar objetivos táctiles de al menos `44px` y evitar tarjetas altas con demasiado contenido.
+
+Para modales con formularios complejos:
+
+- Mantener un borrador local mientras el modal está abierto.
+- Reflejar cambios estructurales de la UI en el momento, por ejemplo al activar o desactivar un bloque condicional.
+- No depender solo de `change` o `blur` para persistir texto; el botón principal debe serializar el estado completo visible antes de cerrar.
+- Si un bloque se oculta temporalmente, conservar sus datos salvo que la UX pida borrarlos de forma explícita.
+
 ---
 
 ## 15. Estados de interfaz
@@ -1299,6 +1317,12 @@ Los listados deben tener:
 - Imagen optimizada si aplica.
 - Paginación o carga controlada.
 - Enlaces internos.
+
+Si el listado es de gestión y no editorial:
+
+- Priorizar filas compactas frente a tarjetas grandes.
+- Reservar badges, fechas, estadísticas y formularios completos para una vista de detalle o modal.
+- Mantener búsqueda, filtros y ordenación visibles, pero separados del contenido de cada fila.
 
 ### 17.2 Artículos
 

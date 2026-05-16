@@ -20,6 +20,7 @@ Rutas principales actuales de la app autenticada:
 - `/dashboard`: inicio privado del menú.
 - `/planificacion`: planificación de próximos días.
 - `/configurar`: alias heredado de planificación para mantener compatibilidad con enlaces existentes.
+- `/compra`: lista de la compra con IA, edición manual y exportación ligera.
 - `/resumen-semanal`: resumen semanal con estadísticas, comparación histórica y recomendaciones básicas no-IA.
 - `/tuppers`: gestión de tuppers.
 - `/mis-platos`: catálogo de platos visibles.

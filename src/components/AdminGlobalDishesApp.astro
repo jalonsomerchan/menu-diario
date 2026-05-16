@@ -1,0 +1,360 @@
+---
+import type { Locale } from '../config/site';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const labels = {
+  configMissing: t('menu.configMissing'),
+  guestSession: t('menu.guestSession'),
+  loading: t('dashboard.loading'),
+  permissionsError: t('menu.permissionsError'),
+  homePath: getLocalizedPath('/', locale),
+  title: t('adminDishes.title'),
+  description: t('adminDishes.description'),
+  badge: t('adminDishes.badge'),
+  deniedTitle: t('adminDishes.deniedTitle'),
+  deniedDescription: t('adminDishes.deniedDescription'),
+  formTitle: t('adminDishes.formTitle'),
+  name: t('adminDishes.name'),
+  tags: t('adminDishes.tags'),
+  tagsPlaceholder: t('adminDishes.tagsPlaceholder'),
+  quickTags: t('adminDishes.quickTags'),
+  quickTagsPlaceholder: t('adminDishes.quickTagsPlaceholder'),
+  archived: t('adminDishes.archived'),
+  addButton: t('adminDishes.addButton'),
+  importTitle: t('adminDishes.importTitle'),
+  importDescription: t('adminDishes.importDescription'),
+  importInput: t('adminDishes.importInput'),
+  importFormat: t('adminDishes.importFormat'),
+  formatText: t('adminDishes.formatText'),
+  formatJson: t('adminDishes.formatJson'),
+  formatCsv: t('adminDishes.formatCsv'),
+  duplicateMode: t('adminDishes.duplicateMode'),
+  duplicateSkip: t('adminDishes.duplicateSkip'),
+  duplicateUpdate: t('adminDishes.duplicateUpdate'),
+  duplicateManual: t('adminDishes.duplicateManual'),
+  previewButton: t('adminDishes.previewButton'),
+  importButton: t('adminDishes.importButton'),
+  previewTitle: t('adminDishes.previewTitle'),
+  previewEmpty: t('adminDishes.previewEmpty'),
+  listTitle: t('adminDishes.listTitle'),
+  search: t('adminDishes.search'),
+  searchPlaceholder: t('adminDishes.searchPlaceholder'),
+  filter: t('adminDishes.filter'),
+  filterAll: t('adminDishes.filterAll'),
+  filterActive: t('adminDishes.filterActive'),
+  filterArchived: t('adminDishes.filterArchived'),
+  empty: t('adminDishes.empty'),
+  emptySearch: t('adminDishes.emptySearch'),
+  edit: t('adminDishes.edit'),
+  save: t('dashboard.save'),
+  cancel: t('dashboard.cancel'),
+  savePending: t('menu.savePending'),
+  saveSaving: t('menu.saveSaving'),
+  saveSaved: t('menu.saveSaved'),
+  created: t('adminDishes.created'),
+  updated: t('adminDishes.updated'),
+  imported: t('adminDishes.imported'),
+  invalid: t('adminDishes.invalid'),
+  duplicateGlobal: t('dishes.duplicateGlobal'),
+  sourceAdmin: t('adminDishes.sourceAdmin'),
+  activeState: t('adminDishes.activeState'),
+  archivedState: t('adminDishes.archivedState'),
+  reviewNeeded: t('adminDishes.reviewNeeded'),
+  previewCreate: t('adminDishes.previewCreate'),
+  previewUpdate: t('adminDishes.previewUpdate'),
+  previewSkip: t('adminDishes.previewSkip'),
+  previewReview: t('adminDishes.previewReview'),
+  editorTitle: t('adminDishes.editorTitle'),
+  importResult: t('adminDishes.importResult'),
+  noFirebase: t('dishes.firebaseMissing'),
+};
+---
+
+<section class="admin-dishes-app" data-admin-dishes-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
+  <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
+
+  <section class="app-panel admin-dishes-app__denied" data-denied hidden>
+    <p class="menu-app__eyebrow">{labels.badge}</p>
+    <h1>{labels.deniedTitle}</h1>
+    <p>{labels.deniedDescription}</p>
+  </section>
+
+  <div class="admin-dishes-app__content" data-content hidden>
+    <section class="app-panel admin-dishes-hero">
+      <p class="menu-app__eyebrow">{labels.badge}</p>
+      <h1>{labels.title}</h1>
+      <p>{labels.description}</p>
+    </section>
+
+    <section class="app-panel admin-dishes-panel" aria-labelledby="admin-dish-create-title">
+      <h2 id="admin-dish-create-title">{labels.formTitle}</h2>
+      <form class="admin-dishes-form" data-single-form>
+        <label>{labels.name}
+          <input type="text" name="name" minlength="2" maxlength="90" required />
+        </label>
+        <label>{labels.tags}
+          <input type="text" name="tags" placeholder={labels.tagsPlaceholder} />
+        </label>
+        <label>{labels.quickTags}
+          <input type="text" name="quickTags" placeholder={labels.quickTagsPlaceholder} />
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" name="archived" />
+          <span>{labels.archived}</span>
+        </label>
+        <button class="button button--primary" type="submit">{labels.addButton}</button>
+      </form>
+    </section>
+
+    <section class="app-panel admin-dishes-panel" aria-labelledby="admin-dish-import-title">
+      <h2 id="admin-dish-import-title">{labels.importTitle}</h2>
+      <p>{labels.importDescription}</p>
+      <form class="admin-dishes-import" data-import-form>
+        <label>{labels.importFormat}
+          <select name="format">
+            <option value="text">{labels.formatText}</option>
+            <option value="json">{labels.formatJson}</option>
+            <option value="csv">{labels.formatCsv}</option>
+          </select>
+        </label>
+        <label>{labels.duplicateMode}
+          <select name="duplicateMode">
+            <option value="skip">{labels.duplicateSkip}</option>
+            <option value="update-tags">{labels.duplicateUpdate}</option>
+            <option value="manual">{labels.duplicateManual}</option>
+          </select>
+        </label>
+        <label>{labels.importInput}
+          <textarea name="payload" rows="8"></textarea>
+        </label>
+        <div class="admin-dishes-import__actions">
+          <button class="button button--secondary" type="button" data-preview-import>{labels.previewButton}</button>
+          <button class="button button--primary" type="submit" data-apply-import disabled>{labels.importButton}</button>
+        </div>
+      </form>
+      <div class="admin-dishes-preview" aria-live="polite">
+        <h3>{labels.previewTitle}</h3>
+        <div data-import-preview>{labels.previewEmpty}</div>
+      </div>
+    </section>
+
+    <section class="app-panel admin-dishes-panel" aria-labelledby="admin-dish-list-title">
+      <div class="admin-dishes-toolbar">
+        <h2 id="admin-dish-list-title">{labels.listTitle}</h2>
+        <label>{labels.search}
+          <input type="search" data-search placeholder={labels.searchPlaceholder} />
+        </label>
+        <label>{labels.filter}
+          <select data-filter>
+            <option value="all">{labels.filterAll}</option>
+            <option value="active">{labels.filterActive}</option>
+            <option value="archived">{labels.filterArchived}</option>
+          </select>
+        </label>
+      </div>
+      <div class="admin-dishes-list" data-list></div>
+    </section>
+  </div>
+
+  <dialog class="app-dialog app-dialog--editor admin-dishes-dialog" data-editor-dialog aria-labelledby="admin-dishes-editor-title">
+    <form class="app-dialog__surface admin-dishes-dialog__surface" data-editor-form>
+      <header class="app-dialog__header admin-dishes-dialog__header">
+        <div class="app-dialog__heading">
+          <p class="menu-app__eyebrow">{labels.badge}</p>
+          <h2 id="admin-dishes-editor-title">{labels.editorTitle}</h2>
+        </div>
+        <button class="app-dialog__dismiss" type="button" data-editor-cancel aria-label={labels.cancel}>
+          <span aria-hidden="true">×</span>
+        </button>
+      </header>
+      <div class="app-dialog__body admin-dishes-dialog__body">
+        <label>{labels.name}
+          <input type="text" name="name" minlength="2" maxlength="90" required />
+        </label>
+        <label>{labels.tags}
+          <input type="text" name="tags" />
+        </label>
+        <label>{labels.quickTags}
+          <input type="text" name="quickTags" />
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" name="archived" />
+          <span>{labels.archived}</span>
+        </label>
+      </div>
+      <footer class="app-dialog__footer admin-dishes-dialog__footer">
+        <p class="admin-dishes-dialog__status" data-editor-status role="status" aria-live="polite">{labels.savePending}</p>
+        <div class="admin-dishes-dialog__footer-actions">
+          <button class="button button--ghost button--small" type="button" data-editor-cancel>{labels.cancel}</button>
+          <button class="button button--primary" type="submit" data-editor-save>{labels.save}</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+</section>
+
+<script>
+  import '../scripts/admin-global-dishes-app.ts';
+</script>
+
+<style is:global>
+  .admin-dishes-app,
+  .admin-dishes-app__content {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .admin-dishes-hero,
+  .admin-dishes-panel,
+  .admin-dishes-app__denied {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+  }
+
+  .admin-dishes-hero h1,
+  .admin-dishes-panel h2,
+  .admin-dishes-dialog h2,
+  .admin-dishes-preview h3 {
+    margin: 0;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .admin-dishes-form,
+  .admin-dishes-import,
+  .admin-dishes-toolbar,
+  .admin-dishes-dialog__surface,
+  .admin-dishes-dialog__body {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .admin-dishes-form label,
+  .admin-dishes-import label,
+  .admin-dishes-toolbar label,
+  .admin-dishes-dialog__body label {
+    display: grid;
+    gap: 0.35rem;
+    font-weight: 800;
+  }
+
+  .admin-dishes-form input,
+  .admin-dishes-import input,
+  .admin-dishes-import select,
+  .admin-dishes-import textarea,
+  .admin-dishes-toolbar input,
+  .admin-dishes-toolbar select,
+  .admin-dishes-dialog input {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    padding: 0.8rem;
+  }
+
+  .admin-dishes-import__actions,
+  .admin-dishes-toolbar,
+  .admin-dishes-item__meta,
+  .admin-dishes-dialog__header,
+  .admin-dishes-dialog__footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .admin-dishes-preview,
+  .admin-dishes-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .admin-dishes-item {
+    display: grid;
+    gap: 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface), transparent 4%);
+    padding: 0.9rem;
+  }
+
+  .admin-dishes-item h3,
+  .admin-dishes-item p,
+  .admin-dishes-preview-item p {
+    margin: 0;
+  }
+
+  .admin-dishes-item__meta,
+  .admin-dishes-preview-item__meta {
+    font-size: 0.92rem;
+    color: var(--color-muted);
+  }
+
+  .admin-dishes-preview-item {
+    display: grid;
+    gap: 0.4rem;
+    border-left: 3px solid var(--color-border);
+    padding-left: 0.75rem;
+  }
+
+  .admin-dishes-preview-item[data-action='create'] {
+    border-color: var(--color-success);
+  }
+
+  .admin-dishes-preview-item[data-action='update'] {
+    border-color: var(--color-warning);
+  }
+
+  .admin-dishes-preview-item[data-action='review'] {
+    border-color: var(--color-danger);
+  }
+
+  .admin-dishes-dialog__surface {
+    gap: 0;
+  }
+
+  .admin-dishes-dialog__status {
+    margin: 0;
+    color: var(--color-muted);
+    font-weight: 800;
+  }
+
+  .admin-dishes-dialog__footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  @media (min-width: 760px) {
+    .admin-dishes-app__content {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+      align-items: start;
+    }
+
+    .admin-dishes-hero,
+    .admin-dishes-panel:last-child {
+      grid-column: 1 / -1;
+    }
+
+    .admin-dishes-form {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-dishes-form > :last-child {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+  }
+</style>

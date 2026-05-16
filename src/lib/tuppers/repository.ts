@@ -2,7 +2,7 @@ import { recordMenuDishUsage } from '../dishes/repository';
 import { getMonday, toIsoDate } from '../menu/dates';
 import { getOrCreateWeekMenu, updateMenuPatch } from '../menu/repository';
 import type { Dish, FirebaseUser, UserProfile, WeekMenu } from '../menu/types';
-import { planTupperAssignment } from './assignment';
+import { getMealForAssignment, planTupperAssignment, removeTupperFromMealItems } from './assignment';
 import { sortTuppersByPriority } from './expiry';
 import type { TupperAssignment, TupperFormData, TupperItem, TupperLocation, TupperStatus } from './types';
 
@@ -115,6 +115,13 @@ export async function updateTupperState(
   const { db, firestoreModule } = services;
   await firestoreModule.updateDoc(firestoreModule.doc(db, tuppersCollection, tupper.id), {
     ...patch,
+    ...(patch.status && patch.status !== 'assigned'
+      ? {
+          assignedMenuId: firestoreModule.deleteField(),
+          assignedDay: firestoreModule.deleteField(),
+          assignedMeal: firestoreModule.deleteField(),
+        }
+      : {}),
     updatedAt: firestoreModule.serverTimestamp(),
   });
 }
@@ -123,8 +130,22 @@ export async function assignTupperToMeal(
   services: FirebaseServices,
   user: FirebaseUser,
   tupper: TupperItem,
-  assignment: Omit<TupperAssignment, 'menuId'> & { locale: string; allowAppend?: boolean }
+  assignment: Omit<TupperAssignment, 'menuId'> & { locale: string; allowAppend?: boolean; forceMove?: boolean }
 ) {
+  const isAssigned = Boolean(tupper.assignedMenuId && tupper.assignedDay && tupper.assignedMeal);
+  const isSameTarget =
+    isAssigned &&
+    tupper.assignedDay === assignment.dayKey &&
+    tupper.assignedMeal === assignment.meal;
+
+  if (isSameTarget) {
+    throw new Error('assignment-already-same');
+  }
+
+  if (isAssigned && !assignment.forceMove) {
+    throw new Error('assignment-move-required');
+  }
+
   const menuId = await getOrCreateWeekMenu(services, user.uid, getWeekStart(assignment.dayKey), assignment.locale);
   const menu = await readWeekMenu(services, menuId);
   const result = planTupperAssignment(menu, assignment.dayKey, assignment.meal, tupper, {
@@ -135,13 +156,17 @@ export async function assignTupperToMeal(
     throw new Error(result.reason ?? 'assignment-blocked');
   }
 
+  if (isAssigned) {
+    await removeTupperAssignmentFromMenu(services, tupper, user.uid);
+  }
+
   await updateMenuPatch(services, menuId, user.uid, {
     dayKey: assignment.dayKey,
     path: `meals.${assignment.meal}.items`,
     value: result.nextItems,
   });
 
-  const { db, firestoreModule } = services;
+      const { db, firestoreModule } = services;
   await firestoreModule.updateDoc(firestoreModule.doc(db, tuppersCollection, tupper.id), {
     status: 'assigned',
     assignedMenuId: menuId,
@@ -149,6 +174,25 @@ export async function assignTupperToMeal(
     assignedMeal: assignment.meal,
     updatedAt: firestoreModule.serverTimestamp(),
   });
+}
+
+export async function removeTupperFromMeal(
+  services: FirebaseServices,
+  userId: string,
+  tupper: TupperItem
+) {
+  const hadAssignment = await removeTupperAssignmentFromMenu(services, tupper, userId);
+  const { db, firestoreModule } = services;
+
+  await firestoreModule.updateDoc(firestoreModule.doc(db, tuppersCollection, tupper.id), {
+    status: 'active',
+    assignedMenuId: firestoreModule.deleteField(),
+    assignedDay: firestoreModule.deleteField(),
+    assignedMeal: firestoreModule.deleteField(),
+    updatedAt: firestoreModule.serverTimestamp(),
+  });
+
+  return hadAssignment;
 }
 
 async function readWeekMenu(services: FirebaseServices, menuId: string): Promise<WeekMenu> {
@@ -164,6 +208,36 @@ async function readWeekMenu(services: FirebaseServices, menuId: string): Promise
 
 function getWeekStart(dayKey: string) {
   return toIsoDate(getMonday(new Date(`${dayKey}T00:00:00`)));
+}
+
+async function removeTupperAssignmentFromMenu(
+  services: FirebaseServices,
+  tupper: TupperItem,
+  userId = tupper.createdBy
+) {
+  if (!tupper.assignedMenuId || !tupper.assignedDay || !tupper.assignedMeal) {
+    return false;
+  }
+
+  try {
+    const menu = await readWeekMenu(services, tupper.assignedMenuId);
+    const meal = getMealForAssignment(menu, tupper.assignedDay, tupper.assignedMeal);
+    const nextItems = removeTupperFromMealItems(meal.items, tupper);
+
+    if (nextItems.length === meal.items.length) {
+      return false;
+    }
+
+    await updateMenuPatch(services, tupper.assignedMenuId, userId, {
+      dayKey: tupper.assignedDay,
+      path: `meals.${tupper.assignedMeal}.items`,
+      value: nextItems,
+    });
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function getDishOptions(dishes: Dish[]) {

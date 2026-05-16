@@ -91,6 +91,7 @@ export type Dish = {
   archived?: boolean;
   archivedAt?: Date;
   duplicatedFrom?: string;
+  ingredients?: Array<string | { name: string; quantity?: string; category?: string }>;
   createdAt?: Date;
   lastUsedAt?: Date;
   updatedAt?: Date;

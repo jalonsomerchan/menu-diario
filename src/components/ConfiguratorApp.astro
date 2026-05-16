@@ -14,6 +14,7 @@ const t = useTranslations(locale);
 const tp = usePlanningTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
+const shoppingPath = getLocalizedPath('/compra', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
 
 const labels = {
@@ -22,8 +23,10 @@ const labels = {
   configure: tp('title'),
   configureHint: tp('hint'),
   cancel: t('dashboard.cancel'),
+  save: t('dashboard.save'),
   deleteDay: t('dashboard.deleteDay'),
   editDay: t('dashboard.editDay'),
+  loadMoreDays: t('dashboard.nextSeven'),
   aiLoading: t('ai.loading'),
   aiError: t('ai.error'),
   aiMissingConfig: t('ai.missingConfig'),
@@ -38,6 +41,9 @@ const labels = {
   aiPendingApplied: t('ai.pendingMealsApplied'),
   aiPendingMealLabel: t('ai.pendingMealsMealLabel'),
   aiPendingReasonLabel: t('ai.pendingMealsReasonLabel'),
+  aiPendingDishOriginGlobal: t('ai.pendingMealsDishOriginGlobal'),
+  aiPendingDishOriginGroup: t('ai.pendingMealsDishOriginGroup'),
+  aiPendingDishOriginUser: t('ai.pendingMealsDishOriginUser'),
   'ai.loading': t('ai.loading'),
   'ai.error': t('ai.error'),
   'ai.quotaExhausted': t('ai.quotaExhausted'),
@@ -71,6 +77,7 @@ const labels = {
   guestSession: t('menu.guestSession'),
   offlineReadOnly: t('pwa.offlineReadOnly'),
   tuppers: tt('nav'),
+  shopping: t('appNav.shopping'),
   homePath,
 };
 ---
@@ -104,9 +111,17 @@ const labels = {
           <p class="menu-app__eyebrow">{labels.configureHint}</p>
           <h1>{labels.configure}</h1>
         </div>
-        <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
+        <div class="flex flex-wrap gap-2">
+          <a class="button button--ghost button--small" href={shoppingPath}>{labels.shopping}</a>
+          <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
+        </div>
       </div>
       <div class="menu-days menu-days--cards" data-config-days></div>
+      <div class="configurator-app__load-more">
+        <button class="button button--secondary" type="button" data-config-load-more>
+          {labels.loadMoreDays}
+        </button>
+      </div>
     </section>
   </div>
 
@@ -117,6 +132,7 @@ const labels = {
     saveLabel={labels.save}
     clearLabel={labels.deleteDay}
     saveHint={labels.saveHint}
+    savePendingLabel={labels.savePending}
   />
 </section>
 
@@ -226,6 +242,12 @@ const labels = {
     outline: 0;
   }
 
+  .configurator-app__load-more {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
   .ai-meals-panel {
     display: grid;
     gap: 1rem;
@@ -308,10 +330,22 @@ const labels = {
   }
 
   .ai-meals-panel__list li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     border-radius: var(--radius-full);
     background: color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 22%);
     padding: 0.45rem 0.75rem;
     font-weight: 850;
+  }
+
+  .ai-meals-panel__dish-origin {
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-surface), var(--color-border) 55%);
+    padding: 0.16rem 0.5rem;
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
   }
 
   .ai-meals-panel__reason {

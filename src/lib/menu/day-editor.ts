@@ -25,7 +25,7 @@ function mealLabel(labels: DayEditorLabels, meal: MealSlot) {
 
 function renderReasonFields(labels: DayEditorLabels, reason = '', note = '') {
   return `
-    <div class="day-skip-fields">
+    <div class="day-skip-fields" data-day-skip-fields>
       <label>${escapeHtml(labels.reason)}
         <select data-field="reason">
           <option value=""></option>
@@ -100,7 +100,7 @@ export function renderDayEditor(options: DayEditorOptions) {
   const editorBody = skipped
     ? renderReasonFields(labels, day.reason, day.skipNote)
     : `
-      <div class="day-meals-block">
+      <div class="day-meals-block" data-day-meals-block>
         ${enabledMeals.map((meal) => renderMeal(labels, meal, day.meals[meal] ?? emptyMeal(), dishes)).join('')}
         <label>${escapeHtml(labels.notes)}
           <textarea data-field="notes" rows="3">${escapeHtml(day.notes ?? '')}</textarea>
@@ -109,7 +109,7 @@ export function renderDayEditor(options: DayEditorOptions) {
     `;
 
   return `
-    <article class="day-card day-card--editor ${compact ? 'day-card--compact-editor' : ''}" id="dia-${dayKey}" data-day="${dayKey}">
+    <article class="day-card day-card--editor ${compact ? 'day-card--compact-editor' : ''}" id="dia-${dayKey}" data-day="${dayKey}" data-day-mode="${skipped ? 'skipped' : 'meals'}">
       <header class="day-card__header">
         <div class="day-card__date-number">${escapeHtml(dayNumber)}</div>
         <div class="day-card__title"><h3>${escapeHtml(weekday)}</h3>${dateLabel ? `<p>${escapeHtml(dateLabel)}</p>` : ''}</div>

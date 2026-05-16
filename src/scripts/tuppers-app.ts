@@ -11,6 +11,7 @@ import {
   assignTupperToMeal,
   createTupper,
   getDishOptions,
+  removeTupperFromMeal,
   updateTupperState,
   watchTuppers,
 } from '../lib/tuppers/repository';
@@ -109,9 +110,18 @@ if (root) {
   function renderTupperCard(tupper: TupperItem, targets: ReturnType<typeof getNextTargets>) {
     const state = getTupperExpiryState(tupper);
     const stateLabel = labels[state] ?? state;
-    const locationLabel = tupper.location === 'freezer' ? labels.locationFreezer : tupper.location === 'fridge' ? labels.locationFridge : labels.locationOther;
+    const locationLabel =
+      tupper.location === 'freezer'
+        ? labels.locationFreezer
+        : tupper.location === 'fridge'
+          ? labels.locationFridge
+          : labels.locationOther;
     const targetOptions = targets
-      .map((target) => `<option value="${target.dayKey}|${target.meal}">${escapeHtml(target.label)}</option>`)
+      .map((target) => {
+        const value = `${target.dayKey}|${target.meal}`;
+        const isSelected = tupper.assignedDay === target.dayKey && tupper.assignedMeal === target.meal;
+        return `<option value="${value}" ${isSelected ? 'selected' : ''}>${escapeHtml(target.label)}</option>`;
+      })
       .join('');
 
     return `
@@ -123,6 +133,11 @@ if (root) {
           </div>
           <span class="tupper-card__location">${escapeHtml(locationLabel)}</span>
         </header>
+        ${
+          tupper.status === 'assigned'
+            ? `<p class="tupper-card__assignment">${escapeHtml(formatAssignmentLabel(tupper))}</p>`
+            : ''
+        }
         <dl>
           <div><dt>${escapeHtml(labels.preparedAt)}</dt><dd>${escapeHtml(formatDate(tupper.preparedAt))}</dd></div>
           <div><dt>${escapeHtml(labels.expiresAt)}</dt><dd>${escapeHtml(formatDate(tupper.expiresAt))}</dd></div>
@@ -134,9 +149,16 @@ if (root) {
             <span>${escapeHtml(labels.assignDay)}</span>
             <select data-assign-target>${targetOptions}</select>
           </label>
-          <button class="button button--primary button--small" type="submit">${escapeHtml(labels.assign)}</button>
+          <button class="button button--primary button--small" type="submit">
+            ${escapeHtml(tupper.status === 'assigned' ? labels.reassign : labels.assign)}
+          </button>
         </form>
         <div class="tupper-card__actions">
+          ${
+            tupper.status === 'assigned'
+              ? `<button type="button" data-action="unassign">${escapeHtml(labels.unassign)}</button>`
+              : ''
+          }
           <button type="button" data-action="consume">${escapeHtml(labels.consume)}</button>
           <button type="button" data-action="discard">${escapeHtml(labels.discard)}</button>
           <button type="button" data-action="freeze">${escapeHtml(labels.freeze)}</button>
@@ -148,6 +170,7 @@ if (root) {
   }
 
   function actionMessage(action: string) {
+    if (action === 'unassign') return labels.unassigned;
     if (action === 'consume') return labels.consumed;
     if (action === 'discard') return labels.discarded;
     if (action === 'freeze') return labels.frozen;
@@ -155,6 +178,97 @@ if (root) {
     if (action === 'archive') return labels.archived;
 
     return labels.created;
+  }
+
+  function formatTargetLabel(dayKey: string, meal: MealSlot) {
+    return `${formatDate(dayKey)} · ${labels[meal] ?? meal}`;
+  }
+
+  function formatAssignmentLabel(tupper: TupperItem) {
+    if (!tupper.assignedDay || !tupper.assignedMeal) return '';
+    return `${labels.assignedTo}: ${formatTargetLabel(tupper.assignedDay, tupper.assignedMeal)}`;
+  }
+
+  function formatError(error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message === 'assignment-already-same') return labels.alreadyAssigned;
+    if (message === 'day-skipped') return labels.assignmentBlockedDay;
+    if (message === 'meal-skipped') return labels.assignmentBlockedMeal;
+    if (message === 'already-in-meal') return labels.assignmentBlockedDuplicate;
+    if (message === 'meal-has-items') return labels.assignmentBlocked;
+    return message || labels.assignmentBlocked;
+  }
+
+  async function openAssignmentConfirm(
+    mode: 'append' | 'move' | 'unassign' | 'discard' | 'archive',
+    returnFocusTo?: HTMLElement | null
+  ) {
+    if (!assignmentConfirmation) {
+      return false;
+    }
+
+    if (mode === 'append') {
+      return assignmentConfirmation.open({
+        eyebrow: labels.assign,
+        title: labels.appendConfirmTitle,
+        description: labels.appendConfirm,
+        confirmLabel: labels.assign,
+        cancelLabel: labels.cancel,
+        confirmVariant: 'primary',
+        returnFocusTo,
+        initialFocus: 'cancel',
+      });
+    }
+
+    if (mode === 'move') {
+      return assignmentConfirmation.open({
+        eyebrow: labels.reassign,
+        title: labels.moveConfirmTitle,
+        description: labels.moveConfirm,
+        confirmLabel: labels.reassign,
+        cancelLabel: labels.cancel,
+        confirmVariant: 'primary',
+        returnFocusTo,
+        initialFocus: 'cancel',
+      });
+    }
+
+    if (mode === 'unassign') {
+      return assignmentConfirmation.open({
+        eyebrow: labels.unassign,
+        title: labels.unassignConfirmTitle,
+        description: labels.unassignConfirm,
+        confirmLabel: labels.unassign,
+        cancelLabel: labels.cancel,
+        confirmVariant: 'danger',
+        returnFocusTo,
+        initialFocus: 'cancel',
+      });
+    }
+
+    if (mode === 'discard') {
+      return assignmentConfirmation.open({
+        eyebrow: labels.discard,
+        title: labels.discardConfirmTitle,
+        description: labels.discardConfirm,
+        confirmLabel: labels.discard,
+        cancelLabel: labels.cancel,
+        confirmVariant: 'danger',
+        returnFocusTo,
+        initialFocus: 'cancel',
+      });
+    }
+
+    return assignmentConfirmation.open({
+      eyebrow: labels.archive,
+      title: labels.archiveConfirmTitle,
+      description: labels.archiveConfirm,
+      confirmLabel: labels.archive,
+      cancelLabel: labels.cancel,
+      confirmVariant: 'danger',
+      returnFocusTo,
+      initialFocus: 'cancel',
+    });
   }
 
   dishSelect?.addEventListener('change', () => {
@@ -189,7 +303,7 @@ if (root) {
       if (expiresInput) expiresInput.value = today;
       showStatus(labels.created);
     } catch (error) {
-      showStatus(error instanceof Error ? error.message : labels.assignmentBlocked, true);
+      showStatus(formatError(error), true);
     }
   });
 
@@ -199,12 +313,35 @@ if (root) {
     const tupper = getTupperFromElement(button);
     if (!tupper) return;
 
-    const action = button.dataset.action as 'consume' | 'discard' | 'archive' | 'freeze' | 'defrost';
-    await updateTupperState(firebaseServices, tupper, {
-      status: nextTupperStatus(tupper.status, action),
-      location: nextTupperLocation(tupper.location, action),
-    });
-    showStatus(actionMessage(action));
+    const action = button.dataset.action as 'consume' | 'discard' | 'archive' | 'freeze' | 'defrost' | 'unassign';
+
+    try {
+      if (action === 'unassign') {
+        const confirmed = await openAssignmentConfirm('unassign', button);
+        if (!confirmed) return;
+        await removeTupperFromMeal(firebaseServices, currentUser?.uid ?? tupper.createdBy, tupper);
+        showStatus(actionMessage(action));
+        return;
+      }
+
+      if (action === 'discard') {
+        const confirmed = await openAssignmentConfirm('discard', button);
+        if (!confirmed) return;
+      }
+
+      if (action === 'archive') {
+        const confirmed = await openAssignmentConfirm('archive', button);
+        if (!confirmed) return;
+      }
+
+      await updateTupperState(firebaseServices, tupper, {
+        status: nextTupperStatus(tupper.status, action),
+        location: nextTupperLocation(tupper.location, action),
+      });
+      showStatus(actionMessage(action));
+    } catch (error) {
+      showStatus(formatError(error), true);
+    }
   });
 
   list?.addEventListener('submit', async (event) => {
@@ -217,29 +354,56 @@ if (root) {
     if (!tupper || !target) return;
 
     const [dayKey, meal] = target.split('|') as [string, MealSlot];
-    const allowAppend = assignmentConfirmation
-      ? await assignmentConfirmation.open({
-          eyebrow: labels.assign,
-          title: labels.assignTitle,
-          description: labels.appendConfirm,
-          confirmLabel: labels.assign,
-          cancelLabel: labels.cancel,
-          confirmVariant: 'primary',
-          returnFocusTo: form.querySelector<HTMLButtonElement>('button[type="submit"]'),
-          initialFocus: 'cancel',
-        })
-      : false;
+    const submitButton = form.querySelector<HTMLButtonElement>('button[type="submit"]');
 
-    try {
+    async function submitAssignment(options: { allowAppend?: boolean; forceMove?: boolean } = {}) {
       await assignTupperToMeal(firebaseServices, currentUser, tupper, {
         dayKey,
         meal,
         locale,
-        allowAppend,
+        ...options,
       });
+    }
+
+    try {
+      await submitAssignment();
       showStatus(labels.assigned);
     } catch (error) {
-      showStatus(error instanceof Error ? error.message : labels.assignmentBlocked, true);
+      const message = error instanceof Error ? error.message : '';
+
+      if (message === 'meal-has-items') {
+        const confirmed = await openAssignmentConfirm('append', submitButton);
+        if (!confirmed) return;
+        await submitAssignment({ allowAppend: true });
+        showStatus(labels.assigned);
+        return;
+      }
+
+      if (message === 'assignment-move-required') {
+        const confirmed = await openAssignmentConfirm('move', submitButton);
+        if (!confirmed) return;
+
+        try {
+          await submitAssignment({ forceMove: true });
+          showStatus(labels.assigned);
+          return;
+        } catch (moveError) {
+          const moveMessage = moveError instanceof Error ? moveError.message : '';
+
+          if (moveMessage === 'meal-has-items') {
+            const appendConfirmed = await openAssignmentConfirm('append', submitButton);
+            if (!appendConfirmed) return;
+            await submitAssignment({ forceMove: true, allowAppend: true });
+            showStatus(labels.assigned);
+            return;
+          }
+
+          showStatus(formatError(moveError), true);
+          return;
+        }
+      }
+
+      showStatus(formatError(error), true);
     }
   });
 

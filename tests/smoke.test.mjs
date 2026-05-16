@@ -42,15 +42,19 @@ describe('project smoke checks', () => {
       'astro.config.mjs',
       'src/pages/index.astro',
       'src/pages/dashboard.astro',
+      'src/pages/compra.astro',
       'src/pages/configurar.astro',
       'src/pages/ajustes.astro',
+      'src/pages/admin/platos.astro',
       'src/pages/historico.astro',
       'src/pages/mis-platos.astro',
       'src/pages/platos.astro',
       'src/pages/[locale]/index.astro',
       'src/pages/[locale]/dashboard.astro',
+      'src/pages/[locale]/compra.astro',
       'src/pages/[locale]/configurar.astro',
       'src/pages/[locale]/ajustes.astro',
+      'src/pages/[locale]/admin/platos.astro',
       'src/pages/[locale]/historico.astro',
       'src/pages/[locale]/mis-platos.astro',
       'src/pages/[locale]/platos.astro',
@@ -66,7 +70,9 @@ describe('project smoke checks', () => {
       'src/lib/menu/day-state.ts',
       'src/lib/menu/dish-suggestions.ts',
       'src/lib/ai/pending-meal-recommendations.ts',
+      'src/lib/firebase/auth.ts',
       'src/lib/dishes/helpers.mjs',
+      'src/lib/dishes/admin-import.mjs',
       'src/lib/dishes/repository.ts',
       'src/lib/ui/debounced-task-map.ts',
       'src/lib/ui/save-feedback.ts',
@@ -80,7 +86,7 @@ describe('project smoke checks', () => {
   });
 
   it('keeps shared and app components available', () => {
-    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'DayEditModal', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp'].forEach((component) => {
+    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'DayEditModal', 'DishEditDialog', 'AdminGlobalDishesApp', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp', 'ShoppingApp'].forEach((component) => {
       assert.equal(existsSync(join(root, `src/components/${component}.astro`)), true, `${component}.astro should exist`);
     });
     assert.equal(existsSync(join(root, 'src/components/AppHeader.astro')), false);
@@ -136,9 +142,14 @@ describe('project smoke checks', () => {
         'ai.pendingMealsTitle',
         'ai.pendingMealsDescription',
         'ai.pendingMealsGenerate',
+        'ai.pendingMealsDishOriginGlobal',
+        'ai.pendingMealsDishOriginGroup',
+        'ai.pendingMealsDishOriginUser',
         'history.title',
         'group.title',
         'appNav.settings',
+        'appNav.shopping',
+        'appNav.adminDishes',
         'appNav.openMenu',
         'appNav.closeMenu',
         'appNav.dishes',
@@ -147,7 +158,15 @@ describe('project smoke checks', () => {
         'dishes.groupBadge',
         'dishes.duplicateAsGroup',
         'dishes.notEditable',
+        'adminDishes.title',
+        'adminDishes.deniedTitle',
+        'adminDishes.importTitle',
+        'adminDishes.importResult',
         'menu.signInGoogle',
+        'shopping.title',
+        'shopping.generate',
+        'shopping.statusToBuy',
+        'shopping.categoryVegetables',
       ].forEach((key) => {
         assert.ok(translations[key], `${locale}.json should include ${key}`);
       });
@@ -181,11 +200,13 @@ describe('project smoke checks', () => {
     const pages = [
       'src/pages/index.astro',
       'src/pages/dashboard.astro',
+      'src/pages/compra.astro',
       'src/pages/configurar.astro',
       'src/pages/ajustes.astro',
       'src/pages/historico.astro',
       'src/pages/mis-platos.astro',
       'src/pages/[locale]/dashboard.astro',
+      'src/pages/[locale]/compra.astro',
       'src/pages/[locale]/configurar.astro',
       'src/pages/[locale]/ajustes.astro',
       'src/pages/[locale]/historico.astro',
@@ -197,6 +218,7 @@ describe('project smoke checks', () => {
     assert.match(header, /aria-expanded=\"false\"/);
     assert.match(header, /aria-controls=\{panelId\}/);
     assert.match(header, /getLocalizedPath\('\/dashboard'/);
+    assert.match(header, /getLocalizedPath\('\/compra'/);
     assert.match(header, /getLocalizedPath\('\/configurar'/);
     assert.match(header, /getLocalizedPath\('\/mis-platos'/);
     assert.match(header, /getLocalizedPath\('\/historico'/);
@@ -217,6 +239,7 @@ describe('project smoke checks', () => {
   it('keeps app navigation and feature wiring available', () => {
     const home = readText('src/pages/index.astro');
     const dashboard = readText('src/pages/dashboard.astro');
+    const shoppingPage = readText('src/pages/compra.astro');
     const configure = readText('src/pages/configurar.astro');
     const settings = readText('src/pages/ajustes.astro');
     const history = readText('src/pages/historico.astro');
@@ -227,8 +250,16 @@ describe('project smoke checks', () => {
     const settingsApp = readText('src/components/SettingsApp.astro');
     const historyApp = readText('src/components/HistoryApp.astro');
     const dishesApp = readText('src/components/DishesApp.astro');
+    const shoppingApp = readText('src/components/ShoppingApp.astro');
+    const header = readText('src/components/Header.astro');
+    const appHeaderScript = readText('src/scripts/app-header.ts');
+    const adminPage = readText('src/pages/admin/platos.astro');
+    const adminPageLocalized = readText('src/pages/[locale]/admin/platos.astro');
+    const adminComponent = readText('src/components/AdminGlobalDishesApp.astro');
+    const adminScript = readText('src/scripts/admin-global-dishes-app.ts');
     assert.match(home, /<AuthGate/);
     assert.match(dashboard, /<DashboardApp/);
+    assert.match(shoppingPage, /<ShoppingApp/);
     assert.match(configure, /<ConfiguratorApp/);
     assert.match(settings, /<SettingsApp/);
     assert.match(history, /<HistoryApp/);
@@ -253,12 +284,25 @@ describe('project smoke checks', () => {
     assert.match(historyApp, /<DayEditModal/);
     assert.match(historyApp, /dashboard\.showDishOptions/);
     assert.match(dishesApp, /data-dishes-app/);
+    assert.match(shoppingApp, /data-shopping-app/);
+    assert.match(shoppingApp, /shopping-app\.ts/);
     assert.match(dishesApp, /dishes\.globalBadge/);
+    assert.match(header, /data-admin-link/);
+    assert.match(header, /appNav\.adminDishes/);
+    assert.match(appHeaderScript, /isAdminUser/);
+    assert.match(adminPage, /<AdminGlobalDishesApp/);
+    assert.match(adminPageLocalized, /getStaticPaths/);
+    assert.match(adminComponent, /data-admin-dishes-app/);
+    assert.match(adminComponent, /data-import-preview/);
+    assert.match(adminComponent, /data-editor-dialog/);
+    assert.match(adminScript, /watchGlobalDishes/);
+    assert.match(adminScript, /buildGlobalDishImportPreview/);
   });
 
   it('keeps scoped dish catalog logic, permissions and deduplication wired', () => {
     const types = readText('src/lib/menu/types.ts');
     const dishHelpers = readText('src/lib/dishes/helpers.mjs');
+    const adminImport = readText('src/lib/dishes/admin-import.mjs');
     const dishRepository = readText('src/lib/dishes/repository.ts');
     const menuRepository = readText('src/lib/menu/repository.ts');
     const dishesScript = readText('src/scripts/dishes-app.ts');
@@ -270,20 +314,28 @@ describe('project smoke checks', () => {
     assert.match(types, /editable: boolean/);
     assert.match(types, /archivedAt\?: Date/);
     assert.match(dishHelpers, /normalizeDishName/);
+    assert.match(dishHelpers, /createGlobalDishId/);
+    assert.match(dishHelpers, /normalizeStringList/);
     assert.match(dishHelpers, /isGlobalDish/);
     assert.match(dishHelpers, /isEditableDish/);
     assert.match(dishHelpers, /getDuplicateDish/);
+    assert.match(adminImport, /parseGlobalDishImport/);
+    assert.match(adminImport, /buildGlobalDishImportPreview/);
     assert.match(dishRepository, /watchCatalogDishes/);
+    assert.match(dishRepository, /watchGlobalDishes/);
     assert.match(dishRepository, /recordMenuDishUsage/);
     assert.match(dishRepository, /duplicateGlobalDish/);
+    assert.match(dishRepository, /createGlobalDish/);
+    assert.match(dishRepository, /updateGlobalDishMetadata/);
     assert.match(dishRepository, /dish-duplicate-global/);
     assert.match(dishRepository, /dish-not-editable/);
     assert.match(menuRepository, /recordMenuDishUsage/);
-    assert.match(dishesScript, /data-duplicate-global/);
-    assert.match(dishesScript, /labels\.globalReadOnly/);
+    assert.match(dishesScript, /data-dish-editor-duplicate/);
+    assert.match(dishesScript, /labels\.globalReadOnlyModal/);
     assert.match(dishesScript, /isEditableDish/);
     assert.match(rules, /isAdmin/);
     assert.match(rules, /isGlobalDishData/);
+    assert.match(rules, /isValidGlobalDishWrite/);
     assert.match(rules, /isGroupDishData/);
     assert.match(rules, /request.auth.token.admin == true/);
     assert.match(rules, /allow delete: if false/);
@@ -304,6 +356,7 @@ describe('project smoke checks', () => {
   it('keeps data layer helpers and UI styles wired', () => {
     const repository = readText('src/lib/menu/repository.ts');
     const dayEditor = readText('src/lib/menu/day-editor.ts');
+    const dayEditDraft = readText('src/lib/menu/day-edit-draft.mjs');
     const dayEditModal = readText('src/lib/menu/day-edit-modal.ts');
     const suggestionHelper = readText('src/lib/menu/dish-suggestions.ts');
     const types = readText('src/lib/menu/types.ts');
@@ -337,7 +390,12 @@ describe('project smoke checks', () => {
     assert.match(dayEditor, /data-add-plate/);
     assert.match(dayEditor, /data-remove-plate/);
     assert.match(dayEditor, /data-field=\"skipped\"/);
+    assert.match(dayEditor, /data-day-mode/);
+    assert.match(dayEditor, /data-day-skip-fields/);
+    assert.match(dayEditor, /data-day-meals-block/);
     assert.doesNotMatch(dayEditor, /<datalist/);
+    assert.match(dayEditDraft, /setDaySkippedDraft/);
+    assert.match(dayEditDraft, /applyRecommendedMealDraft/);
     assert.match(suggestionHelper, /attachDishSuggestions/);
     assert.match(suggestionHelper, /suggestionLimit = 6/);
     assert.match(suggestionHelper, /focusin/);
@@ -353,11 +411,20 @@ describe('project smoke checks', () => {
     assert.match(dayEditModal, /renderDayEditor/);
     assert.match(dayEditModal, /data-day-edit-modal/);
     assert.match(dayEditModal, /data-day-edit-save/);
+    assert.match(dayEditModal, /readDayDraft/);
+    assert.match(dayEditModal, /fields\.addEventListener\('input'/);
+    assert.match(dayEditModal, /target\.dataset\.field === 'skipped'/);
+    assert.match(dayEditModal, /setDaySkippedDraft/);
+    assert.match(dayEditModal, /await options\.onSaveDay/);
+    assert.match(dayEditModal, /modal\.close\(\)/);
     assert.match(dayEditModal, /returnFocusTo/);
     assert.match(dayEditModal, /applyRecommendedDishes/);
     assert.match(dayEditModalComponent, /aria-labelledby=\"day-edit-modal-title\"/);
     assert.match(dayEditModalComponent, /data-day-edit-number/);
     assert.match(dayEditModalComponent, /day-edit-modal__close/);
+    assert.match(dayEditModalComponent, /data-day-edit-cancel-footer/);
+    assert.match(dayEditModalComponent, /data-day-edit-save-state/);
+    assert.match(dayEditModalComponent, /aria-live=\"polite\"/);
     assert.match(dashboardScript, /createDayEditModalController/);
     assert.match(dashboardScript, /attachDishSuggestions/);
     assert.match(dashboardScript, /currentProfile\?\.groupId/);
@@ -378,8 +445,8 @@ describe('project smoke checks', () => {
     assert.match(styles, /site-header__toggle/);
     assert.match(styles, /day-actions/);
     assert.match(styles, /dish-suggestions/);
-    assert.match(dishStyles, /dish-badge/);
-    assert.match(dishStyles, /dish-card__quick-tags/);
+    assert.match(dishStyles, /dish-row/);
+    assert.match(dishStyles, /dish-editor-dialog/);
     assert.match(dishStyles, /dishes-list/);
     assert.match(styles, /icon-button/);
     assert.match(styles, /day-skip-toggle/);
@@ -392,7 +459,7 @@ describe('project smoke checks', () => {
     assert.match(rules, /match \/groups/);
   });
 
-  it('keeps debounced save helpers wired in editable apps', () => {
+  it('keeps explicit day-save helpers wired in editable apps', () => {
     const dashboardScript = readText('src/scripts/dashboard-app.ts');
     const configuratorScript = readText('src/scripts/configurator-app.ts');
     const historyScript = readText('src/scripts/history-app.ts');
@@ -401,9 +468,10 @@ describe('project smoke checks', () => {
     const designSystem = readText('docs/design-system.md');
 
     [dashboardScript, configuratorScript, historyScript].forEach((source) => {
-      assert.match(source, /createDebouncedTaskMap/);
       assert.match(source, /updateMenuDay/);
-      assert.match(source, /readDayDraft/);
+      assert.match(source, /onSaveDay/);
+      assert.match(source, /getWriteErrorMessage/);
+      assert.doesNotMatch(source, /createDebouncedTaskMap/);
       assert.doesNotMatch(source, /updateMenuPatch/);
     });
     assert.match(dishesScript, /createSaveFeedback/);

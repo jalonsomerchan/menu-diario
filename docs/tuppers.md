@@ -73,6 +73,8 @@ Tupper: nombre del tupper
 
 La asignación no sobrescribe platos existentes. Si la comida ya contiene platos, la UI pide confirmación antes de añadir el tupper a la lista. Si el día o la comida están marcados como no configurables, la asignación se bloquea.
 
+Si un tupper ya estaba asignado a otra comida, la UI pide confirmación antes de moverlo. También permite quitar una asignación concreta y devolver el tupper al estado activo sin borrarlo del histórico.
+
 ## Integración futura con IA, ingredientes y compra
 
 Los helpers de caducidad priorizan tuppers próximos a caducar. Cuando existan recomendador inteligente, ingredientes o lista de la compra, deben usar `getTupperExpiryState`, `sortTuppersByPriority` y `filterTuppers` para:

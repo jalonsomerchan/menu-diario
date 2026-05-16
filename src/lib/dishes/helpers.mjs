@@ -2,9 +2,12 @@ export const dishSortModes = ['most-used', 'recent', 'oldest', 'name'];
 export const dishFilterModes = ['all', 'favorites', 'blocked'];
 export const dishScopes = ['global', 'group', 'user'];
 
+export function cleanDishName(name) {
+  return String(name ?? '').trim().replace(/\s+/g, ' ');
+}
+
 export function normalizeDishName(name) {
-  return String(name ?? '')
-    .trim()
+  return cleanDishName(name)
     .toLocaleLowerCase('es-ES')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -13,6 +16,15 @@ export function normalizeDishName(name) {
 
 export function getDishId(ownerId, normalizedName, scope = 'group') {
   return `${scope}_${ownerId}_${encodeURIComponent(normalizedName).replaceAll('%', '_')}`.slice(0, 1400);
+}
+
+export function createGlobalDishId(normalizedName) {
+  return getDishId('global', normalizedName, 'global');
+}
+
+export function normalizeStringList(values) {
+  const list = Array.isArray(values) ? values : typeof values === 'string' ? values.split(',') : [];
+  return [...new Set(list.map((item) => cleanDishName(item)).filter(Boolean))];
 }
 
 export function isGlobalDish(dish) {
