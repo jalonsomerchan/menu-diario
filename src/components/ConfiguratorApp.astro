@@ -1,5 +1,6 @@
 ---
 import type { Locale } from '../config/site';
+import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
 interface Props {
@@ -8,7 +9,9 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
+const tuppersPath = getLocalizedPath('/tuppers', locale);
 
 const labels = {
   configMissing: t('menu.configMissing'),
@@ -35,6 +38,7 @@ const labels = {
   notes: t('menu.notes'),
   saveHint: t('menu.saveHint'),
   guestSession: t('menu.guestSession'),
+  tuppers: tt('nav'),
   homePath,
 };
 ---
@@ -50,6 +54,7 @@ const labels = {
           <p class="menu-app__eyebrow">{labels.configureHint}</p>
           <h1>{labels.configure}</h1>
         </div>
+        <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
       </div>
       <div class="menu-days menu-days--cards" data-config-days></div>
     </section>
@@ -158,11 +163,7 @@ const labels = {
   .configurator-app .dish-suggestions button:hover,
   .configurator-app .dish-suggestions button:focus-visible {
     background: var(--color-primary-soft);
-    color: var(--color-text);
+    color: var(--color-primary);
     outline: 0;
   }
 </style>
-
-<script>
-  import '../scripts/configurator-app.ts';
-</script>
