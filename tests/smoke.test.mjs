@@ -258,12 +258,11 @@ describe('project smoke checks', () => {
     assert.match(dishHelpers, /isEditableDish/);
     assert.match(dishHelpers, /getDuplicateDish/);
     assert.match(dishRepository, /watchCatalogDishes/);
+    assert.match(dishRepository, /recordMenuDishUsage/);
     assert.match(dishRepository, /duplicateGlobalDish/);
     assert.match(dishRepository, /dish-duplicate-global/);
     assert.match(dishRepository, /dish-not-editable/);
-    assert.match(menuRepository, /groupId \? 'group' : 'user'/);
-    assert.match(menuRepository, /scope,/);
-    assert.match(menuRepository, /isGlobal: false/);
+    assert.match(menuRepository, /recordMenuDishUsage/);
     assert.match(dishesScript, /data-duplicate-global/);
     assert.match(dishesScript, /labels\.globalReadOnly/);
     assert.match(dishesScript, /isEditableDish/);

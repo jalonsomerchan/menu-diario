@@ -1,5 +1,6 @@
+import { recordMenuDishUsage } from '../dishes/repository';
 import { getMonday, toIsoDate } from '../menu/dates';
-import { getOrCreateWeekMenu, updateMenuPatch, upsertDish } from '../menu/repository';
+import { getOrCreateWeekMenu, updateMenuPatch } from '../menu/repository';
 import type { Dish, FirebaseUser, UserProfile, WeekMenu } from '../menu/types';
 import { planTupperAssignment } from './assignment';
 import { sortTuppersByPriority } from './expiry';
@@ -86,7 +87,7 @@ export async function createTupper(
 
   const { db, firestoreModule } = services;
   const normalizedName = normalizeName(cleanName);
-  await upsertDish(services, user.uid, cleanName);
+  await recordMenuDishUsage(services, user.uid, cleanName);
 
   await firestoreModule.addDoc(firestoreModule.collection(db, tuppersCollection), {
     name: cleanName,

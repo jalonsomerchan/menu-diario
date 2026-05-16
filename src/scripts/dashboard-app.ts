@@ -1,5 +1,6 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
+import { watchUserDishes } from '../lib/dishes/repository';
 import { getMonday, toIsoDate } from '../lib/menu/dates';
 import { renderDayEditor } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
@@ -9,7 +10,6 @@ import {
   ensureUserProfile,
   getOrCreateWeekMenu,
   updateMenuPatch,
-  watchDishes,
   watchUserProfile,
   watchWeekMenu,
 } from '../lib/menu/repository';
@@ -420,7 +420,7 @@ if (root) {
               currentProfile = profile;
               applyTheme(profile.theme);
               unsubscribeDishes?.();
-              unsubscribeDishes = watchDishes(
+              unsubscribeDishes = watchUserDishes(
                 services,
                 user.uid,
                 (nextDishes) => {
@@ -428,6 +428,7 @@ if (root) {
                   if (currentMenu) renderDashboard(currentMenu);
                 },
                 (error) => showStatus(error.message, true),
+                false,
                 profile.groupId
               );
               if (currentMenu) {

@@ -1,7 +1,8 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
+import { watchUserDishes } from '../lib/dishes/repository';
 import { toIsoDate } from '../lib/menu/dates';
-import { watchDishes, watchUserProfile } from '../lib/menu/repository';
+import { watchUserProfile } from '../lib/menu/repository';
 import type { Dish, FirebaseUser, MealSlot, UserProfile } from '../lib/menu/types';
 import { getTupperExpiryState } from '../lib/tuppers/expiry';
 import { filterTuppers, nextTupperLocation, nextTupperStatus, shouldShowExpiryWarning } from '../lib/tuppers/state';
@@ -256,7 +257,7 @@ if (root) {
             render();
           }, (error) => showStatus(error.message, true));
 
-          unsubscribeDishes = watchDishes(services, user.uid, (nextDishes) => {
+          unsubscribeDishes = watchUserDishes(services, user.uid, (nextDishes) => {
             dishes = nextDishes;
             renderDishes();
           }, (error) => showStatus(error.message, true));

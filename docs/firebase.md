@@ -251,6 +251,8 @@ La forma normalizada del menú vive en `src/lib/menu/normalizers.ts`. La UI y el
 
 El catálogo de platos usa **una sola colección** `dishes`. Se eligió este modelo para no duplicar consultas, normalización, deduplicación, UI, sugerencias y futuras funciones de IA. La separación se hace con campos explícitos de ámbito y permisos.
 
+Toda la lectura y escritura de platos vive en `src/lib/dishes/repository.ts`. `src/lib/menu/repository.ts` no duplica reglas del catálogo: solo delega el registro de uso cuando el menú añade o modifica platos.
+
 #### Plato general
 
 Creado o gestionado por administración. Visible para usuarios autenticados y no editable desde la UI normal.
