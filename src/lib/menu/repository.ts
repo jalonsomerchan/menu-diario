@@ -1,5 +1,6 @@
 import { getWeekDays, getWeekTitle } from './dates';
 import { getAddedDishNames, isSameDayMenu } from './day-state';
+import { getAddedDishNamesFromItems } from './dish-usage.mjs';
 import { emptyDay, normalizeDay } from './normalizers';
 import { recordMenuDishUsage } from '../dishes/repository';
 import type {
@@ -70,6 +71,13 @@ function mapUserProfile(id: string, data: Record<string, any>, fallbackName: str
 
 function mapGroup(id: string, data: Record<string, any>): MenuGroup {
   return { id, name: data.name ?? 'Menu Diario', ownerId: data.ownerId, members: data.members ?? [], memberEmails: data.memberEmails ?? [], pendingEmails: data.pendingEmails ?? [], inviteCode: data.inviteCode, enabledMeals: normalizeEnabledMeals(data.enabledMeals), updatedAt: data.updatedAt?.toDate?.() };
+}
+
+function getPatchMealItems(previousDay: DailyMenu, path: string) {
+  const match = path.match(/^meals\.(breakfast|lunch|dinner)\.items$/);
+  if (match) return previousDay.meals[match[1] as MealSlot].items;
+  if (path === 'lunchItems') return previousDay.meals.lunch.items;
+  return [];
 }
 
 export async function ensureUserProfile(services: FirebaseServices, user: FirebaseUser, guestLabel: string) {
@@ -223,9 +231,14 @@ export async function updateMenuPatch(services: FirebaseServices, menuId: string
   const path = patch.path ?? patch.slot;
   if (!path) return;
   const { db, firestoreModule } = services;
-  await firestoreModule.updateDoc(firestoreModule.doc(db, menusCollection, menuId), { [`days.${patch.dayKey}.${path}`]: patch.value, updatedAt: firestoreModule.serverTimestamp(), updatedBy: userId });
-  if ((path.endsWith('.items') || path === 'lunchItems') && Array.isArray(patch.value)) {
-    await Promise.all(patch.value.map((item) => recordMenuDishUsage(services, userId, item, groupId)));
+  const menuRef = firestoreModule.doc(db, menusCollection, menuId);
+  const shouldRecordItems = (path.endsWith('.items') || path === 'lunchItems') && Array.isArray(patch.value);
+  const snapshot = shouldRecordItems ? await firestoreModule.getDoc(menuRef) : null;
+  const previousDay = normalizeDay(snapshot?.exists?.() ? snapshot.data()?.days?.[patch.dayKey] : undefined);
+  const addedItems = shouldRecordItems ? getAddedDishNamesFromItems(getPatchMealItems(previousDay, path), patch.value) : [];
+  await firestoreModule.updateDoc(menuRef, { [`days.${patch.dayKey}.${path}`]: patch.value, updatedAt: firestoreModule.serverTimestamp(), updatedBy: userId });
+  if (addedItems.length) {
+    await Promise.all(addedItems.map((item) => recordMenuDishUsage(services, userId, item, groupId)));
   }
 }
 
