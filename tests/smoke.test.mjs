@@ -347,7 +347,7 @@ describe('project smoke checks', () => {
     assert.match(styles, /dish-suggestions/);
     assert.match(dishStyles, /dish-badge/);
     assert.match(dishStyles, /dish-card__quick-tags/);
-    assert.match(dishStyles, /dish-list/);
+    assert.match(dishStyles, /dishes-list/);
     assert.match(styles, /icon-button/);
     assert.match(styles, /day-skip-toggle/);
     assert.match(styles, /quick-edit-modal/);
