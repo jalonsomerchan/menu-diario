@@ -64,5 +64,14 @@ service cloud.firestore {
       allow update: if isMemberDocument() || willBeMemberDocument();
       allow delete: if signedIn() && resource.data.createdBy == request.auth.uid;
     }
+
+    match /tuppers/{tupperId} {
+      allow create: if signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.auth.uid in request.resource.data.members;
+      allow read: if signedIn();
+      allow update: if isMemberDocument() || willBeMemberDocument();
+      allow delete: if signedIn() && resource.data.createdBy == request.auth.uid;
+    }
   }
 }
