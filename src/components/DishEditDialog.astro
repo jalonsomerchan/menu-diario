@@ -1,0 +1,39 @@
+---
+interface Props {
+  dialogId?: string;
+  cancelLabel: string;
+  saveLabel: string;
+  archiveLabel: string;
+  duplicateLabel: string;
+}
+
+const { dialogId = 'dish-editor-dialog', cancelLabel, saveLabel, archiveLabel, duplicateLabel } = Astro.props;
+const titleId = `${dialogId}-title`;
+const descriptionId = `${dialogId}-description`;
+---
+
+<dialog
+  class="dish-editor-dialog"
+  data-dish-editor-dialog
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby={titleId}
+  aria-describedby={descriptionId}
+>
+  <form class="dish-editor-dialog__surface" data-dish-editor-form>
+    <header class="dish-editor-dialog__header">
+      <p class="menu-app__eyebrow" data-dish-editor-eyebrow></p>
+      <h2 id={titleId} data-dish-editor-title></h2>
+      <p id={descriptionId} class="dish-editor-dialog__description" data-dish-editor-description></p>
+    </header>
+
+    <div class="dish-editor-dialog__body" data-dish-editor-body></div>
+
+    <footer class="dish-editor-dialog__footer">
+      <button class="button button--ghost" type="button" data-dish-editor-cancel>{cancelLabel}</button>
+      <button class="button button--danger" type="button" data-dish-editor-archive hidden>{archiveLabel}</button>
+      <button class="button button--secondary" type="button" data-dish-editor-duplicate hidden>{duplicateLabel}</button>
+      <button class="button button--primary" type="submit" data-dish-editor-save>{saveLabel}</button>
+    </footer>
+  </form>
+</dialog>

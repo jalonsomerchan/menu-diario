@@ -1,5 +1,6 @@
 ---
 import ConfirmDialog from './ConfirmDialog.astro';
+import DishEditDialog from './DishEditDialog.astro';
 import { quickDishTags } from '../data/dish-tags';
 import type { Locale } from '../config/site';
 import { getLocalizedPath, useTranslations, type TranslationKey } from '../i18n/ui';
@@ -39,6 +40,7 @@ const labels = {
   filterBlocked: t('dishes.filterBlocked'),
   filterTag: t('dishes.filterTag'),
   allTags: t('dishes.allTags'),
+  compactList: t('dishes.compactList'),
   timesUsed: t('dishes.timesUsed'),
   lastUsed: t('dishes.lastUsed'),
   createdAt: t('dishes.createdAt'),
@@ -49,6 +51,9 @@ const labels = {
   removeTag: t('dishes.removeTag'),
   noQuickTags: t('dishes.noQuickTags'),
   edit: t('dishes.edit'),
+  editCompact: t('dishes.editCompact'),
+  editDishAria: t('dishes.editDishAria'),
+  editTitle: t('dishes.editTitle'),
   archive: t('dishes.archive'),
   duplicateGlobal: t('dishes.duplicateGlobal'),
   duplicateAsGroup: t('dishes.duplicateAsGroup'),
@@ -56,13 +61,36 @@ const labels = {
   groupBadge: t('dishes.groupBadge'),
   readOnlyBadge: t('dishes.readOnlyBadge'),
   globalReadOnly: t('dishes.globalReadOnly'),
+  globalReadOnlyModal: t('dishes.globalReadOnlyModal'),
+  editableHint: t('dishes.editableHint'),
   duplicated: t('dishes.duplicated'),
   markFavorite: t('dishes.markFavorite'),
   unmarkFavorite: t('dishes.unmarkFavorite'),
   block: t('dishes.block'),
   unblock: t('dishes.unblock'),
   favoriteBadge: t('dishes.favoriteBadge'),
+  notFavoriteBadge: t('dishes.notFavoriteBadge'),
   blockedBadge: t('dishes.blockedBadge'),
+  favoriteField: t('dishes.favoriteField'),
+  blockedField: t('dishes.blockedField'),
+  archivedField: t('dishes.archivedField'),
+  activeState: t('dishes.activeState'),
+  archivedState: t('dishes.archivedState'),
+  statusSection: t('dishes.statusSection'),
+  statistics: t('dishes.statistics'),
+  origin: t('dishes.origin'),
+  originGlobal: t('dishes.originGlobal'),
+  originGroup: t('dishes.originGroup'),
+  originUser: t('dishes.originUser'),
+  source: t('dishes.source'),
+  sourceLabels: {
+    admin: t('dishes.sourceAdmin'),
+    group: t('dishes.sourceGroup'),
+    legacy: t('dishes.sourceLegacy'),
+    'duplicated-global': t('dishes.sourceDuplicatedGlobal'),
+    manual: t('dishes.sourceManual'),
+    menu: t('dishes.sourceMenu'),
+  },
   preferencesUpdated: t('dishes.preferencesUpdated'),
   savePending: t('menu.savePending'),
   saveSaving: t('menu.saveSaving'),
@@ -140,8 +168,16 @@ const labels = {
       </label>
     </section>
 
-    <div class="dishes-list" data-dishes-list></div>
+    <div class="dishes-list" data-dishes-list aria-label={labels.compactList}></div>
   </div>
+
+  <DishEditDialog
+    dialogId="dish-editor-dialog"
+    cancelLabel={labels.cancel}
+    saveLabel={labels.save}
+    archiveLabel={labels.archive}
+    duplicateLabel={labels.duplicateAsGroup}
+  />
 
   <ConfirmDialog
     dialogId="dishes-confirm"

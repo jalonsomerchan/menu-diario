@@ -1195,6 +1195,14 @@ Un modal debe:
 - Devolver el foco al elemento que lo abrió.
 - Bloquear interacción con el fondo.
 
+Patrón reutilizable recomendado para listados densos:
+
+- Mantener la vista principal compacta y orientada a escaneo.
+- Dejar en la fila o tarjeta compacta solo el dato primario y una o dos acciones rápidas.
+- Mover metadatos, toggles secundarios, estadísticas y acciones destructivas a un modal accesible.
+- Usar `<dialog>` nativo cuando encaje con la app para reducir dependencia y complejidad.
+- En móvil, garantizar objetivos táctiles de al menos `44px` y evitar tarjetas altas con demasiado contenido.
+
 ---
 
 ## 15. Estados de interfaz
@@ -1299,6 +1307,12 @@ Los listados deben tener:
 - Imagen optimizada si aplica.
 - Paginación o carga controlada.
 - Enlaces internos.
+
+Si el listado es de gestión y no editorial:
+
+- Priorizar filas compactas frente a tarjetas grandes.
+- Reservar badges, fechas, estadísticas y formularios completos para una vista de detalle o modal.
+- Mantener búsqueda, filtros y ordenación visibles, pero separados del contenido de cada fila.
 
 ### 17.2 Artículos
 

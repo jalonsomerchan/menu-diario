@@ -314,6 +314,68 @@ export async function renameDish(services: FirebaseServices, userId: string, dis
   await firestoreModule.setDoc(firestoreModule.doc(db, dishesCollection, dish.id), { name: cleanName, normalizedName, updatedAt: firestoreModule.serverTimestamp() }, { merge: true });
 }
 
+export async function saveDishEdits(
+  services: FirebaseServices,
+  userId: string,
+  dish: Dish,
+  nextValues: { name: string; favorite: boolean; blocked: boolean; quickTags: string[] }
+) {
+  if (!isEditableDish(dish)) throw new Error('dish-not-editable');
+
+  const cleanName = nextValues.name.trim().replace(/\s+/g, ' ');
+  const normalizedName = normalizeDishName(cleanName);
+  if (normalizedName.length < 2) throw new Error('dish-invalid-name');
+
+  const { db, firestoreModule } = services;
+  const groupId = dish.groupId;
+
+  if (normalizedName !== dish.normalizedName) {
+    const duplicate = await findVisibleDuplicate(services, normalizedName, groupId, userId, dish.id);
+    if (duplicate) throw new Error(duplicate.isGlobal ? 'dish-duplicate-global' : 'dish-duplicate');
+
+    const nextRef = ownDishRef(services, userId, normalizedName, groupId);
+    await firestoreModule.setDoc(
+      nextRef,
+      ownDishPayload(services, {
+        userId,
+        groupId,
+        cleanName,
+        normalizedName,
+        source: dish.source ?? 'group',
+        timesUsed: dish.timesUsed ?? 0,
+        favorite: nextValues.favorite,
+        blocked: nextValues.blocked,
+        archived: false,
+        archivedAt: null,
+        tags: dish.tags ?? [],
+        quickTags: nextValues.quickTags,
+        duplicatedFrom: dish.duplicatedFrom ?? null,
+        lastUsedAt: dish.lastUsedAt ?? null,
+        existing: {
+          members: dish.members,
+          createdAt: dish.createdAt,
+        },
+      }),
+      { merge: true }
+    );
+    await archiveDish(services, dish.id);
+    return;
+  }
+
+  await firestoreModule.setDoc(
+    firestoreModule.doc(db, dishesCollection, dish.id),
+    {
+      name: cleanName,
+      normalizedName,
+      favorite: nextValues.favorite,
+      blocked: nextValues.blocked,
+      quickTags: nextValues.quickTags,
+      updatedAt: firestoreModule.serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
 export async function updateDishPreferences(services: FirebaseServices, dishId: string, preferences: { favorite?: boolean; blocked?: boolean; quickTags?: string[] }) {
   const { db, firestoreModule } = services;
   const dishRef = firestoreModule.doc(db, dishesCollection, dishId);

@@ -80,7 +80,7 @@ describe('project smoke checks', () => {
   });
 
   it('keeps shared and app components available', () => {
-    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'DayEditModal', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp'].forEach((component) => {
+    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'DayEditModal', 'DishEditDialog', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp'].forEach((component) => {
       assert.equal(existsSync(join(root, `src/components/${component}.astro`)), true, `${component}.astro should exist`);
     });
     assert.equal(existsSync(join(root, 'src/components/AppHeader.astro')), false);
@@ -279,8 +279,8 @@ describe('project smoke checks', () => {
     assert.match(dishRepository, /dish-duplicate-global/);
     assert.match(dishRepository, /dish-not-editable/);
     assert.match(menuRepository, /recordMenuDishUsage/);
-    assert.match(dishesScript, /data-duplicate-global/);
-    assert.match(dishesScript, /labels\.globalReadOnly/);
+    assert.match(dishesScript, /data-dish-editor-duplicate/);
+    assert.match(dishesScript, /labels\.globalReadOnlyModal/);
     assert.match(dishesScript, /isEditableDish/);
     assert.match(rules, /isAdmin/);
     assert.match(rules, /isGlobalDishData/);
@@ -378,8 +378,8 @@ describe('project smoke checks', () => {
     assert.match(styles, /site-header__toggle/);
     assert.match(styles, /day-actions/);
     assert.match(styles, /dish-suggestions/);
-    assert.match(dishStyles, /dish-badge/);
-    assert.match(dishStyles, /dish-card__quick-tags/);
+    assert.match(dishStyles, /dish-row/);
+    assert.match(dishStyles, /dish-editor-dialog/);
     assert.match(dishStyles, /dishes-list/);
     assert.match(styles, /icon-button/);
     assert.match(styles, /day-skip-toggle/);
