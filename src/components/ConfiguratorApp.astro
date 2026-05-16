@@ -24,6 +24,7 @@ const labels = {
   save: t('dashboard.save'),
   deleteDay: t('dashboard.deleteDay'),
   editDay: t('dashboard.editDay'),
+  loadMoreDays: t('dashboard.loadMoreDays'),
   aiLoading: t('ai.loading'),
   aiError: t('ai.error'),
   aiMissingConfig: t('ai.missingConfig'),
@@ -114,6 +115,11 @@ const labels = {
         </div>
       </div>
       <div class="menu-days menu-days--cards" data-config-days></div>
+      <div class="configurator-app__load-more">
+        <button class="button button--secondary" type="button" data-config-load-more>
+          {labels.loadMoreDays}
+        </button>
+      </div>
     </section>
   </div>
 
@@ -232,6 +238,12 @@ const labels = {
     background: var(--color-primary-soft);
     color: var(--color-primary);
     outline: 0;
+  }
+
+  .configurator-app__load-more {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
   }
 
   .ai-meals-panel {
