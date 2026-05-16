@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/Container.astro';
+import ConfiguratorApp from '../components/ConfiguratorApp.astro';
+import { defaultLocale, siteConfig } from '../config/site';
+import { usePlanningTranslations } from '../i18n/planning';
+import { useTranslations } from '../i18n/ui';
+
+const locale = defaultLocale;
+const t = useTranslations(locale);
+const tp = usePlanningTranslations(locale);
+---
+
+<BaseLayout title={`${tp('title')} · ${siteConfig.name}`} description={t('site.description')} locale={locale}>
+  <Container class="py-4 sm:py-6">
+    <ConfiguratorApp locale={locale} />
+  </Container>
+</BaseLayout>
