@@ -94,7 +94,7 @@ describe('Tuppers domain helpers', () => {
     assert.match(script, /watchTuppers/);
     assert.match(script, /assignTupperToMeal/);
     assert.match(script, /window\.confirm\(labels\.appendConfirm\)/);
-    assert.match(rules, /match \/tuppers\/{tupperId}/);
+    assert.ok(rules.includes('match /tuppers/{tupperId}'));
   });
 
   it('documents Firestore model and future integrations', () => {
