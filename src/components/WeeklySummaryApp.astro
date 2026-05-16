@@ -1,0 +1,118 @@
+---
+import type { Locale } from '../config/site';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+import '../styles/weekly-summary.css';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const homePath = getLocalizedPath('/', locale);
+const dishesPath = getLocalizedPath('/mis-platos', locale);
+const configurePath = getLocalizedPath('/configurar', locale);
+
+const labels = {
+  configMissing: t('menu.configMissing'),
+  permissionsError: t('menu.permissionsError'),
+  guestSession: t('menu.guestSession'),
+  loading: t('dashboard.loading'),
+  saveSaved: t('menu.saveSaved'),
+  title: t('summary.title'),
+  description: t('summary.description'),
+  eyebrow: t('summary.eyebrow'),
+  weekLabel: t('summary.weekLabel'),
+  plannedMeals: t('summary.plannedMeals'),
+  emptyMeals: t('summary.emptyMeals'),
+  eatingOutMeals: t('summary.eatingOutMeals'),
+  totalMeals: t('summary.totalMeals'),
+  topDishes: t('summary.topDishes'),
+  repeatedDishes: t('summary.repeatedDishes'),
+  comparison: t('summary.comparison'),
+  recommendations: t('summary.recommendations'),
+  latestDish: t('summary.latestDish'),
+  emptyTopDishes: t('summary.emptyTopDishes'),
+  emptyRepeatedDishes: t('summary.emptyRepeatedDishes'),
+  notEnoughHistory: t('summary.notEnoughHistory'),
+  noLatestDish: t('summary.noLatestDish'),
+  noData: t('summary.noData'),
+  recommendationDefault: t('summary.recommendationDefault'),
+  'recommendation.empty-week': t('summary.recommendation.emptyWeek'),
+  'recommendation.repeated-dish': t('summary.recommendation.repeatedDish'),
+  'recommendation.stale-dish': t('summary.recommendation.staleDish'),
+  'recommendation.balanced-week': t('summary.recommendation.balancedWeek'),
+  aiReady: t('summary.aiReady'),
+  dishesReady: t('summary.dishesReady'),
+  configureReady: t('summary.configureReady'),
+  dishesLink: t('summary.dishesLink'),
+  configureLink: t('summary.configureLink'),
+  homePath,
+};
+---
+
+<section class="weekly-summary-app" data-weekly-summary-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
+  <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
+
+  <div class="weekly-summary-app__content" data-content hidden>
+    <section class="weekly-summary-hero app-panel" aria-labelledby="weekly-summary-title">
+      <div>
+        <p class="menu-app__eyebrow">{labels.eyebrow}</p>
+        <h1 id="weekly-summary-title">{labels.title}</h1>
+        <p>{labels.description}</p>
+      </div>
+      <label class="weekly-summary-week">
+        <span>{labels.weekLabel}</span>
+        <select data-week-select></select>
+      </label>
+    </section>
+
+    <section class="weekly-summary-grid" aria-label={labels.title} data-summary-metrics></section>
+
+    <section class="weekly-summary-sections">
+      <article class="weekly-summary-panel app-panel">
+        <h2>{labels.topDishes}</h2>
+        <div data-top-dishes></div>
+      </article>
+
+      <article class="weekly-summary-panel app-panel">
+        <h2>{labels.repeatedDishes}</h2>
+        <div data-repeated-dishes></div>
+      </article>
+
+      <article class="weekly-summary-panel app-panel">
+        <h2>{labels.comparison}</h2>
+        <div data-comparison></div>
+      </article>
+
+      <article class="weekly-summary-panel app-panel">
+        <h2>{labels.latestDish}</h2>
+        <div class="weekly-summary-latest" data-latest-dish></div>
+      </article>
+    </section>
+
+    <section class="weekly-summary-panel weekly-summary-panel--highlight app-panel" aria-labelledby="weekly-summary-recommendations">
+      <div class="weekly-summary-panel__heading">
+        <div>
+          <p class="menu-app__eyebrow">{labels.aiReady}</p>
+          <h2 id="weekly-summary-recommendations">{labels.recommendations}</h2>
+        </div>
+        <div class="weekly-summary-actions">
+          <a class="button button--ghost button--small" href={dishesPath}>{labels.dishesLink}</a>
+          <a class="button button--primary button--small" href={configurePath}>{labels.configureLink}</a>
+        </div>
+      </div>
+      <ul class="weekly-summary-recommendations" data-recommendations></ul>
+      <div class="weekly-summary-readiness" aria-label={labels.aiReady}>
+        <span>{labels.aiReady}</span>
+        <span>{labels.dishesReady}</span>
+        <span>{labels.configureReady}</span>
+      </div>
+    </section>
+  </div>
+</section>
+
+<script>
+  import '../scripts/weekly-summary-app.ts';
+</script>
