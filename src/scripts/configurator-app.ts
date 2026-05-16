@@ -49,7 +49,12 @@ if (root) {
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
   let dishes: Dish[] = [];
-  let pendingAiRecommendations: Array<{ dayKey: string; meal: MealSlot; dishes: string[]; reason: string }> = [];
+  let pendingAiRecommendations: Array<{
+    dayKey: string;
+    meal: MealSlot;
+    dishes: Array<{ id: string; name: string; scope: Dish['scope']; isGlobal: boolean }>;
+    reason: string;
+  }> = [];
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
@@ -144,6 +149,12 @@ if (root) {
     return labels[meal] ?? meal;
   }
 
+  function getDishOriginLabel(dish: { scope: Dish['scope']; isGlobal: boolean }) {
+    if (dish.isGlobal || dish.scope === 'global') return labels.aiPendingDishOriginGlobal;
+    if (dish.scope === 'group') return labels.aiPendingDishOriginGroup;
+    return labels.aiPendingDishOriginUser;
+  }
+
   function reasonLabel(reason = '') {
     if (reason === 'away') return labels.reasonAway;
     if (reason === 'eating-out') return labels.reasonEatingOut;
@@ -227,7 +238,16 @@ if (root) {
               <span class="ai-meals-panel__badge">${escapeHtml(labels.aiPendingMealLabel)}</span>
             </header>
             <ul class="ai-meals-panel__list">
-              ${recommendation.dishes.map((dish) => `<li>${escapeHtml(dish)}</li>`).join('')}
+              ${recommendation.dishes
+                .map(
+                  (dish) => `
+                    <li>
+                      <span>${escapeHtml(dish.name)}</span>
+                      <span class="ai-meals-panel__dish-origin">${escapeHtml(getDishOriginLabel(dish))}</span>
+                    </li>
+                  `
+                )
+                .join('')}
             </ul>
             ${
               recommendation.reason
@@ -360,7 +380,11 @@ if (root) {
     const recommendation = pendingAiRecommendations[index];
     if (!recommendation) return;
 
-    dayEditModal.applyRecommendedDishes(recommendation.dayKey, recommendation.meal, recommendation.dishes);
+    dayEditModal.applyRecommendedDishes(
+      recommendation.dayKey,
+      recommendation.meal,
+      recommendation.dishes.map((dish) => dish.name)
+    );
     pendingAiRecommendations = pendingAiRecommendations.filter((_, itemIndex) => itemIndex !== index);
     showAiStatus(labels.aiPendingApplied);
     renderAiResults();

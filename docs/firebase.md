@@ -127,9 +127,16 @@ Privacidad actual del prompt:
 
 - incluye locale activo,
 - incluye día/comida pendiente,
-- incluye nombres de platos visibles y algunas señales de catálogo como favorito, etiquetas rápidas y uso,
+- incluye nombres de platos visibles y algunas señales mínimas de catálogo como scope (`global`, `group`, `user`), favorito, etiquetas rápidas y uso,
 - no incluye emails ni notas personales del menú,
 - no incluye identificadores de usuario en el prompt.
+
+Semántica actual al aplicar recomendaciones con platos generales:
+
+- un plato global puede aplicarse directamente al menú sin duplicarlo como plato propio,
+- si el plato recomendado ya existe como propio visible, se incrementa ese plato propio,
+- si solo existe como global visible, se incrementan `timesUsed` y `lastUsedAt` del plato global,
+- no se crea una copia local automática solo por usar una recomendación IA.
 
 Si más adelante se añaden más flujos de IA, deben consolidarse sobre `src/lib/ai/` y evitar bases paralelas.
 

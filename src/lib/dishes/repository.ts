@@ -277,7 +277,21 @@ export async function recordMenuDishUsage(services: FirebaseServices, userId: st
     return;
   }
 
-  if (await findGlobalDuplicate(services, normalizedName)) return;
+  const globalDuplicate = await findGlobalDuplicate(services, normalizedName);
+  if (globalDuplicate) {
+    await firestoreModule.setDoc(
+      globalDishRef(services, normalizedName),
+      {
+        timesUsed: firestoreModule.increment(1),
+        lastUsedAt: firestoreModule.serverTimestamp(),
+        archived: false,
+        archivedAt: null,
+        updatedAt: firestoreModule.serverTimestamp(),
+      },
+      { merge: true }
+    );
+    return;
+  }
 
   await firestoreModule.setDoc(
     dishRef,

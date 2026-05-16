@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   assignPendingMealRecommendations,
+  buildPendingMealPrompt,
   getPendingMealSlots,
   isPendingMealRecommendationResponse,
 } from '../src/lib/ai/pending-meal-recommendations.ts';
@@ -57,7 +58,7 @@ describe('pending meal AI recommendations', () => {
     );
   });
 
-  it('assigns recommendations only to pending slots and visible catalog dishes', () => {
+  it('assigns recommendations only to pending slots and visible catalog dishes from a mixed catalog', () => {
     const assigned = assignPendingMealRecommendations({
       pendingMeals: [
         { dayKey: '2026-05-17', meal: 'lunch' },
@@ -74,6 +75,18 @@ describe('pending meal AI recommendations', () => {
           isGlobal: false,
           editable: true,
           timesUsed: 3,
+        },
+        {
+          id: 'dish-0',
+          name: 'Crema de calabaza',
+          normalizedName: 'crema de calabaza',
+          scope: 'global',
+          source: 'admin',
+          createdBy: 'admin-1',
+          isGlobal: true,
+          editable: false,
+          favorite: true,
+          timesUsed: 5,
         },
         {
           id: 'dish-2',
@@ -93,8 +106,8 @@ describe('pending meal AI recommendations', () => {
           {
             dayKey: '2026-05-17',
             meal: 'lunch',
-            dishes: ['Lentejas', 'Plato inventado', 'lentejas'],
-            reason: 'Favorito y fácil de repetir.',
+            dishes: ['Crema de calabaza', 'Plato inventado', 'Lentejas'],
+            reason: 'Mezcla una opción general conocida con un plato propio frecuente.',
           },
           {
             dayKey: '2026-05-18',
@@ -116,9 +129,76 @@ describe('pending meal AI recommendations', () => {
       {
         dayKey: '2026-05-17',
         meal: 'lunch',
-        dishes: ['Lentejas'],
-        reason: 'Favorito y fácil de repetir.',
+        dishes: [
+          {
+            id: 'dish-0',
+            name: 'Crema de calabaza',
+            scope: 'global',
+            isGlobal: true,
+          },
+          {
+            id: 'dish-1',
+            name: 'Lentejas',
+            scope: 'group',
+            isGlobal: false,
+          },
+        ],
+        reason: 'Mezcla una opción general conocida con un plato propio frecuente.',
       },
     ]);
+  });
+
+  it('keeps blocked and archived dishes out of the prompt catalog', () => {
+    const prompt = buildPendingMealPrompt({
+      locale: 'es-ES',
+      pendingMeals: [{ dayKey: '2026-05-17', meal: 'lunch' }],
+      mealLabels: {
+        breakfast: 'Desayuno',
+        lunch: 'Comida',
+        dinner: 'Cena',
+      },
+      dishes: [
+        {
+          id: 'dish-1',
+          name: 'General visible',
+          normalizedName: 'general visible',
+          scope: 'global',
+          source: 'admin',
+          createdBy: 'admin-1',
+          isGlobal: true,
+          editable: false,
+          favorite: true,
+          timesUsed: 4,
+        },
+        {
+          id: 'dish-2',
+          name: 'Bloqueado',
+          normalizedName: 'bloqueado',
+          scope: 'group',
+          source: 'group',
+          createdBy: 'user-1',
+          isGlobal: false,
+          editable: true,
+          blocked: true,
+          timesUsed: 2,
+        },
+        {
+          id: 'dish-3',
+          name: 'Archivado',
+          normalizedName: 'archivado',
+          scope: 'user',
+          source: 'legacy',
+          createdBy: 'user-1',
+          isGlobal: false,
+          editable: true,
+          archived: true,
+          timesUsed: 1,
+        },
+      ],
+    });
+
+    assert.match(prompt, /General visible \| scope:global \| favorite \| timesUsed:4/);
+    assert.doesNotMatch(prompt, /Bloqueado/);
+    assert.doesNotMatch(prompt, /Archivado/);
   });
 });

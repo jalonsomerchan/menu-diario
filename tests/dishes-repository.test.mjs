@@ -7,6 +7,7 @@ import {
   recordMenuDishUsage,
   watchUserDishes,
 } from '../src/lib/dishes/repository.ts';
+import { createGlobalDishId } from '../src/lib/dishes/helpers.mjs';
 
 function createFirestoreHarness(initialStore = {}) {
   const store = new Map(
@@ -208,6 +209,45 @@ describe('dishes repository', () => {
       lastUsedAt: new Date('2026-05-16T08:00:00.000Z'),
       updatedAt: new Date('2026-05-16T08:00:00.000Z'),
     });
+  });
+
+  it('registers menu dish usage on the global dish when there is no own duplicate', async () => {
+    const globalDishId = createGlobalDishId('lasana');
+    const { services, read } = createFirestoreHarness({
+      dishes: {
+        [globalDishId]: {
+          name: 'Lasaña',
+          normalizedName: 'lasana',
+          scope: 'global',
+          source: 'admin',
+          isGlobal: true,
+          editable: false,
+          createdBy: 'admin-1',
+          timesUsed: 7,
+          archived: false,
+          createdAt: new Date('2026-05-01T08:00:00.000Z'),
+        },
+      },
+    });
+
+    await recordMenuDishUsage(services, 'user-1', 'Lasaña', 'group-1');
+
+    assert.deepEqual(read('dishes', globalDishId), {
+      name: 'Lasaña',
+      normalizedName: 'lasana',
+      scope: 'global',
+      source: 'admin',
+      isGlobal: true,
+      editable: false,
+      createdBy: 'admin-1',
+      timesUsed: 8,
+      archived: false,
+      archivedAt: null,
+      createdAt: new Date('2026-05-01T08:00:00.000Z'),
+      lastUsedAt: new Date('2026-05-16T08:00:00.000Z'),
+      updatedAt: new Date('2026-05-16T08:00:00.000Z'),
+    });
+    assert.equal(read('dishes', 'group_group-1_lasana'), undefined);
   });
 
   it('restores archived own dishes and preserves their custom metadata on menu usage', async () => {

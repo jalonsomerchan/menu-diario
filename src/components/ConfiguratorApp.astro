@@ -37,6 +37,9 @@ const labels = {
   aiPendingApplied: t('ai.pendingMealsApplied'),
   aiPendingMealLabel: t('ai.pendingMealsMealLabel'),
   aiPendingReasonLabel: t('ai.pendingMealsReasonLabel'),
+  aiPendingDishOriginGlobal: t('ai.pendingMealsDishOriginGlobal'),
+  aiPendingDishOriginGroup: t('ai.pendingMealsDishOriginGroup'),
+  aiPendingDishOriginUser: t('ai.pendingMealsDishOriginUser'),
   'ai.loading': t('ai.loading'),
   'ai.error': t('ai.error'),
   'ai.quotaExhausted': t('ai.quotaExhausted'),
@@ -308,10 +311,22 @@ const labels = {
   }
 
   .ai-meals-panel__list li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     border-radius: var(--radius-full);
     background: color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 22%);
     padding: 0.45rem 0.75rem;
     font-weight: 850;
+  }
+
+  .ai-meals-panel__dish-origin {
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-surface), var(--color-border) 55%);
+    padding: 0.16rem 0.5rem;
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
   }
 
   .ai-meals-panel__reason {

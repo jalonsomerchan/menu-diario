@@ -24,6 +24,7 @@ export type { AiFeatureFlags } from './flags';
 export type { JsonValidator } from './json';
 export type {
   PendingMealRecommendation,
+  PendingMealRecommendedDish,
   PendingMealRecommendationResponse,
   PendingMealSlot,
 } from './pending-meal-recommendations';

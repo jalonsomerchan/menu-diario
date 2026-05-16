@@ -14,8 +14,15 @@ export type PendingMealSlot = {
 export type PendingMealRecommendation = {
   dayKey: string;
   meal: MealSlot;
-  dishes: string[];
+  dishes: PendingMealRecommendedDish[];
   reason: string;
+};
+
+export type PendingMealRecommendedDish = {
+  id: string;
+  name: string;
+  scope: Dish['scope'];
+  isGlobal: boolean;
 };
 
 export type PendingMealRecommendationResponse = {
@@ -53,15 +60,16 @@ export function buildPendingMealPrompt(input: {
   dishes: Dish[];
   mealLabels: Record<MealSlot, string>;
 }) {
+  const visibleCatalog = getVisibleCatalogDishes(input.dishes);
   const pendingMeals = input.pendingMeals
     .slice(0, maxPendingMeals)
     .map((slot) => `- ${slot.dayKey} | ${slot.meal} | ${input.mealLabels[slot.meal] ?? slot.meal}`)
     .join('\n');
-  const catalog = input.dishes
-    .filter((dish) => !dish.archived && !dish.blocked)
+  const catalog = visibleCatalog
     .slice(0, maxCatalogDishes)
     .map((dish) => {
       const details = [
+        `scope:${dish.scope}`,
         dish.favorite ? 'favorite' : '',
         dish.quickTags?.length ? `tags:${dish.quickTags.join(',')}` : '',
         typeof dish.timesUsed === 'number' ? `timesUsed:${dish.timesUsed}` : '',
@@ -77,6 +85,8 @@ export function buildPendingMealPrompt(input: {
     `Locale: ${input.locale}.`,
     'Task: suggest dishes only for pending meals in a weekly menu app.',
     'Use only dish names from the provided catalog. Do not invent new dishes.',
+    'The catalog includes global dishes shared by everyone and own dishes from the group or user.',
+    'Prefer a balanced mix of both when it makes sense, while still using favorites or familiar dishes when helpful.',
     'Keep recommendations practical, varied and concise. Avoid private data.',
     `Return JSON with shape {"recommendations":[{"dayKey":"YYYY-MM-DD","meal":"breakfast|lunch|dinner","dishes":["Dish"],"reason":"short string"}]}.`,
     `Each recommendation must target one pending slot. Return up to ${maxRecommendedDishes} dishes per slot.`,
@@ -115,9 +125,15 @@ export function assignPendingMealRecommendations(input: {
 }) {
   const pendingKeys = new Set(input.pendingMeals.map((slot) => getSlotKey(slot.dayKey, slot.meal)));
   const catalogByName = new Map(
-    input.dishes
-      .filter((dish) => !dish.archived && !dish.blocked)
-      .map((dish) => [normalizeDishName(dish.name), dish.name] as const)
+    getVisibleCatalogDishes(input.dishes).map((dish) => [
+      normalizeDishName(dish.name),
+      {
+        id: dish.id,
+        name: dish.name,
+        scope: dish.scope,
+        isGlobal: dish.isGlobal,
+      } satisfies PendingMealRecommendedDish,
+    ] as const)
   );
   const seenSlots = new Set<string>();
 
@@ -127,8 +143,14 @@ export function assignPendingMealRecommendations(input: {
       return [];
     }
 
-    const dishes = [...new Set(entry.dishes.map((dish) => catalogByName.get(normalizeDishName(dish)) ?? '').filter(Boolean))]
-      .slice(0, maxRecommendedDishes);
+    const dishes = [
+      ...new Map(
+        entry.dishes
+          .map((dish) => catalogByName.get(normalizeDishName(dish)))
+          .filter((dish): dish is PendingMealRecommendedDish => Boolean(dish))
+          .map((dish) => [dish.id, dish] as const)
+      ).values(),
+    ].slice(0, maxRecommendedDishes);
     if (dishes.length === 0) {
       return [];
     }
@@ -151,4 +173,8 @@ function isMealSlot(value: unknown): value is MealSlot {
 
 function getSlotKey(dayKey: string, meal: MealSlot) {
   return `${dayKey}::${meal}`;
+}
+
+function getVisibleCatalogDishes(dishes: Dish[]) {
+  return dishes.filter((dish) => !dish.archived && !dish.blocked);
 }
