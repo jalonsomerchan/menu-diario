@@ -261,9 +261,9 @@ describe('project smoke checks', () => {
     assert.match(dishRepository, /duplicateGlobalDish/);
     assert.match(dishRepository, /dish-duplicate-global/);
     assert.match(dishRepository, /dish-not-editable/);
-    assert.match(menuRepository, /scope: 'group'/);
-    assert.match(menuRepository, /scope: 'user'/);
     assert.match(menuRepository, /groupId \? 'group' : 'user'/);
+    assert.match(menuRepository, /scope,/);
+    assert.match(menuRepository, /isGlobal: false/);
     assert.match(dishesScript, /data-duplicate-global/);
     assert.match(dishesScript, /labels\.globalReadOnly/);
     assert.match(dishesScript, /isEditableDish/);
