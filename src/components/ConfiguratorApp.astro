@@ -254,6 +254,8 @@ const labels = {
     display: grid;
     gap: 1rem;
     margin-bottom: 1rem;
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 68%);
+    background: var(--panel-background-strong);
   }
 
   .ai-meals-panel__header {
@@ -278,9 +280,9 @@ const labels = {
 
   .ai-meals-panel__empty {
     margin: 0;
-    border: 1px dashed color-mix(in srgb, var(--color-border), var(--color-text) 10%);
+    border: 1px dashed color-mix(in srgb, var(--color-border-strong), var(--color-text) 10%);
     border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface), var(--color-surface-soft) 58%);
+    background: color-mix(in srgb, var(--color-surface), var(--color-surface-soft) 62%);
     padding: 0.95rem 1rem;
     color: var(--color-muted);
   }
@@ -288,11 +290,11 @@ const labels = {
   .ai-meals-panel__card {
     display: grid;
     gap: 0.75rem;
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 14%);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 18%);
     border-radius: var(--radius-xl);
     background: linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-surface-raised), var(--color-primary-soft) 16%),
+      color-mix(in srgb, var(--color-surface-raised), var(--color-primary-soft) 14%),
       var(--color-surface-raised)
     );
     padding: 1rem;
@@ -335,15 +337,17 @@ const labels = {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 2%);
     border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 22%);
+    background: color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 18%);
     padding: 0.35rem 0.4rem 0.35rem 0.75rem;
+    box-shadow: var(--shadow-xs);
     font-weight: 850;
   }
 
   .ai-meals-panel__dish-origin {
     border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--color-surface), var(--color-border) 55%);
+    background: color-mix(in srgb, var(--color-surface), var(--color-border) 62%);
     padding: 0.16rem 0.5rem;
     color: var(--color-muted);
     font-size: 0.72rem;
@@ -374,6 +378,7 @@ const labels = {
   .ai-meals-panel__reason {
     margin: 0;
     color: var(--color-muted);
+    line-height: 1.55;
   }
 </style>
 

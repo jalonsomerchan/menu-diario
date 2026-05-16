@@ -212,6 +212,11 @@ const labels = {
     gap: 1rem;
   }
 
+  .shopping-hero {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 68%);
+    background: var(--panel-background-strong);
+  }
+
   .shopping-hero__actions,
   .shopping-toolbar {
     display: flex;
@@ -231,6 +236,7 @@ const labels = {
     align-items: center;
     gap: 0.35rem;
     border-radius: var(--radius-full);
+    border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 52%);
     background: var(--color-primary-soft);
     color: var(--color-primary);
     padding: 0.42rem 0.8rem;
@@ -259,12 +265,17 @@ const labels = {
   .shopping-item {
     border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 8%);
     border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface-raised), transparent 8%);
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 3%);
     box-shadow: var(--shadow-xs);
   }
 
   .shopping-meal-card {
     padding: 1rem;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-raised), var(--color-primary-soft) 10%),
+      color-mix(in srgb, var(--color-surface-raised), transparent 4%)
+    );
   }
 
   .shopping-meal-card h3,
@@ -281,6 +292,10 @@ const labels = {
     gap: 1rem;
     list-style: none;
     padding: 1rem;
+  }
+
+  .shopping-category[open] summary {
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border), transparent 8%);
   }
 
   .shopping-category summary::-webkit-details-marker {
@@ -315,7 +330,8 @@ const labels = {
     display: inline-flex;
     align-items: center;
     border-radius: var(--radius-full);
-    background: var(--color-surface-soft);
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 5%);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 6%);
     color: var(--color-muted);
     padding: 0.3rem 0.7rem;
     font-size: 0.78rem;
@@ -371,8 +387,9 @@ const labels = {
     min-height: 2.75rem;
     align-items: center;
     gap: 0.65rem;
-    border-radius: var(--radius-lg);
-    background: var(--color-surface-soft);
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 4%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 3%);
     padding: 0.7rem 0.8rem;
   }
 
