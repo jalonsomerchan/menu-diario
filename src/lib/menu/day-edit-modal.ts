@@ -1,5 +1,5 @@
 import { readDayDraft } from './day-form';
-import { applyRecommendedMealDraft, setDaySkippedDraft } from './day-edit-draft.mjs';
+import { appendRecommendedMealDraft, applyRecommendedMealDraft, setDaySkippedDraft } from './day-edit-draft.mjs';
 import { renderDayEditor, renderPlateRow } from './day-editor';
 import { normalizeDay } from './normalizers';
 import { serializeDay } from './day-state';
@@ -47,6 +47,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     return {
       open: (_dayKey: string, _config?: OpenDayEditModalOptions) => {},
       applyRecommendedDishes: (_dayKey: string, _meal: MealSlot, _dishes: string[]) => {},
+      appendRecommendedDish: (_dayKey: string, _meal: MealSlot, _dish: string) => {},
     };
   }
 
@@ -142,6 +143,13 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   function applyRecommendedDishes(dayKey: string, meal: MealSlot, dishes: string[]) {
     const currentDay = activeDayKey === dayKey ? draftDay : normalizeDay(options.getDay(dayKey));
     const nextDay = applyRecommendedMealDraft(currentDay, meal, dishes);
+
+    open(dayKey, { day: nextDay });
+  }
+
+  function appendRecommendedDish(dayKey: string, meal: MealSlot, dish: string) {
+    const currentDay = activeDayKey === dayKey ? draftDay : normalizeDay(options.getDay(dayKey));
+    const nextDay = appendRecommendedMealDraft(currentDay, meal, dish);
 
     open(dayKey, { day: nextDay });
   }
@@ -293,5 +301,6 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   return {
     open,
     applyRecommendedDishes,
+    appendRecommendedDish,
   };
 }

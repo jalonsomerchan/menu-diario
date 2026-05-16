@@ -28,3 +28,26 @@ export function applyRecommendedMealDraft(day, meal, dishes) {
     },
   });
 }
+
+export function appendRecommendedMealDraft(day, meal, dish) {
+  const currentDay = normalizeDay(day);
+  const currentItems = currentDay.meals[meal].items.filter(Boolean);
+  const nextItems = currentItems.includes(dish) ? currentItems : [...currentItems, dish];
+
+  return normalizeDay({
+    ...currentDay,
+    skipped: false,
+    reason: currentDay.reason ?? '',
+    skipNote: currentDay.skipNote ?? '',
+    meals: {
+      ...currentDay.meals,
+      [meal]: {
+        ...currentDay.meals[meal],
+        skipped: false,
+        reason: '',
+        note: '',
+        items: nextItems,
+      },
+    },
+  });
+}

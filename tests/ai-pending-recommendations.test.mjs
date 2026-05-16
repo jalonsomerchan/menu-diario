@@ -106,7 +106,7 @@ describe('pending meal AI recommendations', () => {
           {
             dayKey: '2026-05-17',
             meal: 'lunch',
-            dishes: ['Crema de calabaza', 'Plato inventado', 'Lentejas'],
+            dishes: ['Crema de calabaza', 'Plato inventado', 'Lentejas', 'Lentejas'],
             reason: 'Mezcla una opción general conocida con un plato propio frecuente.',
           },
           {
@@ -198,6 +198,9 @@ describe('pending meal AI recommendations', () => {
     });
 
     assert.match(prompt, /General visible \| scope:global \| favorite \| timesUsed:4/);
+    assert.match(prompt, /Every suggested dish must match a catalog item exactly/);
+    assert.match(prompt, /healthy, balanced, varied, not too difficult to prepare/);
+    assert.match(prompt, /Return up to 5 dishes per slot/);
     assert.doesNotMatch(prompt, /Bloqueado/);
     assert.doesNotMatch(prompt, /Archivado/);
   });

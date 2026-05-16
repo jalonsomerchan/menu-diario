@@ -4,7 +4,7 @@ import type { DailyMenu, Dish, MealSlot } from '../menu/types.ts';
 
 const maxPendingMeals = 21;
 const maxCatalogDishes = 48;
-const maxRecommendedDishes = 3;
+const maxRecommendedDishes = 5;
 
 export type PendingMealSlot = {
   dayKey: string;
@@ -85,9 +85,12 @@ export function buildPendingMealPrompt(input: {
     `Locale: ${input.locale}.`,
     'Task: suggest dishes only for pending meals in a weekly menu app.',
     'Use only dish names from the provided catalog. Do not invent new dishes.',
+    'Every suggested dish must match a catalog item exactly, character by character.',
     'The catalog includes global dishes shared by everyone and own dishes from the group or user.',
-    'Prefer a balanced mix of both when it makes sense, while still using favorites or familiar dishes when helpful.',
-    'Keep recommendations practical, varied and concise. Avoid private data.',
+    'Base the recommendations on the user tastes inferred from favorites, repeated use, familiar dishes and quick tags.',
+    'Prioritize dishes that feel healthy, balanced, varied, not too difficult to prepare and realistic for day-to-day planning.',
+    'Prefer a balanced mix of general and own dishes when it makes sense, while still leaning on favorites or familiar dishes when helpful.',
+    'Avoid suggesting the same dish twice for the same slot. Keep recommendations practical, varied and concise. Avoid private data.',
     `Return JSON with shape {"recommendations":[{"dayKey":"YYYY-MM-DD","meal":"breakfast|lunch|dinner","dishes":["Dish"],"reason":"short string"}]}.`,
     `Each recommendation must target one pending slot. Return up to ${maxRecommendedDishes} dishes per slot.`,
     'Pending meals:',

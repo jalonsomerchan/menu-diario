@@ -288,10 +288,17 @@ if (root) {
             <ul class="ai-meals-panel__list">
               ${recommendation.dishes
                 .map(
-                  (dish) => `
+                  (dish, dishIndex) => `
                     <li>
                       <span>${escapeHtml(dish.name)}</span>
                       <span class="ai-meals-panel__dish-origin">${escapeHtml(getDishOriginLabel(dish))}</span>
+                      <button
+                        class="ai-meals-panel__dish-add"
+                        type="button"
+                        data-ai-add="${index}"
+                        data-ai-dish="${dishIndex}"
+                        aria-label="${escapeHtml(`${labels.aiPendingAddDish}: ${dish.name}`)}"
+                      >+</button>
                     </li>
                   `
                 )
@@ -438,6 +445,15 @@ if (root) {
     renderAiResults();
   }
 
+  function addAiDish(index: number, dishIndex: number) {
+    const recommendation = pendingAiRecommendations[index];
+    const dish = recommendation?.dishes[dishIndex];
+    if (!recommendation || !dish) return;
+
+    dayEditModal.appendRecommendedDish(recommendation.dayKey, recommendation.meal, dish.name);
+    showAiStatus(labels.aiPendingDishAdded);
+  }
+
   async function watchVisibleMenus(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
     if (!currentUser) return;
 
@@ -551,6 +567,12 @@ if (root) {
         aiResults?.addEventListener('click', (event) => {
           const target = event.target;
           if (!(target instanceof HTMLElement)) return;
+
+          const addButton = target.closest<HTMLButtonElement>('[data-ai-add]');
+          if (addButton) {
+            addAiDish(Number(addButton.dataset.aiAdd), Number(addButton.dataset.aiDish));
+            return;
+          }
 
           const button = target.closest<HTMLButtonElement>('[data-ai-apply]');
           if (!button) return;

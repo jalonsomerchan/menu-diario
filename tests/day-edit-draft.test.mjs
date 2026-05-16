@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { applyRecommendedMealDraft, setDaySkippedDraft } from '../src/lib/menu/day-edit-draft.mjs';
+import { appendRecommendedMealDraft, applyRecommendedMealDraft, setDaySkippedDraft } from '../src/lib/menu/day-edit-draft.mjs';
 
 describe('day edit draft helpers', () => {
   it('preserves meals and notes when toggling full-day skipped on and off', () => {
@@ -47,5 +47,28 @@ describe('day edit draft helpers', () => {
     assert.equal(nextDay.skipped, false);
     assert.deepEqual(nextDay.meals.lunch.items, ['Arroz al horno']);
     assert.deepEqual(nextDay.meals.dinner.items, ['Sopa']);
+  });
+
+  it('appends one recommended dish without duplicating the same dish', () => {
+    const nextDay = appendRecommendedMealDraft(
+      {
+        skipped: false,
+        reason: '',
+        skipNote: '',
+        meals: {
+          breakfast: { items: [], skipped: false, reason: '', note: '' },
+          lunch: { items: ['Arroz al horno'], skipped: false, reason: '', note: '' },
+          dinner: { items: ['Sopa'], skipped: false, reason: '', note: '' },
+        },
+      },
+      'lunch',
+      'Lentejas'
+    );
+
+    const dedupedDay = appendRecommendedMealDraft(nextDay, 'lunch', 'Lentejas');
+
+    assert.deepEqual(nextDay.meals.lunch.items, ['Arroz al horno', 'Lentejas']);
+    assert.deepEqual(dedupedDay.meals.lunch.items, ['Arroz al horno', 'Lentejas']);
+    assert.deepEqual(dedupedDay.meals.dinner.items, ['Sopa']);
   });
 });
