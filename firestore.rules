@@ -50,6 +50,15 @@ service cloud.firestore {
       return data.scope == 'global' || data.isGlobal == true;
     }
 
+    function isValidGlobalDishWrite(data) {
+      return isGlobalDishData(data)
+        && data.scope == 'global'
+        && data.isGlobal == true
+        && data.editable == false
+        && data.source == 'admin'
+        && data.groupId == null;
+    }
+
     function isOwnPersonalDish(data) {
       return signedIn()
         && data.scope == 'user'
@@ -89,10 +98,12 @@ service cloud.firestore {
 
     match /dishes/{dishId} {
       allow read: if signedIn();
-      allow create: if isAdmin()
+      allow create: if (isAdmin() && isValidGlobalDishWrite(request.resource.data))
         || isGroupDishData(request.resource.data)
         || isOwnPersonalDish(request.resource.data);
-      allow update: if isAdmin()
+      allow update: if (isAdmin()
+          && isValidGlobalDishWrite(resource.data)
+          && isValidGlobalDishWrite(request.resource.data))
         || (!isGlobalDishData(resource.data)
           && !isGlobalDishData(request.resource.data)
           && (isGroupDishData(request.resource.data) || isOwnPersonalDish(request.resource.data)));

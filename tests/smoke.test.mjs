@@ -44,6 +44,7 @@ describe('project smoke checks', () => {
       'src/pages/dashboard.astro',
       'src/pages/configurar.astro',
       'src/pages/ajustes.astro',
+      'src/pages/admin/platos.astro',
       'src/pages/historico.astro',
       'src/pages/mis-platos.astro',
       'src/pages/platos.astro',
@@ -51,6 +52,7 @@ describe('project smoke checks', () => {
       'src/pages/[locale]/dashboard.astro',
       'src/pages/[locale]/configurar.astro',
       'src/pages/[locale]/ajustes.astro',
+      'src/pages/[locale]/admin/platos.astro',
       'src/pages/[locale]/historico.astro',
       'src/pages/[locale]/mis-platos.astro',
       'src/pages/[locale]/platos.astro',
@@ -66,7 +68,9 @@ describe('project smoke checks', () => {
       'src/lib/menu/day-state.ts',
       'src/lib/menu/dish-suggestions.ts',
       'src/lib/ai/pending-meal-recommendations.ts',
+      'src/lib/firebase/auth.ts',
       'src/lib/dishes/helpers.mjs',
+      'src/lib/dishes/admin-import.mjs',
       'src/lib/dishes/repository.ts',
       'src/lib/ui/debounced-task-map.ts',
       'src/lib/ui/save-feedback.ts',
@@ -80,7 +84,7 @@ describe('project smoke checks', () => {
   });
 
   it('keeps shared and app components available', () => {
-    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'DayEditModal', 'DishEditDialog', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp'].forEach((component) => {
+    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'DayEditModal', 'DishEditDialog', 'AdminGlobalDishesApp', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp'].forEach((component) => {
       assert.equal(existsSync(join(root, `src/components/${component}.astro`)), true, `${component}.astro should exist`);
     });
     assert.equal(existsSync(join(root, 'src/components/AppHeader.astro')), false);
@@ -139,6 +143,7 @@ describe('project smoke checks', () => {
         'history.title',
         'group.title',
         'appNav.settings',
+        'appNav.adminDishes',
         'appNav.openMenu',
         'appNav.closeMenu',
         'appNav.dishes',
@@ -147,6 +152,10 @@ describe('project smoke checks', () => {
         'dishes.groupBadge',
         'dishes.duplicateAsGroup',
         'dishes.notEditable',
+        'adminDishes.title',
+        'adminDishes.deniedTitle',
+        'adminDishes.importTitle',
+        'adminDishes.importResult',
         'menu.signInGoogle',
       ].forEach((key) => {
         assert.ok(translations[key], `${locale}.json should include ${key}`);
@@ -227,6 +236,12 @@ describe('project smoke checks', () => {
     const settingsApp = readText('src/components/SettingsApp.astro');
     const historyApp = readText('src/components/HistoryApp.astro');
     const dishesApp = readText('src/components/DishesApp.astro');
+    const header = readText('src/components/Header.astro');
+    const appHeaderScript = readText('src/scripts/app-header.ts');
+    const adminPage = readText('src/pages/admin/platos.astro');
+    const adminPageLocalized = readText('src/pages/[locale]/admin/platos.astro');
+    const adminComponent = readText('src/components/AdminGlobalDishesApp.astro');
+    const adminScript = readText('src/scripts/admin-global-dishes-app.ts');
     assert.match(home, /<AuthGate/);
     assert.match(dashboard, /<DashboardApp/);
     assert.match(configure, /<ConfiguratorApp/);
@@ -254,11 +269,22 @@ describe('project smoke checks', () => {
     assert.match(historyApp, /dashboard\.showDishOptions/);
     assert.match(dishesApp, /data-dishes-app/);
     assert.match(dishesApp, /dishes\.globalBadge/);
+    assert.match(header, /data-admin-link/);
+    assert.match(header, /appNav\.adminDishes/);
+    assert.match(appHeaderScript, /isAdminUser/);
+    assert.match(adminPage, /<AdminGlobalDishesApp/);
+    assert.match(adminPageLocalized, /getStaticPaths/);
+    assert.match(adminComponent, /data-admin-dishes-app/);
+    assert.match(adminComponent, /data-import-preview/);
+    assert.match(adminComponent, /data-editor-dialog/);
+    assert.match(adminScript, /watchGlobalDishes/);
+    assert.match(adminScript, /buildGlobalDishImportPreview/);
   });
 
   it('keeps scoped dish catalog logic, permissions and deduplication wired', () => {
     const types = readText('src/lib/menu/types.ts');
     const dishHelpers = readText('src/lib/dishes/helpers.mjs');
+    const adminImport = readText('src/lib/dishes/admin-import.mjs');
     const dishRepository = readText('src/lib/dishes/repository.ts');
     const menuRepository = readText('src/lib/menu/repository.ts');
     const dishesScript = readText('src/scripts/dishes-app.ts');
@@ -270,12 +296,19 @@ describe('project smoke checks', () => {
     assert.match(types, /editable: boolean/);
     assert.match(types, /archivedAt\?: Date/);
     assert.match(dishHelpers, /normalizeDishName/);
+    assert.match(dishHelpers, /createGlobalDishId/);
+    assert.match(dishHelpers, /normalizeStringList/);
     assert.match(dishHelpers, /isGlobalDish/);
     assert.match(dishHelpers, /isEditableDish/);
     assert.match(dishHelpers, /getDuplicateDish/);
+    assert.match(adminImport, /parseGlobalDishImport/);
+    assert.match(adminImport, /buildGlobalDishImportPreview/);
     assert.match(dishRepository, /watchCatalogDishes/);
+    assert.match(dishRepository, /watchGlobalDishes/);
     assert.match(dishRepository, /recordMenuDishUsage/);
     assert.match(dishRepository, /duplicateGlobalDish/);
+    assert.match(dishRepository, /createGlobalDish/);
+    assert.match(dishRepository, /updateGlobalDishMetadata/);
     assert.match(dishRepository, /dish-duplicate-global/);
     assert.match(dishRepository, /dish-not-editable/);
     assert.match(menuRepository, /recordMenuDishUsage/);
@@ -284,6 +317,7 @@ describe('project smoke checks', () => {
     assert.match(dishesScript, /isEditableDish/);
     assert.match(rules, /isAdmin/);
     assert.match(rules, /isGlobalDishData/);
+    assert.match(rules, /isValidGlobalDishWrite/);
     assert.match(rules, /isGroupDishData/);
     assert.match(rules, /request.auth.token.admin == true/);
     assert.match(rules, /allow delete: if false/);

@@ -18,6 +18,7 @@ const configurePath = getLocalizedPath('/configurar', locale);
 const summaryPath = getLocalizedPath('/resumen-semanal', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
 const dishesPath = getLocalizedPath('/mis-platos', locale);
+const adminDishesPath = getLocalizedPath('/admin/platos', locale);
 const historyPath = getLocalizedPath('/historico', locale);
 const settingsPath = getLocalizedPath('/ajustes', locale);
 const alternateLocales = getAlternateLocales(locale);
@@ -53,6 +54,7 @@ const labels = {
         <a href={summaryPath}><Icon name="mdi:chart-box-outline" aria-hidden="true" />{t('appNav.summary')}</a>
         <a href={tuppersPath}><Icon name="mdi:food-takeout-box-outline" aria-hidden="true" />{tt('nav')}</a>
         <a href={dishesPath}><Icon name="mdi:silverware-fork-knife" aria-hidden="true" />{t('appNav.dishes')}</a>
+        <a href={adminDishesPath} data-admin-link hidden><Icon name="mdi:shield-crown-outline" aria-hidden="true" />{t('appNav.adminDishes')}</a>
         <a href={historyPath}><Icon name="mdi:history" aria-hidden="true" />{t('appNav.history')}</a>
         <a href={settingsPath}><Icon name="mdi:cog-outline" aria-hidden="true" />{t('appNav.settings')}</a>
       </nav>

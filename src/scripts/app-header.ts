@@ -1,5 +1,6 @@
 import { closeSession, getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
+import { isAdminUser } from '../lib/firebase/auth';
 import { updateUserPreferences, watchUserProfile } from '../lib/menu/repository';
 import type { FirebaseUser, ThemePreference } from '../lib/menu/types';
 
@@ -37,6 +38,7 @@ if (root && hasFirebaseConfig()) {
   const guestLabel = labels.guestSession ?? 'Guest session';
   const themeSelect = root.querySelector<HTMLSelectElement>('[data-global-theme]');
   const logoutButton = root.querySelector<HTMLButtonElement>('[data-global-logout]');
+  const adminLink = root.querySelector<HTMLAnchorElement>('[data-admin-link]');
 
   function applyTheme(theme: ThemePreference) {
     if (theme === 'system') {
@@ -53,7 +55,9 @@ if (root && hasFirebaseConfig()) {
 
     services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
       logoutButton?.toggleAttribute('hidden', !user);
+      adminLink?.toggleAttribute('hidden', !user);
       if (!user) return;
+      adminLink?.toggleAttribute('hidden', !(await isAdminUser(user)));
 
       const unsubscribe = watchUserProfile(
         services,
