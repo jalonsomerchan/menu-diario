@@ -1,0 +1,40 @@
+---
+interface Props {
+  eyebrow: string;
+  title: string;
+  subtitle?: string;
+  cancelLabel: string;
+  saveLabel: string;
+  clearLabel: string;
+  saveHint: string;
+}
+
+const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveHint } = Astro.props;
+---
+
+<dialog class="quick-edit-modal quick-edit-modal--day day-edit-modal" data-day-edit-modal>
+  <form method="dialog" class="quick-edit-modal__box day-edit-modal__box" data-day-edit-form>
+    <header class="day-edit-modal__header">
+      <div class="day-edit-modal__heading">
+        <p class="menu-app__eyebrow" data-day-edit-eyebrow>{eyebrow}</p>
+        <h2 data-day-edit-title>{title}</h2>
+        <p data-day-edit-subtitle>{subtitle}</p>
+      </div>
+      <button class="button button--ghost button--small" value="cancel" type="submit">
+        {cancelLabel}
+      </button>
+    </header>
+
+    <div class="day-edit-modal__body" data-day-edit-fields></div>
+
+    <footer class="day-edit-modal__footer">
+      <p class="day-edit-modal__hint">{saveHint}</p>
+      <div class="day-edit-modal__actions">
+        <button class="button button--ghost button--small" type="button" data-day-edit-clear>
+          {clearLabel}
+        </button>
+        <button class="button button--primary" value="save" type="submit">{saveLabel}</button>
+      </div>
+    </footer>
+  </form>
+</dialog>

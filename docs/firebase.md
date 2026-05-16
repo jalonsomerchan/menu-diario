@@ -80,6 +80,7 @@ src/lib/ai/errors.ts         Errores normalizados y logs no sensibles
 src/lib/ai/flags.ts          Feature flags por entorno y Remote Config
 src/lib/ai/json.ts           Helpers para pedir y validar JSON estructurado
 src/lib/ai/limits.ts         Límites básicos por usuario/sesión en cliente
+src/lib/ai/pending-meal-recommendations.ts  Detección de huecos, prompt y validación para comidas pendientes
 src/lib/ai/remote-config.ts  Preparación opcional para Firebase Remote Config
 src/lib/ai/ui-state.ts       Estados comunes traducibles de UI
 ```
@@ -112,6 +113,25 @@ ai_menu_suggestions_enabled
 ```
 
 Remote Config debe considerarse una capa de operación del producto, no una frontera de seguridad. Una función crítica no debe depender solo de flags de cliente.
+
+### Recomendaciones de comidas pendientes
+
+La primera integración concreta aprovecha esta base en la ruta `/configurar` para recomendar solo comidas pendientes de los próximos días.
+
+- Detecta huecos vacíos con `getPendingMealSlots`.
+- Pide JSON estricto a Gemini con `buildPendingMealPrompt`.
+- Valida la forma de la respuesta y reasigna solo platos ya visibles del catálogo con `assignPendingMealRecommendations`.
+- Mantiene App Check y los límites cliente existentes.
+
+Privacidad actual del prompt:
+
+- incluye locale activo,
+- incluye día/comida pendiente,
+- incluye nombres de platos visibles y algunas señales de catálogo como favorito, etiquetas rápidas y uso,
+- no incluye emails ni notas personales del menú,
+- no incluye identificadores de usuario en el prompt.
+
+Si más adelante se añaden más flujos de IA, deben consolidarse sobre `src/lib/ai/` y evitar bases paralelas.
 
 ### Protección de IA con App Check
 

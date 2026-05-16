@@ -2,6 +2,7 @@ import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates, toIsoDate } from '../lib/menu/dates';
+import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { readDayDraft } from '../lib/menu/day-form';
 import { serializeDay } from '../lib/menu/day-state';
 import { renderDayEditor, renderPlateRow } from '../lib/menu/day-editor';
@@ -34,9 +35,6 @@ if (root) {
   const userLabel = root.querySelector<HTMLElement>('[data-user-label]');
   const todaySummary = root.querySelector<HTMLElement>('[data-today-summary]');
   const nextDays = root.querySelector<HTMLElement>('[data-next-days]');
-  const quickModal = root.querySelector<HTMLDialogElement>('[data-quick-modal]');
-  const quickForm = root.querySelector<HTMLFormElement>('[data-quick-form]');
-  const quickFields = root.querySelector<HTMLElement>('[data-quick-fields]');
   const offlineBanner = root.querySelector<HTMLElement>('[data-offline-banner]');
   const offlineMessage = root.querySelector<HTMLElement>('[data-offline-message]');
 
@@ -240,24 +238,7 @@ if (root) {
       showStatus(labels.offlineReadOnly, true);
       return;
     }
-
-    if (!currentMenu || !quickFields || !quickModal) return;
-
-    quickFields.innerHTML = renderDayEditor({
-      dayKey,
-      dayNumber: getDayNumber(dayKey),
-      weekday: formatWeekday(dayKey),
-      day: normalizeDay(currentMenu.days[dayKey]),
-      enabledMeals: getEnabledMeals(),
-      dishes,
-      labels,
-      compact: true,
-    });
-    quickFields.querySelector<HTMLElement>('[data-day]')?.setAttribute(
-      'data-day-state',
-      serializeDay(currentMenu.days[dayKey] ?? normalizeDay(undefined))
-    );
-    quickModal.showModal();
+    dayEditModal.open(dayKey);
   }
 
   function syncRenderedDayStates(container: ParentNode, dates: string[]) {
@@ -385,6 +366,31 @@ if (root) {
     syncRenderedDayStates(nextDays ?? root, getNextSevenDates());
   }
 
+  const dayEditModal = createDayEditModalController({
+    root,
+    labels,
+    getDay: (dayKey) => normalizeDay(currentMenu?.days[dayKey]),
+    getDishes: () => dishes,
+    getEnabledMeals,
+    getSavedDayState: (dayKey) => serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined)),
+    getDayNumber,
+    getWeekday: formatWeekday,
+    onScheduleSave: scheduleDaySave,
+    onFlushSave: (dayKey) => daySaveQueue.flush(dayKey),
+    onClearDay: async (dayKey) => {
+      if (shouldBlockOfflineWrites(isOnline) || !currentUser) {
+        showStatus(labels.offlineReadOnly, true);
+        return false;
+      }
+
+      const menuId = getMenuIdForDay(dayKey);
+      if (!menuId) return false;
+      const services = await getFirebaseServices();
+      await clearMenuDay(services, menuId, currentUser.uid, dayKey);
+      return true;
+    },
+  });
+
   watchNetworkStatus((networkStatus) => {
     const wasOffline = !isOnline;
     isOnline = networkStatus === 'online';
@@ -430,62 +436,6 @@ if (root) {
             const menuId = getMenuIdForDay(target.dataset.clearDay);
             if (!menuId) return;
             await clearMenuDay(services, menuId, currentUser.uid, target.dataset.clearDay);
-          }
-        });
-
-        quickFields?.addEventListener('change', (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
-          const card = target.closest<HTMLElement>('[data-day]');
-          if (!card) return;
-          if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-            const wasSkipped = card.dataset.dayState ? JSON.parse(card.dataset.dayState).skipped : false;
-            if (target.checked !== wasSkipped) {
-              quickFields.innerHTML = renderDayEditor({
-                dayKey: card.dataset.day ?? '',
-                dayNumber: getDayNumber(card.dataset.day ?? ''),
-                weekday: formatWeekday(card.dataset.day ?? ''),
-                day: readDayDraft(card, getEnabledMeals()),
-                enabledMeals: getEnabledMeals(),
-                dishes,
-                labels,
-                compact: true,
-              });
-              quickFields.querySelector<HTMLElement>('[data-day]')?.setAttribute('data-day-state', card.dataset.dayState ?? '');
-            }
-          }
-          quickFields.querySelectorAll<HTMLElement>('[data-day]').forEach((item) => scheduleDaySave(item));
-        });
-
-        quickFields?.addEventListener('click', (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLElement)) return;
-          const button = target.closest<HTMLButtonElement>('button');
-          if (!button) return;
-          const card = button.closest<HTMLElement>('[data-day]');
-          if (!card) return;
-
-          if (button.dataset.addPlate) {
-            addPlate(card, button.dataset.addPlate as MealSlot);
-            return;
-          }
-
-          if (button.dataset.removePlate) {
-            const meal = button.dataset.removePlate as MealSlot;
-            button.closest('.plate-row')?.remove();
-            scheduleDaySave(card);
-          }
-        });
-
-        quickForm?.addEventListener('submit', async (event) => {
-          const submitter = (event as SubmitEvent).submitter;
-          if (submitter instanceof HTMLButtonElement && submitter.value === 'save') {
-            event.preventDefault();
-            const card = quickFields?.querySelector<HTMLElement>('[data-day]');
-            if (card) {
-              await daySaveQueue.flush(card.dataset.day ?? '');
-            }
-            quickModal?.close();
           }
         });
 

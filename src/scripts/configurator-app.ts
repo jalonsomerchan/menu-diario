@@ -1,13 +1,24 @@
+import {
+  assignPendingMealRecommendations,
+  buildPendingMealPrompt,
+  generateGeminiJson,
+  getAiFeatureFlags,
+  getAiUiMessageKey,
+  getAiUiStateFromError,
+  getPendingMealSlots,
+  isMenuSuggestionsAvailable,
+  isPendingMealRecommendationResponse,
+} from '../lib/ai';
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
-import { readDayDraft } from '../lib/menu/day-form';
+import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { serializeDay } from '../lib/menu/day-state';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
-import { renderDayEditor, renderPlateRow } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import {
+  clearMenuDay,
   ensureUserProfile,
   getOrCreateWeekMenus,
   updateMenuDay,
@@ -28,6 +39,10 @@ if (root) {
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const content = root.querySelector<HTMLElement>('[data-content]');
   const configDays = root.querySelector<HTMLElement>('[data-config-days]');
+  const aiGenerateButton = root.querySelector<HTMLButtonElement>('[data-ai-generate]');
+  const aiHelper = root.querySelector<HTMLElement>('[data-ai-helper]');
+  const aiStatus = root.querySelector<HTMLElement>('[data-ai-status]');
+  const aiResults = root.querySelector<HTMLElement>('[data-ai-results]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -35,6 +50,7 @@ if (root) {
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
   let dishes: Dish[] = [];
+  let pendingAiRecommendations: Array<{ dayKey: string; meal: MealSlot; dishes: string[]; reason: string }> = [];
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
@@ -49,6 +65,10 @@ if (root) {
   });
 
   attachDishSuggestions(root, () => dishes);
+
+  function escapeHtml(value = '') {
+    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+  }
 
   function showStatus(message: string, isError = false) {
     if (isError) {
@@ -71,6 +91,10 @@ if (root) {
 
   function getConfigDates() {
     return getUpcomingDates(new Date(), 1, 7);
+  }
+
+  function getPendingMeals() {
+    return getPendingMealSlots(currentMenu?.days ?? {}, getConfigDates(), getEnabledMeals());
   }
 
   function getRelevantWeekStarts() {
@@ -121,26 +145,147 @@ if (root) {
     if (content) content.hidden = !isReady;
   }
 
+  function mealLabel(meal: MealSlot) {
+    return labels[meal] ?? meal;
+  }
+
+  function reasonLabel(reason = '') {
+    if (reason === 'away') return labels.reasonAway;
+    if (reason === 'eating-out') return labels.reasonEatingOut;
+    if (reason === 'not-hungry') return labels.reasonNotHungry;
+    if (reason === 'other') return labels.reasonOther;
+    return '';
+  }
+
+  function renderMealSummary(day: WeekMenu['days'][string], meal: MealSlot) {
+    if (day.skipped) {
+      const reason = reasonLabel(day.reason);
+      return reason ? `${labels.noDay}: ${reason}` : labels.noDay;
+    }
+
+    const mealState = day.meals[meal];
+    if (mealState.skipped) {
+      const reason = reasonLabel(mealState.reason);
+      return reason ? `${labels.noMeal}: ${reason}` : labels.noMeal;
+    }
+
+    return mealState.items.length ? mealState.items.join(', ') : labels.todayEmpty;
+  }
+
+  function showAiStatus(message = '', isError = false) {
+    if (!aiStatus) return;
+    aiStatus.textContent = message;
+    aiStatus.dataset.variant = isError ? 'error' : 'info';
+  }
+
+  function setAiBusy(isBusy: boolean) {
+    if (!aiGenerateButton) return;
+    aiGenerateButton.disabled = isBusy;
+    aiGenerateButton.setAttribute('aria-busy', String(isBusy));
+  }
+
+  function isAiReady() {
+    return hasFirebaseConfig() && isMenuSuggestionsAvailable(getAiFeatureFlags());
+  }
+
+  function renderAiResults() {
+    if (!aiResults || !aiHelper) return;
+
+    const pendingMeals = getPendingMeals();
+    const pendingKeySet = new Set(pendingMeals.map((slot) => `${slot.dayKey}::${slot.meal}`));
+    pendingAiRecommendations = pendingAiRecommendations.filter((item) =>
+      pendingKeySet.has(`${item.dayKey}::${item.meal}`)
+    );
+    if (aiGenerateButton) {
+      aiGenerateButton.disabled = !isAiReady() || pendingMeals.length === 0 || dishes.length === 0;
+    }
+
+    aiHelper.textContent = isAiReady() ? labels.aiPendingHint : labels.aiMissingConfig;
+    if (!isAiReady()) {
+      aiResults.innerHTML = `<p class="ai-meals-panel__empty">${escapeHtml(labels.aiMissingConfig)}</p>`;
+      return;
+    }
+
+    if (pendingMeals.length === 0) {
+      aiResults.innerHTML = `<p class="ai-meals-panel__empty">${escapeHtml(labels.aiPendingEmpty)}</p>`;
+      return;
+    }
+
+    if (dishes.length === 0) {
+      aiResults.innerHTML = `<p class="ai-meals-panel__empty">${escapeHtml(labels.aiPendingNoCatalog)}</p>`;
+      return;
+    }
+
+    if (pendingAiRecommendations.length === 0) {
+      aiResults.innerHTML = `<p class="ai-meals-panel__empty">${escapeHtml(labels.aiPendingNoResults)}</p>`;
+      return;
+    }
+
+    aiResults.innerHTML = pendingAiRecommendations
+      .map(
+        (recommendation, index) => `
+          <article class="ai-meals-panel__card">
+            <header>
+              <div>
+                <h3>${escapeHtml(formatPendingMealTitle(recommendation.dayKey, recommendation.meal))}</h3>
+              </div>
+              <span class="ai-meals-panel__badge">${escapeHtml(labels.aiPendingMealLabel)}</span>
+            </header>
+            <ul class="ai-meals-panel__list">
+              ${recommendation.dishes.map((dish) => `<li>${escapeHtml(dish)}</li>`).join('')}
+            </ul>
+            ${
+              recommendation.reason
+                ? `<p class="ai-meals-panel__reason"><strong>${escapeHtml(labels.aiPendingReasonLabel)}:</strong> ${escapeHtml(recommendation.reason)}</p>`
+                : ''
+            }
+            <button class="button button--secondary button--small" type="button" data-ai-apply="${index}">
+              ${escapeHtml(labels.aiPendingApply)}
+            </button>
+          </article>
+        `
+      )
+      .join('');
+  }
+
+  function formatPendingMealTitle(dayKey: string, meal: MealSlot) {
+    return `${formatWeekday(dayKey)} · ${formatDate(dayKey)} · ${labels[meal] ?? meal}`;
+  }
+
   function renderConfig(menu: WeekMenu) {
     if (!configDays) return;
 
     configDays.innerHTML = getConfigDates()
-      .map((isoDate) =>
-        renderDayEditor({
-          dayKey: isoDate,
-          dayNumber: getDayNumber(isoDate),
-          weekday: formatWeekday(isoDate),
-          dateLabel: formatDate(isoDate),
-          day: normalizeDay(menu.days[isoDate]),
-          enabledMeals: getEnabledMeals(),
-          dishes,
-          labels,
-        })
-      )
+      .map((isoDate) => {
+        const day = normalizeDay(menu.days[isoDate]);
+        const summaries = getEnabledMeals()
+          .map(
+            (meal) => `
+              <div class="day-meal-row">
+                <span>${escapeHtml(mealLabel(meal))}:</span>
+                <strong>${escapeHtml(renderMealSummary(day, meal))}</strong>
+              </div>
+            `
+          )
+          .join('');
+
+        return `
+          <article class="next-day-card next-day-card--mockup" data-day="${isoDate}">
+            <div class="next-day-card__number">${escapeHtml(getDayNumber(isoDate))}</div>
+            <div class="next-day-card__body">
+              <header>
+                <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
+                <button class="button button--ghost button--small" type="button" data-config-edit="${isoDate}">
+                  ${escapeHtml(labels.editDay)}
+                </button>
+              </header>
+              ${summaries}
+            </div>
+          </article>
+        `;
+      })
       .join('');
-    getConfigDates().forEach((dayKey) => {
-      configDays.querySelector<HTMLElement>(`[data-day="${dayKey}"]`)?.setAttribute('data-day-state', serializeDay(menu.days[dayKey]));
-    });
+    renderAiResults();
   }
 
   function updateLocalDay(dayKey: string, nextState: WeekMenu['days'][string]) {
@@ -197,12 +342,40 @@ if (root) {
     daySaveQueue.schedule(card.dataset.day ?? '', () => saveDay(card));
   }
 
-  function addPlate(card: HTMLElement, meal: MealSlot) {
-    const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
-    if (!list) return;
+  const dayEditModal = createDayEditModalController({
+    root,
+    labels,
+    getDay: (dayKey) => normalizeDay(currentMenu?.days[dayKey]),
+    getDishes: () => dishes,
+    getEnabledMeals,
+    getSavedDayState: (dayKey) => serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined)),
+    getDayNumber,
+    getWeekday: formatWeekday,
+    getDateLabel: formatDate,
+    onScheduleSave: scheduleDaySave,
+    onFlushSave: (dayKey) => daySaveQueue.flush(dayKey),
+    onClearDay: async (dayKey) => {
+      if (getNetworkStatus() !== 'online' || !currentUser) {
+        saveFeedback.error(labels.offlineReadOnly);
+        return false;
+      }
 
-    list.insertAdjacentHTML('beforeend', renderPlateRow(labels, meal, '', list.children.length, dishes));
-    list.querySelector<HTMLInputElement>('.plate-row:last-child input')?.focus();
+      const menuId = getMenuIdForDay(dayKey);
+      if (!menuId) return false;
+      const services = await getFirebaseServices();
+      await clearMenuDay(services, menuId, currentUser.uid, dayKey);
+      return true;
+    },
+  });
+
+  function applyAiRecommendation(index: number) {
+    const recommendation = pendingAiRecommendations[index];
+    if (!recommendation) return;
+
+    dayEditModal.applyRecommendedDishes(recommendation.dayKey, recommendation.meal, recommendation.dishes);
+    pendingAiRecommendations = pendingAiRecommendations.filter((_, itemIndex) => itemIndex !== index);
+    showAiStatus(labels.aiPendingApplied);
+    renderAiResults();
   }
 
   if (!hasFirebaseConfig()) {
@@ -211,51 +384,83 @@ if (root) {
   } else {
     getFirebaseServices()
       .then((services) => {
-        configDays?.addEventListener('change', (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
+        aiGenerateButton?.addEventListener('click', async () => {
+          if (!currentUser) return;
 
-          const card = target.closest<HTMLElement>('[data-day]');
-          if (!card) return;
-          if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-            const wasSkipped = card.dataset.dayState ? JSON.parse(card.dataset.dayState).skipped : false;
-            if (target.checked !== wasSkipped) {
-              renderConfig(
-                currentMenu
-                  ? {
-                      ...currentMenu,
-                      days: {
-                        ...currentMenu.days,
-                        [card.dataset.day ?? '']: readDayDraft(card, getEnabledMeals()),
-                      },
-                    }
-                  : buildDisplayMenu(currentMenus)
-              );
-            }
+          const pendingMeals = getPendingMeals();
+          if (pendingMeals.length === 0) {
+            showAiStatus(labels.aiPendingEmpty);
+            renderAiResults();
+            return;
           }
-          configDays.querySelectorAll<HTMLElement>('[data-day]').forEach((item) => {
-            if (item.dataset.day === card.dataset.day) scheduleDaySave(item);
-          });
+
+          if (!isAiReady()) {
+            showAiStatus(labels.aiMissingConfig, true);
+            renderAiResults();
+            return;
+          }
+
+          if (dishes.length === 0) {
+            showAiStatus(labels.aiPendingNoCatalog, true);
+            renderAiResults();
+            return;
+          }
+
+          setAiBusy(true);
+          showAiStatus(labels.aiLoading);
+
+          try {
+            const response = await generateGeminiJson({
+              userId: currentUser.uid,
+              prompt: buildPendingMealPrompt({
+                locale,
+                pendingMeals,
+                dishes,
+                mealLabels: {
+                  breakfast: labels.breakfast,
+                  lunch: labels.lunch,
+                  dinner: labels.dinner,
+                },
+              }),
+              validator: isPendingMealRecommendationResponse,
+            });
+            pendingAiRecommendations = assignPendingMealRecommendations({
+              pendingMeals,
+              dishes,
+              response,
+            });
+
+            if (pendingAiRecommendations.length === 0) {
+              showAiStatus(labels.aiPendingNoResults);
+            } else {
+              showAiStatus('');
+            }
+            renderAiResults();
+          } catch (error) {
+            const state = getAiUiStateFromError(error);
+            const key = getAiUiMessageKey(state);
+            showAiStatus((key && labels[key]) || labels.aiError, true);
+          } finally {
+            setAiBusy(false);
+          }
         });
 
         configDays?.addEventListener('click', (event) => {
           const target = event.target;
           if (!(target instanceof HTMLElement)) return;
-          const button = target.closest<HTMLButtonElement>('button');
+          const button = target.closest<HTMLButtonElement>('[data-config-edit]');
+          if (!button) return;
+          dayEditModal.open(button.dataset.configEdit ?? '');
+        });
+
+        aiResults?.addEventListener('click', (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) return;
+
+          const button = target.closest<HTMLButtonElement>('[data-ai-apply]');
           if (!button) return;
 
-          const card = button.closest<HTMLElement>('[data-day]');
-          if (!card) return;
-
-          if (button.dataset.addPlate) {
-            addPlate(card, button.dataset.addPlate as MealSlot);
-            return;
-          }
-
-          if (button.dataset.removePlate) {
-            button.closest('.plate-row')?.remove();
-            scheduleDaySave(card);
-          }
+          applyAiRecommendation(Number(button.dataset.aiApply));
         });
 
         services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {

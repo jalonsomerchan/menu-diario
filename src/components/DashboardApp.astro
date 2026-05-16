@@ -1,5 +1,6 @@
 ---
 import type { Locale } from '../config/site';
+import DayEditModal from './DayEditModal.astro';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -98,18 +99,14 @@ const labels = {
     </section>
   </div>
 
-  <dialog class="quick-edit-modal quick-edit-modal--day" data-quick-modal>
-    <form method="dialog" class="quick-edit-modal__box" data-quick-form>
-      <header>
-        <h2>{labels.quickEdit}</h2>
-        <button class="button button--ghost button--small" value="cancel" type="submit">{labels.cancel}</button>
-      </header>
-      <div data-quick-fields></div>
-      <footer>
-        <button class="button button--primary" value="save" type="submit">{labels.save}</button>
-      </footer>
-    </form>
-  </dialog>
+  <DayEditModal
+    eyebrow={labels.quickEdit}
+    title={labels.quickEdit}
+    cancelLabel={labels.cancel}
+    saveLabel={labels.save}
+    clearLabel={labels.deleteDay}
+    saveHint={labels.saveHint}
+  />
 </section>
 
 <script>

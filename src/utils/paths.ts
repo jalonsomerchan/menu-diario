@@ -4,7 +4,7 @@ export function joinPathSegments(...parts: string[]) {
     .map((part) => part.replace(/^\/+|\/+$/g, ''))
     .filter(Boolean);
 
-  return `/${cleanParts.join('/')}${cleanParts.length ? '/' : ''}`;
+  return cleanParts.length ? `/${cleanParts.join('/')}` : '/';
 }
 
 export function getBasePath() {

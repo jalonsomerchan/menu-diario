@@ -17,7 +17,7 @@ export function GET() {
   ];
 
   const source = `
-const CACHE_VERSION = 'menu-diario-static-v1';
+const CACHE_VERSION = 'menu-diario-static-v2';
 const BASE_PATH = ${JSON.stringify(basePath)};
 const PRE_CACHE_URLS = ${JSON.stringify([...new Set(preCacheUrls)])};
 

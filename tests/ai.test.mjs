@@ -23,6 +23,7 @@ describe('Firebase AI foundation', () => {
       'src/lib/ai/index.ts',
       'src/lib/ai/json.ts',
       'src/lib/ai/limits.ts',
+      'src/lib/ai/pending-meal-recommendations.ts',
       'src/lib/ai/remote-config.ts',
       'src/lib/ai/ui-state.ts',
     ].forEach((path) => {
@@ -79,6 +80,7 @@ describe('Firebase AI foundation', () => {
 
   it('keeps UI error states translated in all locales', () => {
     const uiState = readText('src/lib/ai/ui-state.ts');
+    const pendingMealRecommendations = readText('src/lib/ai/pending-meal-recommendations.ts');
     const es = readJson('src/i18n/translations/es.json');
     const en = readJson('src/i18n/translations/en.json');
     const keys = [
@@ -88,11 +90,23 @@ describe('Firebase AI foundation', () => {
       'ai.missingConfig',
       'ai.invalidResponse',
       'ai.retry',
+      'ai.pendingMealsTitle',
+      'ai.pendingMealsDescription',
+      'ai.pendingMealsHint',
+      'ai.pendingMealsGenerate',
+      'ai.pendingMealsEmpty',
+      'ai.pendingMealsNoCatalog',
+      'ai.pendingMealsNoResults',
+      'ai.pendingMealsApply',
+      'ai.pendingMealsApplied',
     ];
 
     assert.match(uiState, /quota-exhausted/);
     assert.match(uiState, /missing-config/);
     assert.match(uiState, /invalid-response/);
+    assert.match(pendingMealRecommendations, /getPendingMealSlots/);
+    assert.match(pendingMealRecommendations, /assignPendingMealRecommendations/);
+    assert.match(pendingMealRecommendations, /buildPendingMealPrompt/);
 
     keys.forEach((key) => {
       assert.ok(es[key], `es.json should include ${key}`);
@@ -109,7 +123,10 @@ describe('Firebase AI foundation', () => {
     assert.match(firebaseDocs, /Remote Config/);
     assert.match(firebaseDocs, /sessionStorage/);
     assert.match(firebaseDocs, /no son una protección real/);
+    assert.match(firebaseDocs, /comidas pendientes/);
+    assert.match(firebaseDocs, /no incluye emails ni notas personales/);
     assert.match(readme, /Firebase AI Logic/);
     assert.match(readme, /PUBLIC_AI_ENABLED/);
+    assert.match(readme, /comidas pendientes/);
   });
 });
