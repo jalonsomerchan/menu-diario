@@ -2,6 +2,7 @@
 import { Icon } from 'astro-icon/components';
 import Container from './Container.astro';
 import { localeLabels, siteConfig, type Locale } from '../config/site';
+import { useTupperTranslations } from '../i18n/tuppers';
 import { getAlternateLocales, getLocalizedPath, useTranslations } from '../i18n/ui';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
@@ -47,7 +49,7 @@ const labels = {
         <a href={homePath}>{t('nav.home')}</a>
         <a href={dashboardPath}><Icon name="mdi:home-outline" aria-hidden="true" />{t('appNav.dashboard')}</a>
         <a href={configurePath}><Icon name="mdi:calendar-edit" aria-hidden="true" />{t('appNav.configure')}</a>
-        <a href={tuppersPath}><Icon name="mdi:food-takeout-box-outline" aria-hidden="true" />{t('appNav.tuppers')}</a>
+        <a href={tuppersPath}><Icon name="mdi:food-takeout-box-outline" aria-hidden="true" />{tt('nav')}</a>
         <a href={dishesPath}><Icon name="mdi:silverware-fork-knife" aria-hidden="true" />{t('appNav.dishes')}</a>
         <a href={historyPath}><Icon name="mdi:history" aria-hidden="true" />{t('appNav.history')}</a>
         <a href={settingsPath}><Icon name="mdi:cog-outline" aria-hidden="true" />{t('appNav.settings')}</a>
