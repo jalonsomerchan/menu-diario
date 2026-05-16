@@ -1,3 +1,4 @@
+import { getAddedDishNamesFromItems } from './dish-usage.mjs';
 import { normalizeDay } from './normalizers.ts';
 import type { DailyMenu, MealSlot } from './types.ts';
 
@@ -35,23 +36,5 @@ export function isSameDayMenu(left: Partial<DailyMenu>, right: Partial<DailyMenu
 export function getAddedDishNames(previousDay: Partial<DailyMenu>, nextDay: Partial<DailyMenu>) {
   const previous = normalizeDay(previousDay);
   const next = normalizeDay(nextDay);
-  const additions: string[] = [];
-
-  mealSlots.forEach((meal) => {
-    const previousCounts = new Map<string, number>();
-    previous.meals[meal].items.forEach((item) => {
-      previousCounts.set(item, (previousCounts.get(item) ?? 0) + 1);
-    });
-
-    next.meals[meal].items.forEach((item) => {
-      const remaining = previousCounts.get(item) ?? 0;
-      if (remaining > 0) {
-        previousCounts.set(item, remaining - 1);
-        return;
-      }
-      additions.push(item);
-    });
-  });
-
-  return additions;
+  return mealSlots.flatMap((meal) => getAddedDishNamesFromItems(previous.meals[meal].items, next.meals[meal].items));
 }
