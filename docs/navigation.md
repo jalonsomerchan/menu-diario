@@ -15,6 +15,18 @@ Todos los enlaces internos del header deben generarse con `getLocalizedPath(path
 - GitHub Pages;
 - rutas localizadas como `/en/`.
 
+Rutas principales actuales de la app autenticada:
+
+- `/dashboard`: inicio privado del menú.
+- `/configurar`: edición de próximos días.
+- `/resumen-semanal`: resumen semanal con estadísticas, comparación histórica y recomendaciones básicas no-IA.
+- `/tuppers`: gestión de tuppers.
+- `/mis-platos`: catálogo de platos visibles.
+- `/historico`: consulta y edición de menús anteriores.
+- `/ajustes`: preferencias y grupo.
+
+La ruta `/resumen-semanal` también existe localizada como `/{locale}/resumen-semanal`. La pantalla usa datos ya existentes de `weeklyMenus` y `dishes`; no añade campos nuevos a Firestore. Los cálculos viven en `src/lib/menu/weekly-stats.mjs` para mantenerlos testeables y preparados para integrarse con el recomendador inteligente y Mis platos.
+
 ## Comportamiento responsive
 
 En escritorio, el header muestra la navegación principal directamente cuando hay espacio suficiente.
