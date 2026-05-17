@@ -7,7 +7,7 @@ import {
   createPublicShareMetadata,
   getPublicShareRobots,
   isPublicShareIdSafe,
-} from '../src/lib/public-sharing/metadata.ts';
+} from '../src/lib/public-sharing/metadata.mjs';
 
 const root = process.cwd();
 
@@ -49,6 +49,6 @@ describe('public sharing policy', () => {
       assert.match(docs, new RegExp(term, 'i'));
     });
     assert.match(docs, /noindex,nofollow/);
-    assert.match(docs, /src\/lib\/public-sharing\/metadata\.ts/);
+    assert.match(docs, /src\/lib\/public-sharing\/metadata\.mjs/);
   });
 });
