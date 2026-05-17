@@ -1,7 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
 import type { Locale } from '../config/site';
-import { usePlanningTranslations } from '../i18n/planning';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 import { stripBasePath } from '../utils/paths';
@@ -19,7 +18,6 @@ type NavItem = {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-const tp = usePlanningTranslations(locale);
 const tt = useTupperTranslations(locale);
 const currentPath = stripBasePath(Astro.url.pathname).replace(/\/$/, '') || '/';
 
@@ -33,26 +31,20 @@ const items: NavItem[] = [
   {
     href: getLocalizedPath('/planificacion', locale),
     icon: 'mdi:calendar-edit',
-    label: tp('nav'),
+    label: t('appNav.planning'),
     match: ['/configurar', '/planificacion'],
-  },
-  {
-    href: getLocalizedPath('/mis-platos', locale),
-    icon: 'mdi:silverware-fork-knife',
-    label: t('appNav.dishes'),
-    match: ['/mis-platos'],
-  },
-  {
-    href: getLocalizedPath('/tuppers', locale),
-    icon: 'mdi:food-takeout-box-outline',
-    label: tt('nav'),
-    match: ['/tuppers'],
   },
   {
     href: getLocalizedPath('/compra', locale),
     icon: 'mdi:cart-outline',
     label: t('appNav.shopping'),
     match: ['/compra'],
+  },
+  {
+    href: getLocalizedPath('/tuppers', locale),
+    icon: 'mdi:food-takeout-box-outline',
+    label: tt('nav'),
+    match: ['/tuppers'],
   },
 ];
 

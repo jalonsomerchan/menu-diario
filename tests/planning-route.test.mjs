@@ -21,6 +21,7 @@ describe('planning route smoke checks', () => {
 
   it('uses localized planning labels without hardcoding visible copy', () => {
     const planningI18n = readText('src/i18n/planning.ts');
+    const translations = readText('src/i18n/translations/es.json');
     const header = readText('src/components/Header.astro');
     const configurator = readText('src/components/ConfiguratorApp.astro');
     const planningAi = readText('src/components/PlanningAiApp.astro');
@@ -30,8 +31,8 @@ describe('planning route smoke checks', () => {
     assert.match(planningI18n, /Plan IA/);
     assert.match(planningI18n, /AI plan/);
     assert.match(planningI18n, /Record<Locale/);
-    assert.match(header, /usePlanningTranslations/);
-    assert.match(header, /tp\('nav'\)/);
+    assert.match(translations, /"appNav\.planning": "Planificación"/);
+    assert.match(header, /appNav\.planning/);
     assert.match(header, /getLocalizedPath\('\/planificacion'/);
     assert.match(configurator, /planningPath/);
     assert.match(planningAi, /planningAi\.title/);

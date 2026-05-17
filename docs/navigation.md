@@ -31,7 +31,14 @@ La ruta `/resumen-semanal` también existe localizada como `/{locale}/resumen-se
 
 ## Comportamiento responsive
 
-En escritorio, el header muestra la navegación principal directamente cuando hay espacio suficiente.
+En escritorio, el header muestra directamente una navegación principal corta con:
+
+- dashboard;
+- planificación;
+- tuppers;
+- mis platos;
+- compra;
+- un desplegable `Más` para resumen, histórico, ajustes, idioma, tema del navegador, cerrar sesión y accesos secundarios como administración.
 
 En móvil, el header usa un botón hamburguesa accesible con:
 
@@ -45,8 +52,15 @@ El panel móvil respeta `safe-area-inset-top` y `safe-area-inset-bottom` para ev
 
 ## Acciones de sesión y tema
 
-El selector de tema vive en el header único. El botón de cerrar sesión se muestra solo cuando Firebase está configurado y hay usuario autenticado.
+El selector de tema, el selector de idioma y el botón de cerrar sesión viven dentro del bloque `Más` del header único. El botón de cerrar sesión se muestra solo cuando Firebase está configurado y hay usuario autenticado.
 
 ## Convención para futuras barras móviles
 
-Si se añade una barra inferior móvil, debe complementar al header y no duplicar todos los enlaces principales. La navegación principal y las acciones globales siguen perteneciendo al header único.
+La barra inferior móvil actual debe mantenerse breve y centrada en accesos frecuentes:
+
+- dashboard;
+- planificación;
+- compra;
+- tuppers.
+
+La navegación principal y las acciones globales siguen perteneciendo al header único.

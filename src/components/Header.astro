@@ -2,7 +2,6 @@
 import { Icon } from 'astro-icon/components';
 import Container from './Container.astro';
 import { localeLabels, siteConfig, type Locale } from '../config/site';
-import { usePlanningTranslations } from '../i18n/planning';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getAlternateLocales, getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -12,7 +11,6 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-const tp = usePlanningTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
@@ -31,6 +29,20 @@ const labels = {
   openMenu: t('appNav.openMenu'),
   closeMenu: t('appNav.closeMenu'),
 };
+
+const primaryItems = [
+  { href: dashboardPath, icon: 'mdi:home-outline', label: t('appNav.dashboard') },
+  { href: planningPath, icon: 'mdi:calendar-edit', label: t('appNav.planning') },
+  { href: tuppersPath, icon: 'mdi:food-takeout-box-outline', label: tt('nav') },
+  { href: dishesPath, icon: 'mdi:silverware-fork-knife', label: t('appNav.dishes') },
+  { href: shoppingPath, icon: 'mdi:cart-outline', label: t('appNav.shopping') },
+] as const;
+
+const moreItems = [
+  { href: summaryPath, icon: 'mdi:chart-box-outline', label: t('appNav.summary') },
+  { href: historyPath, icon: 'mdi:history', label: t('appNav.history') },
+  { href: settingsPath, icon: 'mdi:cog-outline', label: t('appNav.settings') },
+] as const;
 ---
 
 <header class="site-header" data-site-header data-labels={JSON.stringify(labels)}>
@@ -51,34 +63,59 @@ const labels = {
 
     <div class="site-header__panel" id={panelId} data-site-menu-panel>
       <nav class="site-header__nav" aria-label={t('nav.main')}>
-        <a href={homePath}>{t('nav.home')}</a>
-        <a href={dashboardPath}><Icon name="mdi:home-outline" aria-hidden="true" />{t('appNav.dashboard')}</a>
-        <a href={planningPath}><Icon name="mdi:calendar-edit" aria-hidden="true" />{tp('nav')}</a>
-        <a href={shoppingPath}><Icon name="mdi:cart-outline" aria-hidden="true" />{t('appNav.shopping')}</a>
-        <a href={summaryPath}><Icon name="mdi:chart-box-outline" aria-hidden="true" />{t('appNav.summary')}</a>
-        <a href={tuppersPath}><Icon name="mdi:food-takeout-box-outline" aria-hidden="true" />{tt('nav')}</a>
-        <a href={dishesPath}><Icon name="mdi:silverware-fork-knife" aria-hidden="true" />{t('appNav.dishes')}</a>
-        <a href={adminDishesPath} data-admin-link hidden><Icon name="mdi:shield-crown-outline" aria-hidden="true" />{t('appNav.adminDishes')}</a>
-        <a href={historyPath}><Icon name="mdi:history" aria-hidden="true" />{t('appNav.history')}</a>
-        <a href={settingsPath}><Icon name="mdi:cog-outline" aria-hidden="true" />{t('appNav.settings')}</a>
-      </nav>
+        {primaryItems.map((item) => (
+          <a class="site-header__nav-link" href={item.href}>
+            <Icon name={item.icon} aria-hidden="true" />
+            {item.label}
+          </a>
+        ))}
+        <details class="site-header__more">
+          <summary class="site-header__more-trigger">
+            <Icon name="mdi:dots-horizontal-circle-outline" aria-hidden="true" />
+            {t('appNav.more')}
+          </summary>
 
-      <div class="site-header__actions">
-        <div class="site-header__locales" aria-label={t('nav.main')}>
-          {alternateLocales.map((alternateLocale) => (
-            <a href={getLocalizedPath('/', alternateLocale)} hreflang={alternateLocale}>{localeLabels[alternateLocale]}</a>
-          ))}
-        </div>
-        <select data-global-theme aria-label={t('dashboard.theme')}>
-          <option value="system">{t('dashboard.themeSystem')}</option>
-          <option value="light">{t('dashboard.themeLight')}</option>
-          <option value="dark">{t('dashboard.themeDark')}</option>
-        </select>
-        <button class="button button--ghost button--small" type="button" data-global-logout hidden>
-          <Icon name="mdi:logout" aria-hidden="true" />
-          {t('menu.signOut')}
-        </button>
-      </div>
+          <div class="site-header__more-panel">
+            <div class="site-header__more-links">
+              {moreItems.map((item) => (
+                <a class="site-header__nav-link" href={item.href}>
+                  <Icon name={item.icon} aria-hidden="true" />
+                  {item.label}
+                </a>
+              ))}
+              <a class="site-header__nav-link" href={adminDishesPath} data-admin-link hidden>
+                <Icon name="mdi:shield-crown-outline" aria-hidden="true" />
+                {t('appNav.adminDishes')}
+              </a>
+            </div>
+
+            <div class="site-header__more-section">
+              <p class="site-header__more-label">{t('appNav.language')}</p>
+              <div class="site-header__locales">
+                {alternateLocales.map((alternateLocale) => (
+                  <a href={getLocalizedPath('/', alternateLocale)} hreflang={alternateLocale}>
+                    {localeLabels[alternateLocale]}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <label class="site-header__more-section">
+              <span class="site-header__more-label">{t('appNav.browserTheme')}</span>
+              <select data-global-theme aria-label={t('dashboard.theme')}>
+                <option value="system">{t('dashboard.themeSystem')}</option>
+                <option value="light">{t('dashboard.themeLight')}</option>
+                <option value="dark">{t('dashboard.themeDark')}</option>
+              </select>
+            </label>
+
+            <button class="button button--ghost button--small site-header__logout" type="button" data-global-logout hidden>
+              <Icon name="mdi:logout" aria-hidden="true" />
+              {t('menu.signOut')}
+            </button>
+          </div>
+        </details>
+      </nav>
     </div>
   </Container>
 </header>

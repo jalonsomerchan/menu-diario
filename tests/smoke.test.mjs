@@ -154,8 +154,12 @@ describe('project smoke checks', () => {
         'planningAi.originNew',
         'history.title',
         'group.title',
+        'appNav.planning',
         'appNav.settings',
         'appNav.shopping',
+        'appNav.more',
+        'appNav.language',
+        'appNav.browserTheme',
         'appNav.adminDishes',
         'appNav.openMenu',
         'appNav.closeMenu',
@@ -232,6 +236,10 @@ describe('project smoke checks', () => {
     assert.match(header, /getLocalizedPath\('\/mis-platos'/);
     assert.match(header, /getLocalizedPath\('\/historico'/);
     assert.match(header, /getLocalizedPath\('\/ajustes'/);
+    assert.match(header, /site-header__more/);
+    assert.match(header, /appNav\.more/);
+    assert.match(header, /appNav\.language/);
+    assert.match(header, /appNav\.browserTheme/);
     assert.match(headerScript, /data-site-header/);
     assert.match(headerScript, /data-site-menu-toggle/);
     assert.match(headerScript, /Escape/);
@@ -239,6 +247,7 @@ describe('project smoke checks', () => {
     assert.match(headerScript, /data-global-theme/);
     assert.match(styles, /site-header__toggle/);
     assert.match(styles, /site-header\[data-menu-open='true'\]/);
+    assert.match(styles, /site-header__more-panel/);
     pages.forEach((source) => {
       assert.doesNotMatch(source, /<AppHeader/);
       assert.doesNotMatch(source, /from ['\"].*AppHeader\.astro['\"]/);
