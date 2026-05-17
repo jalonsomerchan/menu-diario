@@ -216,6 +216,8 @@ Después pulsa **Publish**. La app necesita permiso para:
 - Editar o borrar días de menús donde el usuario sea miembro.
 - Leer platos generales y platos propios visibles para su grupo.
 - Crear y actualizar platos propios, pero no platos generales desde la UI normal.
+- Leer un documento concreto de lista de la compra aunque aún no exista, para que la suscripción de `/compra` pueda arrancar sin error.
+- Crear o actualizar listas de compra solo como propietario o miembro del grupo correspondiente.
 
 Si el error aparece solo tras activar enforcement, revisa también `docs/app-check.md`, dominios registrados y métricas de App Check.
 
@@ -320,7 +322,9 @@ Lista de compra guardada por usuario o grupo para un rango próximo de fechas.
 }
 ```
 
-Las reglas permiten leer o actualizar la lista al propietario y, si `scope` es `group`, a miembros del grupo. App Check y límites de cliente siguen siendo medidas de contención parcial: no sustituyen controles de backend si más adelante se añaden funciones server-side para IA o sincronización avanzada.
+La pantalla `/compra` escucha un documento concreto de lista de compra por rango. Las reglas permiten `get` a usuarios autenticados para que esa escucha funcione incluso antes de que el documento exista, pero bloquean `list` para no enumerar listas. Las escrituras siguen restringidas: solo puede crear o actualizar el propietario y, si `scope` es `group`, los miembros reales de `groups/{groupId}.members`.
+
+App Check y límites de cliente siguen siendo medidas de contención parcial: no sustituyen controles de backend si más adelante se añaden funciones server-side para IA o sincronización avanzada.
 
 Las vistas de próximos días pueden mezclar fechas de dos semanas distintas, pero cada fecha debe leerse y escribirse en el documento `weeklyMenus` de su `weekStart` real. Dashboard y planificación agrupan la UI por rango de días, no por un único documento mezclado.
 
