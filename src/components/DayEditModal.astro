@@ -53,7 +53,7 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
 
 <style is:global>
   .day-edit-modal {
-    width: min(94vw, 45rem);
+    width: min(96vw, 48rem);
     margin: auto;
   }
 
@@ -66,7 +66,7 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
 
   .day-edit-modal__box {
     gap: 0;
-    max-height: min(88vh, 48rem);
+    max-height: min(92vh, 52rem);
     overflow: hidden;
     padding: 0;
     border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 68%);
@@ -83,23 +83,23 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     display: grid !important;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    gap: 0.8rem;
+    gap: 0.95rem;
     border-bottom: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 14%);
     background:
       linear-gradient(180deg, color-mix(in srgb, var(--color-surface), var(--color-primary-soft) 10%), var(--color-surface));
-    padding: var(--surface-padding) var(--surface-padding) calc(var(--surface-padding) - 0.05rem);
+    padding: calc(var(--surface-padding) + 0.1rem) var(--surface-padding) var(--surface-padding);
   }
 
   .day-edit-modal__date-badge {
     display: grid;
     place-items: center;
-    width: clamp(3rem, 13vw, 4.25rem);
+    width: clamp(3.15rem, 13vw, 4.5rem);
     aspect-ratio: 1;
     border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 55%);
-    border-radius: 1.15rem;
+    border-radius: 1.3rem;
     background: var(--color-primary-soft);
     color: var(--color-primary);
-    font-size: clamp(1.8rem, 8vw, 2.65rem);
+    font-size: clamp(1.95rem, 8vw, 2.8rem);
     font-weight: 150;
     letter-spacing: -0.12em;
     line-height: 0.9;
@@ -109,14 +109,14 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
   .day-edit-modal__heading {
     display: grid;
     min-width: 0;
-    gap: 0.3rem;
+    gap: 0.22rem;
   }
 
   .day-edit-modal__heading h2 {
     margin: 0;
-    font-size: clamp(1.7rem, 7vw, 2.65rem);
-    line-height: 0.95;
-    letter-spacing: -0.07em;
+    font-size: clamp(1.95rem, 8vw, 3rem);
+    line-height: 0.92;
+    letter-spacing: -0.08em;
     text-transform: lowercase;
   }
 
@@ -128,20 +128,20 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     min-height: 1.2em;
     margin: 0;
     color: var(--color-muted);
-    font-size: 0.92rem;
+    font-size: 1rem;
     font-weight: 850;
   }
 
   .day-edit-modal__close {
     display: grid;
     place-items: center;
-    width: 2.55rem;
-    height: 2.55rem;
+    width: 2.9rem;
+    height: 2.9rem;
     border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
     border-radius: 999px;
     background: color-mix(in srgb, var(--color-surface-raised), transparent 4%);
     color: var(--color-muted);
-    font-size: 1.55rem;
+    font-size: 1.7rem;
     font-weight: 900;
     line-height: 1;
     transition:
@@ -163,12 +163,12 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
 
   .day-edit-modal__body {
     display: grid;
-    gap: 0.75rem;
+    gap: 1rem;
     min-height: 0;
     overflow: auto;
     overscroll-behavior: contain;
     padding: var(--surface-padding);
-    padding-bottom: max(var(--surface-padding), 1rem);
+    padding-bottom: calc(max(var(--surface-padding), 1rem) + 0.35rem);
   }
 
   .day-edit-modal__footer {
@@ -176,7 +176,7 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     bottom: 0;
     z-index: 4;
     display: grid !important;
-    gap: 0.9rem;
+    gap: 0.85rem;
     border-top: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 12%);
     background:
       linear-gradient(0deg, color-mix(in srgb, var(--color-surface), var(--color-primary-soft) 8%), var(--color-surface));
@@ -186,7 +186,7 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
   .day-edit-modal__hint {
     margin: 0;
     color: var(--color-muted);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 850;
   }
 
@@ -211,6 +211,19 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     gap: 0.65rem;
   }
 
+  .day-edit-modal .day-edit-card__content {
+    gap: 1rem;
+  }
+
+  .day-edit-modal .day-edit-block {
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 8%);
+    border-radius: 1.35rem;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 10%), color-mix(in srgb, var(--color-surface-soft), transparent 10%));
+    padding: 1rem;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff, transparent 94%);
+  }
+
   .day-edit-modal .day-card--compact-editor {
     border: 0;
     background: transparent;
@@ -223,30 +236,125 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
   }
 
   .day-edit-modal .meal-editor {
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 16%),
-      color-mix(in srgb, var(--color-surface-soft), transparent 8%)
-    );
+    gap: 0.9rem;
   }
 
   .day-edit-modal .plate-row {
-    align-items: center;
+    align-items: flex-start;
+    gap: 0.85rem;
   }
 
   .day-edit-modal .plate-row label {
     position: relative;
-    gap: 0.35rem;
+    gap: 0.45rem;
+  }
+
+  .day-edit-modal .meal-editor__header {
+    align-items: center;
+  }
+
+  .day-edit-modal .meal-editor__title {
+    display: grid;
+    min-width: 0;
+    gap: 0.18rem;
+  }
+
+  .day-edit-modal .meal-editor h4 {
+    font-size: 0.92rem;
+    letter-spacing: 0.1em;
+    color: var(--color-muted);
+  }
+
+  .day-edit-modal .plate-list {
+    gap: 0.7rem;
+  }
+
+  .day-edit-modal .plate-row .icon-button--danger {
+    width: 2.9rem;
+    height: 2.9rem;
+    align-self: center;
+    background: color-mix(in srgb, var(--color-danger-soft), transparent 8%);
   }
 
   .day-edit-modal .button--primary[aria-busy='true'] {
     opacity: 0.82;
   }
 
+  .day-edit-modal .dish-combobox {
+    grid-template-columns: minmax(0, 1fr) 3rem;
+    border-radius: 1.1rem;
+    background: color-mix(in srgb, var(--color-surface-raised), var(--color-surface) 35%);
+  }
+
+  .day-edit-modal .dish-combobox input {
+    min-height: 3.3rem;
+    padding: 0.82rem 1rem;
+    font-size: 1.08rem;
+    font-weight: 850;
+  }
+
+  .day-edit-modal .dish-combobox__toggle {
+    min-width: 3rem;
+    font-size: 1rem;
+  }
+
+  .day-edit-modal .dish-suggestions {
+    gap: 0.5rem;
+    padding-bottom: 0.2rem;
+  }
+
+  .day-edit-modal .dish-suggestions button {
+    padding: 0.52rem 0.82rem;
+    border-radius: 999px;
+    font-size: 0.84rem;
+  }
+
+  .day-edit-modal .day-edit-field {
+    gap: 0.5rem;
+    color: var(--color-text);
+    font-size: 0.92rem;
+  }
+
+  .day-edit-modal .day-edit-field textarea,
+  .day-edit-modal .day-edit-field select {
+    width: 100%;
+  }
+
+  .day-edit-modal .day-edit-field textarea {
+    min-height: 8rem;
+    border-radius: 1.15rem;
+    background: color-mix(in srgb, var(--color-surface-raised), var(--color-surface) 35%);
+    padding: 1rem;
+    line-height: 1.55;
+  }
+
+  .day-edit-modal .day-edit-field--textarea textarea {
+    resize: vertical;
+  }
+
+  .day-edit-modal .day-edit-toggle-card {
+    display: flex !important;
+    align-items: center;
+    gap: 0.8rem;
+    border-style: dashed;
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 6%);
+    padding: 0.95rem 1rem;
+  }
+
+  .day-edit-modal .day-edit-toggle-card input {
+    width: 1.2rem;
+    height: 1.2rem;
+    accent-color: var(--color-primary);
+  }
+
+  .day-edit-modal .day-edit-toggle-card:has(input:checked) {
+    border-color: color-mix(in srgb, var(--color-warning), var(--color-border) 35%);
+    background: color-mix(in srgb, var(--color-warning-soft), transparent 25%);
+  }
+
   @media (min-width: 640px) {
     .day-edit-modal__actions {
-      grid-template-columns: auto minmax(11rem, auto);
+      grid-template-columns: auto auto minmax(11rem, auto);
       justify-content: end;
       align-items: center;
     }

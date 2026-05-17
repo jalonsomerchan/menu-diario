@@ -2,6 +2,7 @@ import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
+import { renderDaySummaryCard } from '../lib/menu/day-summary-card';
 import { serializeDay } from '../lib/menu/day-state';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
 import { normalizeDay } from '../lib/menu/normalizers';
@@ -167,23 +168,15 @@ if (root) {
           )
           .join('');
 
-        return `
-          <article class="next-day-card next-day-card--mockup" data-day="${isoDate}">
-            <div class="next-day-card__number">${escapeHtml(getDayNumber(isoDate))}</div>
-            <div class="next-day-card__body">
-              <header class="config-day-card__header">
-                <div class="config-day-card__title">
-                  <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
-                  <p>${escapeHtml(formatDate(isoDate))}</p>
-                </div>
-                <button class="button button--ghost button--small config-day-card__edit" type="button" data-config-edit="${isoDate}">
-                  ${escapeHtml(labels.editDay)}
-                </button>
-              </header>
-              <div class="config-day-card__meals">${summaries}</div>
-            </div>
-          </article>
-        `;
+        return renderDaySummaryCard({
+          isoDate,
+          dayNumber: getDayNumber(isoDate),
+          weekday: formatWeekday(isoDate),
+          dateLabel: formatDate(isoDate),
+          actionLabel: labels.editDay,
+          actionAttr: 'data-config-edit',
+          summariesHtml: summaries,
+        });
       })
       .join('');
   }

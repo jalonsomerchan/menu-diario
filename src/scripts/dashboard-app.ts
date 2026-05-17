@@ -3,6 +3,7 @@ import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates, toIsoDate } from '../lib/menu/dates';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
+import { renderDaySummaryCard } from '../lib/menu/day-summary-card';
 import { serializeDay } from '../lib/menu/day-state';
 import { renderPlateRow } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
@@ -205,27 +206,16 @@ if (root) {
           )
           .join('');
 
-        return `
-          <article class="next-day-card next-day-card--mockup" data-day="${isoDate}">
-            <div class="next-day-card__number">${escapeHtml(getDayNumber(isoDate))}</div>
-            <div class="next-day-card__body">
-              <header class="dashboard-day-card__header">
-                <div class="dashboard-day-card__title">
-                  <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
-                  <p>${escapeHtml(new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(`${isoDate}T00:00:00`)))}</p>
-                </div>
-                <details class="day-actions">
-                  <summary aria-label="${escapeHtml(labels.moreActions)}">⋯</summary>
-                  <div>
-                    <button type="button" data-quick-edit="${isoDate}" ${disabledAttr}>${escapeHtml(labels.editDay)}</button>
-                    <button type="button" data-clear-day="${isoDate}" ${disabledAttr}>${escapeHtml(labels.deleteDay)}</button>
-                  </div>
-                </details>
-              </header>
-              <div class="dashboard-day-card__meals">${summaries}</div>
-            </div>
-          </article>
-        `;
+        return renderDaySummaryCard({
+          isoDate,
+          dayNumber: getDayNumber(isoDate),
+          weekday: formatWeekday(isoDate),
+          dateLabel: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(`${isoDate}T00:00:00`)),
+          actionLabel: labels.editDay,
+          actionAttr: 'data-quick-edit',
+          actionStateAttr: disabledAttr,
+          summariesHtml: summaries,
+        });
       })
       .join('');
   }
@@ -418,15 +408,6 @@ if (root) {
             return;
           }
 
-          if (target.dataset.clearDay && currentUser) {
-            if (shouldBlockOfflineWrites(isOnline)) {
-              showStatus(labels.offlineReadOnly, true);
-              return;
-            }
-            const menuId = getMenuIdForDay(target.dataset.clearDay);
-            if (!menuId) return;
-            await clearMenuDay(services, menuId, currentUser.uid, target.dataset.clearDay);
-          }
         });
 
         services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
