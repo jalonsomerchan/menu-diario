@@ -107,13 +107,13 @@ const labels = {
       </div>
     </section>
 
-    <section id="configurador" class="dashboard-section">
+    <section id="configurador" class="dashboard-section app-panel configurator-planner-panel">
       <div class="section-heading section-heading--simple">
         <div>
           <p class="menu-app__eyebrow">{labels.configureHint}</p>
           <h1>{labels.configure}</h1>
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="configurator-planner-panel__actions">
           <a class="button button--ghost button--small" href={shoppingPath}>{labels.shopping}</a>
           <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
         </div>
@@ -146,6 +146,27 @@ const labels = {
   .configurator-app .plate-row label {
     position: relative;
     gap: 0.35rem;
+  }
+
+  .configurator-planner-panel {
+    display: grid;
+    gap: 1rem;
+    background: var(--panel-background);
+  }
+
+  .configurator-planner-panel .section-heading {
+    margin-bottom: 0.15rem;
+  }
+
+  .configurator-planner-panel__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    align-items: center;
+  }
+
+  .configurator-planner-panel .menu-days--cards {
+    gap: 0.9rem;
   }
 
   .configurator-app .dish-combobox {
@@ -248,6 +269,10 @@ const labels = {
     display: flex;
     justify-content: center;
     margin-top: 1rem;
+  }
+
+  .configurator-app__load-more .button {
+    min-width: min(100%, 14rem);
   }
 
   .ai-meals-panel {
