@@ -3,7 +3,9 @@ import '../styles/global.css';
 import '../styles/dishes.css';
 import '../styles/pwa.css';
 import '../styles/tuppers.css';
+import '../styles/mobile-bottom-nav.css';
 import Header from '../components/Header.astro';
+import MobileBottomNav from '../components/MobileBottomNav.astro';
 import Footer from '../components/Footer.astro';
 import { defaultLocale, siteConfig, type Locale } from '../config/site';
 import { useTranslations } from '../i18n/ui';
@@ -65,6 +67,7 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
     <main class="site-main">
       <slot />
     </main>
+    <MobileBottomNav locale={locale} />
     <Footer locale={locale} />
     <script>
       import '../scripts/pwa-register.ts';
