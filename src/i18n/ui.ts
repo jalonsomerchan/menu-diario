@@ -61,6 +61,21 @@ export function getLocalizedPath(path: string, locale: Locale): string {
   return withBasePath(joinPathSegments(locale, cleanPath));
 }
 
+export function getUnlocalizedPath(pathname: string): string {
+  const pathnameWithoutBase = stripBasePath(pathname);
+  const segments = pathnameWithoutBase.split('/').filter(Boolean);
+
+  if (isLocale(segments[0])) {
+    segments.shift();
+  }
+
+  return segments.length ? joinPathSegments(...segments) : '/';
+}
+
+export function getLocalizedEquivalentPath(pathname: string, locale: Locale): string {
+  return getLocalizedPath(getUnlocalizedPath(pathname), locale);
+}
+
 export function getAlternateLocales(currentLocale: Locale) {
   return locales.filter((locale) => locale !== currentLocale);
 }
