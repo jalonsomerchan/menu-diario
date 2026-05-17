@@ -1,0 +1,31 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  actionLabel?: string;
+  actionHref?: string;
+  icon?: string;
+  variant?: 'info' | 'warning' | 'error';
+  ariaLive?: 'polite' | 'assertive' | 'off';
+}
+
+const {
+  title,
+  description,
+  actionLabel,
+  actionHref,
+  icon = '·',
+  variant = 'info',
+  ariaLive = 'polite',
+} = Astro.props;
+const hasAction = Boolean(actionLabel && actionHref);
+---
+
+<div class="empty-state" data-variant={variant} role="status" aria-live={ariaLive}>
+  <span class="empty-state__icon" aria-hidden="true">{icon}</span>
+  <div class="empty-state__body">
+    <h2>{title}</h2>
+    <p>{description}</p>
+    {hasAction && <a class="button button--secondary button--small" href={actionHref}>{actionLabel}</a>}
+  </div>
+</div>
