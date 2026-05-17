@@ -1,6 +1,8 @@
 ---
 import type { Locale } from '../config/site';
 import DayEditModal from './DayEditModal.astro';
+import EmptyState from './EmptyState.astro';
+import InlineHint from './InlineHint.astro';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -85,6 +87,7 @@ const labels = {
       <p class="today-hero__hello" data-user-label>{labels.hello}</p>
       <h1>{labels.todayForLunch}</h1>
       <ul data-today-summary></ul>
+      <InlineHint text={t('emptyStates.dashboardTodayHint')} />
       <div class="flex flex-wrap gap-2">
         <a class="button button--ghost button--small" href={shoppingPath}>{labels.shopping}</a>
         <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
@@ -101,7 +104,15 @@ const labels = {
         <h2>{labels.nextSeven}</h2>
         <button class="button button--ghost button--small" type="button" data-notifications>{labels.enableNotifications}</button>
       </div>
-      <div class="next-days next-days--timeline" data-next-days></div>
+      <div class="next-days next-days--timeline" data-next-days>
+        <EmptyState
+          title={t('emptyStates.dashboardNextTitle')}
+          description={t('emptyStates.dashboardNextDescription')}
+          actionLabel={t('emptyStates.configureAction')}
+          actionHref={configurePath}
+          icon="🍽️"
+        />
+      </div>
     </section>
   </div>
 
