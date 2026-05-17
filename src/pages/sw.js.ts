@@ -2,28 +2,24 @@ import { defaultLocale } from '../config/site';
 import { getLocalizedPath } from '../i18n/ui';
 import { getBasePath, withBasePath } from '../utils/paths';
 
-const appShellRoutes = [
-  '',
-  'dashboard',
-  'planificacion',
-  'configurar',
-  'compra',
-  'tuppers',
-  'mis-platos',
-  'platos',
-  'historico',
-  'ajustes',
-  'admin/platos',
-  'resumen-semanal',
-];
-
-const staticAssets = ['manifest.webmanifest', 'favicon.svg', 'og-image.svg'];
-
 export function GET() {
   const basePath = getBasePath();
   const preCacheUrls = [
-    ...appShellRoutes.map((route) => withBasePath(route)),
-    ...staticAssets.map((asset) => withBasePath(asset)),
+    withBasePath(''),
+    withBasePath('dashboard'),
+    withBasePath('planificacion'),
+    withBasePath('configurar'),
+    withBasePath('compra'),
+    withBasePath('tuppers'),
+    withBasePath('mis-platos'),
+    withBasePath('platos'),
+    withBasePath('historico'),
+    withBasePath('ajustes'),
+    withBasePath('admin/platos'),
+    withBasePath('resumen-semanal'),
+    withBasePath('manifest.webmanifest'),
+    withBasePath('favicon.svg'),
+    withBasePath('og-image.svg'),
     getLocalizedPath('/', defaultLocale),
   ];
 
