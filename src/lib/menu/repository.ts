@@ -40,6 +40,16 @@ function normalizeFoodIntolerances(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function normalizeGroupFoodIntolerances(value: unknown): Record<string, string> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .map(([userId, userFoodIntolerances]) => [userId, normalizeFoodIntolerances(userFoodIntolerances)] as const)
+      .filter(([, userFoodIntolerances]) => Boolean(userFoodIntolerances))
+  );
+}
+
 function uniqueValues(values: string[]) {
   return [...new Set(values.filter(Boolean))];
 }
@@ -83,7 +93,18 @@ function mapUserProfile(id: string, data: Record<string, any>, fallbackName: str
 }
 
 function mapGroup(id: string, data: Record<string, any>): MenuGroup {
-  return { id, name: data.name ?? 'Menu Diario', ownerId: data.ownerId, members: data.members ?? [], memberEmails: data.memberEmails ?? [], pendingEmails: data.pendingEmails ?? [], inviteCode: data.inviteCode, enabledMeals: normalizeEnabledMeals(data.enabledMeals), updatedAt: data.updatedAt?.toDate?.() };
+  return {
+    id,
+    name: data.name ?? 'Menu Diario',
+    ownerId: data.ownerId,
+    members: data.members ?? [],
+    memberEmails: data.memberEmails ?? [],
+    pendingEmails: data.pendingEmails ?? [],
+    inviteCode: data.inviteCode,
+    enabledMeals: normalizeEnabledMeals(data.enabledMeals),
+    memberFoodIntolerances: normalizeGroupFoodIntolerances(data.memberFoodIntolerances),
+    updatedAt: data.updatedAt?.toDate?.(),
+  };
 }
 
 function getPatchMealItems(previousDay: DailyMenu, path: string) {
@@ -91,6 +112,12 @@ function getPatchMealItems(previousDay: DailyMenu, path: string) {
   if (match) return previousDay.meals[match[1] as MealSlot].items;
   if (path === 'lunchItems') return previousDay.meals.lunch.items;
   return [];
+}
+
+export function getGroupFoodIntolerances(group: MenuGroup | null, fallbackFoodIntolerances = '') {
+  const values = Object.values(group?.memberFoodIntolerances ?? {}).map(normalizeFoodIntolerances);
+  const fallback = normalizeFoodIntolerances(fallbackFoodIntolerances);
+  return uniqueValues([...values, fallback]).join('\n');
 }
 
 export async function ensureUserProfile(services: FirebaseServices, user: FirebaseUser, guestLabel: string) {
@@ -119,11 +146,23 @@ export async function updateUserPreferences(services: FirebaseServices, userId: 
   await firestoreModule.setDoc(firestoreModule.doc(db, 'users', userId), { ...preferences, updatedAt: firestoreModule.serverTimestamp() }, { merge: true });
 }
 
+export async function syncGroupFoodIntolerances(services: FirebaseServices, groupId: string, userId: string, foodIntolerances: string) {
+  const { db, firestoreModule } = services;
+  await firestoreModule.setDoc(
+    firestoreModule.doc(db, groupsCollection, groupId),
+    {
+      [`memberFoodIntolerances.${userId}`]: normalizeFoodIntolerances(foodIntolerances),
+      updatedAt: firestoreModule.serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
 export async function ensureDefaultGroup(services: FirebaseServices, user: FirebaseUser, profile: UserProfile) {
   if (profile.groupId) return profile.groupId;
   const { db, firestoreModule } = services;
   const email = normalizeEmail(user.email ?? profile.email);
-  const groupRef = await firestoreModule.addDoc(firestoreModule.collection(db, groupsCollection), { name: 'Menu Diario', ownerId: user.uid, members: [user.uid], memberEmails: email ? [email] : [], pendingEmails: [], inviteCode: createInviteCode(), enabledMeals: profile.enabledMeals, createdAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp() });
+  const groupRef = await firestoreModule.addDoc(firestoreModule.collection(db, groupsCollection), { name: 'Menu Diario', ownerId: user.uid, members: [user.uid], memberEmails: email ? [email] : [], pendingEmails: [], inviteCode: createInviteCode(), enabledMeals: profile.enabledMeals, memberFoodIntolerances: { [user.uid]: normalizeFoodIntolerances(profile.foodIntolerances) }, createdAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp() });
   await updateUserPreferences(services, user.uid, { groupId: groupRef.id });
   return groupRef.id;
 }
@@ -168,7 +207,7 @@ export async function joinGroupByInviteCode(services: FirebaseServices, user: Fi
 export async function leaveGroup(services: FirebaseServices, user: FirebaseUser, group: MenuGroup) {
   const { db, firestoreModule } = services;
   const email = normalizeEmail(user.email ?? '');
-  await firestoreModule.updateDoc(firestoreModule.doc(db, groupsCollection, group.id), { members: group.members.filter((member) => member !== user.uid), memberEmails: email ? group.memberEmails.filter((item) => item !== email) : group.memberEmails, updatedAt: firestoreModule.serverTimestamp() });
+  await firestoreModule.updateDoc(firestoreModule.doc(db, groupsCollection, group.id), { members: group.members.filter((member) => member !== user.uid), memberEmails: email ? group.memberEmails.filter((item) => item !== email) : group.memberEmails, [`memberFoodIntolerances.${user.uid}`]: '', updatedAt: firestoreModule.serverTimestamp() });
   await updateUserPreferences(services, user.uid, { groupId: null });
 }
 
