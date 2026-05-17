@@ -7,6 +7,7 @@ type DaySummaryCardOptions = {
   actionAttr: string;
   actionStateAttr?: string;
   summariesHtml: string;
+  notesHtml?: string;
 };
 
 function escapeHtml(value = '') {
@@ -22,6 +23,7 @@ export function renderDaySummaryCard({
   actionAttr,
   actionStateAttr = '',
   summariesHtml,
+  notesHtml = '',
 }: DaySummaryCardOptions) {
   return `
     <article class="next-day-card next-day-card--mockup planner-day-card" data-day="${escapeHtml(isoDate)}">
@@ -37,6 +39,7 @@ export function renderDaySummaryCard({
           </button>
         </header>
         <div class="planner-day-card__meals">${summariesHtml}</div>
+        ${notesHtml}
       </div>
     </article>
   `;
