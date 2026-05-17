@@ -28,11 +28,14 @@ describe('public sharing policy', () => {
       description: 'Menú compartido',
       routePath: '/menu/public-share-id',
       type: 'menu',
+      siteUrl: 'https://example.com',
+      basePath: '/menu-diario',
     });
 
     assert.equal(metadata.robots, 'noindex,nofollow');
     assert.equal(metadata.ogType, 'website');
-    assert.match(metadata.canonicalUrl, /\/menu\/public-share-id$/);
+    assert.equal(metadata.canonicalUrl, 'https://example.com/menu-diario/menu/public-share-id');
+    assert.equal(metadata.imageUrl, 'https://example.com/menu-diario/og-image.svg');
     assert.doesNotMatch(metadata.canonicalUrl, /uid|ownerId|groupId|inviteCode/i);
   });
 
