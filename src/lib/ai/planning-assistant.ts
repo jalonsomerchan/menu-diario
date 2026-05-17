@@ -242,7 +242,7 @@ function getTasteProfile(dishes: Dish[]) {
 
 function getModeRules(mode: PlanningRecommendationMode) {
   if (mode === 'own') return 'Mode rule: use only exact names from the saved own dishes catalog. Do not invent new dishes and do not use global-only dishes.';
-  if (mode === 'new') return 'Mode rule: invent genuinely new dishes only. Every returned dish must be new and absent from known catalog names.';
+  if (mode === 'new') return 'Mode rule: invent genuinely new dishes only. You must not reuse or rename any saved dish. Every returned dish must be new and absent from known catalog names.';
   return 'Mode rule: you may mix exact saved dish names with genuinely new dishes, but mark new dishes with isNew=true.';
 }
 
