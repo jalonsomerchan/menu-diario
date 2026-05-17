@@ -15,6 +15,7 @@ import type { FirebaseUser, MealSlot, MenuGroup, ThemePreference, UserProfile } 
 
 const root = document.querySelector<HTMLElement>('[data-settings-app]');
 const themes: ThemePreference[] = ['system', 'light', 'dark'];
+const maxFoodIntolerancesLength = 1000;
 
 if (root) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
@@ -22,6 +23,7 @@ if (root) {
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const content = root.querySelector<HTMLElement>('[data-content]');
   const themeSelect = root.querySelector<HTMLSelectElement>('[data-theme-select]');
+  const foodIntolerancesInput = root.querySelector<HTMLTextAreaElement>('[data-food-intolerances]');
   const inviteCode = root.querySelector<HTMLElement>('[data-invite-code]');
   const members = root.querySelector<HTMLElement>('[data-members]');
   const pending = root.querySelector<HTMLElement>('[data-pending]');
@@ -34,6 +36,10 @@ if (root) {
 
   function escapeHtml(value = '') {
     return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+  }
+
+  function normalizeFoodIntolerances(value: string) {
+    return value.trim().slice(0, maxFoodIntolerancesLength);
   }
 
   function showStatus(message: string, isError = false) {
@@ -63,6 +69,14 @@ if (root) {
       document.documentElement.dataset.theme = theme;
     }
     if (themeSelect) themeSelect.value = theme;
+  }
+
+  function renderProfile(profile: UserProfile) {
+    currentProfile = profile;
+    applyTheme(profile.theme);
+    if (foodIntolerancesInput) {
+      foodIntolerancesInput.value = profile.foodIntolerances;
+    }
   }
 
   function selectedMeals(): MealSlot[] {
@@ -112,6 +126,17 @@ if (root) {
             const theme = themeSelect.value as ThemePreference;
             applyTheme(theme);
             await updateUserPreferences(services, currentUser.uid, { theme });
+          });
+        });
+
+        root.querySelector('[data-food-intolerances-form]')?.addEventListener('submit', (event) => {
+          event.preventDefault();
+          runAction(async () => {
+            if (!currentUser || !foodIntolerancesInput) return;
+            const foodIntolerances = normalizeFoodIntolerances(foodIntolerancesInput.value);
+            foodIntolerancesInput.value = foodIntolerances;
+            await updateUserPreferences(services, currentUser.uid, { foodIntolerances });
+            showStatus(labels.foodIntolerancesSaved);
           });
         });
 
@@ -187,8 +212,7 @@ if (root) {
               labels.guestSession,
               (profile) => {
                 runAction(async () => {
-                  currentProfile = profile;
-                  applyTheme(profile.theme);
+                  renderProfile(profile);
                   const groupId = await ensureDefaultGroup(services, user, profile);
                   unsubscribeGroup?.();
                   unsubscribeGroup = watchGroup(services, groupId, renderGroup, reportError);
