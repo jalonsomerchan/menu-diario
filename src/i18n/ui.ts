@@ -1,13 +1,29 @@
 import { defaultLocale, locales, type Locale } from '../config/site';
 import { joinPathSegments, stripBasePath, withBasePath } from '../utils/paths';
 import en from './translations/en.json';
+import enHistory from './translations/history/en.json';
 import es from './translations/es.json';
+import esHistory from './translations/history/es.json';
 
-export type TranslationKey = keyof typeof es;
+function namespaceTranslations(namespace: string, values: Record<string, string>) {
+  return Object.fromEntries(Object.entries(values).map(([key, value]) => [`${namespace}.${key}`, value]));
+}
 
-const translations: Record<Locale, typeof es> = {
-  es,
-  en,
+const esTranslations = {
+  ...es,
+  ...namespaceTranslations('history', esHistory),
+};
+
+const enTranslations: typeof esTranslations = {
+  ...en,
+  ...namespaceTranslations('history', enHistory),
+};
+
+export type TranslationKey = keyof typeof esTranslations;
+
+const translations: Record<Locale, typeof esTranslations> = {
+  es: esTranslations,
+  en: enTranslations,
 };
 
 export function isLocale(locale: string | undefined): locale is Locale {
