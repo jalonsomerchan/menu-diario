@@ -171,13 +171,16 @@ if (root) {
           <article class="next-day-card next-day-card--mockup" data-day="${isoDate}">
             <div class="next-day-card__number">${escapeHtml(getDayNumber(isoDate))}</div>
             <div class="next-day-card__body">
-              <header>
-                <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
-                <button class="button button--ghost button--small" type="button" data-config-edit="${isoDate}">
+              <header class="config-day-card__header">
+                <div class="config-day-card__title">
+                  <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
+                  <p>${escapeHtml(formatDate(isoDate))}</p>
+                </div>
+                <button class="button button--ghost button--small config-day-card__edit" type="button" data-config-edit="${isoDate}">
                   ${escapeHtml(labels.editDay)}
                 </button>
               </header>
-              ${summaries}
+              <div class="config-day-card__meals">${summaries}</div>
             </div>
           </article>
         `;

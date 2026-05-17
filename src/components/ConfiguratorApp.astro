@@ -23,7 +23,10 @@ const labels = {
   loading: t('dashboard.loading'),
   configure: t('dashboard.configure'),
   configureHint: t('dashboard.configureHint'),
+  configureDescription: t('dashboard.configureDescription'),
   planning: tp('nav'),
+  planningTitle: tp('title'),
+  planningHint: tp('hint'),
   cancel: t('dashboard.cancel'),
   save: t('dashboard.save'),
   deleteDay: t('dashboard.deleteDay'),
@@ -57,6 +60,7 @@ const labels = {
   offlineReadOnly: t('pwa.offlineReadOnly'),
   tuppers: tt('nav'),
   shopping: t('appNav.shopping'),
+  dashboard: t('appNav.dashboard'),
   planningPath,
   homePath,
 };
@@ -69,16 +73,28 @@ const labels = {
   <div data-content hidden>
     <section id="configurador" class="dashboard-section app-panel configurator-planner-panel">
       <div class="section-heading section-heading--simple">
-        <div>
+        <div class="configurator-planner-panel__intro">
           <p class="menu-app__eyebrow">{labels.configureHint}</p>
           <h1>{labels.configure}</h1>
+          <p>{labels.configureDescription}</p>
         </div>
         <div class="configurator-planner-panel__actions">
+          <a class="button button--secondary button--small" href={homePath}>{labels.dashboard}</a>
           <a class="button button--primary button--small" href={planningPath}>{labels.planning}</a>
           <a class="button button--ghost button--small" href={shoppingPath}>{labels.shopping}</a>
           <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
         </div>
       </div>
+
+      <a class="configurator-ai-shortcut" href={planningPath}>
+        <div class="configurator-ai-shortcut__copy">
+          <p class="menu-app__eyebrow">{labels.planning}</p>
+          <h2>{labels.planningTitle}</h2>
+          <p>{labels.planningHint}</p>
+        </div>
+        <span class="button button--primary button--small">{labels.planning}</span>
+      </a>
+
       <div class="menu-days menu-days--cards" data-config-days></div>
       <div class="configurator-app__load-more">
         <button class="button button--secondary" type="button" data-config-load-more>
@@ -116,7 +132,8 @@ const labels = {
   }
 
   .configurator-planner-panel .section-heading {
-    margin-bottom: 0.15rem;
+    margin-bottom: 0;
+    gap: 1rem;
   }
 
   .configurator-planner-panel__actions {
@@ -126,8 +143,75 @@ const labels = {
     align-items: center;
   }
 
+  .configurator-planner-panel__intro {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .configurator-ai-shortcut {
+    display: grid;
+    gap: 1rem;
+    align-items: center;
+    padding: var(--surface-padding);
+    padding-bottom: max(var(--surface-padding), 1rem);
+    border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 48%);
+    border-radius: var(--radius-2xl);
+    background:
+      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary-soft), transparent 18%), transparent 48%),
+      color-mix(in srgb, var(--color-surface), transparent 1%);
+    box-shadow: var(--shadow-xs);
+    text-decoration: none;
+  }
+
+  .configurator-ai-shortcut__copy {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .configurator-ai-shortcut__copy h2 {
+    margin: 0;
+    font-size: clamp(1.35rem, 5vw, 2rem);
+    line-height: 0.98;
+    letter-spacing: -0.05em;
+  }
+
   .configurator-planner-panel .menu-days--cards {
-    gap: 0.9rem;
+    gap: 1rem;
+  }
+
+  .configurator-app .config-day-card__header {
+    align-items: start;
+  }
+
+  .configurator-app .config-day-card__title {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .configurator-app .config-day-card__title p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.86rem;
+    font-weight: 800;
+  }
+
+  .configurator-app .config-day-card__meals {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .configurator-app .day-meal-row {
+    gap: 0.28rem;
+    padding: 0.8rem 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface), transparent 4%);
+  }
+
+  .configurator-app .day-meal-row strong {
+    overflow-wrap: anywhere;
   }
 
   .configurator-app__load-more {
@@ -138,6 +222,12 @@ const labels = {
 
   .configurator-app__load-more .button {
     min-width: min(100%, 14rem);
+  }
+
+  @media (min-width: 720px) {
+    .configurator-ai-shortcut {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
   }
 
 </style>

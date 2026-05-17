@@ -209,8 +209,11 @@ if (root) {
           <article class="next-day-card next-day-card--mockup" data-day="${isoDate}">
             <div class="next-day-card__number">${escapeHtml(getDayNumber(isoDate))}</div>
             <div class="next-day-card__body">
-              <header>
-                <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
+              <header class="dashboard-day-card__header">
+                <div class="dashboard-day-card__title">
+                  <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
+                  <p>${escapeHtml(new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(`${isoDate}T00:00:00`)))}</p>
+                </div>
                 <details class="day-actions">
                   <summary aria-label="${escapeHtml(labels.moreActions)}">⋯</summary>
                   <div>
@@ -219,7 +222,7 @@ if (root) {
                   </div>
                 </details>
               </header>
-              ${summaries}
+              <div class="dashboard-day-card__meals">${summaries}</div>
             </div>
           </article>
         `;
