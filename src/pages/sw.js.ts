@@ -2,23 +2,33 @@ import { defaultLocale } from '../config/site';
 import { getLocalizedPath } from '../i18n/ui';
 import { getBasePath, withBasePath } from '../utils/paths';
 
+const appShellRoutes = [
+  '',
+  'dashboard',
+  'planificacion',
+  'configurar',
+  'compra',
+  'tuppers',
+  'mis-platos',
+  'platos',
+  'historico',
+  'ajustes',
+  'admin/platos',
+  'resumen-semanal',
+];
+
+const staticAssets = ['manifest.webmanifest', 'favicon.svg', 'og-image.svg'];
+
 export function GET() {
   const basePath = getBasePath();
   const preCacheUrls = [
-    withBasePath(''),
-    withBasePath('dashboard'),
-    withBasePath('planificacion'),
-    withBasePath('configurar'),
-    withBasePath('ajustes'),
-    withBasePath('historico'),
-    withBasePath('manifest.webmanifest'),
-    withBasePath('favicon.svg'),
-    withBasePath('og-image.svg'),
+    ...appShellRoutes.map((route) => withBasePath(route)),
+    ...staticAssets.map((asset) => withBasePath(asset)),
     getLocalizedPath('/', defaultLocale),
   ];
 
   const source = `
-const CACHE_VERSION = 'menu-diario-static-v2';
+const CACHE_VERSION = 'menu-diario-static-v3';
 const BASE_PATH = ${JSON.stringify(basePath)};
 const PRE_CACHE_URLS = ${JSON.stringify([...new Set(preCacheUrls)])};
 
