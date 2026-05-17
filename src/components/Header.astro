@@ -4,7 +4,7 @@ import Container from './Container.astro';
 import { localeLabels, siteConfig, type Locale } from '../config/site';
 import { usePlanningTranslations } from '../i18n/planning';
 import { useTupperTranslations } from '../i18n/tuppers';
-import { getAlternateLocales, getLocalizedPath, useTranslations } from '../i18n/ui';
+import { getAlternateLocales, getLocalizedEquivalentPath, getLocalizedPath, useTranslations } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -97,7 +97,7 @@ const moreItems = [
               <p class="site-header__more-label">{t('appNav.language')}</p>
               <div class="site-header__locales">
                 {alternateLocales.map((alternateLocale) => (
-                  <a href={getLocalizedPath('/', alternateLocale)} hreflang={alternateLocale}>
+                  <a href={getLocalizedEquivalentPath(Astro.url.pathname, alternateLocale)} hreflang={alternateLocale}>
                     {localeLabels[alternateLocale]}
                   </a>
                 ))}
