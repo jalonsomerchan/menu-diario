@@ -143,10 +143,11 @@ service cloud.firestore {
     }
 
     match /shoppingLists/{listId} {
+      allow get: if signedIn();
+      allow list: if false;
       allow create: if signedIn()
         && request.resource.data.ownerId == request.auth.uid
         && isShoppingListScope(request.resource.data);
-      allow read: if canAccessShoppingList(resource.data);
       allow update: if canAccessShoppingList(resource.data)
         && request.resource.data.ownerId == resource.data.ownerId
         && request.resource.data.rangeStart == resource.data.rangeStart
