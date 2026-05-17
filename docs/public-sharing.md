@@ -55,9 +55,11 @@ Los helpers de metadatos públicos viven en `src/lib/public-sharing/metadata.mjs
 Reglas recomendadas:
 
 - `robots`: usar `noindex,nofollow` por defecto.
-- `canonical`: generar con `withBasePath()` y `getAbsoluteUrl()` para soportar dominio raíz, subrutas y GitHub Pages.
+- `canonical`: generar rutas absolutas compatibles con dominio raíz, subrutas y GitHub Pages.
 - Open Graph: usar título y descripción públicos, nunca notas privadas.
 - JSON-LD: solo añadirlo cuando la página sea indexable explícitamente y el contenido tenga estructura suficiente.
+
+El helper usa `ASTRO_SITE` y `ASTRO_BASE` cuando están disponibles, y también acepta `siteUrl` y `basePath` explícitos para tests o contextos fuera de Astro.
 
 Ejemplo:
 
