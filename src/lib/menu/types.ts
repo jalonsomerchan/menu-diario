@@ -56,6 +56,7 @@ export type UserProfile = {
   email: string;
   enabledMeals: MealSlot[];
   theme: ThemePreference;
+  foodIntolerances: string;
   groupId?: string;
   updatedAt?: Date;
 };
