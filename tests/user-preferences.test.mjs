@@ -32,6 +32,19 @@ describe('user preference settings', () => {
     assert.match(docs, /foodIntolerances/);
   });
 
+  it('includes food intolerances in AI planning prompts with a bounded payload', () => {
+    const planningPrompt = readText('src/lib/ai/planning-assistant.ts');
+    const planningScript = readText('src/scripts/planning-ai-app.ts');
+    const docs = readText('docs/user-preferences.md');
+
+    assert.match(planningPrompt, /foodIntolerances\?: string/);
+    assert.match(planningPrompt, /maxFoodIntolerancesPromptLength = 500/);
+    assert.match(planningPrompt, /describeFoodIntolerances/);
+    assert.match(planningPrompt, /Food restrictions/);
+    assert.match(planningScript, /foodIntolerances: currentProfile\?\.foodIntolerances/);
+    assert.match(docs, /planificación con IA/);
+  });
+
   it('keeps settings namespace translations aligned', () => {
     const es = readJson('src/i18n/translations/settings/es.json');
     const en = readJson('src/i18n/translations/settings/en.json');
