@@ -50,7 +50,7 @@ Nunca deben exponerse en páginas públicas:
 
 ## SEO y metadatos
 
-Los helpers de metadatos públicos viven en `src/lib/public-sharing/metadata.ts`.
+Los helpers de metadatos públicos viven en `src/lib/public-sharing/metadata.mjs`.
 
 Reglas recomendadas:
 
@@ -61,8 +61,8 @@ Reglas recomendadas:
 
 Ejemplo:
 
-```ts
-import { createPublicShareMetadata } from '../lib/public-sharing/metadata';
+```js
+import { createPublicShareMetadata } from '../lib/public-sharing/metadata.mjs';
 
 const metadata = createPublicShareMetadata({
   title: 'Menú semanal',
