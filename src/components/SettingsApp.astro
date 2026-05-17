@@ -20,6 +20,12 @@ const labels = {
   breakfast: t('dashboard.breakfast'),
   lunch: t('dashboard.lunch'),
   dinner: t('dashboard.dinner'),
+  foodIntolerancesTitle: t('settings.foodIntolerancesTitle'),
+  foodIntolerancesDescription: t('settings.foodIntolerancesDescription'),
+  foodIntolerancesLabel: t('settings.foodIntolerancesLabel'),
+  foodIntolerancesPlaceholder: t('settings.foodIntolerancesPlaceholder'),
+  saveFoodIntolerances: t('settings.saveFoodIntolerances'),
+  foodIntolerancesSaved: t('settings.foodIntolerancesSaved'),
   groupTitle: t('group.title'),
   groupDescription: t('group.description'),
   inviteEmail: t('group.inviteEmail'),
@@ -66,6 +72,23 @@ const labels = {
         <label><input type="checkbox" value="lunch" data-meal-preference /> {labels.lunch}</label>
         <label><input type="checkbox" value="dinner" data-meal-preference /> {labels.dinner}</label>
       </fieldset>
+    </section>
+
+    <section class="settings-card app-panel">
+      <p class="menu-app__eyebrow">{labels.foodIntolerancesTitle}</p>
+      <h2>{labels.foodIntolerancesTitle}</h2>
+      <p>{labels.foodIntolerancesDescription}</p>
+      <form class="settings-form" data-food-intolerances-form>
+        <label for="food-intolerances">{labels.foodIntolerancesLabel}</label>
+        <textarea
+          id="food-intolerances"
+          rows="5"
+          maxlength="1000"
+          data-food-intolerances
+          placeholder={labels.foodIntolerancesPlaceholder}
+        ></textarea>
+        <button class="button button--primary" type="submit">{labels.saveFoodIntolerances}</button>
+      </form>
     </section>
 
     <section class="settings-card app-panel">
