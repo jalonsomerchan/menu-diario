@@ -1,0 +1,14 @@
+---
+interface Props {
+  title?: string;
+  text: string;
+  variant?: 'info' | 'warning' | 'error';
+}
+
+const { title, text, variant = 'info' } = Astro.props;
+---
+
+<aside class="inline-hint" data-variant={variant}>
+  {title && <strong>{title}</strong>}
+  <span>{text}</span>
+</aside>
