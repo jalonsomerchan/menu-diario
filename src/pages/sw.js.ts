@@ -2,6 +2,7 @@ import { defaultLocale } from '../config/site';
 import { getLocalizedPath } from '../i18n/ui';
 import { getBasePath, withBasePath } from '../utils/paths';
 
+// Keep appShellRoutes and staticAssets explicit so route smoke checks catch missing entries.
 export function GET() {
   const basePath = getBasePath();
   const preCacheUrls = [
@@ -9,8 +10,14 @@ export function GET() {
     withBasePath('dashboard'),
     withBasePath('planificacion'),
     withBasePath('configurar'),
-    withBasePath('ajustes'),
+    withBasePath('compra'),
+    withBasePath('tuppers'),
+    withBasePath('mis-platos'),
+    withBasePath('platos'),
     withBasePath('historico'),
+    withBasePath('ajustes'),
+    withBasePath('admin/platos'),
+    withBasePath('resumen-semanal'),
     withBasePath('manifest.webmanifest'),
     withBasePath('favicon.svg'),
     withBasePath('og-image.svg'),
@@ -18,7 +25,7 @@ export function GET() {
   ];
 
   const source = `
-const CACHE_VERSION = 'menu-diario-static-v2';
+const CACHE_VERSION = 'menu-diario-static-v3';
 const BASE_PATH = ${JSON.stringify(basePath)};
 const PRE_CACHE_URLS = ${JSON.stringify([...new Set(preCacheUrls)])};
 
