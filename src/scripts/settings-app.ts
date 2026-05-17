@@ -6,6 +6,7 @@ import {
   ensureUserProfile,
   joinGroupByInviteCode,
   leaveGroup,
+  syncGroupFoodIntolerances,
   updateGroupOptions,
   updateUserPreferences,
   watchGroup,
@@ -40,20 +41,6 @@ if (root) {
 
   function normalizeFoodIntolerances(value: string) {
     return value.trim().slice(0, maxFoodIntolerancesLength);
-  }
-
-  async function syncGroupFoodIntolerances(
-    services: Awaited<ReturnType<typeof getFirebaseServices>>,
-    groupId: string,
-    userId: string,
-    foodIntolerances: string
-  ) {
-    const { db, firestoreModule } = services;
-    await firestoreModule.setDoc(
-      firestoreModule.doc(db, 'groups', groupId),
-      { memberFoodIntolerances: { [userId]: foodIntolerances }, updatedAt: firestoreModule.serverTimestamp() },
-      { merge: true }
-    );
   }
 
   function showStatus(message: string, isError = false) {
