@@ -2,6 +2,7 @@
 import type { Locale } from '../config/site';
 import DayEditModal from './DayEditModal.astro';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
+import '../styles/history.css';
 
 interface Props { locale: Locale }
 const { locale } = Astro.props;
@@ -32,7 +33,36 @@ const labels = {
   weekdaySaturday: t('history.weekdaySaturday'),
   weekdaySunday: t('history.weekdaySunday'),
   search: t('history.search'),
+  clear: t('history.clear'),
+  filters: t('history.filters'),
+  filtersSummary: t('history.filtersSummary'),
+  meal: t('history.meal'),
+  allMeals: t('history.allMeals'),
+  dish: t('history.dish'),
+  historyDishPlaceholder: t('history.dishPlaceholder'),
+  tag: t('history.tag'),
+  tagPlaceholder: t('history.tagPlaceholder'),
+  special: t('history.special'),
+  specialAll: t('history.specialAll'),
+  specialFavorite: t('history.specialFavorite'),
+  specialLeftovers: t('history.specialLeftovers'),
+  specialEatingOut: t('history.specialEatingOut'),
+  specialUnplanned: t('history.specialUnplanned'),
+  specialCustom: t('history.specialCustom'),
+  sort: t('history.sort'),
+  sortRecent: t('history.sortRecent'),
+  sortOldest: t('history.sortOldest'),
+  sortDish: t('history.sortDish'),
+  sortFrequency: t('history.sortFrequency'),
+  applyFilters: t('history.applyFilters'),
+  loadMore: t('history.loadMore'),
+  showingResults: t('history.showingResults'),
   empty: t('history.empty'),
+  emptySearch: t('history.emptySearch'),
+  errorOffline: t('history.errorOffline'),
+  resultsLabel: t('history.resultsLabel'),
+  favoriteBadge: t('history.favoriteBadge'),
+  leftoversBadge: t('history.leftoversBadge'),
   editDay: t('dashboard.editDay'),
   deleteDay: t('dashboard.deleteDay'),
   quickEdit: t('dashboard.quickEdit'),
@@ -73,42 +103,86 @@ const labels = {
   <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
   <div data-content hidden>
-    <section class="settings-card app-panel">
+    <section class="settings-card app-panel history-hero">
       <p class="menu-app__eyebrow">{labels.title}</p>
       <h1>{labels.title}</h1>
       <p>{labels.description}</p>
       <form class="history-search" data-history-form>
-        <label>{labels.from}<input type="date" data-date-from /></label>
-        <label>{labels.to}<input type="date" data-date-to /></label>
-        <label>{labels.query}<input type="search" data-history-query placeholder={labels.queryPlaceholder} /></label>
-        <label>
-          {labels.status}
-          <select data-history-status>
-            <option value="all">{labels.statusAll}</option>
-            <option value="planned">{labels.statusPlanned}</option>
-            <option value="skipped">{labels.statusSkipped}</option>
-            <option value="empty">{labels.statusEmpty}</option>
-          </select>
+        <label class="history-search__wide">
+          <span>{labels.query}</span>
+          <input type="search" data-history-query inputmode="search" autocomplete="off" placeholder={labels.queryPlaceholder} />
         </label>
-        <label>
-          {labels.weekday}
-          <select data-history-weekday>
-            <option value="all">{labels.weekdayAll}</option>
-            <option value="1">{labels.weekdayMonday}</option>
-            <option value="2">{labels.weekdayTuesday}</option>
-            <option value="3">{labels.weekdayWednesday}</option>
-            <option value="4">{labels.weekdayThursday}</option>
-            <option value="5">{labels.weekdayFriday}</option>
-            <option value="6">{labels.weekdaySaturday}</option>
-            <option value="7">{labels.weekdaySunday}</option>
-          </select>
-        </label>
-        <div class="history-search__actions">
-          <button class="button button--primary" type="submit">{labels.search}</button>
-        </div>
+        <label><span>{labels.from}</span><input type="date" data-date-from /></label>
+        <label><span>{labels.to}</span><input type="date" data-date-to /></label>
+        <details class="history-filter-panel" data-filter-panel>
+          <summary class="button button--secondary">
+            {labels.filters}
+            <span class="history-filter-count" data-filter-count hidden></span>
+          </summary>
+          <div class="history-filter-panel__body">
+            <label>
+              <span>{labels.status}</span>
+              <select data-history-status>
+                <option value="all">{labels.statusAll}</option>
+                <option value="planned">{labels.statusPlanned}</option>
+                <option value="skipped">{labels.statusSkipped}</option>
+                <option value="empty">{labels.statusEmpty}</option>
+              </select>
+            </label>
+            <label>
+              <span>{labels.weekday}</span>
+              <select data-history-weekday>
+                <option value="all">{labels.weekdayAll}</option>
+                <option value="1">{labels.weekdayMonday}</option>
+                <option value="2">{labels.weekdayTuesday}</option>
+                <option value="3">{labels.weekdayWednesday}</option>
+                <option value="4">{labels.weekdayThursday}</option>
+                <option value="5">{labels.weekdayFriday}</option>
+                <option value="6">{labels.weekdaySaturday}</option>
+                <option value="7">{labels.weekdaySunday}</option>
+              </select>
+            </label>
+            <label>
+              <span>{labels.meal}</span>
+              <select data-history-meal>
+                <option value="all">{labels.allMeals}</option>
+                <option value="breakfast">{labels.breakfast}</option>
+                <option value="lunch">{labels.lunch}</option>
+                <option value="dinner">{labels.dinner}</option>
+              </select>
+            </label>
+            <label><span>{labels.dish}</span><input type="search" data-history-dish autocomplete="off" placeholder={labels.historyDishPlaceholder} /></label>
+            <label><span>{labels.tag}</span><input type="search" data-history-tag autocomplete="off" placeholder={labels.tagPlaceholder} /></label>
+            <label>
+              <span>{labels.special}</span>
+              <select data-history-special>
+                <option value="all">{labels.specialAll}</option>
+                <option value="favorite">{labels.specialFavorite}</option>
+                <option value="leftovers">{labels.specialLeftovers}</option>
+                <option value="eating-out">{labels.specialEatingOut}</option>
+                <option value="unplanned">{labels.specialUnplanned}</option>
+                <option value="custom">{labels.specialCustom}</option>
+              </select>
+            </label>
+            <label>
+              <span>{labels.sort}</span>
+              <select data-history-sort>
+                <option value="date-desc">{labels.sortRecent}</option>
+                <option value="date-asc">{labels.sortOldest}</option>
+                <option value="dish">{labels.sortDish}</option>
+                <option value="frequency">{labels.sortFrequency}</option>
+              </select>
+            </label>
+            <button class="button button--primary" type="submit">{labels.applyFilters}</button>
+          </div>
+        </details>
+        <button class="button button--ghost" type="button" data-clear-filters>{labels.clear}</button>
       </form>
+      <div class="history-chips" data-history-chips aria-label={labels.filtersSummary}></div>
     </section>
-    <div class="next-days next-days--timeline" data-history-days></div>
+    <p class="history-results-summary" data-history-summary aria-live="polite"></p>
+    <div class="history-results" data-history-days aria-label={labels.resultsLabel}></div>
+    <button class="button button--secondary history-load-more" type="button" data-history-load-more hidden>{labels.loadMore}</button>
   </div>
 
   <DayEditModal
