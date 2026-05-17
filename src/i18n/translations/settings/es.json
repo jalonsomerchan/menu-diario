@@ -1,0 +1,8 @@
+{
+  "foodIntolerancesTitle": "Intolerancias alimentarias",
+  "foodIntolerancesDescription": "Guarda alergias, intolerancias o alimentos que prefieres evitar para tenerlo presente en futuras sugerencias.",
+  "foodIntolerancesLabel": "Notas de intolerancias",
+  "foodIntolerancesPlaceholder": "Ejemplo: lactosa, frutos secos, gluten...",
+  "saveFoodIntolerances": "Guardar intolerancias",
+  "foodIntolerancesSaved": "Intolerancias guardadas."
+}
