@@ -574,6 +574,7 @@ if (root) {
                 pendingMeals,
                 days: getDaysForRequest(request),
                 dishes,
+                foodIntolerances: currentProfile?.foodIntolerances,
                 mealLabels: {
                   breakfast: labels.breakfast,
                   lunch: labels.lunch,

@@ -18,6 +18,7 @@ Convenciones actuales:
 - Se guarda en el documento del usuario autenticado.
 - Se edita desde `SettingsApp` mediante un `textarea` accesible.
 - Se normaliza recortando espacios y limitando el texto a 1000 caracteres en cliente.
-- No debe enviarse a prompts o servicios externos sin revisar antes la privacidad del flujo concreto.
+- La planificación con IA lo incluye como restricción alimentaria dentro del prompt, recortado a 500 caracteres y sin añadir emails, UID, nombres de miembros ni códigos de invitación.
+- Cualquier flujo nuevo que lo envíe a servicios externos debe documentar antes su privacidad y necesidad.
 
 Firestore permite leer y actualizar `users/{userId}` solo al propio usuario autenticado según `firestore.rules`.
