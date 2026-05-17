@@ -79,7 +79,14 @@ function hasFavorite(items: string[], dishIndex: Map<string, Dish>) {
 }
 
 function rowDishName(row: HistoryRow) {
-  return row.items[0] || '~~~~';
+  return row.items[0] ?? '';
+}
+
+function compareRowDishName(first: HistoryRow, second: HistoryRow) {
+  const firstIsEmpty = rowDishName(first) === '';
+  const secondIsEmpty = rowDishName(second) === '';
+  if (firstIsEmpty !== secondIsEmpty) return firstIsEmpty ? 1 : -1;
+  return byName(rowDishName(first), rowDishName(second));
 }
 
 function hasLeftoverSignal(row: Pick<HistoryRow, 'items' | 'dayNotes' | 'mealNote'>, tags: string[]) {
@@ -211,9 +218,9 @@ export function buildHistoryRows(menus: WeekMenu[], dishes: Dish[], enabledMeals
 export function sortHistoryRows(rows: HistoryRow[], mode: HistorySortMode = 'date-desc') {
   const frequencyMap = mode === 'frequency' ? buildFrequencyMap(rows) : new Map<string, number>();
   return [...rows].sort((first, second) => {
-    if (mode === 'date-asc') return dateValue(first.isoDate) - dateValue(second.isoDate) || byName(rowDishName(first), rowDishName(second));
-    if (mode === 'dish') return byName(rowDishName(first), rowDishName(second)) || dateValue(second.isoDate) - dateValue(first.isoDate);
-    if (mode === 'frequency') return getRowFrequency(second, frequencyMap) - getRowFrequency(first, frequencyMap) || dateValue(second.isoDate) - dateValue(first.isoDate) || byName(rowDishName(first), rowDishName(second));
+    if (mode === 'date-asc') return dateValue(first.isoDate) - dateValue(second.isoDate) || compareRowDishName(first, second);
+    if (mode === 'dish') return compareRowDishName(first, second) || dateValue(second.isoDate) - dateValue(first.isoDate);
+    if (mode === 'frequency') return getRowFrequency(second, frequencyMap) - getRowFrequency(first, frequencyMap) || dateValue(second.isoDate) - dateValue(first.isoDate) || compareRowDishName(first, second);
     return dateValue(second.isoDate) - dateValue(first.isoDate) || byName(first.meal, second.meal);
   });
 }
