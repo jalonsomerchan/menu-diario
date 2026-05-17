@@ -36,6 +36,10 @@ function normalizeEmail(email = '') {
   return email.trim().toLocaleLowerCase('es-ES');
 }
 
+function normalizeFoodIntolerances(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 function uniqueValues(values: string[]) {
   return [...new Set(values.filter(Boolean))];
 }
@@ -66,7 +70,16 @@ function mapWeekMenu(id: string, data: Record<string, any>): WeekMenu {
 }
 
 function mapUserProfile(id: string, data: Record<string, any>, fallbackName: string, fallbackEmail = ''): UserProfile {
-  return { id, displayName: data.displayName ?? fallbackName, email: data.email ?? fallbackEmail, enabledMeals: normalizeEnabledMeals(data.enabledMeals), theme: normalizeTheme(data.theme), groupId: data.groupId, updatedAt: data.updatedAt?.toDate?.() };
+  return {
+    id,
+    displayName: data.displayName ?? fallbackName,
+    email: data.email ?? fallbackEmail,
+    enabledMeals: normalizeEnabledMeals(data.enabledMeals),
+    theme: normalizeTheme(data.theme),
+    foodIntolerances: normalizeFoodIntolerances(data.foodIntolerances),
+    groupId: data.groupId,
+    updatedAt: data.updatedAt?.toDate?.(),
+  };
 }
 
 function mapGroup(id: string, data: Record<string, any>): MenuGroup {
@@ -89,7 +102,7 @@ export async function ensureUserProfile(services: FirebaseServices, user: Fireba
     await firestoreModule.setDoc(userRef, { displayName: user.displayName ?? snapshot.data().displayName ?? guestLabel, email: email || snapshot.data().email || '', updatedAt: firestoreModule.serverTimestamp() }, { merge: true });
     return;
   }
-  await firestoreModule.setDoc(userRef, { displayName: user.displayName ?? guestLabel, email, enabledMeals: defaultEnabledMeals, theme: 'system', createdAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp() });
+  await firestoreModule.setDoc(userRef, { displayName: user.displayName ?? guestLabel, email, enabledMeals: defaultEnabledMeals, theme: 'system', foodIntolerances: '', createdAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp() });
 }
 
 export function watchUserProfile(services: FirebaseServices, user: FirebaseUser, guestLabel: string, callback: (profile: UserProfile) => void, onError: (error: Error) => void) {
@@ -101,7 +114,7 @@ export function watchUserProfile(services: FirebaseServices, user: FirebaseUser,
   );
 }
 
-export async function updateUserPreferences(services: FirebaseServices, userId: string, preferences: { enabledMeals?: MealSlot[]; theme?: ThemePreference; groupId?: string | null }) {
+export async function updateUserPreferences(services: FirebaseServices, userId: string, preferences: { enabledMeals?: MealSlot[]; theme?: ThemePreference; groupId?: string | null; foodIntolerances?: string }) {
   const { db, firestoreModule } = services;
   await firestoreModule.setDoc(firestoreModule.doc(db, 'users', userId), { ...preferences, updatedAt: firestoreModule.serverTimestamp() }, { merge: true });
 }
