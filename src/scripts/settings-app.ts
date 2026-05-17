@@ -42,6 +42,20 @@ if (root) {
     return value.trim().slice(0, maxFoodIntolerancesLength);
   }
 
+  async function syncGroupFoodIntolerances(
+    services: Awaited<ReturnType<typeof getFirebaseServices>>,
+    groupId: string,
+    userId: string,
+    foodIntolerances: string
+  ) {
+    const { db, firestoreModule } = services;
+    await firestoreModule.setDoc(
+      firestoreModule.doc(db, 'groups', groupId),
+      { memberFoodIntolerances: { [userId]: foodIntolerances }, updatedAt: firestoreModule.serverTimestamp() },
+      { merge: true }
+    );
+  }
+
   function showStatus(message: string, isError = false) {
     if (!status) return;
     status.hidden = false;
@@ -136,6 +150,9 @@ if (root) {
             const foodIntolerances = normalizeFoodIntolerances(foodIntolerancesInput.value);
             foodIntolerancesInput.value = foodIntolerances;
             await updateUserPreferences(services, currentUser.uid, { foodIntolerances });
+            if (currentProfile?.groupId) {
+              await syncGroupFoodIntolerances(services, currentProfile.groupId, currentUser.uid, foodIntolerances);
+            }
             showStatus(labels.foodIntolerancesSaved);
           });
         });
@@ -214,6 +231,9 @@ if (root) {
                 runAction(async () => {
                   renderProfile(profile);
                   const groupId = await ensureDefaultGroup(services, user, profile);
+                  if (profile.foodIntolerances) {
+                    await syncGroupFoodIntolerances(services, groupId, user.uid, profile.foodIntolerances);
+                  }
                   unsubscribeGroup?.();
                   unsubscribeGroup = watchGroup(services, groupId, renderGroup, reportError);
                 });
