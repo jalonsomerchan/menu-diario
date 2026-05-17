@@ -1,18 +1,18 @@
 .tuppers-app { max-width: 72rem; margin-inline: auto; }
 
-.tuppers-hero { display: grid; gap: 0.8rem; margin-bottom: 1rem; padding: 1.35rem; border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 70%); background: var(--panel-background-strong); }
+.tuppers-hero { display: grid; gap: var(--surface-gap); margin-bottom: 1rem; padding: var(--surface-padding-lg); padding-bottom: max(var(--surface-padding-lg), 1rem); border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 70%); background: var(--panel-background-strong); }
 .tuppers-hero h1 { margin: 0; font-size: clamp(2.2rem, 11vw, 4rem); line-height: 0.95; letter-spacing: -0.06em; }
-.tuppers-hero p { margin: 0; color: var(--color-muted); font-weight: 700; }
+.tuppers-hero p { margin: 0; color: var(--color-muted); font-weight: 700; line-height: var(--surface-copy-line-height); letter-spacing: var(--surface-copy-letter-spacing); }
 .expiry-banner[hidden] { display: none; }
 
-.tuppers-form-card { display: grid; gap: 1rem; margin-bottom: 1rem; padding: 1.1rem; }
+.tuppers-form-card { display: grid; gap: var(--surface-gap); margin-bottom: 1rem; padding: var(--surface-padding); padding-bottom: max(var(--surface-padding), 1rem); }
 .tuppers-form-card h2 { margin: 0; font-size: clamp(1.35rem, 6vw, 2rem); letter-spacing: -0.04em; }
 .tuppers-form { display: grid; gap: 0.8rem; }
 .tuppers-form label { display: grid; gap: 0.35rem; color: var(--color-muted); font-size: 0.88rem; font-weight: 850; }
 .tuppers-form input,
 .tuppers-form select,
 .tuppers-form textarea,
-.tupper-assign select { width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-raised); color: var(--color-text); padding: 0.8rem; }
+.tupper-assign select { width: 100%; min-height: var(--form-control-min-height); border: 1px solid var(--color-border); border-radius: var(--radius-xl); background: var(--color-surface-raised); color: var(--color-text); padding: var(--form-control-padding-block) var(--form-control-padding-inline); line-height: 1.5; }
 .tuppers-form input:focus-visible,
 .tuppers-form select:focus-visible,
 .tuppers-form textarea:focus-visible,
@@ -24,17 +24,17 @@
 .tupper-filters button[aria-pressed='true'] { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%); background: var(--color-primary-soft); color: var(--color-primary); }
 
 .tupper-list { display: grid; gap: 0.85rem; }
-.tupper-card { display: grid; gap: 0.9rem; border: 1px solid var(--color-border); border-radius: var(--radius-2xl); background: var(--color-surface); padding: 1rem; box-shadow: var(--shadow-sm); }
+.tupper-card { display: grid; gap: var(--surface-gap); border: 1px solid var(--color-border); border-radius: var(--radius-2xl); background: var(--color-surface); padding: var(--surface-padding); padding-bottom: max(var(--surface-padding), 1rem); box-shadow: var(--shadow-sm); min-height: auto; }
 .tupper-card { border-color: var(--panel-border); background: var(--panel-background); }
-.tupper-card header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.tupper-card header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 0.75rem; min-width: 0; }
 .tupper-card h3 { margin: 0.15rem 0 0; font-size: clamp(1.35rem, 7vw, 2.2rem); line-height: 1; letter-spacing: -0.05em; }
 .tupper-card__location { border-radius: 999px; border: 1px solid color-mix(in srgb, var(--color-accent), var(--color-border) 55%); background: var(--color-accent-soft); color: var(--color-text); padding: 0.35rem 0.65rem; font-size: 0.8rem; font-weight: 900; }
 .tupper-card__assignment { margin: -0.1rem 0 0; border-left: 3px solid color-mix(in srgb, var(--color-primary), transparent 25%); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: color-mix(in srgb, var(--color-primary-soft), transparent 25%); padding: 0.55rem 0.75rem; color: var(--color-text); font-size: 0.9rem; font-weight: 800; }
 .tupper-card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; margin: 0; }
 .tupper-card dt { color: var(--color-muted); font-size: 0.78rem; font-weight: 900; text-transform: uppercase; }
 .tupper-card dd { margin: 0; font-weight: 850; }
-.tupper-card p { margin: 0; color: var(--color-muted); }
-.tupper-assign { display: grid; gap: 0.65rem; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%); border-radius: var(--radius-xl); background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 10%), var(--color-surface-soft)); padding: 0.75rem; }
+.tupper-card p { margin: 0; color: var(--color-muted); line-height: var(--surface-copy-line-height); letter-spacing: var(--surface-copy-letter-spacing); }
+.tupper-assign { display: grid; gap: 0.65rem; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%); border-radius: var(--radius-xl); background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 10%), var(--color-surface-soft)); padding: var(--surface-padding-tight); padding-bottom: max(var(--surface-padding-tight), 1rem); }
 .tupper-assign label { display: grid; gap: 0.35rem; color: var(--color-muted); font-size: 0.85rem; font-weight: 850; }
 .tupper-card__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .tupper-card__actions button { min-height: 2.45rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface-raised); color: var(--color-text); padding: 0.45rem 0.8rem; font-size: 0.84rem; font-weight: 850; transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base), transform var(--transition-base); }

@@ -216,6 +216,71 @@ body {
 }
 ```
 
+### 4.2 Legibilidad mínima en superficies y formularios
+
+Todo texto de apoyo, instrucciones, descripciones y contenido de tarjetas o modales debe mantener:
+
+- `line-height` mínimo de `1.5`.
+- Preferencia por `1.55` a `1.6` en fondos oscuros o superficies densas.
+- Un ligero ajuste de `letter-spacing` cuando haya pesos medios o altos para evitar bloques apelmazados.
+
+Los títulos pueden usar un tracking más compacto, pero los párrafos, etiquetas explicativas y mensajes de estado no deben verse comprimidos.
+
+---
+
+## 5. Contenedores seguros
+
+Tarjetas, modales, paneles, secciones destacadas y formularios deben compartir una regla base de espaciado interno seguro.
+
+### 5.1 Safe edge padding
+
+Todo contenedor visual reutilizable debe tener como mínimo un padding equivalente a `p-4` y preferiblemente `p-5` cuando el contenido sea denso.
+
+Reglas obligatorias:
+
+- Ningún texto, badge, input, icono o botón debe tocar el borde exterior del contenedor.
+- El padding superior e inferior debe mantenerse también cuando el contenido crece dinámicamente.
+- Si una cabecera o footer es sticky dentro de un modal, debe seguir alineado a la misma retícula interna, no usar márgenes negativos para pegarse al borde salvo diseño full bleed explícito.
+
+### 5.2 Cabeceras y badges
+
+Cabeceras, eyebrow labels y badges dentro de tarjetas o modales deben alinearse con el mismo padding interno del contenedor.
+
+No se debe:
+
+- posicionar una cabecera contra el borde izquierdo o superior por defecto,
+- sacar badges fuera del flujo para compensar padding insuficiente,
+- usar soluciones con `absolute` o márgenes negativos para simular alineación.
+
+### 5.3 Altura y overflow vertical
+
+Los contenedores deben crecer con el contenido (`height: auto`, `min-height` cuando proceda) y reservar padding inferior suficiente para que el último bloque nunca quede cortado.
+
+Esto aplica especialmente a:
+
+- tarjetas con listas de items,
+- modales con cabeceras o footers sticky,
+- formularios con campos condicionales,
+- cajas de resultados con texto variable.
+
+---
+
+## 6. Filas y formularios
+
+Las filas de clave/valor, etiquetas con inputs alineados y grupos compactos deben compartir una base robusta.
+
+### 6.1 Filas inline
+
+Para filas de formulario o metadatos usar:
+
+- `display: flex`
+- `justify-content: space-between`
+- `align-items: center`
+- `gap` suficiente para no colapsar en móvil
+- `min-width: 0` en columnas de texto
+
+Los iconos de calendario, selectores y affordances del extremo derecho deben quedar visualmente centrados y separados del borde mediante padding interno, nunca pegados a la pared del campo.
+
 No usar:
 
 ```html

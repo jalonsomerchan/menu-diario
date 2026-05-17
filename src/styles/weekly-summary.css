@@ -12,8 +12,9 @@
 .weekly-summary-hero,
 .weekly-summary-panel {
   display: grid;
-  gap: 1rem;
-  padding: 1.1rem;
+  gap: var(--surface-gap);
+  padding: var(--surface-padding);
+  padding-bottom: max(var(--surface-padding), 1rem);
 }
 
 .weekly-summary-hero h1,
@@ -36,6 +37,8 @@
 .weekly-summary-empty {
   margin: 0;
   color: var(--color-muted);
+  line-height: var(--surface-copy-line-height);
+  letter-spacing: var(--surface-copy-letter-spacing);
 }
 
 .weekly-summary-week {
@@ -47,12 +50,12 @@
 
 .weekly-summary-week select {
   width: 100%;
-  min-height: 2.75rem;
+  min-height: var(--form-control-min-height);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--color-surface-raised);
   color: var(--color-text);
-  padding: 0.72rem 0.8rem;
+  padding: var(--form-control-padding-block) calc(var(--form-control-padding-inline) + 1.25rem) var(--form-control-padding-block) var(--form-control-padding-inline);
   font-weight: 800;
 }
 
@@ -69,7 +72,8 @@
   border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 16%);
   border-radius: var(--radius-2xl);
   background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface), var(--color-primary-soft) 12%), color-mix(in srgb, var(--color-surface), transparent 4%));
-  padding: 1rem;
+  padding: var(--surface-padding);
+  padding-bottom: max(var(--surface-padding), 1rem);
   box-shadow: var(--shadow-sm);
 }
 
@@ -108,7 +112,7 @@
   border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
   border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--color-surface), var(--color-surface-soft) 50%);
-  padding: 0.8rem;
+  padding: var(--surface-padding-tight);
 }
 
 .weekly-summary-list strong,
@@ -135,6 +139,12 @@
 .weekly-summary-latest {
   display: grid;
   gap: 0.25rem;
+}
+
+.weekly-summary-latest strong,
+.weekly-summary-recommendations li,
+.weekly-summary-list li {
+  line-height: var(--surface-copy-line-height);
 }
 
 .weekly-summary-latest strong {

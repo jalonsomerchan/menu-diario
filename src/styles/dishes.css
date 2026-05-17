@@ -14,8 +14,9 @@
 .dishes-form-card,
 .dishes-empty {
   display: grid;
-  gap: 0.85rem;
-  padding: 1.1rem;
+  gap: var(--surface-gap);
+  padding: var(--surface-padding);
+  padding-bottom: max(var(--surface-padding), 1rem);
 }
 
 .dishes-hero h1,
@@ -46,6 +47,8 @@
 .dish-editor-status {
   margin: 0;
   color: var(--color-muted);
+  line-height: var(--surface-copy-line-height);
+  letter-spacing: var(--surface-copy-letter-spacing);
 }
 
 .dishes-hero__future,
@@ -74,8 +77,21 @@
 }
 
 .dishes-form__row {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.65rem;
+  min-width: 0;
+}
+
+.dishes-form__row input {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.dishes-form__row .button {
+  flex: 0 0 auto;
 }
 
 .dishes-form input,
@@ -83,11 +99,13 @@
 .dishes-toolbar select,
 .dish-editor-field input {
   width: 100%;
+  min-height: var(--form-control-min-height);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--color-surface-raised);
   color: var(--color-text);
-  padding: 0.8rem;
+  padding: var(--form-control-padding-block) var(--form-control-padding-inline);
+  line-height: 1.5;
 }
 
 .dish-editor-field input[readonly] {
@@ -99,7 +117,8 @@
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-2xl);
   background: var(--panel-background);
-  padding: 1rem;
+  padding: var(--surface-padding);
+  padding-bottom: max(var(--surface-padding), 1rem);
   box-shadow: var(--shadow-sm);
 }
 
@@ -111,7 +130,7 @@
   border: 1px solid color-mix(in srgb, var(--color-border), transparent 6%);
   border-radius: var(--radius-2xl);
   background: color-mix(in srgb, var(--color-surface), transparent 4%);
-  padding: 0.9rem 1rem;
+  padding: var(--surface-padding-tight) var(--surface-padding);
   box-shadow: var(--shadow-xs);
 }
 
@@ -184,7 +203,8 @@
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-2xl);
   background: var(--panel-background);
-  padding: 1rem;
+  padding: var(--surface-padding);
+  padding-bottom: max(var(--surface-padding), 1rem);
   box-shadow: var(--shadow-lg);
 }
 
@@ -197,6 +217,7 @@
 
 .dish-editor-dialog__body {
   overflow: auto;
+  padding-bottom: 0.15rem;
 }
 
 .dish-editor-grid {
@@ -207,7 +228,8 @@
   border: 1px solid color-mix(in srgb, var(--color-border), transparent 8%);
   border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--color-surface-raised), transparent 6%);
-  padding: 0.9rem;
+  padding: var(--surface-padding-tight);
+  padding-bottom: max(var(--surface-padding-tight), 1rem);
 }
 
 .dish-editor-section__title {
