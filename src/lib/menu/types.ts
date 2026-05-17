@@ -70,7 +70,7 @@ export type MenuGroup = {
   pendingEmails: string[];
   inviteCode: string;
   enabledMeals: MealSlot[];
-  memberFoodIntolerances: Record<string, string>;
+  memberFoodIntolerances?: Record<string, string>;
   updatedAt?: Date;
 };
 
