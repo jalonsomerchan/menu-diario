@@ -14,16 +14,10 @@ import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getUpcomingDateRange, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
 import { ensureUserProfile, getOrCreateWeekMenus, watchUserProfile, watchWeekMenusByIds } from '../lib/menu/repository';
 import type { Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
-import { buildShoppingListText, createShoppingExportFilename, groupItemsByCategory } from '../lib/shopping/export';
-import {
-  fromAiResponseItems,
-  getToBuyItems,
-  groupShoppingItems,
-  mergeShoppingDraftItems,
-  normalizeShoppingItem,
-} from '../lib/shopping/normalize';
+import { buildShoppingListText } from '../lib/shopping/export';
+import { fromAiResponseItems, getToBuyItems, groupShoppingItems, mergeShoppingDraftItems, normalizeShoppingItem } from '../lib/shopping/normalize';
 import { saveShoppingList, watchShoppingList } from '../lib/shopping/repository';
-import type { ShoppingCategory, ShoppingItem, ShoppingScope } from '../lib/shopping/types';
+import type { ShoppingItem, ShoppingScope } from '../lib/shopping/types';
 import { watchTuppers } from '../lib/tuppers/repository';
 import type { TupperItem } from '../lib/tuppers/types';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
@@ -37,17 +31,16 @@ if (root) {
   const authPanel = root.querySelector<HTMLElement>('[data-auth-panel]');
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const workspace = root.querySelector<HTMLElement>('[data-workspace]');
+  const rangePicker = root.querySelector<HTMLElement>('[data-range-picker]');
+  const selectionSummary = root.querySelector<HTMLElement>('[data-selection-summary]');
   const meals = root.querySelector<HTMLElement>('[data-meals]');
   const draft = root.querySelector<HTMLElement>('[data-draft]');
   const aiStatus = root.querySelector<HTMLElement>('[data-ai-status]');
   const scopeLabel = root.querySelector<HTMLElement>('[data-scope-label]');
   const inventoryHint = root.querySelector<HTMLElement>('[data-inventory-hint]');
   const generateButton = root.querySelector<HTMLButtonElement>('[data-generate]');
-  const addItemButton = root.querySelector<HTMLButtonElement>('[data-add-item]');
   const saveButton = root.querySelector<HTMLButtonElement>('[data-save]');
-  const copyButton = root.querySelector<HTMLButtonElement>('[data-copy]');
   const shareButton = root.querySelector<HTMLButtonElement>('[data-share]');
-  const downloadButton = root.querySelector<HTMLButtonElement>('[data-download]');
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -56,14 +49,14 @@ if (root) {
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
-  let currentMenus: WeekMenu[] = [];
   let currentMenu: WeekMenu | null = null;
-  let currentMenuIdsByWeekStart: Record<string, string> = {};
   let currentDishes: Dish[] = [];
   let currentTuppers: TupperItem[] = [];
   let currentSavedItems: ShoppingItem[] = [];
   let currentDraftItems: ShoppingItem[] = [];
+  let selectedDayKeys = getAvailableRange().dates;
   let draftDirty = false;
+  let currentServices: Awaited<ReturnType<typeof getFirebaseServices>> | null = null;
   let unsubscribeMenus: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
@@ -91,6 +84,21 @@ if (root) {
     loading?.toggleAttribute('hidden', isAuthenticated);
   }
 
+  function getAvailableRange() {
+    return getUpcomingDateRange(new Date(), 1, 7);
+  }
+
+  function getRange() {
+    const availableRange = getAvailableRange();
+    const dates = [...selectedDayKeys].sort();
+
+    return {
+      rangeStart: dates[0] ?? availableRange.rangeStart,
+      rangeEnd: dates.at(-1) ?? availableRange.rangeEnd,
+      dates,
+    };
+  }
+
   function getEnabledMeals(): MealSlot[] {
     return currentProfile?.enabledMeals?.length ? currentProfile.enabledMeals : ['lunch'];
   }
@@ -99,12 +107,8 @@ if (root) {
     return currentProfile?.groupId ? 'group' : 'user';
   }
 
-  function getRange() {
-    return getUpcomingDateRange(new Date(), 1, 7);
-  }
-
   function getRelevantWeekStarts() {
-    return getWeekStartsForDates(getRange().dates);
+    return getWeekStartsForDates(getAvailableRange().dates);
   }
 
   function getMealContext() {
@@ -118,9 +122,63 @@ if (root) {
     });
   }
 
-  function getCategoryLabel(category: ShoppingCategory) {
-    const key = `category${category.charAt(0).toUpperCase()}${category.slice(1)}`;
-    return labels[`shopping.${key}`] ?? labels[key] ?? category;
+  function formatCountLabel(singleKey: string, pluralKey: string, count: number) {
+    if (count === 1) {
+      return labels[singleKey];
+    }
+
+    return (labels[pluralKey] ?? '').replace('{count}', String(count));
+  }
+
+  function escapeHtml(value = '') {
+    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+  }
+
+  function formatMealLabel(dayKey: string, meal: string) {
+    const date = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'short' }).format(
+      new Date(`${dayKey}T00:00:00`)
+    );
+    return `${date} · ${labels[meal] ?? meal}`;
+  }
+
+  function renderRangePicker() {
+    if (!rangePicker) return;
+
+    rangePicker.innerHTML = getAvailableRange().dates
+      .map((dayKey) => {
+        const date = new Date(`${dayKey}T00:00:00`);
+        const weekday = new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date);
+        const dayLabel = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(date);
+
+        return `
+          <button class="shopping-range__day" type="button" data-day-key="${escapeHtml(dayKey)}" data-selected="${selectedDayKeys.includes(dayKey)}">
+            <strong>${escapeHtml(dayLabel)}</strong>
+            <span>${escapeHtml(weekday)}</span>
+          </button>
+        `;
+      })
+      .join('');
+  }
+
+  function renderSelectionSummary() {
+    if (!selectionSummary) return;
+
+    const selectedCount = selectedDayKeys.length;
+    const mealCount = getMealContext().meals.length;
+
+    if (selectedCount === 0) {
+      selectionSummary.innerHTML = `<span class="shopping-summary-empty">${escapeHtml(labels.selectedDaysNone)}</span>`;
+      return;
+    }
+
+    selectionSummary.innerHTML = `
+      <span class="shopping-summary-pill">${escapeHtml(
+        formatCountLabel('selectedDaysSingle', 'selectedDaysPlural', selectedCount)
+      )}</span>
+      <span class="shopping-summary-pill">${escapeHtml(
+        formatCountLabel('selectedMealsSingle', 'selectedMealsPlural', mealCount)
+      )}</span>
+    `;
   }
 
   function renderMeals() {
@@ -130,6 +188,13 @@ if (root) {
     inventoryHint.textContent = currentTuppers.length ? labels.inventoryHint : '';
 
     const context = getMealContext();
+    renderSelectionSummary();
+
+    if (selectedDayKeys.length === 0) {
+      meals.innerHTML = `<p class="shopping-empty">${escapeHtml(labels.selectedDaysNone)}</p>`;
+      return;
+    }
+
     if (context.meals.length === 0) {
       meals.innerHTML = `<p class="shopping-empty">${escapeHtml(currentMenu ? labels.emptyPlannedMeals : labels.emptyMeals)}</p>`;
       return;
@@ -156,116 +221,93 @@ if (root) {
       .join('');
   }
 
-  function renderDraft() {
-    if (!draft) return;
-
-    const grouped = groupItemsByCategory(currentDraftItems);
-    if (grouped.length === 0) {
-      draft.innerHTML = `<p class="shopping-empty">${escapeHtml(labels.noToBuyItems)}</p>`;
-      return;
-    }
-
-    draft.innerHTML = grouped
-      .map(
-        ({ category, items }) => `
-          <details class="shopping-category" open>
-            <summary>
-              <span>${escapeHtml(getCategoryLabel(category))}</span>
-              <span class="shopping-category__count">${items.length}</span>
-            </summary>
-            <div class="shopping-category__items">
-              ${items.map((item) => renderItem(item)).join('')}
-            </div>
-          </details>
-        `
-      )
-      .join('');
+  function renderStatusButton(item: ShoppingItem, value: ShoppingItem['status'], label: string) {
+    return `
+      <button
+        class="shopping-status__button"
+        type="button"
+        data-set-status="${value}"
+        data-selected="${item.status === value}"
+        data-status="${value}"
+      >
+        ${escapeHtml(label)}
+      </button>
+    `;
   }
 
   function renderItem(item: ShoppingItem) {
     return `
-      <article class="shopping-item" data-item-id="${escapeHtml(item.id)}">
-        <div class="shopping-item__meta">
-          <span class="shopping-pill">${escapeHtml(item.source === 'manual' ? labels.sourceManual : labels.sourceAi)}</span>
-          <span class="shopping-pill">${escapeHtml(readConfidenceLabel(item.confidence))}</span>
+      <article class="shopping-item" data-item-id="${escapeHtml(item.id)}" data-status="${escapeHtml(item.status)}">
+        <div class="shopping-item__head">
+          <h3 class="shopping-item__title">${escapeHtml(item.name)}</h3>
+          ${item.quantity ? `<span class="shopping-pill">${escapeHtml(item.quantity)}</span>` : ''}
         </div>
-        <div class="shopping-fields">
-          <label>
-            <span>${escapeHtml(labels.itemName)}</span>
-            <input data-field="name" value="${escapeHtml(item.name)}" />
-          </label>
-          <label>
-            <span>${escapeHtml(labels.itemQuantity)}</span>
-            <input data-field="quantity" value="${escapeHtml(item.quantity)}" />
-          </label>
-          <label>
-            <span>${escapeHtml(labels.itemCategory)}</span>
-            <input data-field="category" value="${escapeHtml(getCategoryLabel(item.category))}" list="shopping-categories" />
-          </label>
-          <label data-field-meals>
-            <span>${escapeHtml(labels.itemMeals)}</span>
-            <textarea data-field="forMeals">${escapeHtml(item.forMeals.join(', '))}</textarea>
-          </label>
-        </div>
-        <div class="shopping-status">
-          <fieldset>
-            <legend>${escapeHtml(labels.itemStatus)}</legend>
-            <div class="shopping-status__options">
-              ${renderStatusOption(item, 'to-buy', labels.statusToBuy)}
-              ${renderStatusOption(item, 'owned', labels.statusOwned)}
-              ${renderStatusOption(item, 'dismissed', labels.statusDismissed)}
-            </div>
-          </fieldset>
-        </div>
-        <div class="shopping-item__footer">
-          <span class="shopping-empty">${escapeHtml(labels.itemConfidence)}: ${escapeHtml(readConfidenceLabel(item.confidence))}</span>
-          <button class="button button--ghost button--small shopping-item__remove" type="button" data-remove-item="${escapeHtml(item.id)}">
-            ${escapeHtml(labels.removeItem)}
-          </button>
+        ${item.forMeals.length ? `<p class="shopping-item__meals">${escapeHtml(item.forMeals.join(' · '))}</p>` : ''}
+        <div class="shopping-item__actions">
+          <div class="shopping-status" role="group" aria-label="${escapeHtml(labels.itemStatus)}">
+            ${renderStatusButton(item, 'to-buy', labels.markToBuy)}
+            ${renderStatusButton(item, 'owned', labels.markOwned)}
+            ${renderStatusButton(item, 'dismissed', labels.markDismissed)}
+          </div>
         </div>
       </article>
     `;
   }
 
-  function renderStatusOption(item: ShoppingItem, value: ShoppingItem['status'], label: string) {
-    return `
-      <label class="shopping-status__option">
-        <input type="radio" name="status-${escapeHtml(item.id)}" value="${value}" data-field="status" ${item.status === value ? 'checked' : ''} />
-        <span>${escapeHtml(label)}</span>
-      </label>
+  function renderDraft() {
+    if (!draft) return;
+
+    if (currentDraftItems.length === 0) {
+      draft.innerHTML = `<p class="shopping-empty">${escapeHtml(labels.startByGenerating)}</p>`;
+      return;
+    }
+
+    const pendingItems = currentDraftItems.filter((item) => item.status === 'to-buy');
+    const reviewedItems = currentDraftItems.filter((item) => item.status !== 'to-buy');
+
+    draft.innerHTML = `
+      <section class="shopping-review-group" data-variant="pending">
+        <header class="shopping-review-group__header">
+          <h3>${escapeHtml(labels.statusToBuy)}</h3>
+          <span class="shopping-review-group__count">${escapeHtml(
+            formatCountLabel('pendingCountSingle', 'pendingCountPlural', pendingItems.length)
+          )}</span>
+        </header>
+        ${
+          pendingItems.length
+            ? pendingItems.map((item) => renderItem(item)).join('')
+            : `<p class="shopping-empty">${escapeHtml(labels.noToBuyItems)}</p>`
+        }
+      </section>
+      ${
+        reviewedItems.length
+          ? `
+            <section class="shopping-review-group" data-variant="reviewed">
+              <header class="shopping-review-group__header">
+                <h3>${escapeHtml(labels.doneTitle)}</h3>
+                <span class="shopping-review-group__count">${reviewedItems.length}</span>
+              </header>
+              ${reviewedItems.map((item) => renderItem(item)).join('')}
+            </section>
+          `
+          : ''
+      }
     `;
   }
 
-  function escapeHtml(value = '') {
-    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-  }
-
-  function formatMealLabel(dayKey: string, meal: string) {
-    const date = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'short' }).format(
-      new Date(`${dayKey}T00:00:00`)
-    );
-    return `${date} · ${labels[meal] ?? meal}`;
-  }
-
-  function readConfidenceLabel(confidence: ShoppingItem['confidence']) {
-    if (confidence === 'high') return labels.confidenceHigh;
-    if (confidence === 'low') return labels.confidenceLow;
-    return labels.confidenceMedium;
-  }
-
   function updateToolbarState() {
+    const hasSelectedDays = selectedDayKeys.length > 0;
     const hasItems = currentDraftItems.length > 0;
     const hasToBuy = getToBuyItems(currentDraftItems).length > 0;
     const aiReady = hasFirebaseConfig() && isShoppingListAiAvailable(getAiFeatureFlags());
+
     if (generateButton) {
-      generateButton.disabled = !aiReady || !currentUser;
+      generateButton.disabled = !aiReady || !currentUser || !hasSelectedDays;
       generateButton.textContent = currentDraftItems.some((item) => item.source === 'ai') ? labels.regenerate : labels.generate;
     }
-    if (saveButton) saveButton.disabled = !currentUser || !hasItems;
-    if (copyButton) copyButton.disabled = !hasToBuy;
-    if (downloadButton) downloadButton.disabled = !hasToBuy;
-    if (shareButton) shareButton.disabled = !hasToBuy || typeof navigator.share !== 'function';
-    addItemButton?.toggleAttribute('disabled', !currentUser);
+
+    if (saveButton) saveButton.disabled = !currentUser || !hasItems || !hasSelectedDays;
+    if (shareButton) shareButton.disabled = !hasToBuy || !hasSelectedDays || typeof navigator.share !== 'function';
   }
 
   function hydrateDraft(items: ShoppingItem[]) {
@@ -276,11 +318,13 @@ if (root) {
 
   async function generateWithAi() {
     if (!currentUser) return;
+
     const flags = getAiFeatureFlags();
     if (!flags.aiEnabled || !flags.shoppingListEnabled) {
       showAiStatus(labels.aiDisabled, true);
       return;
     }
+
     if (!hasFirebaseConfig()) {
       showAiStatus(labels.aiMissingConfig, true);
       return;
@@ -346,34 +390,6 @@ if (root) {
     }
   }
 
-  async function copyCurrentList() {
-    const text = buildExportText();
-    if (!text) return;
-    await navigator.clipboard.writeText(text);
-    showStatus(labels.copied);
-  }
-
-  async function shareCurrentList() {
-    const text = buildExportText();
-    if (!text || typeof navigator.share !== 'function') return;
-    await navigator.share({ text, title: labels.exportTitle });
-    showStatus(labels.shared);
-  }
-
-  function downloadCurrentList() {
-    const text = buildExportText();
-    if (!text) return;
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    const { rangeStart, rangeEnd } = getRange();
-    anchor.href = url;
-    anchor.download = createShoppingExportFilename(rangeStart, rangeEnd);
-    anchor.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 0);
-    showStatus(labels.exported);
-  }
-
   function buildExportText() {
     const toBuyItems = getToBuyItems(currentDraftItems);
     if (toBuyItems.length === 0) {
@@ -384,45 +400,21 @@ if (root) {
     return buildShoppingListText(toBuyItems, {
       title: labels.exportTitle,
       emptyLabel: labels.exportEmpty,
-      categoryLabel: getCategoryLabel,
     });
   }
 
-  function addManualItem() {
-    currentDraftItems = groupShoppingItems([
-      ...currentDraftItems,
-      normalizeShoppingItem({
-        name: labels.newItemName,
-        category: 'other',
-        source: 'manual',
-        status: 'to-buy',
-        quantity: '',
-        forMeals: [],
-      }),
-    ]);
-    draftDirty = true;
-    renderDraft();
-    updateToolbarState();
+  async function shareCurrentList() {
+    const text = buildExportText();
+    if (!text || typeof navigator.share !== 'function') return;
+    await navigator.share({ text, title: labels.exportTitle });
+    showStatus(labels.shared);
   }
 
-  function removeItem(itemId: string) {
-    currentDraftItems = currentDraftItems.filter((item) => item.id !== itemId);
-    draftDirty = true;
-    renderDraft();
-    updateToolbarState();
-  }
-
-  function updateItem(itemId: string, field: string, value: string) {
+  function updateItemStatus(itemId: string, nextStatus: ShoppingItem['status']) {
     currentDraftItems = groupShoppingItems(
       currentDraftItems.map((item) => {
         if (item.id !== itemId) return item;
-        const nextItem =
-          field === 'status'
-            ? { ...item, status: value as ShoppingItem['status'] }
-            : field === 'forMeals'
-              ? { ...item, forMeals: value.split(',').map((meal) => meal.trim()).filter(Boolean) }
-              : { ...item, [field]: value };
-        return normalizeShoppingItem(nextItem);
+        return normalizeShoppingItem({ ...item, status: nextStatus });
       })
     );
     draftDirty = true;
@@ -431,9 +423,9 @@ if (root) {
   }
 
   function buildDisplayMenu(menus: WeekMenu[]) {
-    const range = getRange();
+    const visibleRange = getAvailableRange();
     const days = Object.fromEntries(
-      range.dates.map((dayKey) => {
+      visibleRange.dates.map((dayKey) => {
         const weekStart = getWeekStartForDate(dayKey);
         const menu = menus.find((entry) => entry.weekStart === weekStart);
         return [dayKey, menu?.days?.[dayKey]];
@@ -446,7 +438,7 @@ if (root) {
       ownerId: currentUser?.uid ?? '',
       members: currentUser ? [currentUser.uid] : [],
       inviteCode: '',
-      weekStart: range.rangeStart,
+      weekStart: visibleRange.rangeStart,
       days,
     } as WeekMenu;
   }
@@ -454,6 +446,7 @@ if (root) {
   function resubscribeShoppingList(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
     unsubscribeShoppingList?.();
     if (!currentUser) return;
+
     const { rangeStart, rangeEnd } = getRange();
     unsubscribeShoppingList = watchShoppingList(
       services,
@@ -478,6 +471,7 @@ if (root) {
     if (error instanceof Error && error.message.toLowerCase().includes('permission')) {
       return labels.permissionsError;
     }
+
     return error instanceof Error ? error.message : String(error);
   }
 
@@ -491,38 +485,36 @@ if (root) {
     generateButton?.addEventListener('click', () => {
       generateWithAi().catch((error) => showAiStatus(formatError(error), true));
     });
-    addItemButton?.addEventListener('click', addManualItem);
     saveButton?.addEventListener('click', () => {
       saveCurrentList().catch((error) => showStatus(formatError(error), true));
-    });
-    copyButton?.addEventListener('click', () => {
-      copyCurrentList().catch((error) => showStatus(formatError(error), true));
     });
     shareButton?.addEventListener('click', () => {
       shareCurrentList().catch((error) => showStatus(formatError(error), true));
     });
-    downloadButton?.addEventListener('click', downloadCurrentList);
+
+    rangePicker?.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-day-key]');
+      const dayKey = button?.dataset.dayKey;
+      if (!button || !dayKey) return;
+
+      selectedDayKeys = selectedDayKeys.includes(dayKey)
+        ? selectedDayKeys.filter((entry) => entry !== dayKey)
+        : [...selectedDayKeys, dayKey].sort();
+      renderRangePicker();
+      renderMeals();
+      updateToolbarState();
+
+      if (currentServices && currentUser) {
+        resubscribeShoppingList(currentServices);
+      }
+    });
 
     draft?.addEventListener('click', (event) => {
-      const target = event.target as HTMLElement | null;
-      if (!(target instanceof HTMLButtonElement) || !target.dataset.removeItem) return;
-      removeItem(target.dataset.removeItem);
-    });
-
-    draft?.addEventListener('input', (event) => {
-      const target = event.target as HTMLInputElement | HTMLTextAreaElement | null;
-      const itemId = target?.closest<HTMLElement>('[data-item-id]')?.dataset.itemId;
-      const field = target?.dataset.field;
-      if (!target || !itemId || !field) return;
-      updateItem(itemId, field, target.value);
-    });
-
-    draft?.addEventListener('change', (event) => {
-      const target = event.target as HTMLInputElement | null;
-      const itemId = target?.closest<HTMLElement>('[data-item-id]')?.dataset.itemId;
-      const field = target?.dataset.field;
-      if (!target || !itemId || !field) return;
-      updateItem(itemId, field, target.value);
+      const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-set-status]');
+      const itemId = button?.closest<HTMLElement>('[data-item-id]')?.dataset.itemId;
+      const nextStatus = button?.dataset.setStatus as ShoppingItem['status'] | undefined;
+      if (!button || !itemId || !nextStatus) return;
+      updateItemStatus(itemId, nextStatus);
     });
   }
 
@@ -535,6 +527,7 @@ if (root) {
     attachEvents();
     getFirebaseServices()
       .then((services) => {
+        currentServices = services;
         services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
           currentUser = user;
           if (!user) {
@@ -554,20 +547,13 @@ if (root) {
             async (profile) => {
               currentProfile = profile;
               resubscribeShoppingList(services);
-              const menuIdsByWeekStart = await getOrCreateWeekMenus(
-                services,
-                user.uid,
-                getRelevantWeekStarts(),
-                locale
-              );
-              currentMenuIdsByWeekStart = menuIdsByWeekStart;
+              const menuIdsByWeekStart = await getOrCreateWeekMenus(services, user.uid, getRelevantWeekStarts(), locale);
 
               unsubscribeMenus?.();
               unsubscribeMenus = watchWeekMenusByIds(
                 services,
                 Object.values(menuIdsByWeekStart),
                 (menus) => {
-                  currentMenus = menus;
                   currentMenu = buildDisplayMenu(menus);
                   renderMeals();
                 },
@@ -605,6 +591,8 @@ if (root) {
       .catch((error: Error) => showStatus(error.message, true));
   }
 
+  renderRangePicker();
+  renderSelectionSummary();
   renderDraft();
   updateToolbarState();
 }

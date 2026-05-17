@@ -124,8 +124,8 @@ describe('AI shopping list helpers', () => {
     );
 
     assert.match(text, /Lista de la compra/);
-    assert.match(text, /Verduras/);
     assert.match(text, /Tomate \(4\)/);
     assert.doesNotMatch(text, /Arroz/);
+    assert.doesNotMatch(text, /Verduras/);
   });
 });
