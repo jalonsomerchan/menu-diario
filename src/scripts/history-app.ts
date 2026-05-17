@@ -1,12 +1,20 @@
+import { watchUserDishes } from '../lib/dishes/repository';
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
-import { watchUserDishes } from '../lib/dishes/repository';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { serializeDay } from '../lib/menu/day-state';
-import { getDatesInRange, getMonday, getWeekStartForDate, normalizeDateRange, toIsoDate } from '../lib/menu/dates';
-import { getHistoryDayStatus, matchesHistoryFilters, type HistoryStatusFilter } from '../lib/menu/history';
-import { normalizeDay } from '../lib/menu/normalizers';
+import { getMonday, getWeekStartForDate, normalizeDateRange, toIsoDate } from '../lib/menu/dates';
+import {
+  countActiveHistoryFilters,
+  filterAndSortHistoryRows,
+  type HistoryFilters,
+  type HistoryRow,
+  type HistorySortMode,
+  type HistorySpecialFilter,
+  type HistoryStatusFilter,
+} from '../lib/menu/history';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
+import { normalizeDay } from '../lib/menu/normalizers';
 import {
   clearMenuDay,
   ensureUserProfile,
@@ -15,11 +23,12 @@ import {
   watchUserMenusByWeekRange,
   watchUserProfile,
 } from '../lib/menu/repository';
-import type { Dish, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-history-app]');
+const pageSize = 20;
 
 if (root) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
@@ -28,11 +37,21 @@ if (root) {
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const content = root.querySelector<HTMLElement>('[data-content]');
   const list = root.querySelector<HTMLElement>('[data-history-days]');
+  const summary = root.querySelector<HTMLElement>('[data-history-summary]');
+  const chips = root.querySelector<HTMLElement>('[data-history-chips]');
   const fromInput = root.querySelector<HTMLInputElement>('[data-date-from]');
   const toInput = root.querySelector<HTMLInputElement>('[data-date-to]');
   const queryInput = root.querySelector<HTMLInputElement>('[data-history-query]');
   const statusInput = root.querySelector<HTMLSelectElement>('[data-history-status]');
   const weekdayInput = root.querySelector<HTMLSelectElement>('[data-history-weekday]');
+  const mealInput = root.querySelector<HTMLSelectElement>('[data-history-meal]');
+  const dishInput = root.querySelector<HTMLInputElement>('[data-history-dish]');
+  const tagInput = root.querySelector<HTMLInputElement>('[data-history-tag]');
+  const specialInput = root.querySelector<HTMLSelectElement>('[data-history-special]');
+  const sortInput = root.querySelector<HTMLSelectElement>('[data-history-sort]');
+  const clearButton = root.querySelector<HTMLButtonElement>('[data-clear-filters]');
+  const loadMoreButton = root.querySelector<HTMLButtonElement>('[data-history-load-more]');
+  const filterCount = root.querySelector<HTMLElement>('[data-filter-count]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -43,6 +62,7 @@ if (root) {
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let activeRange = { start: '', end: '' };
+  let visibleCount = pageSize;
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -52,7 +72,7 @@ if (root) {
   attachDishSuggestions(root, () => dishes);
 
   function escapeHtml(value = '') {
-    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
   }
 
   function showStatus(message: string, isError = false) {
@@ -74,7 +94,7 @@ if (root) {
     return currentProfile?.enabledMeals?.length ? currentProfile.enabledMeals : ['lunch'];
   }
 
-  function mealLabel(meal: MealSlot) {
+  function mealLabel(meal: string) {
     return labels[meal] ?? meal;
   }
 
@@ -98,11 +118,16 @@ if (root) {
     return normalizeDateRange(fromInput?.value || fallback.start, toInput?.value || fallback.end);
   }
 
-  function getSelectedFilters() {
+  function getSelectedFilters(): HistoryFilters {
     return {
       query: queryInput?.value.trim() ?? '',
       status: (statusInput?.value as HistoryStatusFilter | '') || 'all',
       weekday: weekdayInput?.value || 'all',
+      meal: (mealInput?.value as HistoryFilters['meal'] | '') || 'all',
+      dish: dishInput?.value.trim() ?? '',
+      tag: tagInput?.value.trim() ?? '',
+      special: (specialInput?.value as HistorySpecialFilter | '') || 'all',
+      sort: (sortInput?.value as HistorySortMode | '') || 'date-desc',
     };
   }
 
@@ -116,18 +141,6 @@ if (root) {
 
   function getDayNumber(isoDate: string) {
     return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(new Date(`${isoDate}T00:00:00`));
-  }
-
-  function renderMealSummary(meal: MealEntry) {
-    if (meal.skipped) return labels.skipSummary;
-    return meal.items.length ? meal.items.join(', ') : labels.todayEmpty;
-  }
-
-  function findDay(isoDate: string) {
-    for (const menu of menus) {
-      if (menu.days[isoDate]) return { menu, day: normalizeDay(menu.days[isoDate]) };
-    }
-    return null;
   }
 
   function getEditingMenu() {
@@ -163,9 +176,7 @@ if (root) {
 
     const weekStart = getWeekStartForDate(dayKey);
     const existingMenu = menus.find((menu) => menu.weekStart === weekStart);
-    if (existingMenu) {
-      return existingMenu.id;
-    }
+    if (existingMenu) return existingMenu.id;
 
     const services = await getFirebaseServices();
     const nextMenuId = await getOrCreateWeekMenu(services, currentUser.uid, weekStart, locale);
@@ -173,53 +184,140 @@ if (root) {
     return nextMenuId;
   }
 
+  function stateLabel(row: HistoryRow) {
+    if (row.state === 'eating-out') return labels.specialEatingOut;
+    if (row.state === 'unplanned') return labels.specialUnplanned;
+    if (row.state === 'custom') return labels.specialCustom;
+    if (row.state === 'skipped') return labels.statusSkipped;
+    return '';
+  }
+
+  function specialLabel(value: string) {
+    if (value === 'favorite') return labels.specialFavorite;
+    if (value === 'leftovers') return labels.specialLeftovers;
+    if (value === 'eating-out') return labels.specialEatingOut;
+    if (value === 'unplanned') return labels.specialUnplanned;
+    if (value === 'custom') return labels.specialCustom;
+    return labels.specialAll;
+  }
+
+  function sortLabel(value: string) {
+    if (value === 'date-asc') return labels.sortOldest;
+    if (value === 'dish') return labels.sortDish;
+    if (value === 'frequency') return labels.sortFrequency;
+    return labels.sortRecent;
+  }
+
+  function statusLabel(value: string) {
+    if (value === 'planned') return labels.statusPlanned;
+    if (value === 'skipped') return labels.statusSkipped;
+    if (value === 'empty') return labels.statusEmpty;
+    return labels.statusAll;
+  }
+
+  function weekdayLabel(value: string) {
+    const labelsByWeekday: Record<string, string> = {
+      '1': labels.weekdayMonday,
+      '2': labels.weekdayTuesday,
+      '3': labels.weekdayWednesday,
+      '4': labels.weekdayThursday,
+      '5': labels.weekdayFriday,
+      '6': labels.weekdaySaturday,
+      '7': labels.weekdaySunday,
+    };
+    return labelsByWeekday[value] ?? labels.weekdayAll;
+  }
+
+  function renderChips(filters: HistoryFilters) {
+    if (!chips) return;
+    const active = [
+      filters.query && `${labels.query}: ${filters.query}`,
+      filters.status !== 'all' && `${labels.status}: ${statusLabel(filters.status)}`,
+      filters.weekday !== 'all' && `${labels.weekday}: ${weekdayLabel(filters.weekday)}`,
+      filters.meal && filters.meal !== 'all' && `${labels.meal}: ${mealLabel(filters.meal)}`,
+      filters.dish && `${labels.dish}: ${filters.dish}`,
+      filters.tag && `${labels.tag}: ${filters.tag}`,
+      filters.special && filters.special !== 'all' && `${labels.special}: ${specialLabel(filters.special)}`,
+      filters.sort && filters.sort !== 'date-desc' && `${labels.sort}: ${sortLabel(filters.sort)}`,
+    ].filter(Boolean) as string[];
+    chips.innerHTML = active.map((item) => `<span class="history-chip">${escapeHtml(item)}</span>`).join('');
+  }
+
+  function renderBadges(row: HistoryRow) {
+    const badges = [
+      row.isFavorite && labels.favoriteBadge,
+      row.hasLeftovers && labels.leftoversBadge,
+      stateLabel(row),
+      ...row.tags.slice(0, 3),
+    ].filter(Boolean) as string[];
+    return badges.length ? `<div class="history-card__badges">${badges.map((badge) => `<span>${escapeHtml(badge)}</span>`).join('')}</div>` : '';
+  }
+
+  function renderRow(row: HistoryRow) {
+    const items = row.daySkipped || row.mealSkipped ? labels.skipSummary : row.items.length ? row.items.join(', ') : labels.todayEmpty;
+    return `
+      <article class="history-card" data-day="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}" data-day-status="${escapeHtml(row.dayStatus)}">
+        <div class="history-card__date" aria-hidden="true">${escapeHtml(getDayNumber(row.isoDate))}</div>
+        <div class="history-card__body">
+          <header class="history-card__header">
+            <div>
+              <p class="history-card__meta">${escapeHtml(formatDate(row.isoDate))} · ${escapeHtml(mealLabel(row.meal))}</p>
+              <h2>${escapeHtml(formatWeekday(row.isoDate))}</h2>
+            </div>
+            <details class="day-actions">
+              <summary aria-label="${escapeHtml(labels.moreActions)}">⋯</summary>
+              <div>
+                <button type="button" data-history-edit="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.editDay)}</button>
+                ${row.menuId ? `<button type="button" data-clear-day="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.deleteDay)}</button>` : ''}
+              </div>
+            </details>
+          </header>
+          <p class="history-card__items">${escapeHtml(items)}</p>
+          ${renderBadges(row)}
+        </div>
+      </article>
+    `;
+  }
+
+  function updateResultSummary(shown: number, total: number) {
+    if (!summary) return;
+    summary.textContent = labels.showingResults.replace('{shown}', String(shown)).replace('{total}', String(total));
+  }
+
   function renderHistory() {
     if (!list) return;
     const filters = getSelectedFilters();
-    const rows: string[] = [];
-    const enabledMeals = getEnabledMeals();
+    const rows = filterAndSortHistoryRows(menus, dishes, getEnabledMeals(), filters);
+    const visibleRows = rows.slice(0, visibleCount);
+    const activeCount = countActiveHistoryFilters(filters);
+    const emptyLabel = activeCount > 0 ? labels.emptySearch : labels.empty;
 
-    getDatesInRange(activeRange.start, activeRange.end).forEach((isoDate) => {
-      const found = findDay(isoDate);
-      const day = found?.day;
+    list.innerHTML = visibleRows.length ? visibleRows.map(renderRow).join('') : `<p class="history-empty">${escapeHtml(emptyLabel)}</p>`;
+    updateResultSummary(visibleRows.length, rows.length);
+    renderChips(filters);
 
-      if (!matchesHistoryFilters(isoDate, day, enabledMeals, filters)) {
-        return;
-      }
+    if (filterCount) {
+      filterCount.hidden = activeCount === 0;
+      filterCount.textContent = String(activeCount);
+    }
+    if (loadMoreButton) loadMoreButton.hidden = visibleRows.length >= rows.length;
+  }
 
-      const dayStatus = getHistoryDayStatus(day, enabledMeals);
-      const normalizedDay = normalizeDay(day);
-      const summaries = enabledMeals
-        .map((meal) => {
-          const summary = dayStatus === 'skipped' ? labels.skipSummary : renderMealSummary(normalizedDay.meals[meal]);
-          return `<div class="day-meal-row"><span>${escapeHtml(mealLabel(meal))}:</span><strong>${escapeHtml(summary)}</strong></div>`;
-        })
-        .join('');
-
-      rows.unshift(`
-        <article class="next-day-card next-day-card--mockup" data-day="${isoDate}" data-menu="${escapeHtml(found?.menu.id ?? '')}" data-day-status="${escapeHtml(dayStatus)}">
-          <div class="next-day-card__number">${escapeHtml(getDayNumber(isoDate))}</div>
-          <div class="next-day-card__body">
-            <header>
-              <div class="next-day-card__title">
-                <h3>${escapeHtml(formatWeekday(isoDate))}</h3>
-                <p>${escapeHtml(formatDate(isoDate))}</p>
-              </div>
-              <details class="day-actions">
-                <summary aria-label="${escapeHtml(labels.moreActions)}">⋯</summary>
-                <div>
-                  <button type="button" data-history-edit="${isoDate}" data-menu="${escapeHtml(found?.menu.id ?? '')}">${escapeHtml(labels.editDay)}</button>
-                  ${found?.menu.id ? `<button type="button" data-clear-day="${isoDate}" data-menu="${escapeHtml(found.menu.id)}">${escapeHtml(labels.deleteDay)}</button>` : ''}
-                </div>
-              </details>
-            </header>
-            ${summaries}
-          </div>
-        </article>
-      `);
-    });
-
-    list.innerHTML = rows.length ? rows.join('') : `<p class="menu-list__empty">${escapeHtml(labels.empty)}</p>`;
+  function resetFilters() {
+    const defaultRange = getDefaultRange();
+    activeRange = defaultRange;
+    if (toInput) toInput.value = defaultRange.end;
+    if (fromInput) fromInput.value = defaultRange.start;
+    if (queryInput) queryInput.value = '';
+    if (statusInput) statusInput.value = 'all';
+    if (weekdayInput) weekdayInput.value = 'all';
+    if (mealInput) mealInput.value = 'all';
+    if (dishInput) dishInput.value = '';
+    if (tagInput) tagInput.value = '';
+    if (specialInput) specialInput.value = 'all';
+    if (sortInput) sortInput.value = 'date-desc';
+    visibleCount = pageSize;
+    subscribeRange();
   }
 
   function openEdit(menuId: string, dayKey: string) {
@@ -230,9 +328,7 @@ if (root) {
   function updateLocalDay(dayKey: string, nextDay: WeekMenu['days'][string]) {
     if (!editMenuId) return;
 
-    if (!menus.some((menu) => menu.id === editMenuId)) {
-      ensureLocalMenu(editMenuId, dayKey);
-    }
+    if (!menus.some((menu) => menu.id === editMenuId)) ensureLocalMenu(editMenuId, dayKey);
 
     menus = menus.map((menu) =>
       menu.id === editMenuId
@@ -264,6 +360,7 @@ if (root) {
     const changed = await updateMenuDay(services, editMenuId, currentUser.uid, dayKey, nextDay, currentProfile?.groupId);
     card?.setAttribute('data-day-state', nextState);
     updateLocalDay(dayKey, nextDay);
+    renderHistory();
     saveFeedback.saved(changed ? labels.saveSaved : labels.saveSaved);
   }
 
@@ -271,6 +368,7 @@ if (root) {
     if (!currentUser) return;
     const nextRange = getSelectedRange();
     activeRange = nextRange;
+    visibleCount = pageSize;
     unsubscribeMenus?.();
     unsubscribeMenus = undefined;
     menus = [];
@@ -339,9 +437,23 @@ if (root) {
           subscribeRange();
         });
 
-        queryInput?.addEventListener('input', () => renderHistory());
-        statusInput?.addEventListener('change', () => renderHistory());
-        weekdayInput?.addEventListener('change', () => renderHistory());
+        [queryInput, statusInput, weekdayInput, mealInput, dishInput, tagInput, specialInput, sortInput].forEach((field) => {
+          field?.addEventListener('input', () => {
+            visibleCount = pageSize;
+            renderHistory();
+          });
+          field?.addEventListener('change', () => {
+            visibleCount = pageSize;
+            renderHistory();
+          });
+        });
+        [fromInput, toInput].forEach((field) => field?.addEventListener('change', () => subscribeRange()));
+        clearButton?.addEventListener('click', resetFilters);
+        loadMoreButton?.addEventListener('click', () => {
+          visibleCount += pageSize;
+          renderHistory();
+        });
+        window.addEventListener('offline', () => showStatus(labels.errorOffline, true));
 
         list?.addEventListener('click', async (event) => {
           const target = event.target;
@@ -381,6 +493,7 @@ if (root) {
               unsubscribeDishes?.();
               unsubscribeDishes = watchUserDishes(services, user.uid, (nextDishes) => {
                 dishes = nextDishes;
+                renderHistory();
               }, (error) => showStatus(formatError(error), true), false, profile.groupId);
               renderHistory();
             },
