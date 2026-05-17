@@ -9,6 +9,13 @@ export {
   getPendingMealSlots,
   isPendingMealRecommendationResponse,
 } from './pending-meal-recommendations';
+export {
+  assignPlanningRecommendations,
+  buildPlanningAssistantPrompt,
+  getPlanningCatalogDishes,
+  hasPlanningCatalogForMode,
+  isPlanningRecommendationResponse,
+} from './planning-assistant';
 export { buildShoppingListContext, buildShoppingListPrompt, isShoppingListAiResponse } from './shopping-list';
 export { assertAiClientLimit, readLimitSnapshot, registerAiClientUse } from './limits';
 export { getAiFeatureFlagsFromRemoteConfig } from './remote-config';
@@ -29,5 +36,12 @@ export type {
   PendingMealRecommendationResponse,
   PendingMealSlot,
 } from './pending-meal-recommendations';
+export type {
+  PlanningRecommendation,
+  PlanningRecommendationDish,
+  PlanningRecommendationInput,
+  PlanningRecommendationMode,
+  PlanningRecommendationResponse,
+} from './planning-assistant';
 export type { ShoppingAiResponse } from '../shopping/types';
 export type { AiUiState } from './ui-state';

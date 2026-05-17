@@ -7,6 +7,7 @@ export function GET() {
   const preCacheUrls = [
     withBasePath(''),
     withBasePath('dashboard'),
+    withBasePath('planificacion'),
     withBasePath('configurar'),
     withBasePath('ajustes'),
     withBasePath('historico'),

@@ -1,0 +1,461 @@
+---
+import type { Locale } from '../config/site';
+import DayEditModal from './DayEditModal.astro';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const homePath = getLocalizedPath('/', locale);
+const configurePath = getLocalizedPath('/configurar', locale);
+const dishesPath = getLocalizedPath('/mis-platos', locale);
+
+const labels = {
+  configMissing: t('menu.configMissing'),
+  loading: t('dashboard.loading'),
+  eyebrow: t('planningAi.eyebrow'),
+  title: t('planningAi.title'),
+  description: t('planningAi.description'),
+  formTitle: t('planningAi.formTitle'),
+  formDescription: t('planningAi.formDescription'),
+  start: t('planningAi.start'),
+  end: t('planningAi.end'),
+  meals: t('planningAi.meals'),
+  recommendationCount: t('planningAi.recommendationCount'),
+  mode: t('planningAi.mode'),
+  modeOwn: t('planningAi.modeOwn'),
+  modeOwnHint: t('planningAi.modeOwnHint'),
+  modeNew: t('planningAi.modeNew'),
+  modeNewHint: t('planningAi.modeNewHint'),
+  modeMix: t('planningAi.modeMix'),
+  modeMixHint: t('planningAi.modeMixHint'),
+  submit: t('planningAi.submit'),
+  pendingTitle: t('planningAi.pendingTitle'),
+  pendingDescription: t('planningAi.pendingDescription'),
+  pendingEmpty: t('planningAi.pendingEmpty'),
+  resultsTitle: t('planningAi.resultsTitle'),
+  resultsDescription: t('planningAi.resultsDescription'),
+  resultsEmpty: t('planningAi.resultsEmpty'),
+  resultsNotGenerated: t('planningAi.resultsNotGenerated'),
+  openManual: t('planningAi.openManual'),
+  manageDishes: t('planningAi.manageDishes'),
+  applySelection: t('planningAi.applySelection'),
+  addDish: t('planningAi.addDish'),
+  added: t('planningAi.added'),
+  applied: t('planningAi.applied'),
+  reasonLabel: t('planningAi.reasonLabel'),
+  originGlobal: t('planningAi.originGlobal'),
+  originGroup: t('planningAi.originGroup'),
+  originUser: t('planningAi.originUser'),
+  originNew: t('planningAi.originNew'),
+  newBadge: t('planningAi.newBadge'),
+  noOwnDishes: t('planningAi.noOwnDishes'),
+  invalidRange: t('planningAi.invalidRange'),
+  loadingSlots: t('planningAi.loadingSlots'),
+  loadingPlan: t('planningAi.loadingPlan'),
+  generated: t('planningAi.generated'),
+  aiLoading: t('ai.loading'),
+  aiError: t('ai.error'),
+  aiMissingConfig: t('ai.missingConfig'),
+  'ai.loading': t('ai.loading'),
+  'ai.error': t('ai.error'),
+  'ai.quotaExhausted': t('ai.quotaExhausted'),
+  'ai.missingConfig': t('ai.missingConfig'),
+  'ai.appCheckUnavailable': t('ai.appCheckUnavailable'),
+  'ai.invalidResponse': t('ai.invalidResponse'),
+  breakfast: t('dashboard.breakfast'),
+  lunch: t('dashboard.lunch'),
+  dinner: t('dashboard.dinner'),
+  cancel: t('dashboard.cancel'),
+  save: t('dashboard.save'),
+  deleteDay: t('dashboard.deleteDay'),
+  saveHint: t('menu.saveHint'),
+  savePending: t('menu.savePending'),
+  saveSaving: t('menu.saveSaving'),
+  saveSaved: t('menu.saveSaved'),
+  addDishLabel: t('dashboard.addDish'),
+  addPlate: t('dashboard.addPlate'),
+  removePlate: t('dashboard.removePlate'),
+  showDishOptions: t('dashboard.showDishOptions'),
+  dishSuggestions: t('dashboard.dishSuggestions'),
+  dishPlaceholder: t('dashboard.dishPlaceholder'),
+  noMeal: t('dashboard.noMeal'),
+  noDay: t('dashboard.noDay'),
+  reason: t('dashboard.reason'),
+  reasonAway: t('dashboard.reasonAway'),
+  reasonEatingOut: t('dashboard.reasonEatingOut'),
+  reasonNotHungry: t('dashboard.reasonNotHungry'),
+  reasonOther: t('dashboard.reasonOther'),
+  reasonDescription: t('dashboard.reasonDescription'),
+  notes: t('menu.notes'),
+  permissionsError: t('menu.permissionsError'),
+  guestSession: t('menu.guestSession'),
+  offlineReadOnly: t('pwa.offlineReadOnly'),
+  homePath,
+};
+---
+
+<section class="planning-ai-app" data-planning-ai-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
+  <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
+
+  <div data-content hidden>
+    <section class="planning-ai-hero app-panel">
+      <div>
+        <p class="menu-app__eyebrow">{labels.eyebrow}</p>
+        <h1>{labels.title}</h1>
+        <p>{labels.description}</p>
+      </div>
+      <div class="planning-ai-hero__actions">
+        <a class="button button--ghost button--small" href={configurePath}>{labels.openManual}</a>
+        <a class="button button--ghost button--small" href={dishesPath}>{labels.manageDishes}</a>
+      </div>
+    </section>
+
+    <div class="planning-ai-grid">
+      <section class="planning-ai-panel app-panel" aria-labelledby="planning-ai-form-title">
+        <div class="section-heading section-heading--simple">
+          <div>
+            <p class="menu-app__eyebrow">{labels.eyebrow}</p>
+            <h2 id="planning-ai-form-title">{labels.formTitle}</h2>
+            <p>{labels.formDescription}</p>
+          </div>
+        </div>
+
+        <form class="planning-ai-form" data-plan-form>
+          <div class="planning-ai-form__dates">
+            <label>
+              <span>{labels.start}</span>
+              <input type="date" data-plan-start />
+            </label>
+            <label>
+              <span>{labels.end}</span>
+              <input type="date" data-plan-end />
+            </label>
+          </div>
+
+          <fieldset class="planning-ai-form__meals">
+            <legend>{labels.meals}</legend>
+            <label><input type="checkbox" value="breakfast" data-plan-meal /> {labels.breakfast}</label>
+            <label><input type="checkbox" value="lunch" data-plan-meal /> {labels.lunch}</label>
+            <label><input type="checkbox" value="dinner" data-plan-meal /> {labels.dinner}</label>
+          </fieldset>
+
+          <label>
+            <span>{labels.recommendationCount}</span>
+            <select data-plan-count>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </label>
+
+          <fieldset class="planning-ai-form__modes">
+            <legend>{labels.mode}</legend>
+            <label class="planning-ai-mode-card">
+              <input type="radio" name="planning-mode" value="own" data-plan-mode />
+              <strong>{labels.modeOwn}</strong>
+              <span>{labels.modeOwnHint}</span>
+            </label>
+            <label class="planning-ai-mode-card">
+              <input type="radio" name="planning-mode" value="new" data-plan-mode />
+              <strong>{labels.modeNew}</strong>
+              <span>{labels.modeNewHint}</span>
+            </label>
+            <label class="planning-ai-mode-card">
+              <input type="radio" name="planning-mode" value="mix" data-plan-mode checked />
+              <strong>{labels.modeMix}</strong>
+              <span>{labels.modeMixHint}</span>
+            </label>
+          </fieldset>
+
+          <button class="button button--primary" type="submit" data-plan-submit>{labels.submit}</button>
+        </form>
+      </section>
+
+      <section class="planning-ai-panel app-panel" aria-labelledby="planning-ai-pending-title">
+        <div class="section-heading section-heading--simple">
+          <div>
+            <p class="menu-app__eyebrow">{labels.eyebrow}</p>
+            <h2 id="planning-ai-pending-title">{labels.pendingTitle}</h2>
+            <p>{labels.pendingDescription}</p>
+          </div>
+        </div>
+        <div class="planning-ai-pending" data-plan-pending>
+          <p class="planning-ai-empty">{labels.resultsNotGenerated}</p>
+        </div>
+      </section>
+    </div>
+
+    <section class="planning-ai-panel planning-ai-panel--results app-panel" aria-labelledby="planning-ai-results-title">
+      <div class="section-heading section-heading--simple">
+        <div>
+          <p class="menu-app__eyebrow">{labels.eyebrow}</p>
+          <h2 id="planning-ai-results-title">{labels.resultsTitle}</h2>
+          <p>{labels.resultsDescription}</p>
+        </div>
+      </div>
+      <div class="planning-ai-results-status" data-ai-status role="status" aria-live="polite"></div>
+      <div class="planning-ai-results" data-plan-results>
+        <p class="planning-ai-empty">{labels.resultsNotGenerated}</p>
+      </div>
+    </section>
+  </div>
+
+  <DayEditModal
+    eyebrow={labels.eyebrow}
+    title={labels.title}
+    cancelLabel={labels.cancel}
+    saveLabel={labels.save}
+    clearLabel={labels.deleteDay}
+    saveHint={labels.saveHint}
+    savePendingLabel={labels.savePending}
+  />
+</section>
+
+<style is:global>
+  .planning-ai-app {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .planning-ai-hero,
+  .planning-ai-panel {
+    background: var(--panel-background);
+  }
+
+  .planning-ai-hero {
+    display: grid;
+    gap: 1rem;
+    padding: clamp(1rem, 2.5vw, 1.5rem);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
+    background:
+      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary-soft), transparent 30%), transparent 48%),
+      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-raised), transparent 4%), var(--color-surface));
+  }
+
+  .planning-ai-hero h1 {
+    margin: 0;
+  }
+
+  .planning-ai-hero p:last-child {
+    margin-bottom: 0;
+  }
+
+  .planning-ai-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .planning-ai-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .planning-ai-form,
+  .planning-ai-form__dates,
+  .planning-ai-form__meals,
+  .planning-ai-form__modes,
+  .planning-ai-pending,
+  .planning-ai-results {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .planning-ai-form__dates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .planning-ai-form label,
+  .planning-ai-form legend {
+    font-weight: 800;
+    color: var(--color-text);
+  }
+
+  .planning-ai-form label span {
+    display: inline-flex;
+    margin-bottom: 0.45rem;
+  }
+
+  .planning-ai-form input[type='date'],
+  .planning-ai-form select {
+    width: 100%;
+  }
+
+  .planning-ai-form__meals {
+    padding: 0;
+    border: 0;
+  }
+
+  .planning-ai-form__meals label {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    font-weight: 700;
+    color: var(--color-muted);
+  }
+
+  .planning-ai-form__modes {
+    padding: 0;
+    border: 0;
+  }
+
+  .planning-ai-mode-card {
+    display: grid;
+    gap: 0.3rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 8%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+    transition:
+      border-color var(--transition-base),
+      background var(--transition-base),
+      transform var(--transition-base),
+      box-shadow var(--transition-base);
+  }
+
+  .planning-ai-mode-card strong {
+    font-size: 1rem;
+  }
+
+  .planning-ai-mode-card span {
+    color: var(--color-muted);
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  .planning-ai-mode-card:has(input:checked) {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 20%);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--color-primary-soft), transparent 38%), transparent),
+      var(--color-surface-raised);
+    box-shadow: 0 12px 28px rgb(15 23 42 / 0.08);
+    transform: translateY(-1px);
+  }
+
+  .planning-ai-empty {
+    margin: 0;
+    color: var(--color-muted);
+    font-weight: 650;
+  }
+
+  .planning-ai-pending-card,
+  .planning-ai-result-card {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+  }
+
+  .planning-ai-pending-card header,
+  .planning-ai-result-card header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: start;
+  }
+
+  .planning-ai-pending-card h3,
+  .planning-ai-result-card h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .planning-ai-slot-badge,
+  .planning-ai-dish-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 900;
+  }
+
+  .planning-ai-dish-list {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .planning-ai-dish-item {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface), transparent 5%);
+  }
+
+  .planning-ai-dish-item header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.65rem;
+    align-items: center;
+  }
+
+  .planning-ai-dish-item strong {
+    font-size: 0.98rem;
+  }
+
+  .planning-ai-dish-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .planning-ai-dish-origin {
+    color: var(--color-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .planning-ai-result-card footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .planning-ai-results-status {
+    color: var(--color-muted);
+    font-weight: 700;
+  }
+
+  .planning-ai-results-status[data-variant='error'] {
+    color: var(--color-danger);
+  }
+
+  @media (min-width: 720px) {
+    .planning-ai-hero {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+    }
+
+    .planning-ai-grid {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    }
+  }
+
+  @media (max-width: 539px) {
+    .planning-ai-form__dates {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  import '../scripts/planning-ai-app.ts';
+</script>

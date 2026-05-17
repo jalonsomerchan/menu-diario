@@ -2,14 +2,14 @@ import type { Locale } from '../config/site';
 
 const planningTranslations = {
   es: {
-    nav: 'Planificación',
-    title: 'Planificación',
-    hint: 'Organiza los próximos días',
+    nav: 'Plan IA',
+    title: 'Planificación con IA',
+    hint: 'Configura el rango y deja que la IA proponga',
   },
   en: {
-    nav: 'Planning',
-    title: 'Planning',
-    hint: 'Plan the upcoming days',
+    nav: 'AI plan',
+    title: 'AI planning',
+    hint: 'Set the range and let AI propose meals',
   },
 } satisfies Record<Locale, Record<'nav' | 'title' | 'hint', string>>;
 

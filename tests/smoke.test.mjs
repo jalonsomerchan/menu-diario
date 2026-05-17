@@ -44,6 +44,7 @@ describe('project smoke checks', () => {
       'src/pages/dashboard.astro',
       'src/pages/compra.astro',
       'src/pages/configurar.astro',
+      'src/pages/planificacion.astro',
       'src/pages/ajustes.astro',
       'src/pages/admin/platos.astro',
       'src/pages/historico.astro',
@@ -53,6 +54,7 @@ describe('project smoke checks', () => {
       'src/pages/[locale]/dashboard.astro',
       'src/pages/[locale]/compra.astro',
       'src/pages/[locale]/configurar.astro',
+      'src/pages/[locale]/planificacion.astro',
       'src/pages/[locale]/ajustes.astro',
       'src/pages/[locale]/admin/platos.astro',
       'src/pages/[locale]/historico.astro',
@@ -69,6 +71,7 @@ describe('project smoke checks', () => {
       'src/lib/menu/day-form.ts',
       'src/lib/menu/day-state.ts',
       'src/lib/menu/dish-suggestions.ts',
+      'src/lib/ai/planning-assistant.ts',
       'src/lib/ai/pending-meal-recommendations.ts',
       'src/lib/firebase/auth.ts',
       'src/lib/dishes/helpers.mjs',
@@ -86,7 +89,7 @@ describe('project smoke checks', () => {
   });
 
   it('keeps shared and app components available', () => {
-    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'DayEditModal', 'DishEditDialog', 'AdminGlobalDishesApp', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp', 'ShoppingApp'].forEach((component) => {
+    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'PlanningAiApp', 'DayEditModal', 'DishEditDialog', 'AdminGlobalDishesApp', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp', 'ShoppingApp'].forEach((component) => {
       assert.equal(existsSync(join(root, `src/components/${component}.astro`)), true, `${component}.astro should exist`);
     });
     assert.equal(existsSync(join(root, 'src/components/AppHeader.astro')), false);
@@ -145,6 +148,10 @@ describe('project smoke checks', () => {
         'ai.pendingMealsDishOriginGlobal',
         'ai.pendingMealsDishOriginGroup',
         'ai.pendingMealsDishOriginUser',
+        'planningAi.title',
+        'planningAi.formTitle',
+        'planningAi.modeMix',
+        'planningAi.originNew',
         'history.title',
         'group.title',
         'appNav.settings',
@@ -202,12 +209,14 @@ describe('project smoke checks', () => {
       'src/pages/dashboard.astro',
       'src/pages/compra.astro',
       'src/pages/configurar.astro',
+      'src/pages/planificacion.astro',
       'src/pages/ajustes.astro',
       'src/pages/historico.astro',
       'src/pages/mis-platos.astro',
       'src/pages/[locale]/dashboard.astro',
       'src/pages/[locale]/compra.astro',
       'src/pages/[locale]/configurar.astro',
+      'src/pages/[locale]/planificacion.astro',
       'src/pages/[locale]/ajustes.astro',
       'src/pages/[locale]/historico.astro',
       'src/pages/[locale]/mis-platos.astro',
@@ -219,7 +228,7 @@ describe('project smoke checks', () => {
     assert.match(header, /aria-controls=\{panelId\}/);
     assert.match(header, /getLocalizedPath\('\/dashboard'/);
     assert.match(header, /getLocalizedPath\('\/compra'/);
-    assert.match(header, /getLocalizedPath\('\/configurar'/);
+    assert.match(header, /getLocalizedPath\('\/planificacion'/);
     assert.match(header, /getLocalizedPath\('\/mis-platos'/);
     assert.match(header, /getLocalizedPath\('\/historico'/);
     assert.match(header, /getLocalizedPath\('\/ajustes'/);
@@ -241,12 +250,14 @@ describe('project smoke checks', () => {
     const dashboard = readText('src/pages/dashboard.astro');
     const shoppingPage = readText('src/pages/compra.astro');
     const configure = readText('src/pages/configurar.astro');
+    const planning = readText('src/pages/planificacion.astro');
     const settings = readText('src/pages/ajustes.astro');
     const history = readText('src/pages/historico.astro');
     const dishesPage = readText('src/pages/mis-platos.astro');
     const authGate = readText('src/components/AuthGate.astro');
     const dashboardApp = readText('src/components/DashboardApp.astro');
     const configuratorApp = readText('src/components/ConfiguratorApp.astro');
+    const planningAiApp = readText('src/components/PlanningAiApp.astro');
     const settingsApp = readText('src/components/SettingsApp.astro');
     const historyApp = readText('src/components/HistoryApp.astro');
     const dishesApp = readText('src/components/DishesApp.astro');
@@ -261,6 +272,7 @@ describe('project smoke checks', () => {
     assert.match(dashboard, /<DashboardApp/);
     assert.match(shoppingPage, /<ShoppingApp/);
     assert.match(configure, /<ConfiguratorApp/);
+    assert.match(planning, /<PlanningAiApp/);
     assert.match(settings, /<SettingsApp/);
     assert.match(history, /<HistoryApp/);
     assert.match(dishesPage, /<DishesApp/);
@@ -270,14 +282,15 @@ describe('project smoke checks', () => {
     assert.match(dashboardApp, /dashboard\.showDishOptions/);
     assert.match(dashboardApp, /dashboard-app\.ts/);
     assert.match(configuratorApp, /data-configurator-app/);
-    assert.match(configuratorApp, /data-ai-generate/);
-    assert.match(configuratorApp, /data-ai-results/);
     assert.match(configuratorApp, /<DayEditModal/);
-    assert.match(configuratorApp, /ai\.pendingMealsTitle/);
+    assert.match(configuratorApp, /planningPath/);
     assert.match(configuratorApp, /configurator-app\.ts/);
     assert.match(configuratorApp, /dashboard\.showDishOptions/);
-    assert.match(configuratorApp, /dish-combobox:focus-within/);
-    assert.match(configuratorApp, /dish-suggestions\[hidden\]/);
+    assert.match(planningAiApp, /data-planning-ai-app/);
+    assert.match(planningAiApp, /planningAi\.formTitle/);
+    assert.match(planningAiApp, /data-plan-submit/);
+    assert.match(planningAiApp, /data-plan-results/);
+    assert.match(planningAiApp, /planning-ai-app\.ts/);
     assert.match(settingsApp, /data-settings-app/);
     assert.match(settingsApp, /settings-app\.ts/);
     assert.match(historyApp, /data-history-app/);

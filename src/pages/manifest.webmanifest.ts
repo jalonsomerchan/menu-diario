@@ -39,9 +39,9 @@ export function GET() {
         url: withBasePath('dashboard'),
       },
       {
-        name: t('dashboard.configure'),
-        short_name: t('dashboard.configure'),
-        url: withBasePath('configurar'),
+        name: t('planningAi.title'),
+        short_name: t('planningAi.title'),
+        url: withBasePath('planificacion'),
       },
     ],
   };

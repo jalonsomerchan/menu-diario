@@ -23,18 +23,21 @@ describe('planning route smoke checks', () => {
     const planningI18n = readText('src/i18n/planning.ts');
     const header = readText('src/components/Header.astro');
     const configurator = readText('src/components/ConfiguratorApp.astro');
+    const planningAi = readText('src/components/PlanningAiApp.astro');
     const defaultRoute = readText('src/pages/planificacion.astro');
     const localizedRoute = readText('src/pages/[locale]/planificacion.astro');
 
-    assert.match(planningI18n, /Planificación/);
-    assert.match(planningI18n, /Planning/);
+    assert.match(planningI18n, /Plan IA/);
+    assert.match(planningI18n, /AI plan/);
     assert.match(planningI18n, /Record<Locale/);
     assert.match(header, /usePlanningTranslations/);
     assert.match(header, /tp\('nav'\)/);
-    assert.match(configurator, /usePlanningTranslations/);
-    assert.match(configurator, /tp\('title'\)/);
-    assert.match(configurator, /tp\('hint'\)/);
-    assert.match(defaultRoute, /tp\('title'\)/);
-    assert.match(localizedRoute, /tp\('title'\)/);
+    assert.match(header, /getLocalizedPath\('\/planificacion'/);
+    assert.match(configurator, /planningPath/);
+    assert.match(planningAi, /planningAi\.title/);
+    assert.match(planningAi, /planningAi\.formTitle/);
+    assert.match(planningAi, /planning-ai-app\.ts/);
+    assert.match(defaultRoute, /<PlanningAiApp/);
+    assert.match(localizedRoute, /<PlanningAiApp/);
   });
 });

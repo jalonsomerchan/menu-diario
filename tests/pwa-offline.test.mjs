@@ -46,7 +46,7 @@ describe('PWA offline support', () => {
     assert.match(manifest, /orientation: 'portrait-primary'/);
     assert.match(manifest, /shortcuts/);
     assert.match(manifest, /withBasePath\('dashboard'\)/);
-    assert.match(manifest, /withBasePath\('configurar'\)/);
+    assert.match(manifest, /withBasePath\('planificacion'\)/);
     assert.match(manifest, /purpose: 'any maskable'/);
   });
 
@@ -55,6 +55,7 @@ describe('PWA offline support', () => {
 
     assert.match(sw, /getBasePath/);
     assert.match(sw, /withBasePath/);
+    assert.match(sw, /withBasePath\('planificacion'\)/);
     assert.match(sw, /CACHE_VERSION/);
     assert.match(sw, /PRE_CACHE_URLS/);
     assert.match(sw, /request\.mode === 'navigate'/);

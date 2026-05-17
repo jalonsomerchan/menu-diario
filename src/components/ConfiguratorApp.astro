@@ -14,44 +14,21 @@ const t = useTranslations(locale);
 const tp = usePlanningTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
+const planningPath = getLocalizedPath('/planificacion', locale);
 const shoppingPath = getLocalizedPath('/compra', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
 
 const labels = {
   configMissing: t('menu.configMissing'),
   loading: t('dashboard.loading'),
-  configure: tp('title'),
-  configureHint: tp('hint'),
+  configure: t('dashboard.configure'),
+  configureHint: t('dashboard.configureHint'),
+  planning: tp('nav'),
   cancel: t('dashboard.cancel'),
   save: t('dashboard.save'),
   deleteDay: t('dashboard.deleteDay'),
   editDay: t('dashboard.editDay'),
   loadMoreDays: t('dashboard.nextSeven'),
-  aiLoading: t('ai.loading'),
-  aiError: t('ai.error'),
-  aiMissingConfig: t('ai.missingConfig'),
-  aiPendingTitle: t('ai.pendingMealsTitle'),
-  aiPendingDescription: t('ai.pendingMealsDescription'),
-  aiPendingHint: t('ai.pendingMealsHint'),
-  aiPendingGenerate: t('ai.pendingMealsGenerate'),
-  aiPendingEmpty: t('ai.pendingMealsEmpty'),
-  aiPendingNoCatalog: t('ai.pendingMealsNoCatalog'),
-  aiPendingNoResults: t('ai.pendingMealsNoResults'),
-  aiPendingApply: t('ai.pendingMealsApply'),
-  aiPendingAddDish: t('ai.pendingMealsAddDish'),
-  aiPendingApplied: t('ai.pendingMealsApplied'),
-  aiPendingDishAdded: t('ai.pendingMealsDishAdded'),
-  aiPendingMealLabel: t('ai.pendingMealsMealLabel'),
-  aiPendingReasonLabel: t('ai.pendingMealsReasonLabel'),
-  aiPendingDishOriginGlobal: t('ai.pendingMealsDishOriginGlobal'),
-  aiPendingDishOriginGroup: t('ai.pendingMealsDishOriginGroup'),
-  aiPendingDishOriginUser: t('ai.pendingMealsDishOriginUser'),
-  'ai.loading': t('ai.loading'),
-  'ai.error': t('ai.error'),
-  'ai.quotaExhausted': t('ai.quotaExhausted'),
-  'ai.missingConfig': t('ai.missingConfig'),
-  'ai.appCheckUnavailable': t('ai.appCheckUnavailable'),
-  'ai.invalidResponse': t('ai.invalidResponse'),
   breakfast: t('dashboard.breakfast'),
   lunch: t('dashboard.lunch'),
   dinner: t('dashboard.dinner'),
@@ -80,6 +57,7 @@ const labels = {
   offlineReadOnly: t('pwa.offlineReadOnly'),
   tuppers: tt('nav'),
   shopping: t('appNav.shopping'),
+  planningPath,
   homePath,
 };
 ---
@@ -89,24 +67,6 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>
-    <section class="dashboard-section app-panel ai-meals-panel" aria-labelledby="ai-pending-meals-title">
-      <div class="section-heading section-heading--simple ai-meals-panel__header">
-        <div>
-          <p class="menu-app__eyebrow">{labels.aiPendingHint}</p>
-          <h2 id="ai-pending-meals-title">{labels.aiPendingTitle}</h2>
-          <p>{labels.aiPendingDescription}</p>
-        </div>
-        <button class="button button--primary button--small" type="button" data-ai-generate>
-          {labels.aiPendingGenerate}
-        </button>
-      </div>
-      <p class="ai-meals-panel__helper" data-ai-helper>{labels.aiPendingHint}</p>
-      <div class="ai-meals-panel__status" data-ai-status role="status" aria-live="polite"></div>
-      <div class="ai-meals-panel__results" data-ai-results>
-        <p class="ai-meals-panel__empty">{labels.aiPendingEmpty}</p>
-      </div>
-    </section>
-
     <section id="configurador" class="dashboard-section app-panel configurator-planner-panel">
       <div class="section-heading section-heading--simple">
         <div>
@@ -114,6 +74,7 @@ const labels = {
           <h1>{labels.configure}</h1>
         </div>
         <div class="configurator-planner-panel__actions">
+          <a class="button button--primary button--small" href={planningPath}>{labels.planning}</a>
           <a class="button button--ghost button--small" href={shoppingPath}>{labels.shopping}</a>
           <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
         </div>
@@ -169,102 +130,6 @@ const labels = {
     gap: 0.9rem;
   }
 
-  .configurator-app .dish-combobox {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 2.85rem;
-    width: 100%;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface-raised);
-    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff, transparent 90%);
-    transition:
-      border-color var(--transition-base),
-      box-shadow var(--transition-base);
-  }
-
-  .configurator-app .dish-combobox:focus-within {
-    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 28%);
-    box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--color-primary), transparent 82%),
-      inset 0 1px 0 color-mix(in srgb, #fff, transparent 92%);
-  }
-
-  .configurator-app .dish-combobox input {
-    min-height: 3rem;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    padding: 0.72rem 0.9rem;
-    font-size: 1rem;
-    font-weight: 850;
-    outline: 0;
-  }
-
-  .configurator-app .dish-combobox__toggle {
-    display: grid;
-    min-width: 2.85rem;
-    place-items: center;
-    border: 0;
-    border-left: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 5%);
-    background: color-mix(in srgb, var(--color-surface-raised), var(--color-surface-soft) 42%);
-    color: var(--color-muted);
-    font-size: 0.9rem;
-    font-weight: 950;
-    transition:
-      background var(--transition-base),
-      color var(--transition-base);
-  }
-
-  .configurator-app .dish-combobox__toggle:hover,
-  .configurator-app .dish-combobox__toggle:focus-visible {
-    background: var(--color-primary-soft);
-    color: var(--color-primary);
-    outline: 0;
-  }
-
-  .configurator-app .dish-suggestions {
-    position: relative;
-    z-index: 20;
-    display: grid;
-    gap: 0.1rem;
-    width: 100%;
-    max-height: 11rem;
-    overflow-y: auto;
-    margin-top: 0.35rem;
-    border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 74%);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface-raised);
-    box-shadow: 0 16px 34px rgb(15 23 42 / 0.14);
-    padding: 0.3rem;
-  }
-
-  .configurator-app .dish-suggestions[hidden] {
-    display: none;
-  }
-
-  .configurator-app .dish-suggestions button {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    min-height: 2.55rem;
-    border: 0;
-    border-radius: var(--radius-md);
-    background: transparent;
-    color: var(--color-text);
-    padding: 0.58rem 0.72rem;
-    text-align: left;
-    font-size: 0.95rem;
-    font-weight: 800;
-  }
-
-  .configurator-app .dish-suggestions button:hover,
-  .configurator-app .dish-suggestions button:focus-visible {
-    background: var(--color-primary-soft);
-    color: var(--color-primary);
-    outline: 0;
-  }
-
   .configurator-app__load-more {
     display: flex;
     justify-content: center;
@@ -275,136 +140,6 @@ const labels = {
     min-width: min(100%, 14rem);
   }
 
-  .ai-meals-panel {
-    display: grid;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 68%);
-    background: var(--panel-background-strong);
-  }
-
-  .ai-meals-panel__header {
-    align-items: start;
-    gap: 1rem;
-  }
-
-  .ai-meals-panel__helper,
-  .ai-meals-panel__status {
-    margin: 0;
-    color: var(--color-muted);
-  }
-
-  .ai-meals-panel__status[data-variant='error'] {
-    color: var(--color-danger);
-  }
-
-  .ai-meals-panel__results {
-    display: grid;
-    gap: 0.85rem;
-  }
-
-  .ai-meals-panel__empty {
-    margin: 0;
-    border: 1px dashed color-mix(in srgb, var(--color-border-strong), var(--color-text) 10%);
-    border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface), var(--color-surface-soft) 62%);
-    padding: 0.95rem 1rem;
-    color: var(--color-muted);
-  }
-
-  .ai-meals-panel__card {
-    display: grid;
-    gap: 0.75rem;
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 18%);
-    border-radius: var(--radius-xl);
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-surface-raised), var(--color-primary-soft) 14%),
-      var(--color-surface-raised)
-    );
-    padding: 1rem;
-    box-shadow: var(--shadow-xs);
-  }
-
-  .ai-meals-panel__card header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.5rem;
-    align-items: center;
-  }
-
-  .ai-meals-panel__card h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 900;
-  }
-
-  .ai-meals-panel__badge {
-    border-radius: var(--radius-full);
-    background: var(--color-primary-soft);
-    color: var(--color-primary);
-    padding: 0.3rem 0.65rem;
-    font-size: 0.78rem;
-    font-weight: 900;
-  }
-
-  .ai-meals-panel__list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .ai-meals-panel__list li {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    border: 1px solid color-mix(in srgb, var(--color-border), transparent 2%);
-    border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 18%);
-    padding: 0.35rem 0.4rem 0.35rem 0.75rem;
-    box-shadow: var(--shadow-xs);
-    font-weight: 850;
-  }
-
-  .ai-meals-panel__dish-origin {
-    border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--color-surface), var(--color-border) 62%);
-    padding: 0.16rem 0.5rem;
-    color: var(--color-muted);
-    font-size: 0.72rem;
-    font-weight: 800;
-  }
-
-  .ai-meals-panel__dish-add {
-    display: inline-grid;
-    place-items: center;
-    width: 1.9rem;
-    height: 1.9rem;
-    border: 0;
-    border-radius: var(--radius-full);
-    background: var(--color-primary);
-    color: #fff;
-    font-size: 1.15rem;
-    font-weight: 900;
-    line-height: 1;
-    box-shadow: 0 10px 18px color-mix(in srgb, var(--color-primary), transparent 82%);
-  }
-
-  .ai-meals-panel__dish-add:hover,
-  .ai-meals-panel__dish-add:focus-visible {
-    background: var(--color-primary-hover);
-    outline: 0;
-  }
-
-  .ai-meals-panel__reason {
-    margin: 0;
-    color: var(--color-muted);
-    line-height: 1.55;
-  }
 </style>
 
 <script>
