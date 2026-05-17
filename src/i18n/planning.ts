@@ -2,13 +2,13 @@ import type { Locale } from '../config/site';
 
 const planningTranslations = {
   es: {
-    nav: 'Plan IA',
-    title: 'Planificación con IA',
+    nav: 'Planificador IA',
+    title: 'Planificador IA',
     hint: 'Configura el rango y deja que la IA proponga',
   },
   en: {
-    nav: 'AI plan',
-    title: 'AI planning',
+    nav: 'AI Planner',
+    title: 'AI Planner',
     hint: 'Set the range and let AI propose meals',
   },
 } satisfies Record<Locale, Record<'nav' | 'title' | 'hint', string>>;

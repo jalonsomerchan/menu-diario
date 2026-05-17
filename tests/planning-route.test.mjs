@@ -28,12 +28,13 @@ describe('planning route smoke checks', () => {
     const defaultRoute = readText('src/pages/planificacion.astro');
     const localizedRoute = readText('src/pages/[locale]/planificacion.astro');
 
-    assert.match(planningI18n, /Plan IA/);
-    assert.match(planningI18n, /AI plan/);
+    assert.match(planningI18n, /Planificador IA/);
+    assert.match(planningI18n, /AI Planner/);
     assert.match(planningI18n, /Record<Locale/);
-    assert.match(translations, /"appNav\.planning": "Planificación"/);
+    assert.match(translations, /"appNav\.planning": "Planificador"/);
     assert.match(header, /appNav\.planning/);
-    assert.match(header, /getLocalizedPath\('\/planificacion'/);
+    assert.match(header, /getLocalizedPath\('\/configurar'/);
+    assert.match(header, /tp\('nav'\)/);
     assert.match(configurator, /planningPath/);
     assert.match(planningAi, /planningAi\.title/);
     assert.match(planningAi, /planningAi\.formTitle/);

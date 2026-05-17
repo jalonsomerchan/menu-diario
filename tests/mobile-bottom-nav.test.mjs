@@ -18,7 +18,7 @@ describe('mobile bottom navigation', () => {
     assert.match(layout, /MobileBottomNav/);
     assert.match(layout, /mobile-bottom-nav\.css/);
     assert.match(component, /getLocalizedPath\('\/dashboard'/);
-    assert.match(component, /getLocalizedPath\('\/planificacion'/);
+    assert.match(component, /getLocalizedPath\('\/configurar'/);
     assert.match(component, /getLocalizedPath\('\/compra'/);
     assert.match(component, /getLocalizedPath\('\/tuppers'/);
     assert.match(component, /appNav\.planning/);

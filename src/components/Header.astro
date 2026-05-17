@@ -2,6 +2,7 @@
 import { Icon } from 'astro-icon/components';
 import Container from './Container.astro';
 import { localeLabels, siteConfig, type Locale } from '../config/site';
+import { usePlanningTranslations } from '../i18n/planning';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getAlternateLocales, getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -11,9 +12,11 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const tp = usePlanningTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
+const configurePath = getLocalizedPath('/configurar', locale);
 const planningPath = getLocalizedPath('/planificacion', locale);
 const shoppingPath = getLocalizedPath('/compra', locale);
 const summaryPath = getLocalizedPath('/resumen-semanal', locale);
@@ -32,13 +35,14 @@ const labels = {
 
 const primaryItems = [
   { href: dashboardPath, icon: 'mdi:home-outline', label: t('appNav.dashboard') },
-  { href: planningPath, icon: 'mdi:calendar-edit', label: t('appNav.planning') },
+  { href: configurePath, icon: 'mdi:calendar-edit', label: t('appNav.planning') },
   { href: tuppersPath, icon: 'mdi:food-takeout-box-outline', label: tt('nav') },
   { href: dishesPath, icon: 'mdi:silverware-fork-knife', label: t('appNav.dishes') },
   { href: shoppingPath, icon: 'mdi:cart-outline', label: t('appNav.shopping') },
 ] as const;
 
 const moreItems = [
+  { href: planningPath, icon: 'mdi:creation-outline', label: tp('nav') },
   { href: summaryPath, icon: 'mdi:chart-box-outline', label: t('appNav.summary') },
   { href: historyPath, icon: 'mdi:history', label: t('appNav.history') },
   { href: settingsPath, icon: 'mdi:cog-outline', label: t('appNav.settings') },
