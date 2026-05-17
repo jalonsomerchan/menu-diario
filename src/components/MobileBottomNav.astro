@@ -1,0 +1,82 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { Locale } from '../config/site';
+import { usePlanningTranslations } from '../i18n/planning';
+import { useTupperTranslations } from '../i18n/tuppers';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+import { stripBasePath } from '../utils/paths';
+
+interface Props {
+  locale: Locale;
+}
+
+type NavItem = {
+  href: string;
+  icon: string;
+  label: string;
+  match: string[];
+};
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const tp = usePlanningTranslations(locale);
+const tt = useTupperTranslations(locale);
+const currentPath = stripBasePath(Astro.url.pathname).replace(/\/$/, '') || '/';
+
+const items: NavItem[] = [
+  {
+    href: getLocalizedPath('/dashboard', locale),
+    icon: 'mdi:home-outline',
+    label: t('appNav.dashboard'),
+    match: ['/dashboard'],
+  },
+  {
+    href: getLocalizedPath('/configurar', locale),
+    icon: 'mdi:calendar-edit',
+    label: tp('nav'),
+    match: ['/configurar', '/planificacion'],
+  },
+  {
+    href: getLocalizedPath('/mis-platos', locale),
+    icon: 'mdi:silverware-fork-knife',
+    label: t('appNav.dishes'),
+    match: ['/mis-platos'],
+  },
+  {
+    href: getLocalizedPath('/tuppers', locale),
+    icon: 'mdi:food-takeout-box-outline',
+    label: tt('nav'),
+    match: ['/tuppers'],
+  },
+  {
+    href: getLocalizedPath('/compra', locale),
+    icon: 'mdi:cart-outline',
+    label: t('appNav.shopping'),
+    match: ['/compra'],
+  },
+];
+
+function isActive(item: NavItem) {
+  return item.match.some((path) => currentPath === path || currentPath.endsWith(path));
+}
+---
+
+<nav class="mobile-bottom-nav" aria-label={t('nav.main')}>
+  <ul class="mobile-bottom-nav__list">
+    {items.map((item) => {
+      const active = isActive(item);
+      return (
+        <li>
+          <a
+            class:list={['mobile-bottom-nav__link', { 'mobile-bottom-nav__link--active': active }]}
+            href={item.href}
+            aria-current={active ? 'page' : undefined}
+          >
+            <Icon name={item.icon} aria-hidden="true" />
+            <span>{item.label}</span>
+          </a>
+        </li>
+      );
+    })}
+  </ul>
+</nav>
