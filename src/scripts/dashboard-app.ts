@@ -124,6 +124,34 @@ if (root) {
     return renderMealSummary(day.meals[meal]);
   }
 
+  function collectDayNotes(day: DailyMenu) {
+    const dayNotes = [day.notes, day.skipped ? day.skipNote : '']
+      .map((note) => note?.trim())
+      .filter((note): note is string => Boolean(note));
+    const mealNotes = getEnabledMeals()
+      .map((meal) => {
+        const note = day.meals[meal]?.note?.trim();
+        return note ? `${mealLabel(meal)}: ${note}` : '';
+      })
+      .filter(Boolean);
+
+    return [...dayNotes, ...mealNotes];
+  }
+
+  function renderDayNotesHtml(day: DailyMenu) {
+    const notes = collectDayNotes(day);
+    if (!notes.length) return '';
+
+    return `
+      <section class="planner-day-card__notes" aria-label="${escapeHtml(labels.notes)}">
+        <span class="planner-day-card__notes-label">${escapeHtml(labels.notes)}</span>
+        <ul>
+          ${notes.map((note) => `<li>${escapeHtml(note)}</li>`).join('')}
+        </ul>
+      </section>
+    `;
+  }
+
   function getNextSevenDates() {
     return getUpcomingDates(new Date(), 1, 7);
   }
@@ -226,6 +254,7 @@ if (root) {
           actionAttr: 'data-quick-edit',
           actionStateAttr: disabledAttr,
           summariesHtml: summaries,
+          notesHtml: renderDayNotesHtml(day),
         });
       })
       .join('');
