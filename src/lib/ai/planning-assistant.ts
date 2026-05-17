@@ -6,6 +6,7 @@ const maxPlanningMeals = 42;
 const maxCatalogDishes = 84;
 const maxTasteProfileDishes = 18;
 const maxSuggestedDishes = 5;
+const maxFoodIntolerancesPromptLength = 500;
 
 export type PlanningRecommendationMode = 'own' | 'new' | 'mix';
 
@@ -52,6 +53,7 @@ export function buildPlanningAssistantPrompt(input: {
   days: Record<string, Partial<DailyMenu> | undefined>;
   dishes: Dish[];
   mealLabels: Record<MealSlot, string>;
+  foodIntolerances?: string;
 }) {
   const recommendationCount = clampRecommendationCount(input.recommendationCount);
   const pendingMeals = input.pendingMeals
@@ -59,29 +61,13 @@ export function buildPlanningAssistantPrompt(input: {
     .map((slot) => `- ${slot.dayKey} | ${slot.meal} | ${input.mealLabels[slot.meal] ?? slot.meal}`)
     .join('\n');
   const currentMeals = describeCurrentMeals(input.days, input.pendingMeals, input.mealLabels);
-  const visibleCatalog = getPlanningCatalogDishes(input.dishes, input.mode);
-  const catalogSection = visibleCatalog.length
-    ? visibleCatalog
-        .slice(0, maxCatalogDishes)
-        .map((dish) => {
-          const details = [
-            `scope:${dish.scope}`,
-            dish.favorite ? 'favorite' : '',
-            dish.quickTags?.length ? `tags:${dish.quickTags.join(',')}` : '',
-            typeof dish.timesUsed === 'number' ? `timesUsed:${dish.timesUsed}` : '',
-          ]
-            .filter(Boolean)
-            .join(' | ');
-
-          return details ? `- ${dish.name} | ${details}` : `- ${dish.name}`;
-        })
-        .join('\n')
-    : '- none';
+  const catalogSection = describeCatalog(input.dishes, input.mode);
   const knownNames = getVisibleDishes(input.dishes)
     .slice(0, maxCatalogDishes)
     .map((dish) => `- ${dish.name}`)
     .join('\n');
   const tasteProfile = getTasteProfile(input.dishes);
+  const foodIntolerances = describeFoodIntolerances(input.foodIntolerances);
 
   return [
     `Locale: ${input.locale}.`,
@@ -89,19 +75,23 @@ export function buildPlanningAssistantPrompt(input: {
     `Recommendation mode: ${describeMode(input.mode)}.`,
     `Return up to ${recommendationCount} dishes per slot.`,
     'Prioritize practical, varied, balanced dishes that make sense for everyday home planning.',
-    'Avoid suggesting the same dish again and again across nearby slots when possible.',
-    'Never include private data, names, emails or invite codes.',
+    'Avoid repeating the same dish across nearby slots when possible.',
+    foodIntolerances
+      ? 'Use the food restrictions as hard constraints and avoid dishes that conflict with them.'
+      : 'No food restrictions were provided.',
     getModeRules(input.mode),
     `Return JSON with shape {"recommendations":[{"dayKey":"YYYY-MM-DD","meal":"breakfast|lunch|dinner","dishes":[{"name":"Dish","isNew":true}],"reason":"short string"}]}.`,
     'Pending slots to plan:',
     pendingMeals || '- none',
-    'Already planned meals in this range (use as context to avoid repetition):',
+    'Already planned meals in this range:',
     currentMeals || '- none',
+    'Food restrictions:',
+    foodIntolerances || '- none',
     'Taste profile inferred from saved dishes:',
     tasteProfile || '- none',
     'Saved dishes available to reuse when allowed:',
     catalogSection,
-    'Known dish names already in the catalog (do not repeat them as new dishes):',
+    'Known dish names already in the catalog:',
     knownNames || '- none',
   ].join('\n\n');
 }
@@ -112,10 +102,7 @@ export function isPlanningRecommendationResponse(value: unknown): value is Plann
   }
 
   return (value as { recommendations: unknown[] }).recommendations.every((entry) => {
-    if (!entry || typeof entry !== 'object') {
-      return false;
-    }
-
+    if (!entry || typeof entry !== 'object') return false;
     const candidate = entry as Partial<PlanningRecommendationResponseEntry>;
     return (
       typeof candidate.dayKey === 'string' &&
@@ -152,9 +139,7 @@ export function assignPlanningRecommendations(input: {
 
   return input.response.recommendations.flatMap((entry) => {
     const slotKey = getSlotKey(entry.dayKey, entry.meal);
-    if (!pendingKeys.has(slotKey) || seenSlots.has(slotKey)) {
-      return [];
-    }
+    if (!pendingKeys.has(slotKey) || seenSlots.has(slotKey)) return [];
 
     const suggestions = [
       ...new Map(
@@ -165,45 +150,50 @@ export function assignPlanningRecommendations(input: {
       ).values(),
     ].slice(0, limit);
 
-    if (suggestions.length === 0) {
-      return [];
-    }
-
+    if (suggestions.length === 0) return [];
     seenSlots.add(slotKey);
-    return [
-      {
-        dayKey: entry.dayKey,
-        meal: entry.meal,
-        dishes: suggestions,
-        reason: entry.reason.trim(),
-      } satisfies PlanningRecommendation,
-    ];
+    return [{ dayKey: entry.dayKey, meal: entry.meal, dishes: suggestions, reason: entry.reason.trim() }];
   });
 }
 
 export function getPlanningCatalogDishes(dishes: Dish[], mode: PlanningRecommendationMode) {
   const visible = getVisibleDishes(dishes);
-  if (mode === 'new') {
-    return [];
-  }
-
-  if (mode === 'own') {
-    return visible.filter((dish) => !dish.isGlobal && dish.scope !== 'global');
-  }
-
+  if (mode === 'new') return [];
+  if (mode === 'own') return visible.filter((dish) => !dish.isGlobal && dish.scope !== 'global');
   return visible;
 }
 
 export function hasPlanningCatalogForMode(dishes: Dish[], mode: PlanningRecommendationMode) {
-  if (mode === 'new') {
-    return true;
-  }
-
+  if (mode === 'new') return true;
   return getPlanningCatalogDishes(dishes, mode).length > 0;
+}
+
+function describeCatalog(dishes: Dish[], mode: PlanningRecommendationMode) {
+  const visibleCatalog = getPlanningCatalogDishes(dishes, mode);
+  if (!visibleCatalog.length) return '- none';
+
+  return visibleCatalog
+    .slice(0, maxCatalogDishes)
+    .map((dish) => {
+      const details = [
+        `scope:${dish.scope}`,
+        dish.favorite ? 'favorite' : '',
+        dish.quickTags?.length ? `tags:${dish.quickTags.join(',')}` : '',
+        typeof dish.timesUsed === 'number' ? `timesUsed:${dish.timesUsed}` : '',
+      ]
+        .filter(Boolean)
+        .join(' | ');
+      return details ? `- ${dish.name} | ${details}` : `- ${dish.name}`;
+    })
+    .join('\n');
 }
 
 function getVisibleDishes(dishes: Dish[]) {
   return dishes.filter((dish) => !dish.archived && !dish.blocked);
+}
+
+function describeFoodIntolerances(foodIntolerances = '') {
+  return foodIntolerances.trim().slice(0, maxFoodIntolerancesPromptLength);
 }
 
 function describeCurrentMeals(
@@ -216,20 +206,12 @@ function describeCurrentMeals(
   return dateKeys
     .flatMap((dayKey) => {
       const day = normalizeDay(days[dayKey]);
-      if (day.skipped) {
-        return [`- ${dayKey} | whole day skipped`];
-      }
+      if (day.skipped) return [`- ${dayKey} | whole day skipped`];
 
       return (['breakfast', 'lunch', 'dinner'] as MealSlot[]).flatMap((meal) => {
         const mealState = day.meals[meal];
-        if (mealState.skipped) {
-          return [`- ${dayKey} | ${mealLabels[meal] ?? meal} | skipped`];
-        }
-
-        if (mealState.items.length === 0) {
-          return [];
-        }
-
+        if (mealState.skipped) return [`- ${dayKey} | ${mealLabels[meal] ?? meal} | skipped`];
+        if (mealState.items.length === 0) return [];
         return [`- ${dayKey} | ${mealLabels[meal] ?? meal} | ${mealState.items.join(', ')}`];
       });
     })
@@ -239,10 +221,7 @@ function describeCurrentMeals(
 function getTasteProfile(dishes: Dish[]) {
   return getVisibleDishes(dishes)
     .sort((left, right) => {
-      if (Boolean(left.favorite) !== Boolean(right.favorite)) {
-        return left.favorite ? -1 : 1;
-      }
-
+      if (Boolean(left.favorite) !== Boolean(right.favorite)) return left.favorite ? -1 : 1;
       return (right.timesUsed ?? 0) - (left.timesUsed ?? 0) || left.name.localeCompare(right.name);
     })
     .slice(0, maxTasteProfileDishes)
@@ -262,15 +241,9 @@ function getTasteProfile(dishes: Dish[]) {
 }
 
 function getModeRules(mode: PlanningRecommendationMode) {
-  if (mode === 'own') {
-    return 'Mode rule: use only exact names from the saved own dishes catalog. Do not invent new dishes and do not use global-only dishes.';
-  }
-
-  if (mode === 'new') {
-    return 'Mode rule: invent genuinely new dishes only. Every returned dish must be new, absent from the known catalog names, and you must not reuse or rename any saved dish.';
-  }
-
-  return 'Mode rule: you may mix exact saved dish names with genuinely new dishes, but clearly mark new dishes with isNew=true.';
+  if (mode === 'own') return 'Mode rule: use only exact names from the saved own dishes catalog. Do not invent new dishes and do not use global-only dishes.';
+  if (mode === 'new') return 'Mode rule: invent genuinely new dishes only. Every returned dish must be new and absent from known catalog names.';
+  return 'Mode rule: you may mix exact saved dish names with genuinely new dishes, but mark new dishes with isNew=true.';
 }
 
 function describeMode(mode: PlanningRecommendationMode) {
@@ -288,60 +261,24 @@ function mapSuggestedDish(
 ) {
   const cleanName = cleanDishName(dish.name);
   const normalizedName = normalizeDishName(cleanName);
-
-  if (normalizedName.length < 2) {
-    return null;
-  }
+  if (normalizedName.length < 2) return null;
 
   const ownMatch = ownByName.get(normalizedName);
   const mixedMatch = mixedByName.get(normalizedName);
 
-  if (mode === 'own') {
-    if (!ownMatch) return null;
-    return {
-      name: ownMatch.name,
-      isNew: false,
-      scope: ownMatch.scope,
-      isGlobal: ownMatch.isGlobal,
-    } satisfies PlanningRecommendationDish;
-  }
+  if (mode === 'own') return ownMatch ? mapCatalogDish(ownMatch) : null;
+  if (mode === 'new') return dish.isNew === true && !knownNames.has(normalizedName) ? mapNewDish(cleanName) : null;
+  if (mixedMatch && dish.isNew !== true) return mapCatalogDish(mixedMatch);
+  if (!knownNames.has(normalizedName)) return mapNewDish(cleanName);
+  return mixedMatch ? mapCatalogDish(mixedMatch) : null;
+}
 
-  if (mode === 'new') {
-    if (dish.isNew !== true || knownNames.has(normalizedName)) return null;
-    return {
-      name: cleanName,
-      isNew: true,
-      scope: 'new',
-      isGlobal: false,
-    } satisfies PlanningRecommendationDish;
-  }
+function mapCatalogDish(dish: Dish): PlanningRecommendationDish {
+  return { name: dish.name, isNew: false, scope: dish.scope, isGlobal: dish.isGlobal };
+}
 
-  if (mixedMatch && dish.isNew !== true) {
-    return {
-      name: mixedMatch.name,
-      isNew: false,
-      scope: mixedMatch.scope,
-      isGlobal: mixedMatch.isGlobal,
-    } satisfies PlanningRecommendationDish;
-  }
-
-  if (!knownNames.has(normalizedName)) {
-    return {
-      name: cleanName,
-      isNew: true,
-      scope: 'new',
-      isGlobal: false,
-    } satisfies PlanningRecommendationDish;
-  }
-
-  return mixedMatch
-    ? {
-        name: mixedMatch.name,
-        isNew: false,
-        scope: mixedMatch.scope,
-        isGlobal: mixedMatch.isGlobal,
-      }
-    : null;
+function mapNewDish(name: string): PlanningRecommendationDish {
+  return { name, isNew: true, scope: 'new', isGlobal: false };
 }
 
 function clampRecommendationCount(value: number) {
