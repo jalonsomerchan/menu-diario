@@ -2,7 +2,7 @@ import { defaultLocale } from '../config/site';
 import { getLocalizedPath } from '../i18n/ui';
 import { getBasePath, withBasePath } from '../utils/paths';
 
-// Keep app shell routes and static assets explicit so route smoke checks catch missing entries.
+// Keep appShellRoutes and staticAssets explicit so route smoke checks catch missing entries.
 export function GET() {
   const basePath = getBasePath();
   const preCacheUrls = [
