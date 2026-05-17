@@ -1,5 +1,5 @@
 import { cleanDishName, normalizeDishName } from '../dishes/helpers.mjs';
-import { normalizeDay } from '../menu/normalizers';
+import { normalizeDay } from '../menu/normalizers.ts';
 import type { DailyMenu, Dish, MealSlot } from '../menu/types';
 
 const maxPlanningMeals = 42;
@@ -183,6 +183,10 @@ export function assignPlanningRecommendations(input: {
 
 export function getPlanningCatalogDishes(dishes: Dish[], mode: PlanningRecommendationMode) {
   const visible = getVisibleDishes(dishes);
+  if (mode === 'new') {
+    return [];
+  }
+
   if (mode === 'own') {
     return visible.filter((dish) => !dish.isGlobal && dish.scope !== 'global');
   }
@@ -263,7 +267,7 @@ function getModeRules(mode: PlanningRecommendationMode) {
   }
 
   if (mode === 'new') {
-    return 'Mode rule: invent genuinely new dishes only. Every returned dish must be new and absent from the known catalog names.';
+    return 'Mode rule: invent genuinely new dishes only. Every returned dish must be new, absent from the known catalog names, and you must not reuse or rename any saved dish.';
   }
 
   return 'Mode rule: you may mix exact saved dish names with genuinely new dishes, but clearly mark new dishes with isNew=true.';
