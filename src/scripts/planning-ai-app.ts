@@ -52,11 +52,12 @@ if (root) {
   const form = root.querySelector<HTMLFormElement>('[data-plan-form]');
   const startInput = root.querySelector<HTMLInputElement>('[data-plan-start]');
   const endInput = root.querySelector<HTMLInputElement>('[data-plan-end]');
-  const countSelect = root.querySelector<HTMLSelectElement>('[data-plan-count]');
+  const countInput = root.querySelector<HTMLInputElement>('[data-plan-count]');
   const submitButton = root.querySelector<HTMLButtonElement>('[data-plan-submit]');
   const pendingContainer = root.querySelector<HTMLElement>('[data-plan-pending]');
   const resultsContainer = root.querySelector<HTMLElement>('[data-plan-results]');
   const aiStatus = root.querySelector<HTMLElement>('[data-ai-status]');
+  const summaryContainer = root.querySelector<HTMLElement>('[data-plan-summary]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -129,6 +130,28 @@ if (root) {
     if (endInput && !endInput.value) endInput.value = range.end;
   }
 
+  function applyPresetRange(totalDays: number) {
+    if (!startInput || !endInput) return;
+    startInput.value = getDateOffset(new Date(), 1);
+    endInput.value = getDateOffset(new Date(), totalDays);
+    renderCurrentState();
+  }
+
+  function syncPresetButtons() {
+    if (!startInput?.value || !endInput?.value) {
+      root.querySelectorAll<HTMLButtonElement>('[data-plan-preset]').forEach((button) => {
+        button.setAttribute('aria-pressed', 'false');
+      });
+      return;
+    }
+
+    const matchingDays = getDatesInRange(startInput.value, endInput.value).length;
+    root.querySelectorAll<HTMLButtonElement>('[data-plan-preset]').forEach((button) => {
+      const isSelected = Number(button.dataset.planPreset ?? 0) === matchingDays;
+      button.setAttribute('aria-pressed', String(isSelected));
+    });
+  }
+
   function applyProfileMeals(enabledMeals: MealSlot[]) {
     if (syncedMealsFromProfile) return;
     root.querySelectorAll<HTMLInputElement>('[data-plan-meal]').forEach((input) => {
@@ -151,7 +174,21 @@ if (root) {
   }
 
   function getSelectedCount() {
-    return Math.max(1, Math.min(5, Number(countSelect?.value ?? 3)));
+    return Math.max(1, Math.min(5, Number(countInput?.value ?? 3)));
+  }
+
+  function setSelectedCount(value: number) {
+    const normalized = Math.max(1, Math.min(5, value));
+    if (countInput) {
+      countInput.value = String(normalized);
+    }
+
+    root.querySelectorAll<HTMLButtonElement>('[data-plan-count-option]').forEach((button) => {
+      const isSelected = Number(button.dataset.planCountOption) === normalized;
+      button.setAttribute('aria-pressed', String(isSelected));
+    });
+
+    renderCurrentState();
   }
 
   function readRequestFromForm(): PlanningRequest | null {
@@ -203,6 +240,12 @@ if (root) {
 
   function mealLabel(meal: MealSlot) {
     return labels[meal] ?? meal;
+  }
+
+  function modeLabel(mode: PlanningRecommendationMode) {
+    if (mode === 'own') return labels.modeOwn;
+    if (mode === 'new') return labels.modeNew;
+    return labels.modeMix;
   }
 
   function getDishOriginLabel(dish: PlanningRecommendation['dishes'][number]) {
@@ -313,7 +356,31 @@ if (root) {
       .join('');
   }
 
+  function renderRequestSummary() {
+    if (!summaryContainer) return;
+
+    const request = readRequestFromForm();
+    if (!request) {
+      summaryContainer.innerHTML = '';
+      return;
+    }
+
+    const dayCount = request.dates.length;
+    const mealCount = request.meals.length;
+    const dayLabel = dayCount === 1 ? labels.daysSingular : labels.daysPlural;
+    const mealLabelText = mealCount === 1 ? labels.mealsSingular : labels.mealsPlural;
+
+    summaryContainer.innerHTML = `
+      <div class="planning-ai-request-pill"><span>${escapeHtml(labels.summaryRange)}</span>${escapeHtml(`${dayCount} ${dayLabel}`)}</div>
+      <div class="planning-ai-request-pill"><span>${escapeHtml(labels.summaryMeals)}</span>${escapeHtml(`${mealCount} ${mealLabelText}`)}</div>
+      <div class="planning-ai-request-pill"><span>${escapeHtml(labels.summaryMode)}</span>${escapeHtml(modeLabel(request.mode))}</div>
+      <div class="planning-ai-request-pill"><span>${escapeHtml(labels.summaryIdeas)}</span>${escapeHtml(`${request.recommendationCount} ${labels.ideasSuffix}`)}</div>
+    `;
+  }
+
   function renderCurrentState() {
+    syncPresetButtons();
+    renderRequestSummary();
     renderPendingMeals();
     renderResults();
   }
@@ -447,6 +514,7 @@ if (root) {
   }
 
   applyDefaultRange();
+  setSelectedCount(getSelectedCount());
 
   if (!hasFirebaseConfig()) {
     setVisible(false);
@@ -532,6 +600,24 @@ if (root) {
           } finally {
             setBusy(false);
           }
+        });
+
+        root.querySelectorAll<HTMLButtonElement>('[data-plan-preset]').forEach((button) => {
+          button.addEventListener('click', () => {
+            applyPresetRange(Number(button.dataset.planPreset ?? 7));
+          });
+        });
+
+        root.querySelectorAll<HTMLButtonElement>('[data-plan-count-option]').forEach((button) => {
+          button.addEventListener('click', () => {
+            setSelectedCount(Number(button.dataset.planCountOption ?? 3));
+          });
+        });
+
+        startInput?.addEventListener('input', () => renderCurrentState());
+        endInput?.addEventListener('input', () => renderCurrentState());
+        root.querySelectorAll<HTMLInputElement>('[data-plan-meal], [data-plan-mode]').forEach((input) => {
+          input.addEventListener('change', () => renderCurrentState());
         });
 
         resultsContainer?.addEventListener('click', (event) => {

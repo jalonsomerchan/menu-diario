@@ -21,10 +21,15 @@ const labels = {
   description: t('planningAi.description'),
   formTitle: t('planningAi.formTitle'),
   formDescription: t('planningAi.formDescription'),
+  quickTitle: t('planningAi.quickTitle'),
+  presetShort: t('planningAi.presetShort'),
+  presetWeek: t('planningAi.presetWeek'),
+  presetLong: t('planningAi.presetLong'),
   start: t('planningAi.start'),
   end: t('planningAi.end'),
   meals: t('planningAi.meals'),
   recommendationCount: t('planningAi.recommendationCount'),
+  recommendationHint: t('planningAi.recommendationHint'),
   mode: t('planningAi.mode'),
   modeOwn: t('planningAi.modeOwn'),
   modeOwnHint: t('planningAi.modeOwnHint'),
@@ -32,6 +37,16 @@ const labels = {
   modeNewHint: t('planningAi.modeNewHint'),
   modeMix: t('planningAi.modeMix'),
   modeMixHint: t('planningAi.modeMixHint'),
+  summaryTitle: t('planningAi.summaryTitle'),
+  summaryRange: t('planningAi.summaryRange'),
+  summaryMeals: t('planningAi.summaryMeals'),
+  summaryMode: t('planningAi.summaryMode'),
+  summaryIdeas: t('planningAi.summaryIdeas'),
+  daysSingular: t('planningAi.daysSingular'),
+  daysPlural: t('planningAi.daysPlural'),
+  mealsSingular: t('planningAi.mealsSingular'),
+  mealsPlural: t('planningAi.mealsPlural'),
+  ideasSuffix: t('planningAi.ideasSuffix'),
   submit: t('planningAi.submit'),
   pendingTitle: t('planningAi.pendingTitle'),
   pendingDescription: t('planningAi.pendingDescription'),
@@ -126,55 +141,91 @@ const labels = {
         </div>
 
         <form class="planning-ai-form" data-plan-form>
-          <div class="planning-ai-form__dates">
-            <label>
-              <span>{labels.start}</span>
-              <input type="date" data-plan-start />
-            </label>
-            <label>
-              <span>{labels.end}</span>
-              <input type="date" data-plan-end />
-            </label>
-          </div>
+          <section class="planning-ai-section-card">
+            <div class="planning-ai-section-heading">
+              <h3>{labels.quickTitle}</h3>
+            </div>
 
-          <fieldset class="planning-ai-form__meals">
-            <legend>{labels.meals}</legend>
-            <label><input type="checkbox" value="breakfast" data-plan-meal /> {labels.breakfast}</label>
-            <label><input type="checkbox" value="lunch" data-plan-meal /> {labels.lunch}</label>
-            <label><input type="checkbox" value="dinner" data-plan-meal /> {labels.dinner}</label>
-          </fieldset>
+            <div class="planning-ai-preset-row" role="group" aria-label={labels.quickTitle}>
+              <button class="planning-ai-chip-button" type="button" data-plan-preset="3">{labels.presetShort}</button>
+              <button class="planning-ai-chip-button" type="button" data-plan-preset="7">{labels.presetWeek}</button>
+              <button class="planning-ai-chip-button" type="button" data-plan-preset="14">{labels.presetLong}</button>
+            </div>
 
-          <label>
-            <span>{labels.recommendationCount}</span>
-            <select data-plan-count>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3" selected>3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-            </select>
-          </label>
+            <div class="planning-ai-form__dates">
+              <label>
+                <span>{labels.start}</span>
+                <input type="date" data-plan-start />
+              </label>
+              <label>
+                <span>{labels.end}</span>
+                <input type="date" data-plan-end />
+              </label>
+            </div>
+          </section>
 
-          <fieldset class="planning-ai-form__modes">
-            <legend>{labels.mode}</legend>
-            <label class="planning-ai-mode-card">
-              <input type="radio" name="planning-mode" value="own" data-plan-mode />
-              <strong>{labels.modeOwn}</strong>
-              <span>{labels.modeOwnHint}</span>
-            </label>
-            <label class="planning-ai-mode-card">
-              <input type="radio" name="planning-mode" value="new" data-plan-mode />
-              <strong>{labels.modeNew}</strong>
-              <span>{labels.modeNewHint}</span>
-            </label>
-            <label class="planning-ai-mode-card">
-              <input type="radio" name="planning-mode" value="mix" data-plan-mode checked />
-              <strong>{labels.modeMix}</strong>
-              <span>{labels.modeMixHint}</span>
-            </label>
-          </fieldset>
+          <section class="planning-ai-section-card">
+            <div class="planning-ai-section-heading">
+              <h3>{labels.meals}</h3>
+            </div>
 
-          <button class="button button--primary" type="submit" data-plan-submit>{labels.submit}</button>
+            <fieldset class="planning-ai-form__meals">
+              <legend class="sr-only">{labels.meals}</legend>
+              <label class="planning-ai-toggle-card"><input type="checkbox" value="breakfast" data-plan-meal /> <span>{labels.breakfast}</span></label>
+              <label class="planning-ai-toggle-card"><input type="checkbox" value="lunch" data-plan-meal /> <span>{labels.lunch}</span></label>
+              <label class="planning-ai-toggle-card"><input type="checkbox" value="dinner" data-plan-meal /> <span>{labels.dinner}</span></label>
+            </fieldset>
+          </section>
+
+          <section class="planning-ai-section-card">
+            <div class="planning-ai-section-heading">
+              <h3>{labels.recommendationCount}</h3>
+              <p>{labels.recommendationHint}</p>
+            </div>
+
+            <div class="planning-ai-count-row" role="group" aria-label={labels.recommendationCount}>
+              <button class="planning-ai-chip-button" type="button" data-plan-count-option="1">1</button>
+              <button class="planning-ai-chip-button" type="button" data-plan-count-option="2">2</button>
+              <button class="planning-ai-chip-button" type="button" data-plan-count-option="3" aria-pressed="true">3</button>
+              <button class="planning-ai-chip-button" type="button" data-plan-count-option="4">4</button>
+              <button class="planning-ai-chip-button" type="button" data-plan-count-option="5">5</button>
+            </div>
+            <input type="hidden" value="3" data-plan-count />
+          </section>
+
+          <section class="planning-ai-section-card">
+            <div class="planning-ai-section-heading">
+              <h3>{labels.mode}</h3>
+            </div>
+
+            <fieldset class="planning-ai-form__modes">
+              <legend class="sr-only">{labels.mode}</legend>
+              <label class="planning-ai-mode-card">
+                <input type="radio" name="planning-mode" value="own" data-plan-mode />
+                <strong>{labels.modeOwn}</strong>
+                <span>{labels.modeOwnHint}</span>
+              </label>
+              <label class="planning-ai-mode-card">
+                <input type="radio" name="planning-mode" value="new" data-plan-mode />
+                <strong>{labels.modeNew}</strong>
+                <span>{labels.modeNewHint}</span>
+              </label>
+              <label class="planning-ai-mode-card">
+                <input type="radio" name="planning-mode" value="mix" data-plan-mode checked />
+                <strong>{labels.modeMix}</strong>
+                <span>{labels.modeMixHint}</span>
+              </label>
+            </fieldset>
+          </section>
+
+          <section class="planning-ai-request-card" aria-live="polite">
+            <div class="planning-ai-section-heading">
+              <h3>{labels.summaryTitle}</h3>
+            </div>
+            <div class="planning-ai-request-summary" data-plan-summary></div>
+          </section>
+
+          <button class="button button--primary planning-ai-submit" type="submit" data-plan-submit>{labels.submit}</button>
         </form>
       </section>
 
@@ -270,6 +321,33 @@ const labels = {
     gap: 1rem;
   }
 
+  .planning-ai-section-card,
+  .planning-ai-request-card {
+    display: grid;
+    gap: 0.9rem;
+    padding: var(--surface-padding-tight);
+    padding-bottom: max(var(--surface-padding-tight), 1rem);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+  }
+
+  .planning-ai-section-heading {
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .planning-ai-section-heading h3 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+
+  .planning-ai-section-heading p {
+    margin: 0;
+  }
+
   .planning-ai-form__dates {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -280,7 +358,7 @@ const labels = {
     color: var(--color-text);
   }
 
-  .planning-ai-form label span {
+  .planning-ai-form label:not(.planning-ai-toggle-card):not(.planning-ai-mode-card) span {
     display: inline-flex;
     margin-bottom: 0.45rem;
     line-height: var(--surface-copy-line-height);
@@ -294,14 +372,40 @@ const labels = {
   .planning-ai-form__meals {
     padding: 0;
     border: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
   }
 
-  .planning-ai-form__meals label {
+  .planning-ai-toggle-card {
     display: flex;
-    gap: 0.55rem;
+    min-width: 0;
     align-items: center;
-    font-weight: 700;
-    color: var(--color-muted);
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0.85rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface), transparent 3%);
+    color: var(--color-text);
+    font-weight: 800;
+    text-align: center;
+    transition:
+      border-color var(--transition-base),
+      background var(--transition-base),
+      color var(--transition-base),
+      transform var(--transition-base);
+  }
+
+  .planning-ai-toggle-card input {
+    margin: 0;
+    flex: 0 0 auto;
+  }
+
+  .planning-ai-toggle-card:has(input:checked) {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 30%);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 10%);
+    color: var(--color-primary);
   }
 
   .planning-ai-form__modes {
@@ -309,9 +413,41 @@ const labels = {
     border: 0;
   }
 
+  .planning-ai-preset-row,
+  .planning-ai-count-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .planning-ai-chip-button {
+    display: inline-flex;
+    min-height: 2.8rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.72rem 0.95rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-surface), transparent 3%);
+    color: var(--color-text);
+    font-weight: 850;
+    line-height: 1;
+    transition:
+      border-color var(--transition-base),
+      background var(--transition-base),
+      color var(--transition-base),
+      transform var(--transition-base);
+  }
+
+  .planning-ai-chip-button[aria-pressed='true'] {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 28%);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+
   .planning-ai-mode-card {
     display: grid;
-    gap: 0.3rem;
+    gap: 0.35rem;
     min-height: auto;
     padding: var(--surface-padding-tight) var(--surface-padding);
     padding-bottom: max(var(--surface-padding-tight), 1rem);
@@ -327,6 +463,7 @@ const labels = {
 
   .planning-ai-mode-card strong {
     font-size: 1rem;
+    line-height: 1.2;
   }
 
   .planning-ai-mode-card span {
@@ -348,6 +485,30 @@ const labels = {
     margin: 0;
     color: var(--color-muted);
     font-weight: 650;
+  }
+
+  .planning-ai-request-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  .planning-ai-request-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    min-height: 2.3rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
+    color: var(--color-text);
+    font-size: 0.84rem;
+    font-weight: 800;
+  }
+
+  .planning-ai-request-pill span {
+    color: var(--color-muted);
+    font-weight: 700;
   }
 
   .planning-ai-pending-card,
@@ -441,6 +602,7 @@ const labels = {
   .planning-ai-results-status {
     color: var(--color-muted);
     font-weight: 700;
+    min-height: 1.3rem;
   }
 
   .planning-ai-results-status[data-variant='error'] {
@@ -461,6 +623,14 @@ const labels = {
   @media (max-width: 539px) {
     .planning-ai-form__dates {
       grid-template-columns: 1fr;
+    }
+
+    .planning-ai-form__meals {
+      grid-template-columns: 1fr;
+    }
+
+    .planning-ai-submit {
+      width: 100%;
     }
   }
 </style>
