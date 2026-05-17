@@ -97,6 +97,7 @@ const labels = {
       <h1>{labels.todayForLunch}</h1>
       <ul data-today-summary></ul>
       <div class="dashboard-hero-actions">
+        <button class="button button--ghost button--small" type="button" data-today-edit>{labels.editDay}</button>
         <a class="button button--primary button--small" href={configurePath}>{labels.configure}</a>
         <a class="button button--secondary button--small" href={planningPath}>{labels.planning}</a>
         <a class="button button--ghost button--small" href={shoppingPath}>{labels.shopping}</a>
@@ -117,7 +118,7 @@ const labels = {
       </a>
     </section>
 
-    <section class="expiry-banner" role="status" aria-live="polite">
+    <section class="expiry-banner" data-expiry-banner hidden role="status" aria-live="polite">
       <strong>{labels.tuppersExpiryAlert}</strong>
       <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
     </section>

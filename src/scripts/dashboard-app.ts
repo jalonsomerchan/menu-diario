@@ -22,6 +22,9 @@ import { getNetworkStatus, watchNetworkStatus } from '../lib/pwa/network-status'
 import { readLastOfflineMenuCache, saveOfflineMenuCache } from '../lib/pwa/offline-cache';
 import { shouldBlockOfflineWrites } from '../lib/pwa/offline-sync';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
+import { watchTuppers } from '../lib/tuppers/repository';
+import type { TupperItem } from '../lib/tuppers/types';
+import { shouldShowExpiryWarning } from '../lib/tuppers/state';
 
 const root = document.querySelector<HTMLElement>('[data-dashboard-app]');
 
@@ -36,6 +39,7 @@ if (root) {
   const nextDays = root.querySelector<HTMLElement>('[data-next-days]');
   const offlineBanner = root.querySelector<HTMLElement>('[data-offline-banner]');
   const offlineMessage = root.querySelector<HTMLElement>('[data-offline-message]');
+  const expiryBanner = root.querySelector<HTMLElement>('[data-expiry-banner]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -43,9 +47,11 @@ if (root) {
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
   let dishes: Dish[] = [];
+  let tuppers: TupperItem[] = [];
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  let unsubscribeTuppers: (() => void) | undefined;
   let firstMenuLoad = true;
   let isOnline = getNetworkStatus() === 'online';
   let isReadOnlyOffline = !isOnline;
@@ -186,6 +192,11 @@ if (root) {
     const items = day.skipped || meal.skipped || meal.items.length === 0 ? [renderDaySummary(day, firstMeal)] : meal.items;
 
     todaySummary.innerHTML = items.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+  }
+
+  function renderExpiryBanner() {
+    if (!expiryBanner) return;
+    expiryBanner.hidden = !shouldShowExpiryWarning(tuppers);
   }
 
   function renderNextSeven(menu: WeekMenu) {
@@ -341,6 +352,7 @@ if (root) {
     currentMenu = menu;
     setVisible(true);
     renderToday(menu);
+    renderExpiryBanner();
     renderNextSeven(menu);
     syncRenderedDayStates(nextDays ?? root, getNextSevenDates());
   }
@@ -410,11 +422,16 @@ if (root) {
 
         });
 
+        root.querySelector('[data-today-edit]')?.addEventListener('click', () => {
+          openQuickEdit(toIsoDate(new Date()));
+        });
+
         services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
           currentUser = user;
           unsubscribeMenu?.();
           unsubscribeDishes?.();
           unsubscribeProfile?.();
+          unsubscribeTuppers?.();
 
           if (!user) {
             window.location.assign(labels.homePath || '/');
@@ -451,6 +468,17 @@ if (root) {
                 renderDashboard(currentMenu);
                 cacheCurrentMenu(currentMenu);
               }
+
+              unsubscribeTuppers?.();
+              unsubscribeTuppers = watchTuppers(
+                services,
+                user.uid,
+                (nextTuppers) => {
+                  tuppers = nextTuppers;
+                  renderExpiryBanner();
+                },
+                (error) => showStatus(formatError(error), true)
+              );
             },
             (error) => showStatus(formatError(error), true)
           );
