@@ -27,6 +27,19 @@ describe('shopping wizard smoke checks', () => {
     assert.match(component, /data-generate/);
   });
 
+  it('uses the same visible format as the planning assistant', () => {
+    const component = readText('src/components/ShoppingApp.astro');
+
+    assert.match(component, /planning-ai-app/);
+    assert.match(component, /planning-ai-hero/);
+    assert.match(component, /planning-ai-panel/);
+    assert.match(component, /planning-ai-wizard-progress/);
+    assert.match(component, /planning-ai-wizard-step/);
+    assert.match(component, /planning-ai-section-card/);
+    assert.match(component, /planning-ai-request-card/);
+    assert.match(component, /planning-ai-wizard-actions/);
+  });
+
   it('keeps AI generation behind the summary confirmation step', () => {
     const script = readText('src/scripts/shopping-app.ts');
 
