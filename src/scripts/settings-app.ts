@@ -12,6 +12,7 @@ import {
   watchUserProfile,
 } from '../lib/menu/repository';
 import type { FirebaseUser, MealSlot, MenuGroup, ThemePreference, UserProfile } from '../lib/menu/types';
+import { createConfirmDialog } from '../lib/ui/confirm-dialog';
 
 const root = document.querySelector<HTMLElement>('[data-settings-app]');
 const themes: ThemePreference[] = ['system', 'light', 'dark'];
@@ -27,6 +28,9 @@ if (root) {
   const inviteCode = root.querySelector<HTMLElement>('[data-invite-code]');
   const members = root.querySelector<HTMLElement>('[data-members]');
   const pending = root.querySelector<HTMLElement>('[data-pending]');
+  const leaveButton = root.querySelector<HTMLButtonElement>('[data-leave-group]');
+  const confirmDialogElement = root.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
+  const confirmDialog = confirmDialogElement ? createConfirmDialog(confirmDialogElement) : null;
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -87,31 +91,44 @@ if (root) {
     return selected.length ? selected : ['lunch'];
   }
 
+  function renderList(container: HTMLElement | null, values: string[], emptyLabel: string) {
+    if (!container) return;
+    container.innerHTML = values.length
+      ? values.map((value) => `<li>${escapeHtml(value)}</li>`).join('')
+      : `<li>${escapeHtml(emptyLabel)}</li>`;
+  }
+
+  function setGroupAdminState(isOwner: boolean) {
+    root.querySelectorAll<HTMLElement>('[data-group-admin-section]').forEach((section) => {
+      section.dataset.disabled = String(!isOwner);
+    });
+    root.querySelectorAll<HTMLElement>('[data-group-permission-note]').forEach((note) => {
+      note.hidden = isOwner;
+    });
+    root.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLFieldSetElement>('[data-group-admin-control] input, [data-group-admin-control] button, [data-group-admin-control]').forEach((control) => {
+      control.disabled = !isOwner;
+    });
+  }
+
   function renderGroup(group: MenuGroup | null) {
     currentGroup = group;
     setVisible(true);
 
     if (!group) return;
 
+    const isOwner = currentUser?.uid === group.ownerId;
+    setGroupAdminState(isOwner);
+
     if (inviteCode) {
-      inviteCode.innerHTML = `<button class="button button--secondary" type="button" data-copy-code>${escapeHtml(group.inviteCode)}</button>`;
+      inviteCode.innerHTML = `<button class="button button--secondary" type="button" data-copy-code ${isOwner ? '' : 'disabled'}>${escapeHtml(group.inviteCode)}</button>`;
     }
 
     root.querySelectorAll<HTMLInputElement>('[data-meal-preference]').forEach((input) => {
       input.checked = group.enabledMeals.includes(input.value as MealSlot);
     });
 
-    if (members) {
-      members.innerHTML = group.memberEmails.length
-        ? group.memberEmails.map((email) => `<li>${escapeHtml(email)}</li>`).join('')
-        : group.members.map((member) => `<li>${escapeHtml(member)}</li>`).join('');
-    }
-
-    if (pending) {
-      pending.innerHTML = group.pendingEmails.length
-        ? group.pendingEmails.map((email) => `<li>${escapeHtml(email)}</li>`).join('')
-        : `<li>${escapeHtml(labels.updated)}</li>`;
-    }
+    renderList(members, group.memberEmails.length ? group.memberEmails : group.members, labels.membersEmpty);
+    renderList(pending, group.pendingEmails, labels.pendingEmpty);
   }
 
   if (!hasFirebaseConfig()) {
@@ -143,7 +160,7 @@ if (root) {
         root.querySelectorAll<HTMLInputElement>('[data-meal-preference]').forEach((input) => {
           input.addEventListener('change', () => {
             runAction(async () => {
-              if (!currentGroup || !currentUser) return;
+              if (!currentGroup || !currentUser || currentGroup.ownerId !== currentUser.uid) return;
               const enabledMeals = selectedMeals();
               await updateGroupOptions(services, currentGroup.id, enabledMeals);
               await updateUserPreferences(services, currentUser.uid, { enabledMeals });
@@ -156,10 +173,10 @@ if (root) {
           event.preventDefault();
           runAction(async () => {
             const input = root.querySelector<HTMLInputElement>('[data-invite-email]');
-            if (!currentGroup || !input?.value) return;
+            if (!currentGroup || !currentUser || currentGroup.ownerId !== currentUser.uid || !input?.value) return;
             await addPendingGroupEmail(services, currentGroup.id, input.value);
             input.value = '';
-            showStatus(`${labels.copied} ${currentGroup.inviteCode}`);
+            showStatus(labels.updated);
           });
         });
 
@@ -174,9 +191,18 @@ if (root) {
           });
         });
 
-        root.querySelector('[data-leave-group]')?.addEventListener('click', () => {
+        leaveButton?.addEventListener('click', () => {
           runAction(async () => {
             if (!currentUser || !currentGroup || !currentProfile) return;
+            const confirmed = await confirmDialog?.open({
+              title: labels.leaveConfirmTitle,
+              description: labels.leaveConfirmDescription,
+              confirmLabel: labels.leaveConfirmConfirm,
+              cancelLabel: labels.leaveConfirmCancel,
+              confirmVariant: 'danger',
+              returnFocusTo: leaveButton,
+            });
+            if (!confirmed) return;
             await leaveGroup(services, currentUser, currentGroup);
             const personalProfile: UserProfile = { ...currentProfile, groupId: undefined };
             const groupId = await ensureDefaultGroup(services, currentUser, personalProfile);
