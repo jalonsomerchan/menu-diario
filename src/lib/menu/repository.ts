@@ -18,6 +18,7 @@ const menusCollection = 'weeklyMenus';
 const groupsCollection = 'groups';
 const defaultEnabledMeals: MealSlot[] = ['lunch'];
 const mealSlots: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
+const groupProfileReadLimit = 12;
 
 type FirebaseServices = {
   db: any;
@@ -112,6 +113,27 @@ export function watchUserProfile(services: FirebaseServices, user: FirebaseUser,
     (snapshot: any) => callback(mapUserProfile(user.uid, snapshot.exists() ? snapshot.data() : {}, user.displayName ?? user.email ?? guestLabel, normalizeEmail(user.email ?? ''))),
     onError
   );
+}
+
+export async function getGroupById(services: FirebaseServices, groupId: string) {
+  if (!groupId) return null;
+  const { db, firestoreModule } = services;
+  const snapshot = await firestoreModule.getDoc(firestoreModule.doc(db, groupsCollection, groupId));
+  return snapshot.exists() ? mapGroup(snapshot.id, snapshot.data()) : null;
+}
+
+export async function getUserProfilesByIds(services: FirebaseServices, userIds: string[]) {
+  const { db, firestoreModule } = services;
+  const uniqueIds = uniqueValues(userIds).slice(0, groupProfileReadLimit);
+  const snapshots = await Promise.all(uniqueIds.map((userId) => firestoreModule.getDoc(firestoreModule.doc(db, 'users', userId))));
+
+  return snapshots.map((snapshot: any, index) =>
+    mapUserProfile(uniqueIds[index], snapshot.exists() ? snapshot.data() : {}, uniqueIds[index], '')
+  );
+}
+
+export function getCombinedFoodIntolerances(profiles: Pick<UserProfile, 'foodIntolerances'>[]) {
+  return uniqueValues(profiles.map((profile) => normalizeFoodIntolerances(profile.foodIntolerances))).join('\n');
 }
 
 export async function updateUserPreferences(services: FirebaseServices, userId: string, preferences: { enabledMeals?: MealSlot[]; theme?: ThemePreference; groupId?: string | null; foodIntolerances?: string }) {
