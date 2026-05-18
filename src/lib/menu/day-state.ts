@@ -19,6 +19,7 @@ function stableDay(day: Partial<DailyMenu>) {
           reason: normalized.meals[meal].reason,
           note: normalized.meals[meal].note,
           items: [...normalized.meals[meal].items],
+          participantIds: normalized.meals[meal].participantIds ? [...normalized.meals[meal].participantIds] : undefined,
         },
       ])
     ),
