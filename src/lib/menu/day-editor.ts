@@ -44,11 +44,9 @@ function renderReasonFields(labels: DayEditorLabels, reason = '', note = '') {
   `;
 }
 
-function renderSuggestionContainer(labels: DayEditorLabels, meal: MealSlot, dishes: Dish[]) {
-  const hasSuggestions = dishes.length > 0;
-
+function renderSuggestionContainer(labels: DayEditorLabels, meal: MealSlot, _dishes: Dish[]) {
   return `
-    <div class="dish-suggestions" role="listbox" aria-label="${escapeHtml(labels.dishSuggestions)}" data-suggestion-list="${meal}" ${hasSuggestions ? '' : 'hidden'}></div>
+    <div class="dish-suggestions" role="listbox" aria-label="${escapeHtml(labels.dishSuggestions)}" data-suggestion-list="${meal}" hidden></div>
   `;
 }
 
@@ -95,7 +93,7 @@ function renderParticipantSelector(labels: DayEditorLabels, meal: MealSlot, meal
             const name = getParticipantDisplayName(participant);
             return `
               <label class="meal-participant-chip">
-                <input type="checkbox" value="${escapeHtml(participant.id)}" ${selectedIds.has(participant.id) ? 'checked' : ''} data-participant-input="${meal}" />
+                <input class="sr-only" type="checkbox" value="${escapeHtml(participant.id)}" ${selectedIds.has(participant.id) ? 'checked' : ''} data-participant-input="${meal}" />
                 <span class="meal-participant-chip__avatar" aria-hidden="true">${escapeHtml(getParticipantInitials(participant))}</span>
                 <span class="meal-participant-chip__name">${escapeHtml(name)}</span>
               </label>

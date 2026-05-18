@@ -47,11 +47,13 @@ describe('meal participants wiring', () => {
 
     assert.match(editor, /fieldset class="meal-participants"/);
     assert.match(editor, /legend/);
+    assert.match(editor, /input class="sr-only" type="checkbox"/);
     assert.match(editor, /data-participant-input/);
     assert.match(editor, /getParticipantInitials/);
     assert.match(form, /getStoredParticipantIds/);
     assert.match(modal, /getParticipants/);
     assert.match(styles, /:focus-within/);
+    assert.match(styles, /:has\(input:checked\)::after/);
     assert.match(styles, /@media \(max-width: 520px\)/);
   });
 

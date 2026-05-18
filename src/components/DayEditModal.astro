@@ -23,11 +23,11 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
 >
   <form method="dialog" class="app-dialog__surface quick-edit-modal__box day-edit-modal__box" data-day-edit-form>
     <header class="day-edit-modal__header">
-      <div class="day-edit-modal__date-badge" aria-hidden="true" data-day-edit-number></div>
       <div class="day-edit-modal__heading">
-        <p class="menu-app__eyebrow" data-day-edit-eyebrow>{eyebrow}</p>
+        <p class="sr-only" data-day-edit-eyebrow>{eyebrow}</p>
+        <span class="sr-only" data-day-edit-number></span>
         <h2 id="day-edit-modal-title" data-day-edit-title>{title}</h2>
-        <p id="day-edit-modal-description" data-day-edit-subtitle>{subtitle}</p>
+        <p id="day-edit-modal-description" class="sr-only" data-day-edit-subtitle>{subtitle}</p>
       </div>
       <button class="day-edit-modal__close" type="button" data-day-edit-cancel aria-label={cancelLabel}>
         <span aria-hidden="true">×</span>
@@ -37,7 +37,7 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     <div class="day-edit-modal__body" data-day-edit-fields></div>
 
     <footer class="day-edit-modal__footer">
-      <p class="day-edit-modal__hint" data-day-edit-save-state role="status" aria-live="polite" data-idle-label={saveHint} data-pending-label={savePendingLabel}>{saveHint}</p>
+      <p class="day-edit-modal__hint" data-day-edit-save-state role="status" aria-live="polite" data-idle-label={saveHint} data-pending-label={savePendingLabel} hidden>{saveHint}</p>
       <div class="day-edit-modal__actions">
         <button class="button button--ghost button--small" type="button" data-day-edit-cancel-footer>
           <span class="day-edit-modal__action-icon" aria-hidden="true">✕</span>
@@ -70,83 +70,56 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
   }
 
   .day-edit-modal__box {
+    display: flex;
+    flex-direction: column;
     gap: 0;
     max-height: min(94dvh, 52rem);
     overflow: hidden;
     padding: 0;
     border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 68%);
-    background:
-      linear-gradient(135deg, color-mix(in srgb, var(--color-primary-soft), transparent 58%), transparent 18rem),
-      var(--color-surface);
+    background: var(--color-surface);
     box-shadow: 0 28px 86px rgb(15 23 42 / 0.32);
   }
 
   .day-edit-modal__header {
-    position: sticky;
-    top: 0;
-    z-index: 4;
+    flex: 0 0 auto;
     display: grid !important;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.85rem;
     border-bottom: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 14%);
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--color-surface), var(--color-primary-soft) 10%), var(--color-surface));
-    padding: calc(var(--surface-padding) + 0.1rem) var(--surface-padding) var(--surface-padding);
-  }
-
-  .day-edit-modal__date-badge {
-    display: grid;
-    place-items: center;
-    width: clamp(2.9rem, 13vw, 4.5rem);
-    aspect-ratio: 1;
-    border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 55%);
-    border-radius: 1.15rem;
-    background: var(--color-primary-soft);
-    color: var(--color-primary);
-    font-size: clamp(1.8rem, 8vw, 2.8rem);
-    font-weight: 150;
-    letter-spacing: -0.12em;
-    line-height: 0.9;
-    padding-right: 0.12em;
+    background: color-mix(in srgb, var(--color-surface), var(--color-surface-raised) 36%);
+    padding: 1rem var(--surface-padding);
   }
 
   .day-edit-modal__heading {
     display: grid;
     min-width: 0;
-    gap: 0.22rem;
+    gap: 0.2rem;
   }
 
   .day-edit-modal__heading h2 {
     margin: 0;
-    font-size: clamp(1.75rem, 8vw, 3rem);
-    line-height: 0.92;
-    letter-spacing: -0.08em;
-    text-transform: lowercase;
-  }
-
-  .day-edit-modal__heading h2::first-letter {
-    text-transform: uppercase;
-  }
-
-  .day-edit-modal__heading p:last-child {
-    min-height: 1.2em;
-    margin: 0;
-    color: var(--color-muted);
-    font-size: 1rem;
-    font-weight: 850;
+    overflow: hidden;
+    color: var(--color-text);
+    font-size: clamp(1.35rem, 5vw, 2rem);
+    font-weight: 950;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .day-edit-modal__close {
     display: grid;
     place-items: center;
-    width: 2.7rem;
-    height: 2.7rem;
+    width: 2.55rem;
+    height: 2.55rem;
     border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
     border-radius: 999px;
     background: color-mix(in srgb, var(--color-surface-raised), transparent 4%);
     color: var(--color-muted);
-    font-size: 1.7rem;
+    font-size: 1.55rem;
     font-weight: 900;
     line-height: 1;
     transition:
@@ -168,26 +141,22 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
 
   .day-edit-modal__body {
     display: grid;
+    flex: 1 1 auto;
     gap: 1rem;
     min-height: 0;
     overflow: auto;
     overscroll-behavior: contain;
     padding: var(--surface-padding);
-    padding-bottom: calc(5.6rem + env(safe-area-inset-bottom));
   }
 
   .day-edit-modal__footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 4;
+    flex: 0 0 auto;
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.75rem;
     border-top: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 12%);
-    background:
-      linear-gradient(0deg, color-mix(in srgb, var(--color-surface), var(--color-primary-soft) 8%), color-mix(in srgb, var(--color-surface), transparent 2%));
-    backdrop-filter: blur(18px);
+    background: color-mix(in srgb, var(--color-surface), var(--color-surface-raised) 42%);
     padding: 0.72rem var(--surface-padding) calc(0.72rem + env(safe-area-inset-bottom));
   }
 
@@ -197,6 +166,10 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     font-size: 0.8rem;
     font-weight: 850;
     line-height: 1.2;
+  }
+
+  .day-edit-modal__hint[hidden] {
+    display: none;
   }
 
   .day-edit-modal__hint[data-variant='saving'] {
@@ -409,10 +382,6 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
   }
 
   @media (min-width: 640px) {
-    .day-edit-modal__body {
-      padding-bottom: calc(5rem + env(safe-area-inset-bottom));
-    }
-
     .day-edit-modal__actions {
       grid-auto-flow: column;
       grid-auto-columns: auto;
@@ -423,6 +392,20 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
 
     .day-edit-modal__actions .button--primary {
       min-width: 11rem;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .day-edit-modal__footer {
+      grid-template-columns: 1fr;
+    }
+
+    .day-edit-modal__actions {
+      justify-content: stretch;
+    }
+
+    .day-edit-modal__actions .button {
+      width: 100%;
     }
   }
 </style>

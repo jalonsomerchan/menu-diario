@@ -4,6 +4,10 @@ import type { Dish } from './types';
 const suggestionLimit = 6;
 let inputSequence = 0;
 
+type RenderSuggestionOptions = {
+  allowEmptyQuery?: boolean;
+};
+
 function escapeHtml(value = '') {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 }
@@ -50,10 +54,22 @@ function hideSuggestions(list: HTMLElement, input?: HTMLInputElement | null) {
   if (input) setExpanded(input, false);
 }
 
-function renderSuggestions(list: HTMLElement, input: HTMLInputElement, dishes: Dish[]) {
-  const matches = getMatches(dishes, input.value);
+function renderSuggestions(
+  list: HTMLElement,
+  input: HTMLInputElement,
+  dishes: Dish[],
+  options: RenderSuggestionOptions = {}
+) {
+  const query = input.value.trim();
   list.dataset.activeInputId = ensureInputId(input);
   ensureListId(list, input);
+
+  if (!query && !options.allowEmptyQuery) {
+    hideSuggestions(list, input);
+    return;
+  }
+
+  const matches = getMatches(dishes, input.value);
 
   if (!matches.length) {
     hideSuggestions(list, input);
@@ -121,7 +137,7 @@ export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]
     if (!target) return;
 
     event.preventDefault();
-    renderSuggestions(target.list, input, getDishes());
+    renderSuggestions(target.list, input, getDishes(), { allowEmptyQuery: true });
     target.list.querySelector<HTMLButtonElement>('[data-suggestion]')?.focus();
   });
 
@@ -159,7 +175,7 @@ export function attachDishSuggestions(root: HTMLElement, getDishes: () => Dish[]
       if (!input || !suggestionTarget) return;
 
       event.preventDefault();
-      renderSuggestions(suggestionTarget.list, input, getDishes());
+      renderSuggestions(suggestionTarget.list, input, getDishes(), { allowEmptyQuery: true });
       input.focus();
       return;
     }

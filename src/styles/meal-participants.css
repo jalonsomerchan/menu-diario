@@ -76,14 +76,22 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary), transparent 78%);
 }
 
-.meal-participant-chip input {
+.meal-participant-chip:has(input:checked)::after {
+  content: '✓';
   position: absolute;
-  top: 0.1rem;
-  right: 0.08rem;
-  width: 1rem;
-  height: 1rem;
-  margin: 0;
-  accent-color: var(--color-primary);
+  right: 0.55rem;
+  top: 50%;
+  display: grid;
+  width: 1.05rem;
+  height: 1.05rem;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 950;
+  line-height: 1;
+  transform: translateY(-50%);
 }
 
 .meal-participant-chip__avatar {
@@ -103,7 +111,7 @@
 .meal-participant-chip__name {
   overflow: hidden;
   min-width: 0;
-  padding-right: 0.28rem;
+  padding-right: 1.5rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
