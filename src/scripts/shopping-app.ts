@@ -23,6 +23,8 @@ import type { TupperItem } from '../lib/tuppers/types';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-shopping-app]');
+const wizardSteps = ['range', 'meals', 'summary', 'results'] as const;
+type WizardStep = (typeof wizardSteps)[number];
 
 if (root) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
@@ -41,6 +43,11 @@ if (root) {
   const generateButton = root.querySelector<HTMLButtonElement>('[data-generate]');
   const saveButton = root.querySelector<HTMLButtonElement>('[data-save]');
   const shareButton = root.querySelector<HTMLButtonElement>('[data-share]');
+  const wizardError = root.querySelector<HTMLElement>('[data-wizard-error]');
+  const wizardSummary = root.querySelector<HTMLElement>('[data-wizard-summary]');
+  const wizardPrev = root.querySelector<HTMLButtonElement>('[data-wizard-prev]');
+  const wizardNext = root.querySelector<HTMLButtonElement>('[data-wizard-next]');
+  const wizardCancel = root.querySelector<HTMLButtonElement>('[data-wizard-cancel]');
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -55,6 +62,7 @@ if (root) {
   let currentSavedItems: ShoppingItem[] = [];
   let currentDraftItems: ShoppingItem[] = [];
   let selectedDayKeys = getAvailableRange().dates;
+  let currentWizardStep: WizardStep = 'range';
   let draftDirty = false;
   let currentServices: Awaited<ReturnType<typeof getFirebaseServices>> | null = null;
   let unsubscribeMenus: (() => void) | undefined;
@@ -76,6 +84,12 @@ if (root) {
     if (!aiStatus) return;
     aiStatus.textContent = message;
     aiStatus.dataset.variant = isError ? 'error' : 'info';
+  }
+
+  function showWizardError(message = '') {
+    if (!wizardError) return;
+    wizardError.hidden = !message;
+    wizardError.textContent = message;
   }
 
   function setAuthenticated(isAuthenticated: boolean) {
@@ -134,11 +148,78 @@ if (root) {
     return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
   }
 
+  function formatDateLabel(dayKey: string) {
+    return new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${dayKey}T00:00:00`));
+  }
+
   function formatMealLabel(dayKey: string, meal: string) {
     const date = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'short' }).format(
       new Date(`${dayKey}T00:00:00`)
     );
     return `${date} · ${labels[meal] ?? meal}`;
+  }
+
+  function validateWizardStep(step: WizardStep) {
+    if (step === 'range' && selectedDayKeys.length === 0) return labels.wizardRangeRequired;
+    if (step === 'meals' && getMealContext().meals.length === 0) return labels.wizardMealsRequired;
+    return '';
+  }
+
+  function goToWizardStep(step: WizardStep) {
+    currentWizardStep = step;
+    showWizardError('');
+    renderWizard();
+  }
+
+  function renderWizardSummary() {
+    if (!wizardSummary) return;
+    const context = getMealContext();
+    const rangeLabel = getRange().dates.map(formatDateLabel).join(' · ');
+    const scopeLabelText = getScope() === 'group' ? labels.groupScope : labels.userScope;
+    const mealsLabel = formatCountLabel('selectedMealsSingle', 'selectedMealsPlural', context.meals.length);
+    const tupperLabel = currentTuppers.length ? labels.inventoryHint : labels.exportEmpty;
+
+    wizardSummary.innerHTML = `
+      <dl>
+        <div>
+          <dt>${escapeHtml(labels.rangeTitle)}</dt>
+          <dd>${escapeHtml(rangeLabel || labels.selectedDaysNone)}</dd>
+        </div>
+        <div>
+          <dt>${escapeHtml(labels.mealsTitle)}</dt>
+          <dd>${escapeHtml(mealsLabel)}</dd>
+        </div>
+        <div>
+          <dt>${escapeHtml(labels.groupScope)}</dt>
+          <dd>${escapeHtml(scopeLabelText)}</dd>
+        </div>
+        <div>
+          <dt>${escapeHtml(labels.inventoryHint)}</dt>
+          <dd>${escapeHtml(tupperLabel)}</dd>
+        </div>
+      </dl>
+    `;
+  }
+
+  function renderWizard() {
+    root.querySelectorAll<HTMLElement>('[data-wizard-step]').forEach((section) => {
+      section.hidden = section.dataset.wizardStep !== currentWizardStep;
+    });
+    root.querySelectorAll<HTMLElement>('[data-wizard-progress-step]').forEach((item) => {
+      const isCurrent = item.dataset.wizardProgressStep === currentWizardStep;
+      item.toggleAttribute('aria-current', isCurrent);
+      if (isCurrent) item.setAttribute('aria-current', 'step');
+    });
+
+    if (wizardPrev) wizardPrev.disabled = currentWizardStep === 'range';
+    if (wizardNext) {
+      wizardNext.hidden = currentWizardStep === 'summary' || currentWizardStep === 'results';
+      wizardNext.disabled = currentWizardStep === 'range' ? selectedDayKeys.length === 0 : false;
+    }
+    if (wizardCancel) wizardCancel.hidden = currentWizardStep === 'range';
+
+    if (currentWizardStep === 'summary') renderWizardSummary();
+    updateToolbarState();
   }
 
   function renderRangePicker() {
@@ -189,14 +270,17 @@ if (root) {
 
     const context = getMealContext();
     renderSelectionSummary();
+    if (currentWizardStep === 'summary') renderWizardSummary();
 
     if (selectedDayKeys.length === 0) {
       meals.innerHTML = `<p class="shopping-empty">${escapeHtml(labels.selectedDaysNone)}</p>`;
+      renderWizard();
       return;
     }
 
     if (context.meals.length === 0) {
       meals.innerHTML = `<p class="shopping-empty">${escapeHtml(currentMenu ? labels.emptyPlannedMeals : labels.emptyMeals)}</p>`;
+      renderWizard();
       return;
     }
 
@@ -219,6 +303,7 @@ if (root) {
         `
       )
       .join('');
+    renderWizard();
   }
 
   function renderStatusButton(item: ShoppingItem, value: ShoppingItem['status'], label: string) {
@@ -302,7 +387,7 @@ if (root) {
     const aiReady = hasFirebaseConfig() && isShoppingListAiAvailable(getAiFeatureFlags());
 
     if (generateButton) {
-      generateButton.disabled = !aiReady || !currentUser || !hasSelectedDays;
+      generateButton.disabled = !aiReady || !currentUser || !hasSelectedDays || currentWizardStep !== 'summary';
       generateButton.textContent = currentDraftItems.some((item) => item.source === 'ai') ? labels.regenerate : labels.generate;
     }
 
@@ -318,6 +403,13 @@ if (root) {
 
   async function generateWithAi() {
     if (!currentUser) return;
+
+    const stepError = validateWizardStep('meals');
+    if (stepError) {
+      showWizardError(stepError);
+      goToWizardStep('meals');
+      return;
+    }
 
     const flags = getAiFeatureFlags();
     if (!flags.aiEnabled || !flags.shoppingListEnabled) {
@@ -357,6 +449,7 @@ if (root) {
       currentDraftItems = mergeShoppingDraftItems(currentDraftItems, aiItems);
       draftDirty = true;
       renderDraft();
+      goToWizardStep('results');
       updateToolbarState();
       showAiStatus(aiItems.length ? labels.updated : labels.noToBuyItems, false);
     } catch (error) {
@@ -491,6 +584,24 @@ if (root) {
     shareButton?.addEventListener('click', () => {
       shareCurrentList().catch((error) => showStatus(formatError(error), true));
     });
+    wizardPrev?.addEventListener('click', () => {
+      const index = wizardSteps.indexOf(currentWizardStep);
+      goToWizardStep(wizardSteps[Math.max(0, index - 1)]);
+    });
+    wizardNext?.addEventListener('click', () => {
+      const error = validateWizardStep(currentWizardStep);
+      if (error) {
+        showWizardError(error);
+        return;
+      }
+      const index = wizardSteps.indexOf(currentWizardStep);
+      goToWizardStep(wizardSteps[Math.min(wizardSteps.length - 1, index + 1)]);
+    });
+    wizardCancel?.addEventListener('click', () => {
+      showAiStatus('');
+      showStatus(labels.wizardCancelled);
+      goToWizardStep('range');
+    });
 
     rangePicker?.addEventListener('click', (event) => {
       const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-day-key]');
@@ -594,5 +705,6 @@ if (root) {
   renderRangePicker();
   renderSelectionSummary();
   renderDraft();
+  renderWizard();
   updateToolbarState();
 }
