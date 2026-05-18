@@ -1,7 +1,13 @@
+import { getStoredParticipantIds } from './participants.ts';
 import { normalizeDay } from './normalizers.ts';
-import type { DailyMenu, MealSlot } from './types.ts';
+import type { DailyMenu, MealSlot, MenuParticipant } from './types.ts';
 
-export function readDayDraft(card: HTMLElement, enabledMeals: MealSlot[], baseDay?: Partial<DailyMenu>) {
+export function readDayDraft(
+  card: HTMLElement,
+  enabledMeals: MealSlot[],
+  baseDay?: Partial<DailyMenu>,
+  participants: MenuParticipant[] = []
+) {
   const currentDay = normalizeDay(baseDay);
   const skipped = card.querySelector<HTMLInputElement>('[data-field="skipped"]')?.checked ?? false;
 
@@ -15,14 +21,23 @@ export function readDayDraft(card: HTMLElement, enabledMeals: MealSlot[], baseDa
   }
 
   const meals = Object.fromEntries(
-    enabledMeals.map((meal) => [
-      meal,
-      {
-        items: [...card.querySelectorAll<HTMLInputElement>(`[data-plate-input="${meal}"]`)]
-          .map((input) => input.value.trim())
-          .filter(Boolean),
-      },
-    ])
+    enabledMeals.map((meal) => {
+      const selectedIds = [...card.querySelectorAll<HTMLInputElement>(`[data-participant-input="${meal}"]`)]
+        .filter((input) => input.checked)
+        .map((input) => input.value);
+      const participantIds = getStoredParticipantIds(selectedIds, participants);
+
+      return [
+        meal,
+        {
+          ...currentDay.meals[meal],
+          items: [...card.querySelectorAll<HTMLInputElement>(`[data-plate-input="${meal}"]`)]
+            .map((input) => input.value.trim())
+            .filter(Boolean),
+          ...(participantIds === undefined ? { participantIds: undefined } : { participantIds }),
+        },
+      ];
+    })
   );
 
   return normalizeDay({
