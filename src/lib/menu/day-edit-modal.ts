@@ -34,7 +34,6 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   const fields = options.root.querySelector<HTMLElement>('[data-day-edit-fields]');
   const title = options.root.querySelector<HTMLElement>('[data-day-edit-title]');
   const subtitle = options.root.querySelector<HTMLElement>('[data-day-edit-subtitle]');
-  const dayNumber = options.root.querySelector<HTMLElement>('[data-day-edit-number]');
   const saveButton = options.root.querySelector<HTMLButtonElement>('[data-day-edit-save]');
   const saveState = options.root.querySelector<HTMLElement>('[data-day-edit-save-state]');
   const clearButton = options.root.querySelector<HTMLButtonElement>('[data-day-edit-clear]');
@@ -58,17 +57,17 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     return options.getParticipants?.() ?? [];
   }
 
+  function formatModalTitle(dayKey: string) {
+    return [options.getWeekday(dayKey), options.getDateLabel?.(dayKey)].filter(Boolean).join(' ');
+  }
+
   function setHeading(dayKey: string) {
     if (title) {
-      title.textContent = options.getWeekday(dayKey);
+      title.textContent = formatModalTitle(dayKey);
     }
 
     if (subtitle) {
-      subtitle.textContent = options.getDateLabel?.(dayKey) ?? '';
-    }
-
-    if (dayNumber) {
-      dayNumber.textContent = options.getDayNumber(dayKey);
+      subtitle.textContent = options.labels.editDay ?? '';
     }
   }
 
@@ -76,6 +75,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     if (!saveState) return;
     saveState.textContent = message;
     saveState.dataset.variant = variant;
+    saveState.hidden = variant === 'idle' || !message;
     if (variant === 'error') {
       saveState.setAttribute('role', 'alert');
     } else {
