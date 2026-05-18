@@ -96,6 +96,7 @@ const labels = {
       <p class="today-hero__hello" data-user-label>{labels.hello}</p>
       <h1>{labels.todayForLunch}</h1>
       <ul data-today-summary></ul>
+      <div class="today-hero__notes" data-today-notes hidden></div>
       <div class="dashboard-hero-actions">
         <button class="button button--ghost button--small" type="button" data-today-edit>{labels.editDay}</button>
         <a class="button button--primary button--small" href={configurePath}>{labels.configure}</a>
@@ -148,6 +149,10 @@ const labels = {
     display: flex;
     flex-wrap: wrap;
     gap: 0.65rem;
+  }
+
+  .today-hero__notes {
+    margin-top: 0.9rem;
   }
 
   .dashboard-action-strip {

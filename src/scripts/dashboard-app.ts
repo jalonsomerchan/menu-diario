@@ -36,6 +36,7 @@ if (root) {
   const content = root.querySelector<HTMLElement>('[data-content]');
   const userLabel = root.querySelector<HTMLElement>('[data-user-label]');
   const todaySummary = root.querySelector<HTMLElement>('[data-today-summary]');
+  const todayNotes = root.querySelector<HTMLElement>('[data-today-notes]');
   const nextDays = root.querySelector<HTMLElement>('[data-next-days]');
   const offlineBanner = root.querySelector<HTMLElement>('[data-offline-banner]');
   const offlineMessage = root.querySelector<HTMLElement>('[data-offline-message]');
@@ -218,8 +219,13 @@ if (root) {
     const firstMeal = getEnabledMeals()[0] ?? 'lunch';
     const meal = day.meals[firstMeal];
     const items = day.skipped || meal.skipped || meal.items.length === 0 ? [renderDaySummary(day, firstMeal)] : meal.items;
+    const notesHtml = renderDayNotesHtml(day);
 
     todaySummary.innerHTML = items.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+    if (todayNotes) {
+      todayNotes.innerHTML = notesHtml;
+      todayNotes.hidden = !notesHtml;
+    }
   }
 
   function renderExpiryBanner() {
