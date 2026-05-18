@@ -32,17 +32,25 @@ describe('user preference settings', () => {
     assert.match(docs, /foodIntolerances/);
   });
 
-  it('includes food intolerances in AI planning prompts with a bounded payload', () => {
+  it('includes all group food intolerances in AI planning prompts with a bounded payload', () => {
     const planningPrompt = readText('src/lib/ai/planning-assistant.ts');
     const planningScript = readText('src/scripts/planning-ai-app.ts');
+    const groupHelper = readText('src/lib/menu/group-food-intolerances.ts');
+    const rules = readText('firestore.rules');
     const docs = readText('docs/user-preferences.md');
 
     assert.match(planningPrompt, /foodIntolerances\?: string/);
     assert.match(planningPrompt, /maxFoodIntolerancesPromptLength = 500/);
     assert.match(planningPrompt, /describeFoodIntolerances/);
     assert.match(planningPrompt, /Food restrictions/);
-    assert.match(planningScript, /foodIntolerances: currentProfile\?\.foodIntolerances/);
-    assert.match(docs, /planificación con IA/);
+    assert.match(groupHelper, /getGroupFoodIntolerancesForPrompt/);
+    assert.match(groupHelper, /getCombinedFoodIntolerances/);
+    assert.match(groupHelper, /groupProfileReadLimit = 12/);
+    assert.match(planningScript, /getGroupFoodIntolerancesForPrompt/);
+    assert.match(planningScript, /foodIntolerances: await getGroupFoodIntolerancesForPrompt\(services, currentProfile\)/);
+    assert.match(rules, /canReadUserProfile/);
+    assert.match(rules, /allow read: if canReadUserProfile\(userId\)/);
+    assert.match(docs, /intolerancias de los usuarios miembros del grupo actual/);
   });
 
   it('keeps settings namespace translations aligned', () => {
