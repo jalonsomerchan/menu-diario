@@ -1,78 +1,46 @@
 ---
 import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
-import { getLocalizedPath, useTranslations } from '../i18n/ui';
-import { usePlanningTranslations } from '../i18n/planning';
-import { usePublicPageCopy } from '../i18n/public-pages';
-import { useTupperTranslations } from '../i18n/tuppers';
+import { footerGames, footerTools, formatProjectLabel, getFooterLabels } from '../i18n/footer-projects';
 
 interface Props {
   locale: Locale;
 }
 
 const { locale } = Astro.props;
-const t = useTranslations(locale);
-const tp = usePublicPageCopy(locale);
-const tplanning = usePlanningTranslations(locale);
-const ttuppers = useTupperTranslations(locale);
-const year = new Date().getFullYear();
-
-const footerGroups = [
-  {
-    title: t('appNav.more'),
-    links: [
-      { href: getLocalizedPath('/', locale), label: t('nav.home') },
-      { href: getLocalizedPath('/dashboard', locale), label: t('appNav.dashboard') },
-      { href: getLocalizedPath('/configurar', locale), label: t('appNav.planning') },
-      { href: getLocalizedPath('/compra', locale), label: t('appNav.shopping') },
-    ],
-  },
-  {
-    title: t('dashboard.shortcuts'),
-    links: [
-      { href: getLocalizedPath('/planificacion', locale), label: tplanning('nav') },
-      { href: getLocalizedPath('/mis-platos', locale), label: t('appNav.dishes') },
-      { href: getLocalizedPath('/tuppers', locale), label: ttuppers('nav') },
-      { href: getLocalizedPath('/historico', locale), label: t('appNav.history') },
-    ],
-  },
-  {
-    title: t('appNav.settings'),
-    links: [
-      { href: getLocalizedPath('/ajustes', locale), label: t('appNav.settings') },
-      { href: getLocalizedPath('/como-funciona', locale), label: t('public.howItWorks.nav') },
-      { href: getLocalizedPath('/acerca-de', locale), label: tp('footerAbout') },
-      { href: getLocalizedPath('/faq', locale), label: tp('footerFaq') },
-    ],
-  },
+const labels = getFooterLabels(locale);
+const projectGroups = [
+  { title: labels.tools, projects: footerTools },
+  { title: labels.games, projects: footerGames },
 ];
 ---
 
 <footer class="site-footer">
   <Container class="site-footer__inner">
-    <section class="site-footer__brand" aria-labelledby="site-footer-title">
-      <p class="site-footer__eyebrow">{t('home.eyebrow')}</p>
-      <h2 id="site-footer-title">{siteConfig.name}</h2>
-      <p>{t('site.description')}</p>
-      <small>© {year} {siteConfig.name}. {t('footer.createdWith')}</small>
-    </section>
+    <div class="site-footer__brand">
+      <p class="eyebrow">{labels.eyebrow}</p>
+      <h2>{labels.title}</h2>
+      <p>{labels.copy}</p>
+      <strong>{siteConfig.name}</strong>
+    </div>
 
-    <nav class="site-footer__nav" aria-label={t('nav.main')}>
-      {footerGroups.map((group) => (
+    <div class="site-footer__projects" aria-label={labels.title}>
+      {projectGroups.map((group) => (
         <section class="site-footer__group" aria-labelledby={`footer-${group.title.toLowerCase().replaceAll(' ', '-')}`}>
           <h3 id={`footer-${group.title.toLowerCase().replaceAll(' ', '-')}`}>{group.title}</h3>
           <ul>
-            {group.links.map((link) => (
+            {group.projects.map((project) => (
               <li>
-                <a href={link.href}>
-                  <span>{link.label}</span>
+                <a href={project.href} target="_blank" rel="noopener noreferrer" aria-label={formatProjectLabel(labels.openProject, project.name)}>
+                  <span>{project.name}</span>
+                  <small>{new URL(project.href).hostname}</small>
                 </a>
               </li>
             ))}
           </ul>
         </section>
       ))}
-    </nav>
+    </div>
   </Container>
 </footer>
 
@@ -104,7 +72,7 @@ const footerGroups = [
     padding: clamp(1.1rem, 4vw, 1.45rem);
   }
 
-  .site-footer__eyebrow {
+  .site-footer .eyebrow {
     width: fit-content;
     margin: 0;
     border-radius: var(--radius-full);
@@ -136,12 +104,12 @@ const footerGroups = [
     line-height: 1.6;
   }
 
-  .site-footer small {
-    display: block;
-    font-size: 0.9rem;
+  .site-footer__brand strong {
+    font-size: 1rem;
+    letter-spacing: -0.03em;
   }
 
-  .site-footer__nav {
+  .site-footer__projects {
     display: grid;
     gap: 0.85rem;
   }
@@ -169,11 +137,10 @@ const footerGroups = [
   }
 
   .site-footer__group a {
-    display: flex;
-    min-height: 2.75rem;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+    display: grid;
+    min-height: 3.15rem;
+    align-content: center;
+    gap: 0.1rem;
     border: 1px solid color-mix(in srgb, var(--color-border), transparent 22%);
     border-radius: var(--radius-xl);
     background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
@@ -188,12 +155,17 @@ const footerGroups = [
       transform var(--transition-base);
   }
 
-  .site-footer__group a::after {
-    content: '›';
-    color: var(--color-primary);
-    font-size: 1.25rem;
-    font-weight: 900;
-    line-height: 1;
+  .site-footer__group a span,
+  .site-footer__group a small {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .site-footer__group a small {
+    font-size: 0.78rem;
+    font-weight: 700;
   }
 
   .site-footer__group a:hover,
@@ -215,8 +187,8 @@ const footerGroups = [
       gap: 1.1rem;
     }
 
-    .site-footer__nav {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    .site-footer__projects {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .site-footer__brand {
