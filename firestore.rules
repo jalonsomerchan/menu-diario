@@ -21,6 +21,10 @@ service cloud.firestore {
         && request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members;
     }
 
+    function canReadUserProfile(userId) {
+      return isSelf(userId) || (resource.data.groupId is string && isGroupMember(resource.data.groupId));
+    }
+
     function isMemberDocument() {
       return signedIn() && request.auth.uid in resource.data.members;
     }
@@ -100,7 +104,8 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, create, update: if isSelf(userId);
+      allow read: if canReadUserProfile(userId);
+      allow create, update: if isSelf(userId);
       allow delete: if false;
     }
 
