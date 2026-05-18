@@ -111,7 +111,7 @@ service cloud.firestore {
 
     match /weeklyMenus/{menuId} {
       allow create: if createsOwnMenu();
-      allow read: if signedIn();
+      allow read: if isMemberDocument();
       allow update: if isMemberDocument() || joinsDocument();
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
     }
