@@ -10,6 +10,7 @@ export function GET() {
     withBasePath('como-funciona'),
     withBasePath('dashboard'),
     withBasePath('planificacion'),
+    withBasePath('recomendador-platos'),
     withBasePath('configurar'),
     withBasePath('compra'),
     withBasePath('tuppers'),
