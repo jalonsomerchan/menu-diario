@@ -3,7 +3,7 @@
 .dish-recommender-panel,
 .dish-recommender-results {
   display: grid;
-  gap: 1rem;
+  gap: 1.15rem;
 }
 
 .dish-recommender-panel {
@@ -16,7 +16,11 @@
 .dish-recommender-result,
 .dish-recommender-result__body {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.6rem;
+}
+
+.dish-recommender-heading {
+  margin-bottom: 0.25rem;
 }
 
 .dish-recommender-heading h1 {
@@ -37,7 +41,7 @@
 .dish-recommender-progress {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.45rem;
+  gap: 0.55rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -45,25 +49,30 @@
 
 .dish-recommender-step {
   display: grid;
-  gap: 0.3rem;
+  gap: 0.35rem;
   width: 100%;
-  min-height: 4.25rem;
+  min-height: 4.5rem;
   align-content: center;
-  padding: 0.6rem 0.45rem;
+  padding: 0.7rem 0.5rem;
   border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--color-surface), transparent 3%);
   color: var(--color-muted);
   font: inherit;
   text-align: center;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.dish-recommender-step:hover {
+  transform: translateY(-1px);
 }
 
 .dish-recommender-step span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.55rem;
-  height: 1.55rem;
+  width: 1.65rem;
+  height: 1.65rem;
   justify-self: center;
   border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
@@ -93,8 +102,9 @@
 
 .dish-recommender-card,
 .dish-recommender-result {
-  padding: var(--surface-padding-tight);
-  padding-bottom: max(var(--surface-padding-tight), 1rem);
+  display: grid;
+  gap: 1.2rem;
+  padding: clamp(1rem, 3vw, 1.35rem);
   border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
   border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
@@ -102,7 +112,7 @@
 
 .dish-recommender-grid {
   display: grid;
-  gap: 0.8rem;
+  gap: 1rem;
 }
 
 .dish-recommender-field span,
@@ -116,11 +126,57 @@
 .dish-recommender-field textarea,
 .dish-recommender-result select {
   width: 100%;
+  min-height: 3.15rem;
+  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 10%);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-surface), transparent 1%);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff, transparent 86%);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.dish-recommender-field input,
+.dish-recommender-field select,
+.dish-recommender-result select {
+  padding: 0 0.95rem;
+}
+
+.dish-recommender-field select,
+.dish-recommender-result select {
+  appearance: none;
+  padding-right: 2.4rem;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 1.15rem) 1.35rem, calc(100% - 0.8rem) 1.35rem;
+  background-repeat: no-repeat;
+  background-size: 0.36rem 0.36rem, 0.36rem 0.36rem;
+}
+
+.dish-recommender-field textarea {
+  min-height: 8.5rem;
+  padding: 0.95rem;
+  resize: vertical;
+  line-height: 1.55;
+  font-weight: 650;
+}
+
+.dish-recommender-field textarea::placeholder {
+  color: color-mix(in srgb, var(--color-muted), transparent 15%);
+}
+
+.dish-recommender-field input:focus,
+.dish-recommender-field select:focus,
+.dish-recommender-field textarea:focus,
+.dish-recommender-result select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 18%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-soft), transparent 12%);
 }
 
 .dish-recommender-options {
   display: grid;
-  gap: 0.65rem;
+  gap: 0.8rem;
   margin: 0;
   padding: 0;
   border: 0;
@@ -129,14 +185,27 @@
 .dish-recommender-options label {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  min-height: 3rem;
-  padding: 0.85rem 0.9rem;
+  gap: 0.7rem;
+  min-height: 3.2rem;
+  padding: 0.95rem 1rem;
   border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
   border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--color-surface), transparent 3%);
   color: var(--color-text);
   font-weight: 800;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.dish-recommender-options label:hover {
+  transform: translateY(-1px);
+}
+
+.dish-recommender-options input[type='radio'],
+.dish-recommender-options input[type='checkbox'] {
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--color-primary);
 }
 
 .dish-recommender-options label:has(input:checked) {
@@ -153,7 +222,7 @@
 .dish-recommender-result__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: 0.65rem;
 }
 
 .dish-recommender-pill {
@@ -177,7 +246,47 @@
 }
 
 .dish-recommender-ai-status[data-variant='error'] {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-danger), transparent 58%);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-danger), transparent 90%);
   color: var(--color-danger);
+}
+
+.dish-recommender-loading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 42%);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-primary-soft), transparent 12%);
+}
+
+.dish-recommender-loading__spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid color-mix(in srgb, var(--color-primary), transparent 75%);
+  border-top-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  animation: dish-recommender-spin 750ms linear infinite;
+}
+
+.dish-recommender-loading strong,
+.dish-recommender-loading p {
+  margin: 0;
+}
+
+.dish-recommender-loading strong {
+  color: var(--color-text);
+}
+
+.dish-recommender-loading p {
+  color: var(--color-muted);
+  line-height: var(--surface-copy-line-height);
 }
 
 .dish-recommender-result h3 {
@@ -188,7 +297,7 @@
 
 .dish-recommender-actions {
   display: flex;
-  gap: 0.65rem;
+  gap: 0.75rem;
   align-items: center;
   justify-content: space-between;
 }
@@ -198,10 +307,35 @@
   min-width: 0;
 }
 
+@keyframes dish-recommender-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dish-recommender-step,
+  .dish-recommender-options label,
+  .dish-recommender-field input,
+  .dish-recommender-field select,
+  .dish-recommender-field textarea,
+  .dish-recommender-result select {
+    transition: none;
+  }
+
+  .dish-recommender-loading__spinner {
+    animation-duration: 1.6s;
+  }
+}
+
 @media (min-width: 640px) {
   .dish-recommender-grid,
   .dish-recommender-options:not(.dish-recommender-options--time):not(.dish-recommender-options--wrap) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dish-recommender-grid--compact {
+    grid-template-columns: minmax(10rem, 0.7fr) minmax(12rem, 1.3fr);
   }
 
   .dish-recommender-options--time {
