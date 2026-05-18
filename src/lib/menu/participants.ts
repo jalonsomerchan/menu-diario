@@ -67,7 +67,7 @@ export function formatParticipantSummary(
   participants: MenuParticipant[],
   labels: ParticipantLabels
 ) {
-  const allLabel = labels.participantsAll ?? labels.statusAll ?? 'All';
+  const allLabel = labels.participantsAll ?? labels.statusAll ?? 'Todos';
   if (!participants.length || !Array.isArray(meal.participantIds)) return allLabel;
 
   const selected = getSelectedParticipants(meal, participants);
