@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Button from '../components/Button.astro';
 import Container from '../components/Container.astro';
 import AuthGate from '../components/AuthGate.astro';
 import { defaultLocale, siteConfig } from '../config/site';
@@ -8,34 +7,286 @@ import { useTranslations } from '../i18n/ui';
 
 const locale = defaultLocale;
 const t = useTranslations(locale);
+const homeCopy =
+  locale === 'es'
+    ? {
+        title: 'Menu Diario',
+        subtitle: 'Organiza tus comidas de una manera fácil y con inteligecia artificial',
+        eyebrow: 'Webapp de menús con IA',
+        sectionsTitle: 'Todo lo que necesitas para decidir qué comer',
+        sectionsSubtitle: 'Una herramienta sencilla para planificar, guardar ideas y coordinar comidas sin conversaciones eternas.',
+        features: [
+          {
+            title: 'Planifica desayunos, comidas y cenas',
+            description: 'Organiza los próximos días de forma visual, completa huecos y deja claro qué se come en cada momento.',
+          },
+          {
+            title: 'Recomendaciones con inteligencia artificial',
+            description: 'Recibe ideas de platos nuevos, menús equilibrados y propuestas adaptadas a tus intolerancias y preferencias.',
+          },
+          {
+            title: 'Platos guardados y menús reutilizables',
+            description: 'Crea tu catálogo de platos, reutiliza favoritos y evita repetir siempre las mismas comidas.',
+          },
+          {
+            title: 'Pensado para familias y grupos',
+            description: 'Comparte la planificación con tu grupo, revisa cambios en tiempo real y decide juntos sin perder información.',
+          },
+        ],
+      }
+    : {
+        title: 'Menu Diario',
+        subtitle: 'Organize your meals easily with artificial intelligence',
+        eyebrow: 'AI meal planning web app',
+        sectionsTitle: 'Everything you need to decide what to eat',
+        sectionsSubtitle: 'A simple tool to plan, save ideas and coordinate meals without endless conversations.',
+        features: [
+          {
+            title: 'Plan breakfasts, lunches and dinners',
+            description: 'Organize the upcoming days visually, fill empty slots and make it clear what everyone is eating.',
+          },
+          {
+            title: 'Artificial intelligence recommendations',
+            description: 'Get ideas for new dishes, balanced menus and suggestions adapted to your intolerances and preferences.',
+          },
+          {
+            title: 'Saved dishes and reusable menus',
+            description: 'Build your dish catalog, reuse favorites and avoid repeating the same meals all the time.',
+          },
+          {
+            title: 'Designed for families and groups',
+            description: 'Share planning with your group, review real-time changes and decide together without losing information.',
+          },
+        ],
+      };
 ---
 
-<BaseLayout title={siteConfig.name} description={t('site.description')} locale={locale}>
-  <Container class="py-12 sm:py-16">
-    <section class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-      <div>
-        <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">{t('home.eyebrow')}</p>
-        <h1 class="text-4xl font-black tracking-tight sm:text-6xl">{t('home.title')}</h1>
-        <p class="mt-6 max-w-2xl text-lg text-[var(--color-muted)]">
-          {t('home.description')}
-        </p>
-        <div class="mt-8 flex flex-wrap gap-3">
-          <Button href="#login">{t('home.loginTitle')}</Button>
-          <Button href={siteConfig.repositoryUrl} variant="secondary">{t('home.repository')}</Button>
+<BaseLayout title={homeCopy.title} description={homeCopy.subtitle} locale={locale}>
+  <Container class="py-10 sm:py-16">
+    <section class="home-hero" aria-labelledby="home-title">
+      <div class="home-hero__content">
+        <p class="home-hero__eyebrow">{homeCopy.eyebrow}</p>
+        <h1 id="home-title">{homeCopy.title}</h1>
+        <p class="home-hero__subtitle">{homeCopy.subtitle}</p>
+        <div class="home-hero__auth" id="login">
+          <AuthGate locale={locale} />
         </div>
       </div>
 
-      <div class="grid gap-3">
-        {[t('home.featureHistory'), t('home.featureShare'), t('home.featureNotifications')].map((feature) => (
-          <div class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 font-bold shadow-sm">
-            {feature}
-          </div>
-        ))}
+      <div class="home-hero__preview" aria-hidden="true">
+        <div class="home-preview-card home-preview-card--active">
+          <span>{t('dashboard.lunch')}</span>
+          <strong>Ensalada templada de quinoa</strong>
+          <small>IA · sano · equilibrado</small>
+        </div>
+        <div class="home-preview-card">
+          <span>{t('dashboard.dinner')}</span>
+          <strong>Crema de calabaza</strong>
+          <small>Guardado en tus platos</small>
+        </div>
+        <div class="home-preview-card">
+          <span>{t('dashboard.breakfast')}</span>
+          <strong>Tostadas con tomate</strong>
+          <small>Listo para mañana</small>
+        </div>
       </div>
     </section>
 
-    <div id="login">
-      <AuthGate locale={locale} />
-    </div>
+    <section class="home-sections" aria-labelledby="home-sections-title">
+      <div class="home-sections__heading">
+        <p class="home-hero__eyebrow">{t('home.eyebrow')}</p>
+        <h2 id="home-sections-title">{homeCopy.sectionsTitle}</h2>
+        <p>{homeCopy.sectionsSubtitle}</p>
+      </div>
+
+      <div class="home-feature-grid">
+        {homeCopy.features.map((feature, index) => (
+          <article class="home-feature-card">
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <h3>{feature.title}</h3>
+            <p>{feature.description}</p>
+          </article>
+        ))}
+      </div>
+    </section>
   </Container>
 </BaseLayout>
+
+<style>
+  .home-hero,
+  .home-sections {
+    display: grid;
+    gap: clamp(1.25rem, 4vw, 2rem);
+  }
+
+  .home-hero {
+    align-items: center;
+    min-height: min(720px, calc(100vh - 8rem));
+    padding: clamp(1.1rem, 4vw, 2.2rem);
+    border: 1px solid var(--panel-border);
+    border-radius: clamp(1.5rem, 4vw, 2.5rem);
+    background:
+      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary-soft), transparent 16%), transparent 16rem),
+      radial-gradient(circle at bottom left, color-mix(in srgb, var(--color-accent-soft), transparent 20%), transparent 14rem),
+      var(--panel-background-strong);
+    box-shadow: var(--shadow-md);
+  }
+
+  .home-hero__content {
+    display: grid;
+    gap: 1rem;
+    justify-items: start;
+  }
+
+  .home-hero__eyebrow {
+    margin: 0;
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 950;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .home-hero h1 {
+    max-width: 11ch;
+    margin: 0;
+    font-size: clamp(3.2rem, 16vw, 7rem);
+    font-weight: 1000;
+    letter-spacing: -0.09em;
+    line-height: 0.9;
+  }
+
+  .home-hero__subtitle {
+    max-width: 42rem;
+    margin: 0;
+    color: var(--color-muted);
+    font-size: clamp(1.15rem, 3vw, 1.55rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.35;
+  }
+
+  .home-hero__auth {
+    width: 100%;
+    max-width: 24rem;
+    margin-top: 0.35rem;
+  }
+
+  .home-hero__preview {
+    display: grid;
+    gap: 0.85rem;
+    align-self: stretch;
+    align-content: center;
+  }
+
+  .home-preview-card {
+    display: grid;
+    gap: 0.3rem;
+    padding: 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
+    border-radius: var(--radius-2xl);
+    background: color-mix(in srgb, var(--color-surface), transparent 4%);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .home-preview-card--active {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 38%);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary-soft), transparent 8%), var(--color-surface-raised));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .home-preview-card span,
+  .home-preview-card small {
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    font-weight: 850;
+  }
+
+  .home-preview-card strong {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  .home-sections {
+    margin-top: clamp(1.5rem, 5vw, 3rem);
+  }
+
+  .home-sections__heading {
+    display: grid;
+    gap: 0.5rem;
+    max-width: 48rem;
+  }
+
+  .home-sections__heading h2 {
+    margin: 0;
+    font-size: clamp(2rem, 8vw, 4rem);
+    line-height: 0.98;
+    letter-spacing: -0.07em;
+  }
+
+  .home-sections__heading p:not(.home-hero__eyebrow) {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 1.05rem;
+    font-weight: 650;
+    line-height: 1.55;
+  }
+
+  .home-feature-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .home-feature-card {
+    display: grid;
+    gap: 0.65rem;
+    min-height: 13rem;
+    padding: clamp(1rem, 3vw, 1.25rem);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-2xl);
+    background: var(--panel-background);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .home-feature-card span {
+    display: inline-grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    font-size: 0.82rem;
+    font-weight: 950;
+  }
+
+  .home-feature-card h3 {
+    margin: auto 0 0;
+    font-size: 1.2rem;
+    line-height: 1.15;
+    letter-spacing: -0.04em;
+  }
+
+  .home-feature-card p {
+    margin: 0;
+    color: var(--color-muted);
+    font-weight: 650;
+    line-height: 1.55;
+  }
+
+  @media (min-width: 760px) {
+    .home-hero {
+      grid-template-columns: minmax(0, 1.05fr) minmax(17rem, 0.65fr);
+    }
+
+    .home-feature-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1040px) {
+    .home-feature-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+</style>
