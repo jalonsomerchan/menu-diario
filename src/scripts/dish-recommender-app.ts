@@ -62,6 +62,7 @@ if (root) {
   let recommendations: DishRecommendation[] = [];
   let syncedIntolerances = false;
   let isGenerating = false;
+  let isGeneratingMore = false;
   let showEmptyResults = true;
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeMenus: (() => void) | undefined;
@@ -191,22 +192,43 @@ if (root) {
       .slice(0, 28);
   }
 
-  function renderLoading() {
+  function getAlreadyShownDishesForPrompt() {
+    return recommendations.map((dish) => `${dish.title} · ${dish.description}`);
+  }
+
+  function renderLoading(isMore = false) {
     if (!resultsContainer) return;
     resultsContainer.innerHTML = `
       <div class="dish-recommender-loading" role="status" aria-live="polite">
         <span class="dish-recommender-loading__spinner" aria-hidden="true"></span>
         <div>
-          <strong>${escapeHtml(labels.loadingTitle)}</strong>
-          <p>${escapeHtml(labels.loadingDescription)}</p>
+          <strong>${escapeHtml(isMore ? labels.loadingMoreTitle : labels.loadingTitle)}</strong>
+          <p>${escapeHtml(isMore ? labels.loadingMoreDescription : labels.loadingDescription)}</p>
         </div>
+      </div>
+    `;
+  }
+
+  function renderMoreControl() {
+    if (!recommendations.length) return '';
+    if (isGeneratingMore) {
+      return `
+        <div class="dish-recommender-more dish-recommender-more--loading" role="status" aria-live="polite">
+          <span class="dish-recommender-loading__spinner" aria-hidden="true"></span>
+          <span>${escapeHtml(labels.generatingMore)}</span>
+        </div>
+      `;
+    }
+    return `
+      <div class="dish-recommender-more">
+        <button class="button button--secondary" type="button" data-dish-generate-more>${escapeHtml(labels.generateMore)}</button>
       </div>
     `;
   }
 
   function renderResults() {
     if (!resultsContainer) return;
-    if (isGenerating) {
+    if (isGenerating && !recommendations.length) {
       renderLoading();
       return;
     }
@@ -220,8 +242,7 @@ if (root) {
     const slotOptions = slots.length
       ? slots.map((slot) => `<option value="${escapeHtml(`${slot.dayKey}::${slot.meal}`)}">${escapeHtml(slot.label)}</option>`).join('')
       : `<option value="">${escapeHtml(labels.assignEmpty)}</option>`;
-
-    resultsContainer.innerHTML = recommendations.map((dish, index) => `
+    const cards = recommendations.map((dish, index) => `
       <article class="dish-recommender-result">
         <div class="dish-recommender-result__body">
           <h3>${escapeHtml(dish.title)}</h3>
@@ -242,6 +263,7 @@ if (root) {
         </div>
       </article>
     `).join('');
+    resultsContainer.innerHTML = `${cards}${renderMoreControl()}`;
   }
 
   function go(nextStep: number, focus = false) {
@@ -283,6 +305,61 @@ if (root) {
 
   function isAiReady() {
     return hasFirebaseConfig() && isMenuSuggestionsAvailable(getAiFeatureFlags());
+  }
+
+  async function generateRecommendations(append = false) {
+    if (!currentUser) return;
+    const request = readRequest();
+
+    if (!isAiReady()) {
+      showEmptyResults = false;
+      renderResults();
+      showAiStatus(labels.configError || labels.aiMissingConfig, true);
+      return;
+    }
+
+    if (append) {
+      isGeneratingMore = true;
+      showAiStatus(labels.generatingMore);
+    } else {
+      setBusy(true);
+      isGenerating = true;
+      recommendations = [];
+      showAiStatus(labels.generating);
+    }
+
+    showEmptyResults = false;
+    renderResults();
+
+    try {
+      const previousRecommendations = append ? recommendations : [];
+      const response = await generateGeminiJson({
+        userId: currentUser.uid,
+        prompt: buildDishRecommenderPrompt({
+          locale,
+          ...request,
+          recentMeals: getRecentMealsForPrompt(request.meal),
+          alreadyShownDishes: previousRecommendations.length ? getAlreadyShownDishesForPrompt() : [],
+        }),
+        validator: isDishRecommendationResponse,
+      });
+      const newRecommendations = normalizeDishRecommendations(response, previousRecommendations);
+      recommendations = append ? [...recommendations, ...newRecommendations] : newRecommendations;
+      showEmptyResults = recommendations.length === 0;
+      if (append) {
+        showAiStatus(newRecommendations.length ? labels.generatedMore : labels.noNewDishes, newRecommendations.length === 0);
+      } else {
+        showAiStatus(recommendations.length ? labels.generated : labels.invalidResponse, recommendations.length === 0);
+      }
+    } catch (error) {
+      showEmptyResults = false;
+      showAiStatus(formatAiError(error), true);
+    } finally {
+      isGenerating = false;
+      isGeneratingMore = false;
+      renderResults();
+      setBusy(false);
+    }
   }
 
   async function saveDish(index: number) {
@@ -365,45 +442,17 @@ if (root) {
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (!currentUser) return;
-    const request = readRequest();
-
-    if (!isAiReady()) {
-      showEmptyResults = false;
-      renderResults();
-      showAiStatus(labels.configError || labels.aiMissingConfig, true);
-      return;
-    }
-
-    setBusy(true);
-    isGenerating = true;
-    showEmptyResults = false;
-    recommendations = [];
-    showAiStatus(labels.generating);
-    renderResults();
-
-    try {
-      const response = await generateGeminiJson({
-        userId: currentUser.uid,
-        prompt: buildDishRecommenderPrompt({ locale, ...request, recentMeals: getRecentMealsForPrompt(request.meal) }),
-        validator: isDishRecommendationResponse,
-      });
-      recommendations = normalizeDishRecommendations(response);
-      showEmptyResults = recommendations.length === 0;
-      showAiStatus(recommendations.length ? labels.generated : labels.invalidResponse, recommendations.length === 0);
-    } catch (error) {
-      showEmptyResults = false;
-      showAiStatus(formatAiError(error), true);
-    } finally {
-      isGenerating = false;
-      renderResults();
-      setBusy(false);
-    }
+    await generateRecommendations(false);
   });
 
   resultsContainer?.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
+    const moreButton = target.closest<HTMLButtonElement>('[data-dish-generate-more]');
+    if (moreButton) {
+      void generateRecommendations(true);
+      return;
+    }
     const saveButton = target.closest<HTMLButtonElement>('[data-dish-save]');
     if (saveButton) {
       void saveDish(Number(saveButton.dataset.dishSave));
