@@ -352,6 +352,29 @@
   background-position: calc(100% - 1rem) 1.02rem, calc(100% - 0.68rem) 1.02rem;
 }
 
+.dish-recommender-more {
+  display: flex;
+  justify-content: center;
+  padding: 0.4rem 0 0.2rem;
+}
+
+.dish-recommender-more .button {
+  min-width: min(100%, 13rem);
+}
+
+.dish-recommender-more--loading {
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--color-muted);
+  font-weight: 850;
+}
+
+.dish-recommender-more--loading .dish-recommender-loading__spinner {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-width: 2px;
+}
+
 .dish-recommender-actions {
   display: flex;
   gap: 0.75rem;
