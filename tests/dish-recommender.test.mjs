@@ -28,6 +28,7 @@ describe('dish recommender smoke checks', () => {
     const styles = readText('src/styles/dish-recommender.css');
     const aiIndex = readText('src/lib/ai/index.ts');
     const aiHelper = readText('src/lib/ai/dish-recommender.ts');
+    const translations = readText('src/i18n/dish-recommender.ts');
 
     assert.match(page, /<DishRecommenderApp/);
     assert.match(localizedPage, /getStaticPaths/);
@@ -35,6 +36,8 @@ describe('dish recommender smoke checks', () => {
     assert.match(component, /data-dish-recommender-app/);
     assert.match(component, /data-dish-step-indicator/);
     assert.match(component, /data-dish-submit/);
+    assert.doesNotMatch(component, /menu-app__eyebrow/);
+    assert.match(component, /inputmode="numeric"/);
     assert.match(script, /buildDishRecommenderPrompt/);
     assert.match(script, /createManualDish/);
     assert.match(script, /updateMenuDay/);
@@ -43,15 +46,24 @@ describe('dish recommender smoke checks', () => {
     assert.match(script, /watchUserMenus/);
     assert.match(script, /getRecentMealsForPrompt/);
     assert.match(script, /recentMeals: getRecentMealsForPrompt\(request\.meal\)/);
+    assert.match(script, /renderLoading/);
+    assert.match(script, /showEmptyResults = false/);
+    assert.match(script, /formatAiError/);
     assert.match(script, /navigator\.share/);
     assert.match(script, /data-dish-share/);
     assert.match(styles, /dish-recommender-progress/);
+    assert.match(styles, /dish-recommender-loading__spinner/);
+    assert.match(styles, /appearance: none/);
+    assert.match(styles, /resize: vertical/);
     assert.match(styles, /@media \(max-width: 539px\)/);
     assert.match(aiIndex, /dish-recommender/);
     assert.match(aiHelper, /basic pantry items/);
     assert.match(aiHelper, /Recently eaten meals to avoid repeating/);
     assert.match(aiHelper, /same main protein\/style/);
     assert.match(aiHelper, /isDishRecommendationResponse/);
+    assert.match(translations, /loadingTitle/);
+    assert.match(translations, /requestError/);
+    assert.match(translations, /timeoutError/);
   });
 
   it('exposes the dish recommender from navigation and app shell cache', () => {
