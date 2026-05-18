@@ -1,5 +1,6 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
+import { formatAppError } from '../lib/errors';
 import {
   addPendingGroupEmail,
   ensureDefaultGroup,
@@ -54,7 +55,7 @@ if (root) {
   }
 
   function reportError(error: unknown) {
-    showStatus(error instanceof Error ? error.message : String(error), true);
+    showStatus(formatAppError(error, labels), true);
   }
 
   function runAction(action: () => Promise<void>) {

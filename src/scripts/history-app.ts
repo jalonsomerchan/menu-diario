@@ -1,4 +1,5 @@
 import { watchUserDishes } from '../lib/dishes/repository';
+import { formatAppError } from '../lib/errors';
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
@@ -84,10 +85,7 @@ if (root) {
   }
 
   function formatError(error: unknown) {
-    if (error instanceof Error && error.message.toLowerCase().includes('permission')) {
-      return labels.permissionsError;
-    }
-    return error instanceof Error ? error.message : String(error);
+    return formatAppError(error, labels);
   }
 
   function getEnabledMeals(): MealSlot[] {
