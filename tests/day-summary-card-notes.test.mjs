@@ -24,10 +24,11 @@ describe('upcoming day card notes', () => {
     assert.ok(dashboard.includes("day.skipped ? day.skipNote : ''"));
     assert.ok(dashboard.includes('day.meals[meal]?.note'));
     assert.ok(dashboard.includes("if (!notes.length) return ''"));
+    assert.ok(dashboard.includes('aria-label="${escapeHtml(labels.notes)}"'));
     assert.ok(dashboard.includes('notesHtml: renderDayNotesHtml(day)'));
 
+    assert.ok(component.includes("notes: t('menu.notes')"));
     assert.ok(component.includes('planner-day-card__notes'));
     assert.ok(component.includes('-webkit-line-clamp: 2'));
-    assert.ok(component.includes('labels.notes'));
   });
 });
