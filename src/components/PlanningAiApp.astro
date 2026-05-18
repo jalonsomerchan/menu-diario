@@ -270,6 +270,17 @@ const wizardSteps = [
             <h3>{labels.summaryTitle}</h3>
           </div>
           <div class="planning-ai-request-summary" data-plan-summary></div>
+
+          <section class="planning-ai-results-panel" aria-labelledby="planning-ai-results-title">
+            <div class="planning-ai-section-heading">
+              <h3 id="planning-ai-results-title">{labels.resultsTitle}</h3>
+              <p>{labels.resultsDescription}</p>
+            </div>
+            <div class="planning-ai-results-status" data-ai-status role="status" aria-live="polite"></div>
+            <div class="planning-ai-results" data-plan-results>
+              <p class="planning-ai-empty">{labels.resultsNotGenerated}</p>
+            </div>
+          </section>
         </section>
 
         <div class="planning-ai-wizard-actions">
@@ -278,20 +289,6 @@ const wizardSteps = [
           <button class="button button--primary planning-ai-submit" type="submit" data-plan-submit hidden>{labels.submit}</button>
         </div>
       </form>
-    </section>
-
-    <section class="planning-ai-panel planning-ai-panel--results app-panel" aria-labelledby="planning-ai-results-title">
-      <div class="section-heading section-heading--simple">
-        <div>
-          <p class="menu-app__eyebrow">{labels.eyebrow}</p>
-          <h2 id="planning-ai-results-title">{labels.resultsTitle}</h2>
-          <p>{labels.resultsDescription}</p>
-        </div>
-      </div>
-      <div class="planning-ai-results-status" data-ai-status role="status" aria-live="polite"></div>
-      <div class="planning-ai-results" data-plan-results>
-        <p class="planning-ai-empty">{labels.resultsNotGenerated}</p>
-      </div>
     </section>
   </div>
 
@@ -429,6 +426,13 @@ const wizardSteps = [
     border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
     border-radius: var(--radius-xl);
     background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+  }
+
+  .planning-ai-results-panel {
+    display: grid;
+    gap: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
   }
 
   .planning-ai-section-heading {
