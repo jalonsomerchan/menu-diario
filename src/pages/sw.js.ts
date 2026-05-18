@@ -7,6 +7,7 @@ export function GET() {
   const basePath = getBasePath();
   const preCacheUrls = [
     withBasePath(''),
+    withBasePath('como-funciona'),
     withBasePath('dashboard'),
     withBasePath('planificacion'),
     withBasePath('configurar'),
@@ -22,6 +23,7 @@ export function GET() {
     withBasePath('favicon.svg'),
     withBasePath('og-image.svg'),
     getLocalizedPath('/', defaultLocale),
+    getLocalizedPath('/como-funciona', defaultLocale),
   ];
 
   const source = `

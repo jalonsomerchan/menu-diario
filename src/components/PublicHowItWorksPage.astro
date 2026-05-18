@@ -1,0 +1,85 @@
+---
+import Button from './Button.astro';
+import Container from './Container.astro';
+import { type Locale } from '../config/site';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const steps = [
+  {
+    title: t('public.howItWorks.stepGroupTitle'),
+    description: t('public.howItWorks.stepGroupDescription'),
+  },
+  {
+    title: t('public.howItWorks.stepPlanTitle'),
+    description: t('public.howItWorks.stepPlanDescription'),
+  },
+  {
+    title: t('public.howItWorks.stepReviewTitle'),
+    description: t('public.howItWorks.stepReviewDescription'),
+  },
+];
+
+const benefits = [
+  t('public.howItWorks.benefitMobile'),
+  t('public.howItWorks.benefitShared'),
+  t('public.howItWorks.benefitHistory'),
+];
+---
+
+<Container class="py-12 sm:py-16">
+  <section class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+    <div>
+      <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
+        {t('public.howItWorks.eyebrow')}
+      </p>
+      <h1 class="text-4xl font-black tracking-tight sm:text-6xl">{t('public.howItWorks.heroTitle')}</h1>
+      <p class="mt-6 max-w-2xl text-lg text-[var(--color-muted)]">{t('public.howItWorks.heroDescription')}</p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <Button href={getLocalizedPath('/', locale)}>{t('public.howItWorks.primaryCta')}</Button>
+        <Button href={getLocalizedPath('/dashboard', locale)} variant="secondary">
+          {t('public.howItWorks.secondaryCta')}
+        </Button>
+      </div>
+    </div>
+
+    <ol class="grid gap-3" aria-label={t('public.howItWorks.stepsTitle')}>
+      {steps.map((step, index) => (
+        <li class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
+          <span class="text-sm font-black uppercase tracking-[0.16em] text-[var(--color-primary)]">0{index + 1}</span>
+          <h2 class="mt-2 text-2xl font-black tracking-tight">{step.title}</h2>
+          <p class="mt-2 text-[var(--color-muted)]">{step.description}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="mt-12 grid gap-5 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm sm:p-7">
+    <div>
+      <h2 class="text-3xl font-black tracking-tight">{t('public.howItWorks.benefitsTitle')}</h2>
+      <p class="mt-3 max-w-2xl text-[var(--color-muted)]">{t('public.howItWorks.description')}</p>
+    </div>
+
+    <div class="grid gap-3 md:grid-cols-3">
+      {benefits.map((benefit) => (
+        <p class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4 font-bold text-[var(--color-text)]">
+          {benefit}
+        </p>
+      ))}
+    </div>
+  </section>
+
+  <section class="mt-8 rounded-3xl border border-[var(--color-border)] bg-[var(--color-primary-soft)] p-5 sm:p-7">
+    <h2 class="text-3xl font-black tracking-tight">{t('public.howItWorks.finalTitle')}</h2>
+    <p class="mt-3 max-w-2xl text-[var(--color-muted)]">{t('public.howItWorks.finalDescription')}</p>
+    <div class="mt-6">
+      <Button href={getLocalizedPath('/', locale)}>{t('public.howItWorks.primaryCta')}</Button>
+    </div>
+  </section>
+</Container>

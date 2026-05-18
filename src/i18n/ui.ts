@@ -2,9 +2,11 @@ import { defaultLocale, locales, type Locale } from '../config/site';
 import { joinPathSegments, stripBasePath, withBasePath } from '../utils/paths';
 import en from './translations/en.json';
 import enHistory from './translations/history/en.json';
+import enPublic from './translations/public/en.json';
 import enSettings from './translations/settings/en.json';
 import es from './translations/es.json';
 import esHistory from './translations/history/es.json';
+import esPublic from './translations/public/es.json';
 import esSettings from './translations/settings/es.json';
 
 function namespaceTranslations(namespace: string, values: Record<string, string>) {
@@ -15,12 +17,14 @@ const esTranslations = {
   ...es,
   ...namespaceTranslations('history', esHistory),
   ...namespaceTranslations('settings', esSettings),
+  ...namespaceTranslations('public', esPublic),
 };
 
 const enTranslations: typeof esTranslations = {
   ...en,
   ...namespaceTranslations('history', enHistory),
   ...namespaceTranslations('settings', enSettings),
+  ...namespaceTranslations('public', enPublic),
 };
 
 export type TranslationKey = keyof typeof esTranslations;
