@@ -142,7 +142,7 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.createdBy == request.auth.uid
         && request.auth.uid in request.resource.data.members;
-      allow read: if signedIn();
+      allow read: if isMemberDocument();
       allow update: if isMemberDocument() || willBeMemberDocument();
       allow delete: if signedIn() && resource.data.createdBy == request.auth.uid;
     }
