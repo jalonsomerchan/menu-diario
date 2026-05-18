@@ -49,6 +49,17 @@ if (form) {
     if (focus) focusPanel();
   }
 
+  function validateBeforeSubmit(event: Event) {
+    for (let panelIndex = 0; panelIndex < panels.length - 1; panelIndex += 1) {
+      if (validate(panelIndex)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        go(panelIndex, true);
+        return;
+      }
+    }
+  }
+
   back?.addEventListener('click', () => go(index - 1, true));
   next?.addEventListener('click', () => {
     if (!validate(index)) go(index + 1, true);
@@ -62,14 +73,6 @@ if (form) {
       go(dotIndex, true);
     });
   });
-  form.addEventListener('submit', (event) => {
-    for (let panelIndex = 0; panelIndex < panels.length - 1; panelIndex += 1) {
-      if (validate(panelIndex)) {
-        event.preventDefault();
-        go(panelIndex, true);
-        return;
-      }
-    }
-  });
+  form.addEventListener('submit', validateBeforeSubmit, { capture: true });
   go(0);
 }
