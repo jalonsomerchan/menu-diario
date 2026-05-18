@@ -1,0 +1,175 @@
+---
+import Button from './Button.astro';
+import Container from './Container.astro';
+import { siteConfig, type Locale } from '../config/site';
+import { getLocalizedPath } from '../i18n/ui';
+import { usePublicPageCopy } from '../i18n/public-pages';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const tp = usePublicPageCopy(locale);
+const dashboardPath = getLocalizedPath('/dashboard', locale);
+const values = [tp('aboutValueSimple'), tp('aboutValueGroup'), tp('aboutValueHistory'), tp('aboutValueMobile')];
+---
+
+<Container class="py-12 sm:py-16">
+  <article class="about-page">
+    <header class="about-page__hero">
+      <p class="about-page__eyebrow">{tp('aboutEyebrow')}</p>
+      <h1>{tp('aboutTitle')}</h1>
+      <p>{tp('aboutIntro')}</p>
+      <div class="about-page__actions" aria-label={tp('aboutCtaTitle')}>
+        <Button href={dashboardPath}>{tp('aboutPrimaryCta')}</Button>
+        <Button href={siteConfig.repositoryUrl} variant="secondary">{tp('aboutSecondaryCta')}</Button>
+      </div>
+    </header>
+
+    <section class="about-page__grid" aria-labelledby="about-who-title">
+      <div class="about-page__panel">
+        <h2 id="about-who-title">{tp('aboutWhoTitle')}</h2>
+        <p>{tp('aboutWhoDescription')}</p>
+      </div>
+
+      <div class="about-page__panel">
+        <h2>{tp('aboutValuesTitle')}</h2>
+        <ul class="about-page__list">
+          {values.map((value) => <li>{value}</li>)}
+        </ul>
+      </div>
+    </section>
+
+    <section class="about-page__panel about-page__panel--wide" aria-labelledby="about-practical-title">
+      <h2 id="about-practical-title">{tp('aboutPrivacyTitle')}</h2>
+      <p>{tp('aboutPrivacyDescription')}</p>
+    </section>
+
+    <section class="about-page__cta" aria-labelledby="about-cta-title">
+      <div>
+        <h2 id="about-cta-title">{tp('aboutCtaTitle')}</h2>
+        <p>{tp('aboutCtaDescription')}</p>
+      </div>
+      <Button href={dashboardPath}>{tp('aboutPrimaryCta')}</Button>
+    </section>
+  </article>
+</Container>
+
+<style>
+  .about-page {
+    display: grid;
+    gap: 1rem;
+    max-width: 64rem;
+    margin-inline: auto;
+  }
+
+  .about-page__hero,
+  .about-page__panel,
+  .about-page__cta {
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-2xl);
+    background: var(--panel-background);
+    box-shadow: var(--shadow-sm);
+    padding: var(--surface-padding-lg);
+  }
+
+  .about-page__hero {
+    display: grid;
+    gap: 1rem;
+    background: var(--panel-background-strong);
+  }
+
+  .about-page__eyebrow {
+    width: fit-content;
+    margin: 0;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 16%);
+    color: var(--color-primary);
+    padding: 0.25rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .about-page h1,
+  .about-page h2,
+  .about-page p {
+    margin: 0;
+  }
+
+  .about-page h1 {
+    max-width: 11ch;
+    font-size: clamp(2.5rem, 11vw, 5rem);
+    line-height: 0.92;
+    letter-spacing: -0.075em;
+  }
+
+  .about-page h2 {
+    font-size: clamp(1.45rem, 5vw, 2.1rem);
+    line-height: 1;
+    letter-spacing: -0.05em;
+  }
+
+  .about-page p,
+  .about-page li {
+    color: var(--color-muted);
+    line-height: var(--surface-copy-line-height);
+  }
+
+  .about-page__actions,
+  .about-page__cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .about-page__grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .about-page__panel {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .about-page__list {
+    display: grid;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .about-page__list li {
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 18%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
+    padding: 0.85rem;
+  }
+
+  .about-page__cta {
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .about-page__cta div {
+    display: grid;
+    gap: 0.45rem;
+    min-width: min(100%, 20rem);
+  }
+
+  @media (min-width: 760px) {
+    .about-page {
+      gap: 1.25rem;
+    }
+
+    .about-page__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+  }
+</style>
