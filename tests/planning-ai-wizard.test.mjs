@@ -15,6 +15,12 @@ describe('AI planner wizard', () => {
     const wizard = readText('src/scripts/planning-ai-wizard.ts');
     const planner = readText('src/scripts/planning-ai-app.ts');
 
+    assert.match(component, /Planificador con IA/);
+    assert.match(component, /Planifica tus próximas comidas con inteligencia artificial/);
+    assert.match(component, /planning-ai-panel-heading/);
+    assert.match(component, /data-plan-scroll-target/);
+    assert.doesNotMatch(component, /planning-ai-hero app-panel/);
+    assert.doesNotMatch(component, /section-heading section-heading--simple/);
     assert.match(component, /data-plan-wizard/);
     assert.match(component, /data-plan-step=\"0\"/);
     assert.match(component, /data-plan-step=\"2\"/);
@@ -37,7 +43,8 @@ describe('AI planner wizard', () => {
     assert.match(wizard, /selectedMeals\(\)\.length === 0/);
     assert.match(wizard, /selectedPendingSlots\(\)\.length === 0/);
     assert.match(wizard, /planning-ai-wizard:step/);
-    assert.match(wizard, /scrollIntoView/);
+    assert.match(wizard, /scrollTarget\.scrollIntoView/);
+    assert.match(wizard, /data-plan-scroll-target/);
     assert.match(wizard, /max-width: 719px/);
     assert.match(wizard, /aria-current', 'step'/);
 
