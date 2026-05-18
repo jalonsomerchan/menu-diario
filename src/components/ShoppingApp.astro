@@ -70,6 +70,21 @@ const labels = {
   invalidResponse: t('shopping.invalidResponse'),
   noToBuyItems: t('shopping.noToBuyItems'),
   previewHint: t('shopping.previewHint'),
+  wizardProgress: t('shopping.wizardProgress'),
+  wizardStepRange: t('shopping.wizardStepRange'),
+  wizardStepMeals: t('shopping.wizardStepMeals'),
+  wizardStepSummary: t('shopping.wizardStepSummary'),
+  wizardStepResults: t('shopping.wizardStepResults'),
+  wizardBack: t('shopping.wizardBack'),
+  wizardNext: t('shopping.wizardNext'),
+  wizardCancel: t('shopping.wizardCancel'),
+  wizardSummaryTitle: t('shopping.wizardSummaryTitle'),
+  wizardSummaryDescription: t('shopping.wizardSummaryDescription'),
+  wizardConfirmTitle: t('shopping.wizardConfirmTitle'),
+  wizardConfirmDescription: t('shopping.wizardConfirmDescription'),
+  wizardRangeRequired: t('shopping.wizardRangeRequired'),
+  wizardMealsRequired: t('shopping.wizardMealsRequired'),
+  wizardCancelled: t('shopping.wizardCancelled'),
   markToBuy: t('shopping.markToBuy'),
   markOwned: t('shopping.markOwned'),
   markDismissed: t('shopping.markDismissed'),
@@ -153,39 +168,82 @@ const labels = {
           <a class="button button--ghost button--small" href={configurePath}>{labels.configureLabel}</a>
         </div>
       </header>
-      <div class="shopping-flow card-container">
-        <section class="shopping-step" aria-labelledby="shopping-range-title">
-          <header class="shopping-step__header">
-            <div>
-              <p class="menu-app__eyebrow" data-scope-label>{labels.userScope}</p>
-              <h2 id="shopping-range-title">{labels.rangeTitle}</h2>
-              <p>{labels.rangeDescription}</p>
-            </div>
-            <span class="shopping-panel__badge" data-inventory-hint>{labels.inventoryHint}</span>
-          </header>
-          <div class="shopping-range" data-range-picker></div>
-          <div class="shopping-selection-summary" data-selection-summary></div>
-          <div class="shopping-meals" data-meals></div>
-          <div class="shopping-generate">
-            <button class="button button--primary" type="button" data-generate>{labels.generate}</button>
-            <p class="shopping-ai-status" data-ai-status role="status" aria-live="polite"></p>
-          </div>
-        </section>
 
-        <section class="shopping-step shopping-step--draft" aria-labelledby="shopping-draft-title">
-          <header class="shopping-step__header">
-            <div>
-              <p class="menu-app__eyebrow">{labels.previewHint}</p>
-              <h2 id="shopping-draft-title">{labels.reviewTitle}</h2>
-              <p>{labels.reviewDescription}</p>
+      <div class="shopping-wizard" data-shopping-wizard>
+        <ol class="shopping-wizard__progress" aria-label={labels.wizardProgress} data-wizard-progress>
+          <li data-wizard-progress-step="range" aria-current="step"><span>1</span>{labels.wizardStepRange}</li>
+          <li data-wizard-progress-step="meals"><span>2</span>{labels.wizardStepMeals}</li>
+          <li data-wizard-progress-step="summary"><span>3</span>{labels.wizardStepSummary}</li>
+          <li data-wizard-progress-step="results"><span>4</span>{labels.wizardStepResults}</li>
+        </ol>
+
+        <p class="shopping-wizard__error" data-wizard-error role="alert" hidden></p>
+
+        <div class="shopping-flow card-container">
+          <section class="shopping-step" aria-labelledby="shopping-range-title" data-wizard-step="range">
+            <header class="shopping-step__header">
+              <div>
+                <p class="menu-app__eyebrow" data-scope-label>{labels.userScope}</p>
+                <h2 id="shopping-range-title">{labels.rangeTitle}</h2>
+                <p>{labels.rangeDescription}</p>
+              </div>
+              <span class="shopping-panel__badge" data-inventory-hint>{labels.inventoryHint}</span>
+            </header>
+            <div class="shopping-range" data-range-picker></div>
+            <div class="shopping-selection-summary" data-selection-summary></div>
+          </section>
+
+          <section class="shopping-step" aria-labelledby="shopping-meals-title" data-wizard-step="meals" hidden>
+            <header class="shopping-step__header">
+              <div>
+                <p class="menu-app__eyebrow">{labels.wizardStepMeals}</p>
+                <h2 id="shopping-meals-title">{labels.mealsTitle}</h2>
+                <p>{labels.mealsDescription}</p>
+              </div>
+            </header>
+            <div class="shopping-meals" data-meals></div>
+          </section>
+
+          <section class="shopping-step" aria-labelledby="shopping-summary-title" data-wizard-step="summary" hidden>
+            <header class="shopping-step__header">
+              <div>
+                <p class="menu-app__eyebrow">{labels.wizardStepSummary}</p>
+                <h2 id="shopping-summary-title">{labels.wizardSummaryTitle}</h2>
+                <p>{labels.wizardSummaryDescription}</p>
+              </div>
+            </header>
+            <div class="shopping-wizard__summary" data-wizard-summary></div>
+            <div class="shopping-generate">
+              <div>
+                <h3>{labels.wizardConfirmTitle}</h3>
+                <p>{labels.wizardConfirmDescription}</p>
+              </div>
+              <button class="button button--primary" type="button" data-generate>{labels.generate}</button>
+              <p class="shopping-ai-status" data-ai-status role="status" aria-live="polite"></p>
             </div>
-            <div class="shopping-toolbar">
-              <button class="button button--ghost button--small" type="button" data-share>{labels.share}</button>
-              <button class="button button--primary button--small" type="button" data-save>{labels.saveList}</button>
-            </div>
-          </header>
-          <div class="shopping-draft" data-draft></div>
-        </section>
+          </section>
+
+          <section class="shopping-step shopping-step--draft" aria-labelledby="shopping-draft-title" data-wizard-step="results" hidden>
+            <header class="shopping-step__header">
+              <div>
+                <p class="menu-app__eyebrow">{labels.previewHint}</p>
+                <h2 id="shopping-draft-title">{labels.reviewTitle}</h2>
+                <p>{labels.reviewDescription}</p>
+              </div>
+              <div class="shopping-toolbar">
+                <button class="button button--ghost button--small" type="button" data-share>{labels.share}</button>
+                <button class="button button--primary button--small" type="button" data-save>{labels.saveList}</button>
+              </div>
+            </header>
+            <div class="shopping-draft" data-draft></div>
+          </section>
+        </div>
+
+        <footer class="shopping-wizard__actions">
+          <button class="button button--ghost" type="button" data-wizard-cancel>{labels.wizardCancel}</button>
+          <button class="button button--secondary" type="button" data-wizard-prev>{labels.wizardBack}</button>
+          <button class="button button--primary" type="button" data-wizard-next>{labels.wizardNext}</button>
+        </footer>
       </div>
     </section>
   </div>
@@ -199,7 +257,8 @@ const labels = {
 
   .shopping-app__loading[hidden],
   .shopping-app__workspace[hidden],
-  .shopping-app__auth[hidden] {
+  .shopping-app__auth[hidden],
+  [data-wizard-step][hidden] {
     display: none;
   }
 
@@ -209,7 +268,8 @@ const labels = {
   }
 
   .shopping-hero,
-  .shopping-panel {
+  .shopping-panel,
+  .shopping-wizard {
     display: grid;
     gap: 1rem;
   }
@@ -217,6 +277,109 @@ const labels = {
   .shopping-hero {
     border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 68%);
     background: var(--panel-background-strong);
+  }
+
+  .shopping-wizard__progress {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .shopping-wizard__progress li {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
+    color: var(--color-muted);
+    padding: 0.62rem 0.72rem;
+    font-size: 0.82rem;
+    font-weight: 850;
+  }
+
+  .shopping-wizard__progress span {
+    display: grid;
+    flex: 0 0 auto;
+    width: 1.65rem;
+    height: 1.65rem;
+    place-items: center;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    font-weight: 950;
+  }
+
+  .shopping-wizard__progress li[aria-current='step'] {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 18%);
+    color: var(--color-primary);
+  }
+
+  .shopping-wizard__progress li[aria-current='step'] span {
+    background: var(--color-primary);
+    color: #fff;
+  }
+
+  .shopping-wizard__error {
+    margin: 0;
+    border: 1px solid color-mix(in srgb, var(--color-danger), var(--color-border) 50%);
+    border-radius: var(--radius-xl);
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+    padding: 0.75rem 0.9rem;
+    font-weight: 850;
+  }
+
+  .shopping-wizard__summary {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .shopping-wizard__summary dl {
+    display: grid;
+    gap: 0.55rem;
+    margin: 0;
+  }
+
+  .shopping-wizard__summary div {
+    display: grid;
+    gap: 0.12rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 16%);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 10%);
+    padding: 0.75rem 0.85rem;
+  }
+
+  .shopping-wizard__summary dt {
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .shopping-wizard__summary dd {
+    margin: 0;
+    font-weight: 850;
+  }
+
+  .shopping-wizard__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: grid;
+    gap: 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 15%);
+    border-radius: var(--radius-2xl);
+    background: color-mix(in srgb, var(--color-surface), transparent 5%);
+    padding: 0.75rem;
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(14px);
   }
 
   .shopping-flow {
@@ -248,6 +411,12 @@ const labels = {
   .shopping-panel__header {
     display: grid;
     gap: 0.9rem;
+    align-items: start;
+  }
+
+  .shopping-step__header {
+    display: grid;
+    gap: 0.75rem;
     align-items: start;
   }
 
@@ -343,7 +512,8 @@ const labels = {
   }
 
   .shopping-empty,
-  .shopping-ai-status {
+  .shopping-ai-status,
+  .shopping-generate p {
     margin: 0;
     color: var(--color-muted);
   }
@@ -355,6 +525,14 @@ const labels = {
   .shopping-generate {
     display: grid;
     gap: 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 55%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 24%);
+    padding: 0.9rem;
+  }
+
+  .shopping-generate h3 {
+    margin: 0 0 0.25rem;
   }
 
   .shopping-meal-card,
@@ -490,12 +668,18 @@ const labels = {
   }
 
   @media (min-width: 48rem) {
-    .shopping-panel__header {
+    .shopping-panel__header,
+    .shopping-step__header {
       grid-template-columns: minmax(0, 1fr) auto;
     }
 
-    .shopping-flow {
-      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    .shopping-wizard__progress {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .shopping-wizard__actions {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
     }
 
     .shopping-range {
@@ -503,8 +687,12 @@ const labels = {
     }
 
     .shopping-generate {
-      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
+    }
+
+    .shopping-generate .shopping-ai-status {
+      grid-column: 1 / -1;
     }
   }
 </style>
