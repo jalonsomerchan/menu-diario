@@ -42,6 +42,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   let activeDayKey = '';
   let draftDay = normalizeDay(undefined);
   let returnFocusTo: HTMLElement | null = null;
+  let allowNextClose = false;
 
   if (!modal || !form || !fields) {
     return {
@@ -107,6 +108,26 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     return fields.querySelector<HTMLElement>('[data-day]');
   }
 
+  function hasUnsavedChanges() {
+    if (!activeDayKey || !options.canWrite()) return false;
+    const card = getEditorCard();
+    const currentDraft = card ? readDayDraft(card, options.getEnabledMeals(), draftDay) : draftDay;
+    return serializeDay(currentDraft) !== options.getSavedDayState(activeDayKey);
+  }
+
+  function requestCloseWithConfirmation() {
+    if (!hasUnsavedChanges()) {
+      allowNextClose = true;
+      modal.close('cancel');
+      return;
+    }
+
+    if (window.confirm(options.labels.discardChangesConfirm)) {
+      allowNextClose = true;
+      modal.close('discard');
+    }
+  }
+
   function render(dayKey: string, day: DailyMenu) {
     activeDayKey = dayKey;
     draftDay = normalizeDay(day);
@@ -129,6 +150,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   }
 
   function open(dayKey: string, config: OpenDayEditModalOptions = {}) {
+    allowNextClose = false;
     returnFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     render(dayKey, normalizeDay(config.day ?? options.getDay(dayKey)));
     if (!modal.open) {
@@ -237,7 +259,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
 
     const cancelButton = target.closest<HTMLButtonElement>('[data-day-edit-cancel], [data-day-edit-cancel-footer]');
     if (cancelButton) {
-      modal.close('cancel');
+      requestCloseWithConfirmation();
       return;
     }
 
@@ -251,6 +273,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     try {
       const cleared = await options.onClearDay(activeDayKey);
       if (cleared !== false) {
+        allowNextClose = true;
         modal.close();
         return;
       }
@@ -280,6 +303,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
       setSaveBusy(true);
       await options.onSaveDay(activeDayKey, draftDay, card);
       setSaveMessage(options.labels.saveSaved || defaultSaveState, 'saved');
+      allowNextClose = true;
       modal.close();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -293,7 +317,14 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     }
   });
 
+  modal.addEventListener('cancel', (event) => {
+    if (allowNextClose || !hasUnsavedChanges()) return;
+    event.preventDefault();
+    requestCloseWithConfirmation();
+  });
+
   modal.addEventListener('close', () => {
+    allowNextClose = false;
     returnFocusTo?.focus();
     returnFocusTo = null;
   });
