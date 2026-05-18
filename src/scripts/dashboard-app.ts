@@ -8,15 +8,17 @@ import { serializeDay } from '../lib/menu/day-state';
 import { renderPlateRow } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
+import { formatParticipantSummary, getMenuParticipants } from '../lib/menu/participants';
 import {
   clearMenuDay,
   ensureUserProfile,
   getOrCreateWeekMenus,
   updateMenuDay,
+  watchGroup,
   watchUserProfile,
   watchWeekMenusByIds,
 } from '../lib/menu/repository';
-import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, MenuGroup, MenuParticipant, UserProfile, WeekMenu } from '../lib/menu/types';
 import { notifyMenuChanged, requestChangeNotifications } from '../lib/notifications/browser';
 import { getNetworkStatus, watchNetworkStatus } from '../lib/pwa/network-status';
 import { readLastOfflineMenuCache, saveOfflineMenuCache } from '../lib/pwa/offline-cache';
@@ -44,6 +46,7 @@ if (root) {
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
+  let currentGroup: MenuGroup | null = null;
   let currentMenu: WeekMenu | null = null;
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
@@ -52,6 +55,7 @@ if (root) {
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  let unsubscribeGroup: (() => void) | undefined;
   let unsubscribeTuppers: (() => void) | undefined;
   let firstMenuLoad = true;
   let isOnline = getNetworkStatus() === 'online';
@@ -81,6 +85,10 @@ if (root) {
       return labels.permissionsError;
     }
     return error instanceof Error ? error.message : String(error);
+  }
+
+  function getParticipants(): MenuParticipant[] {
+    return getMenuParticipants(currentGroup, currentUser, currentProfile, labels.guestSession);
   }
 
   function updateOfflineState(message = labels.offlineReadOnly) {
@@ -123,6 +131,13 @@ if (root) {
     }
 
     return renderMealSummary(day.meals[meal]);
+  }
+
+  function renderParticipantSummary(day: DailyMenu, meal: MealSlot) {
+    const participants = getParticipants();
+    if (!participants.length || day.skipped) return '';
+
+    return `<span class="meal-participants-summary">${escapeHtml(formatParticipantSummary(day.meals[meal], participants, labels))}</span>`;
   }
 
   function collectDayNotes(day: DailyMenu) {
@@ -220,8 +235,9 @@ if (root) {
     const meal = day.meals[firstMeal];
     const items = day.skipped || meal.skipped || meal.items.length === 0 ? [renderDaySummary(day, firstMeal)] : meal.items;
     const notesHtml = renderDayNotesHtml(day);
+    const participantHtml = renderParticipantSummary(day, firstMeal);
 
-    todaySummary.innerHTML = items.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+    todaySummary.innerHTML = items.map((item) => `<li>${escapeHtml(item)} ${participantHtml}</li>`).join('');
     if (todayNotes) {
       todayNotes.innerHTML = notesHtml;
       todayNotes.hidden = !notesHtml;
@@ -246,6 +262,7 @@ if (root) {
               <div class="day-meal-row">
                 <span>${escapeHtml(mealLabel(meal))}:</span>
                 <strong>${escapeHtml(renderDaySummary(day, meal))}</strong>
+                ${renderParticipantSummary(day, meal)}
               </div>
             `
           )
@@ -398,6 +415,7 @@ if (root) {
     getDay: (dayKey) => normalizeDay(currentMenu?.days[dayKey]),
     getDishes: () => dishes,
     getEnabledMeals,
+    getParticipants,
     getSavedDayState: (dayKey) => serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined)),
     getDayNumber,
     getWeekday: formatWeekday,
@@ -466,6 +484,7 @@ if (root) {
           unsubscribeMenu?.();
           unsubscribeDishes?.();
           unsubscribeProfile?.();
+          unsubscribeGroup?.();
           unsubscribeTuppers?.();
 
           if (!user) {
@@ -499,6 +518,19 @@ if (root) {
                 false,
                 profile.groupId
               );
+              unsubscribeGroup?.();
+              currentGroup = null;
+              if (profile.groupId) {
+                unsubscribeGroup = watchGroup(
+                  services,
+                  profile.groupId,
+                  (group) => {
+                    currentGroup = group;
+                    if (currentMenu) renderDashboard(currentMenu);
+                  },
+                  (error) => showStatus(formatError(error), true)
+                );
+              }
               if (currentMenu) {
                 renderDashboard(currentMenu);
                 cacheCurrentMenu(currentMenu);
