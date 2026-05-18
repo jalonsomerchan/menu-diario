@@ -70,6 +70,21 @@ const labels = {
   invalidResponse: t('shopping.invalidResponse'),
   noToBuyItems: t('shopping.noToBuyItems'),
   previewHint: t('shopping.previewHint'),
+  wizardProgress: t('shopping.title'),
+  wizardStepRange: t('shopping.rangeTitle'),
+  wizardStepMeals: t('shopping.mealsTitle'),
+  wizardStepSummary: t('planningAi.summaryTitle'),
+  wizardStepResults: t('shopping.reviewTitle'),
+  wizardBack: t('menu.previous'),
+  wizardNext: t('menu.next'),
+  wizardCancel: t('dashboard.cancel'),
+  wizardSummaryTitle: t('planningAi.summaryTitle'),
+  wizardSummaryDescription: t('shopping.draftDescription'),
+  wizardConfirmTitle: t('shopping.generate'),
+  wizardConfirmDescription: t('shopping.reviewDescription'),
+  wizardRangeRequired: t('shopping.selectedDaysNone'),
+  wizardMealsRequired: t('shopping.emptyPlannedMeals'),
+  wizardCancelled: t('shopping.updated'),
   markToBuy: t('shopping.markToBuy'),
   markOwned: t('shopping.markOwned'),
   markDismissed: t('shopping.markDismissed'),
@@ -153,359 +168,164 @@ const labels = {
           <a class="button button--ghost button--small" href={configurePath}>{labels.configureLabel}</a>
         </div>
       </header>
-      <div class="shopping-flow card-container">
-        <section class="shopping-step" aria-labelledby="shopping-range-title">
-          <header class="shopping-step__header">
-            <div>
-              <p class="menu-app__eyebrow" data-scope-label>{labels.userScope}</p>
-              <h2 id="shopping-range-title">{labels.rangeTitle}</h2>
-              <p>{labels.rangeDescription}</p>
-            </div>
-            <span class="shopping-panel__badge" data-inventory-hint>{labels.inventoryHint}</span>
-          </header>
-          <div class="shopping-range" data-range-picker></div>
-          <div class="shopping-selection-summary" data-selection-summary></div>
-          <div class="shopping-meals" data-meals></div>
-          <div class="shopping-generate">
-            <button class="button button--primary" type="button" data-generate>{labels.generate}</button>
-            <p class="shopping-ai-status" data-ai-status role="status" aria-live="polite"></p>
-          </div>
-        </section>
 
-        <section class="shopping-step shopping-step--draft" aria-labelledby="shopping-draft-title">
-          <header class="shopping-step__header">
-            <div>
-              <p class="menu-app__eyebrow">{labels.previewHint}</p>
-              <h2 id="shopping-draft-title">{labels.reviewTitle}</h2>
-              <p>{labels.reviewDescription}</p>
+      <div class="shopping-wizard" data-shopping-wizard>
+        <ol class="shopping-wizard__progress" aria-label={labels.wizardProgress} data-wizard-progress>
+          <li data-wizard-progress-step="range" aria-current="step"><span>1</span>{labels.wizardStepRange}</li>
+          <li data-wizard-progress-step="meals"><span>2</span>{labels.wizardStepMeals}</li>
+          <li data-wizard-progress-step="summary"><span>3</span>{labels.wizardStepSummary}</li>
+          <li data-wizard-progress-step="results"><span>4</span>{labels.wizardStepResults}</li>
+        </ol>
+
+        <p class="shopping-wizard__error" data-wizard-error role="alert" hidden></p>
+
+        <div class="shopping-flow card-container">
+          <section class="shopping-step" aria-labelledby="shopping-range-title" data-wizard-step="range">
+            <header class="shopping-step__header">
+              <div>
+                <p class="menu-app__eyebrow" data-scope-label>{labels.userScope}</p>
+                <h2 id="shopping-range-title">{labels.rangeTitle}</h2>
+                <p>{labels.rangeDescription}</p>
+              </div>
+              <span class="shopping-panel__badge" data-inventory-hint>{labels.inventoryHint}</span>
+            </header>
+            <div class="shopping-range" data-range-picker></div>
+            <div class="shopping-selection-summary" data-selection-summary></div>
+          </section>
+
+          <section class="shopping-step" aria-labelledby="shopping-meals-title" data-wizard-step="meals" hidden>
+            <header class="shopping-step__header">
+              <div>
+                <p class="menu-app__eyebrow">{labels.wizardStepMeals}</p>
+                <h2 id="shopping-meals-title">{labels.mealsTitle}</h2>
+                <p>{labels.mealsDescription}</p>
+              </div>
+            </header>
+            <div class="shopping-meals" data-meals></div>
+          </section>
+
+          <section class="shopping-step" aria-labelledby="shopping-summary-title" data-wizard-step="summary" hidden>
+            <header class="shopping-step__header">
+              <div>
+                <p class="menu-app__eyebrow">{labels.wizardStepSummary}</p>
+                <h2 id="shopping-summary-title">{labels.wizardSummaryTitle}</h2>
+                <p>{labels.wizardSummaryDescription}</p>
+              </div>
+            </header>
+            <div class="shopping-wizard__summary" data-wizard-summary></div>
+            <div class="shopping-generate">
+              <div>
+                <h3>{labels.wizardConfirmTitle}</h3>
+                <p>{labels.wizardConfirmDescription}</p>
+              </div>
+              <button class="button button--primary" type="button" data-generate>{labels.generate}</button>
+              <p class="shopping-ai-status" data-ai-status role="status" aria-live="polite"></p>
             </div>
-            <div class="shopping-toolbar">
-              <button class="button button--ghost button--small" type="button" data-share>{labels.share}</button>
-              <button class="button button--primary button--small" type="button" data-save>{labels.saveList}</button>
-            </div>
-          </header>
-          <div class="shopping-draft" data-draft></div>
-        </section>
+          </section>
+
+          <section class="shopping-step shopping-step--draft" aria-labelledby="shopping-draft-title" data-wizard-step="results" hidden>
+            <header class="shopping-step__header">
+              <div>
+                <p class="menu-app__eyebrow">{labels.previewHint}</p>
+                <h2 id="shopping-draft-title">{labels.reviewTitle}</h2>
+                <p>{labels.reviewDescription}</p>
+              </div>
+              <div class="shopping-toolbar">
+                <button class="button button--ghost button--small" type="button" data-share>{labels.share}</button>
+                <button class="button button--primary button--small" type="button" data-save>{labels.saveList}</button>
+              </div>
+            </header>
+            <div class="shopping-draft" data-draft></div>
+          </section>
+        </div>
+
+        <footer class="shopping-wizard__actions">
+          <button class="button button--ghost" type="button" data-wizard-cancel>{labels.wizardCancel}</button>
+          <button class="button button--secondary" type="button" data-wizard-prev>{labels.wizardBack}</button>
+          <button class="button button--primary" type="button" data-wizard-next>{labels.wizardNext}</button>
+        </footer>
       </div>
     </section>
   </div>
 </section>
 
 <style is:global>
-  .shopping-app {
-    display: grid;
-    gap: 1rem;
-  }
+  .shopping-app { display: grid; gap: 1rem; }
 
   .shopping-app__loading[hidden],
   .shopping-app__workspace[hidden],
-  .shopping-app__auth[hidden] {
-    display: none;
-  }
+  .shopping-app__auth[hidden],
+  [data-wizard-step][hidden] { display: none; }
 
-  .shopping-app__loading {
-    color: var(--color-muted);
-    font-weight: 700;
-  }
+  .shopping-app__loading { color: var(--color-muted); font-weight: 700; }
 
   .shopping-hero,
-  .shopping-panel {
-    display: grid;
-    gap: 1rem;
-  }
+  .shopping-panel,
+  .shopping-wizard { display: grid; gap: 1rem; }
 
-  .shopping-hero {
-    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 68%);
-    background: var(--panel-background-strong);
-  }
+  .shopping-hero { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 68%); background: var(--panel-background-strong); }
 
-  .shopping-flow {
-    gap: 1rem;
-    padding-top: 0;
-  }
+  .shopping-wizard__progress { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; margin: 0; padding: 0; list-style: none; }
+  .shopping-wizard__progress li { display: flex; align-items: center; gap: 0.45rem; border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-surface-soft), transparent 8%); color: var(--color-muted); padding: 0.62rem 0.72rem; font-size: 0.82rem; font-weight: 850; }
+  .shopping-wizard__progress span { display: grid; flex: 0 0 auto; width: 1.65rem; height: 1.65rem; place-items: center; border-radius: var(--radius-full); background: color-mix(in srgb, var(--color-surface-raised), transparent 2%); color: var(--color-muted); font-size: 0.78rem; font-weight: 950; }
+  .shopping-wizard__progress li[aria-current='step'] { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%); background: color-mix(in srgb, var(--color-primary-soft), transparent 18%); color: var(--color-primary); }
+  .shopping-wizard__progress li[aria-current='step'] span { background: var(--color-primary); color: #fff; }
+  .shopping-wizard__error { margin: 0; border: 1px solid color-mix(in srgb, var(--color-danger), var(--color-border) 50%); border-radius: var(--radius-xl); background: var(--color-danger-soft); color: var(--color-danger); padding: 0.75rem 0.9rem; font-weight: 850; }
+  .shopping-wizard__summary { display: grid; gap: 0.65rem; }
+  .shopping-wizard__summary dl { display: grid; gap: 0.55rem; margin: 0; }
+  .shopping-wizard__summary div { display: grid; gap: 0.12rem; border: 1px solid color-mix(in srgb, var(--color-border), transparent 16%); border-radius: var(--radius-lg); background: color-mix(in srgb, var(--color-surface-soft), transparent 10%); padding: 0.75rem 0.85rem; }
+  .shopping-wizard__summary dt { color: var(--color-muted); font-size: 0.78rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+  .shopping-wizard__summary dd { margin: 0; font-weight: 850; }
+  .shopping-wizard__actions { position: sticky; bottom: 0; z-index: 5; display: grid; gap: 0.65rem; border: 1px solid color-mix(in srgb, var(--color-border), transparent 15%); border-radius: var(--radius-2xl); background: color-mix(in srgb, var(--color-surface), transparent 5%); padding: 0.75rem; box-shadow: var(--shadow-sm); backdrop-filter: blur(14px); }
 
-  .shopping-step {
-    display: grid;
-    gap: 1rem;
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
-    border-radius: var(--radius-2xl);
-    background: color-mix(in srgb, var(--color-surface-raised), transparent 4%);
-    padding: var(--surface-padding);
-  }
-
-  .shopping-step--draft {
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-raised), var(--color-primary-soft) 8%), color-mix(in srgb, var(--color-surface-raised), transparent 4%));
-  }
-
-  .shopping-hero__actions,
-  .shopping-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
-
-  .shopping-panel__header {
-    display: grid;
-    gap: 0.9rem;
-    align-items: start;
-  }
-
-  .shopping-panel__badge {
-    display: inline-flex;
-    width: fit-content;
-    align-items: center;
-    gap: 0.35rem;
-    border-radius: var(--radius-full);
-    border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 52%);
-    background: var(--color-primary-soft);
-    color: var(--color-primary);
-    padding: 0.42rem 0.8rem;
-    font-size: 0.88rem;
-    font-weight: 800;
-  }
-
-  .shopping-meals,
-  .shopping-draft {
-    display: grid;
-    gap: 0.9rem;
-  }
-
-  .shopping-range {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
-
-  .shopping-range__day {
-    display: grid;
-    gap: 0.2rem;
-    min-height: 4.5rem;
-    justify-items: start;
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
-    border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface-soft), transparent 5%);
-    padding: 0.9rem;
-    text-align: left;
-    transition:
-      border-color var(--transition-base),
-      background var(--transition-base),
-      transform var(--transition-base),
-      box-shadow var(--transition-base);
-  }
-
-  .shopping-range__day strong {
-    font-size: 1rem;
-    font-weight: 900;
-  }
-
-  .shopping-range__day span {
-    color: var(--color-muted);
-    font-size: 0.88rem;
-    font-weight: 700;
-  }
-
-  .shopping-range__day[data-selected='true'] {
-    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 34%);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-primary-soft), transparent 12%), color-mix(in srgb, var(--color-surface-raised), transparent 6%));
-    box-shadow: 0 14px 34px color-mix(in srgb, var(--color-primary), transparent 86%);
-  }
-
-  .shopping-range__day:active {
-    transform: scale(0.98);
-  }
-
-  .shopping-selection-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.65rem;
-  }
-
-  .shopping-summary-pill,
-  .shopping-summary-empty {
-    display: inline-flex;
-    align-items: center;
-    border-radius: var(--radius-full);
-    padding: 0.5rem 0.8rem;
-    font-size: 0.88rem;
-    font-weight: 800;
-  }
-
-  .shopping-summary-pill {
-    border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 48%);
-    background: color-mix(in srgb, var(--color-primary-soft), transparent 18%);
-    color: var(--color-primary);
-  }
-
-  .shopping-summary-empty {
-    border: 1px dashed color-mix(in srgb, var(--color-border), var(--color-text) 8%);
-    color: var(--color-muted);
-  }
-
-  .shopping-empty,
-  .shopping-ai-status {
-    margin: 0;
-    color: var(--color-muted);
-  }
-
-  .shopping-ai-status[data-variant='error'] {
-    color: var(--color-danger);
-  }
-
-  .shopping-generate {
-    display: grid;
-    gap: 0.65rem;
-  }
-
-  .shopping-meal-card,
-  .shopping-item {
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 8%);
-    border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface-raised), transparent 3%);
-    box-shadow: var(--shadow-xs);
-  }
-
-  .shopping-meal-card {
-    padding: 1rem;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-surface-raised), var(--color-primary-soft) 10%),
-      color-mix(in srgb, var(--color-surface-raised), transparent 4%)
-    );
-  }
-
-  .shopping-meal-card h3,
-  .shopping-item__title {
-    font-weight: 900;
-  }
-
-  .shopping-item {
-    display: grid;
-    gap: 0.85rem;
-    padding: 0.95rem;
-  }
-
-  .shopping-item__head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .shopping-item__title {
-    margin: 0;
-    font-size: 1.02rem;
-  }
-
-  .shopping-pill {
-    display: inline-flex;
-    align-items: center;
-    border-radius: var(--radius-full);
-    border: 1px solid color-mix(in srgb, var(--color-border), transparent 5%);
-    background: color-mix(in srgb, var(--color-surface-soft), transparent 6%);
-    color: var(--color-muted);
-    padding: 0.3rem 0.7rem;
-    font-size: 0.78rem;
-    font-weight: 800;
-  }
-
-  .shopping-item__meals {
-    margin: 0;
-    color: var(--color-muted);
-    font-size: 0.92rem;
-    line-height: 1.55;
-  }
-
-  .shopping-item__actions {
-    display: grid;
-    gap: 0.75rem;
-  }
-
-  .shopping-status {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.55rem;
-  }
-
-  .shopping-status__button {
-    display: inline-flex;
-    min-height: 2.75rem;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid color-mix(in srgb, var(--color-border), transparent 4%);
-    border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface-soft), transparent 3%);
-    padding: 0.7rem 0.95rem;
-    font-weight: 800;
-    transition:
-      border-color var(--transition-base),
-      background var(--transition-base),
-      color var(--transition-base);
-  }
-
-  .shopping-status__button[data-selected='true'][data-status='to-buy'] {
-    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 30%);
-    background: color-mix(in srgb, var(--color-primary-soft), transparent 12%);
-    color: var(--color-primary);
-  }
-
-  .shopping-status__button[data-selected='true'][data-status='owned'] {
-    border-color: color-mix(in srgb, var(--color-success), var(--color-border) 30%);
-    background: color-mix(in srgb, var(--color-success-soft), transparent 12%);
-    color: var(--color-success);
-  }
-
-  .shopping-status__button[data-selected='true'][data-status='dismissed'] {
-    border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 30%);
-    background: color-mix(in srgb, var(--color-danger-soft), transparent 14%);
-    color: var(--color-danger);
-  }
-
-  .shopping-review-group {
-    display: grid;
-    gap: 0.85rem;
-  }
-
-  .shopping-review-group__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-  .shopping-review-group__header h3 {
-    margin: 0;
-    font-size: 1rem;
-  }
-
-  .shopping-review-group__count {
-    color: var(--color-muted);
-    font-size: 0.88rem;
-    font-weight: 800;
-  }
-
-  .shopping-review-group[data-variant='reviewed'] .shopping-item {
-    opacity: 0.82;
-  }
+  .shopping-flow { gap: 1rem; padding-top: 0; }
+  .shopping-step { display: grid; gap: 1rem; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%); border-radius: var(--radius-2xl); background: color-mix(in srgb, var(--color-surface-raised), transparent 4%); padding: var(--surface-padding); }
+  .shopping-step--draft { background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface-raised), var(--color-primary-soft) 8%), color-mix(in srgb, var(--color-surface-raised), transparent 4%)); }
+  .shopping-hero__actions, .shopping-toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .shopping-panel__header, .shopping-step__header { display: grid; gap: 0.9rem; align-items: start; }
+  .shopping-panel__badge { display: inline-flex; width: fit-content; align-items: center; gap: 0.35rem; border-radius: var(--radius-full); border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 52%); background: var(--color-primary-soft); color: var(--color-primary); padding: 0.42rem 0.8rem; font-size: 0.88rem; font-weight: 800; }
+  .shopping-meals, .shopping-draft { display: grid; gap: 0.9rem; }
+  .shopping-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .shopping-range__day { display: grid; gap: 0.2rem; min-height: 4.5rem; justify-items: start; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-surface-soft), transparent 5%); padding: 0.9rem; text-align: left; transition: border-color var(--transition-base), background var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base); }
+  .shopping-range__day strong { font-size: 1rem; font-weight: 900; }
+  .shopping-range__day span { color: var(--color-muted); font-size: 0.88rem; font-weight: 700; }
+  .shopping-range__day[data-selected='true'] { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 34%); background: linear-gradient(180deg, color-mix(in srgb, var(--color-primary-soft), transparent 12%), color-mix(in srgb, var(--color-surface-raised), transparent 6%)); box-shadow: 0 14px 34px color-mix(in srgb, var(--color-primary), transparent 86%); }
+  .shopping-range__day:active { transform: scale(0.98); }
+  .shopping-selection-summary { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+  .shopping-summary-pill, .shopping-summary-empty { display: inline-flex; align-items: center; border-radius: var(--radius-full); padding: 0.5rem 0.8rem; font-size: 0.88rem; font-weight: 800; }
+  .shopping-summary-pill { border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 48%); background: color-mix(in srgb, var(--color-primary-soft), transparent 18%); color: var(--color-primary); }
+  .shopping-summary-empty { border: 1px dashed color-mix(in srgb, var(--color-border), var(--color-text) 8%); color: var(--color-muted); }
+  .shopping-empty, .shopping-ai-status, .shopping-generate p { margin: 0; color: var(--color-muted); }
+  .shopping-ai-status[data-variant='error'] { color: var(--color-danger); }
+  .shopping-generate { display: grid; gap: 0.65rem; border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 55%); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-primary-soft), transparent 24%); padding: 0.9rem; }
+  .shopping-generate h3 { margin: 0 0 0.25rem; }
+  .shopping-meal-card, .shopping-item { border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 8%); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-surface-raised), transparent 3%); box-shadow: var(--shadow-xs); }
+  .shopping-meal-card { padding: 1rem; background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface-raised), var(--color-primary-soft) 10%), color-mix(in srgb, var(--color-surface-raised), transparent 4%)); }
+  .shopping-meal-card h3, .shopping-item__title { font-weight: 900; }
+  .shopping-item { display: grid; gap: 0.85rem; padding: 0.95rem; }
+  .shopping-item__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .shopping-item__title { margin: 0; font-size: 1.02rem; }
+  .shopping-pill { display: inline-flex; align-items: center; border-radius: var(--radius-full); border: 1px solid color-mix(in srgb, var(--color-border), transparent 5%); background: color-mix(in srgb, var(--color-surface-soft), transparent 6%); color: var(--color-muted); padding: 0.3rem 0.7rem; font-size: 0.78rem; font-weight: 800; }
+  .shopping-item__meals { margin: 0; color: var(--color-muted); font-size: 0.92rem; line-height: 1.55; }
+  .shopping-item__actions { display: grid; gap: 0.75rem; }
+  .shopping-status { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+  .shopping-status__button { display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb, var(--color-border), transparent 4%); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-surface-soft), transparent 3%); padding: 0.7rem 0.95rem; font-weight: 800; transition: border-color var(--transition-base), background var(--transition-base), color var(--transition-base); }
+  .shopping-status__button[data-selected='true'][data-status='to-buy'] { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 30%); background: color-mix(in srgb, var(--color-primary-soft), transparent 12%); color: var(--color-primary); }
+  .shopping-status__button[data-selected='true'][data-status='owned'] { border-color: color-mix(in srgb, var(--color-success), var(--color-border) 30%); background: color-mix(in srgb, var(--color-success-soft), transparent 12%); color: var(--color-success); }
+  .shopping-status__button[data-selected='true'][data-status='dismissed'] { border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 30%); background: color-mix(in srgb, var(--color-danger-soft), transparent 14%); color: var(--color-danger); }
+  .shopping-review-group { display: grid; gap: 0.85rem; }
+  .shopping-review-group__header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+  .shopping-review-group__header h3 { margin: 0; font-size: 1rem; }
+  .shopping-review-group__count { color: var(--color-muted); font-size: 0.88rem; font-weight: 800; }
+  .shopping-review-group[data-variant='reviewed'] .shopping-item { opacity: 0.82; }
 
   @media (min-width: 48rem) {
-    .shopping-panel__header {
-      grid-template-columns: minmax(0, 1fr) auto;
-    }
-
-    .shopping-flow {
-      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-    }
-
-    .shopping-range {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .shopping-generate {
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: center;
-    }
+    .shopping-panel__header, .shopping-step__header { grid-template-columns: minmax(0, 1fr) auto; }
+    .shopping-wizard__progress { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .shopping-wizard__actions { grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; }
+    .shopping-range { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .shopping-generate { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+    .shopping-generate .shopping-ai-status { grid-column: 1 / -1; }
   }
 </style>
 
