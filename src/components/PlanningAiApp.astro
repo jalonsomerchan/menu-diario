@@ -55,6 +55,10 @@ const labels = {
   resultsDescription: t('planningAi.resultsDescription'),
   resultsEmpty: t('planningAi.resultsEmpty'),
   resultsNotGenerated: t('planningAi.resultsNotGenerated'),
+  foodIntolerancesTitle: t('settings.foodIntolerancesTitle'),
+  foodIntolerancesDescription: t('settings.foodIntolerancesDescription'),
+  foodIntolerancesLabel: t('settings.foodIntolerancesLabel'),
+  foodIntolerancesPlaceholder: t('settings.foodIntolerancesPlaceholder'),
   openManual: t('planningAi.openManual'),
   manageDishes: t('planningAi.manageDishes'),
   applySelection: t('planningAi.applySelection'),
@@ -114,7 +118,15 @@ const labels = {
   homePath,
 };
 
-const wizardSteps = [labels.quickTitle, labels.meals, labels.recommendationCount, labels.mode, labels.summaryTitle];
+const wizardSteps = [
+  labels.quickTitle,
+  labels.meals,
+  labels.pendingTitle,
+  labels.foodIntolerancesTitle,
+  labels.recommendationCount,
+  labels.mode,
+  labels.summaryTitle,
+];
 ---
 
 <section class="planning-ai-app" data-planning-ai-app data-labels={JSON.stringify(labels)}>
@@ -134,133 +146,139 @@ const wizardSteps = [labels.quickTitle, labels.meals, labels.recommendationCount
       </div>
     </section>
 
-    <div class="planning-ai-grid">
-      <section class="planning-ai-panel app-panel" aria-labelledby="planning-ai-form-title">
-        <div class="section-heading section-heading--simple">
-          <div>
-            <p class="menu-app__eyebrow">{labels.eyebrow}</p>
-            <h2 id="planning-ai-form-title">{labels.formTitle}</h2>
-            <p>{labels.formDescription}</p>
-          </div>
+    <section class="planning-ai-panel app-panel" aria-labelledby="planning-ai-form-title">
+      <div class="section-heading section-heading--simple">
+        <div>
+          <p class="menu-app__eyebrow">{labels.eyebrow}</p>
+          <h2 id="planning-ai-form-title">{labels.formTitle}</h2>
+          <p>{labels.formDescription}</p>
         </div>
+      </div>
 
-        <form class="planning-ai-form" data-plan-form data-plan-wizard>
-          <ol class="planning-ai-wizard-progress" aria-label={labels.formTitle}>
-            {wizardSteps.map((step, index) => (
-              <li>
-                <button type="button" class="planning-ai-wizard-step" data-plan-step-indicator={index} aria-current={index === 0 ? 'step' : undefined}>
-                  <span>{index + 1}</span>
-                  <strong>{step}</strong>
-                </button>
-              </li>
-            ))}
-          </ol>
+      <form class="planning-ai-form" data-plan-form data-plan-wizard>
+        <ol class="planning-ai-wizard-progress" aria-label={labels.formTitle}>
+          {wizardSteps.map((step, index) => (
+            <li>
+              <button type="button" class="planning-ai-wizard-step" data-plan-step-indicator={index} aria-current={index === 0 ? 'step' : undefined}>
+                <span>{index + 1}</span>
+                <strong>{step}</strong>
+              </button>
+            </li>
+          ))}
+        </ol>
 
-          <section class="planning-ai-section-card" data-plan-step="0">
-            <div class="planning-ai-section-heading">
-              <h3>{labels.quickTitle}</h3>
-            </div>
-
-            <div class="planning-ai-preset-row" role="group" aria-label={labels.quickTitle}>
-              <button class="planning-ai-chip-button" type="button" data-plan-preset="3">{labels.presetShort}</button>
-              <button class="planning-ai-chip-button" type="button" data-plan-preset="7">{labels.presetWeek}</button>
-              <button class="planning-ai-chip-button" type="button" data-plan-preset="14">{labels.presetLong}</button>
-            </div>
-
-            <div class="planning-ai-form__dates">
-              <label>
-                <span>{labels.start}</span>
-                <input type="date" data-plan-start />
-              </label>
-              <label>
-                <span>{labels.end}</span>
-                <input type="date" data-plan-end />
-              </label>
-            </div>
-          </section>
-
-          <section class="planning-ai-section-card" data-plan-step="1" hidden>
-            <div class="planning-ai-section-heading">
-              <h3>{labels.meals}</h3>
-            </div>
-
-            <fieldset class="planning-ai-form__meals">
-              <legend class="sr-only">{labels.meals}</legend>
-              <label class="planning-ai-toggle-card"><input type="checkbox" value="breakfast" data-plan-meal /> <span>{labels.breakfast}</span></label>
-              <label class="planning-ai-toggle-card"><input type="checkbox" value="lunch" data-plan-meal /> <span>{labels.lunch}</span></label>
-              <label class="planning-ai-toggle-card"><input type="checkbox" value="dinner" data-plan-meal /> <span>{labels.dinner}</span></label>
-            </fieldset>
-          </section>
-
-          <section class="planning-ai-section-card" data-plan-step="2" hidden>
-            <div class="planning-ai-section-heading">
-              <h3>{labels.recommendationCount}</h3>
-              <p>{labels.recommendationHint}</p>
-            </div>
-
-            <div class="planning-ai-count-row" role="group" aria-label={labels.recommendationCount}>
-              <button class="planning-ai-chip-button" type="button" data-plan-count-option="1">1</button>
-              <button class="planning-ai-chip-button" type="button" data-plan-count-option="2">2</button>
-              <button class="planning-ai-chip-button" type="button" data-plan-count-option="3" aria-pressed="true">3</button>
-              <button class="planning-ai-chip-button" type="button" data-plan-count-option="4">4</button>
-              <button class="planning-ai-chip-button" type="button" data-plan-count-option="5">5</button>
-            </div>
-            <input type="hidden" value="3" data-plan-count />
-          </section>
-
-          <section class="planning-ai-section-card" data-plan-step="3" hidden>
-            <div class="planning-ai-section-heading">
-              <h3>{labels.mode}</h3>
-            </div>
-
-            <fieldset class="planning-ai-form__modes">
-              <legend class="sr-only">{labels.mode}</legend>
-              <label class="planning-ai-mode-card">
-                <input type="radio" name="planning-mode" value="own" data-plan-mode />
-                <strong>{labels.modeOwn}</strong>
-                <span>{labels.modeOwnHint}</span>
-              </label>
-              <label class="planning-ai-mode-card">
-                <input type="radio" name="planning-mode" value="new" data-plan-mode />
-                <strong>{labels.modeNew}</strong>
-                <span>{labels.modeNewHint}</span>
-              </label>
-              <label class="planning-ai-mode-card">
-                <input type="radio" name="planning-mode" value="mix" data-plan-mode checked />
-                <strong>{labels.modeMix}</strong>
-                <span>{labels.modeMixHint}</span>
-              </label>
-            </fieldset>
-          </section>
-
-          <section class="planning-ai-request-card" aria-live="polite" data-plan-step="4" hidden>
-            <div class="planning-ai-section-heading">
-              <h3>{labels.summaryTitle}</h3>
-            </div>
-            <div class="planning-ai-request-summary" data-plan-summary></div>
-          </section>
-
-          <div class="planning-ai-wizard-actions">
-            <button class="button button--ghost" type="button" data-plan-wizard-back>{labels.wizardBack}</button>
-            <button class="button button--secondary" type="button" data-plan-wizard-next>{labels.wizardNext}</button>
-            <button class="button button--primary planning-ai-submit" type="submit" data-plan-submit hidden>{labels.submit}</button>
+        <section class="planning-ai-section-card" data-plan-step="0">
+          <div class="planning-ai-section-heading">
+            <h3>{labels.quickTitle}</h3>
           </div>
-        </form>
-      </section>
 
-      <section class="planning-ai-panel app-panel" aria-labelledby="planning-ai-pending-title">
-        <div class="section-heading section-heading--simple">
-          <div>
-            <p class="menu-app__eyebrow">{labels.eyebrow}</p>
-            <h2 id="planning-ai-pending-title">{labels.pendingTitle}</h2>
+          <div class="planning-ai-preset-row" role="group" aria-label={labels.quickTitle}>
+            <button class="planning-ai-chip-button" type="button" data-plan-preset="3">{labels.presetShort}</button>
+            <button class="planning-ai-chip-button" type="button" data-plan-preset="7">{labels.presetWeek}</button>
+            <button class="planning-ai-chip-button" type="button" data-plan-preset="14">{labels.presetLong}</button>
+          </div>
+
+          <div class="planning-ai-form__dates">
+            <label>
+              <span>{labels.start}</span>
+              <input type="date" data-plan-start />
+            </label>
+            <label>
+              <span>{labels.end}</span>
+              <input type="date" data-plan-end />
+            </label>
+          </div>
+        </section>
+
+        <section class="planning-ai-section-card" data-plan-step="1" hidden>
+          <div class="planning-ai-section-heading">
+            <h3>{labels.meals}</h3>
+          </div>
+
+          <fieldset class="planning-ai-form__meals">
+            <legend class="sr-only">{labels.meals}</legend>
+            <label class="planning-ai-toggle-card"><input type="checkbox" value="breakfast" data-plan-meal /> <span>{labels.breakfast}</span></label>
+            <label class="planning-ai-toggle-card"><input type="checkbox" value="lunch" data-plan-meal /> <span>{labels.lunch}</span></label>
+            <label class="planning-ai-toggle-card"><input type="checkbox" value="dinner" data-plan-meal /> <span>{labels.dinner}</span></label>
+          </fieldset>
+        </section>
+
+        <section class="planning-ai-section-card" data-plan-step="2" hidden>
+          <div class="planning-ai-section-heading">
+            <h3>{labels.pendingTitle}</h3>
             <p>{labels.pendingDescription}</p>
           </div>
+          <div class="planning-ai-pending" data-plan-pending>
+            <p class="planning-ai-empty">{labels.resultsNotGenerated}</p>
+          </div>
+        </section>
+
+        <section class="planning-ai-section-card" data-plan-step="3" hidden>
+          <div class="planning-ai-section-heading">
+            <h3>{labels.foodIntolerancesTitle}</h3>
+            <p>{labels.foodIntolerancesDescription}</p>
+          </div>
+          <label class="planning-ai-textarea-field">
+            <span>{labels.foodIntolerancesLabel}</span>
+            <textarea rows="5" maxlength="1000" data-plan-intolerances placeholder={labels.foodIntolerancesPlaceholder}></textarea>
+          </label>
+        </section>
+
+        <section class="planning-ai-section-card" data-plan-step="4" hidden>
+          <div class="planning-ai-section-heading">
+            <h3>{labels.recommendationCount}</h3>
+            <p>{labels.recommendationHint}</p>
+          </div>
+
+          <div class="planning-ai-count-row" role="group" aria-label={labels.recommendationCount}>
+            <button class="planning-ai-chip-button" type="button" data-plan-count-option="1">1</button>
+            <button class="planning-ai-chip-button" type="button" data-plan-count-option="2">2</button>
+            <button class="planning-ai-chip-button" type="button" data-plan-count-option="3" aria-pressed="true">3</button>
+            <button class="planning-ai-chip-button" type="button" data-plan-count-option="4">4</button>
+            <button class="planning-ai-chip-button" type="button" data-plan-count-option="5">5</button>
+          </div>
+          <input type="hidden" value="3" data-plan-count />
+        </section>
+
+        <section class="planning-ai-section-card" data-plan-step="5" hidden>
+          <div class="planning-ai-section-heading">
+            <h3>{labels.mode}</h3>
+          </div>
+
+          <fieldset class="planning-ai-form__modes">
+            <legend class="sr-only">{labels.mode}</legend>
+            <label class="planning-ai-mode-card">
+              <input type="radio" name="planning-mode" value="own" data-plan-mode />
+              <strong>{labels.modeOwn}</strong>
+              <span>{labels.modeOwnHint}</span>
+            </label>
+            <label class="planning-ai-mode-card">
+              <input type="radio" name="planning-mode" value="new" data-plan-mode />
+              <strong>{labels.modeNew}</strong>
+              <span>{labels.modeNewHint}</span>
+            </label>
+            <label class="planning-ai-mode-card">
+              <input type="radio" name="planning-mode" value="mix" data-plan-mode checked />
+              <strong>{labels.modeMix}</strong>
+              <span>{labels.modeMixHint}</span>
+            </label>
+          </fieldset>
+        </section>
+
+        <section class="planning-ai-request-card" aria-live="polite" data-plan-step="6" hidden>
+          <div class="planning-ai-section-heading">
+            <h3>{labels.summaryTitle}</h3>
+          </div>
+          <div class="planning-ai-request-summary" data-plan-summary></div>
+        </section>
+
+        <div class="planning-ai-wizard-actions">
+          <button class="button button--ghost" type="button" data-plan-wizard-back>{labels.wizardBack}</button>
+          <button class="button button--secondary" type="button" data-plan-wizard-next>{labels.wizardNext}</button>
+          <button class="button button--primary planning-ai-submit" type="submit" data-plan-submit hidden>{labels.submit}</button>
         </div>
-        <div class="planning-ai-pending" data-plan-pending>
-          <p class="planning-ai-empty">{labels.resultsNotGenerated}</p>
-        </div>
-      </section>
-    </div>
+      </form>
+    </section>
 
     <section class="planning-ai-panel planning-ai-panel--results app-panel" aria-labelledby="planning-ai-results-title">
       <div class="section-heading section-heading--simple">
@@ -342,7 +360,7 @@ const wizardSteps = [labels.quickTitle, labels.meals, labels.recommendationCount
 
   .planning-ai-wizard-progress {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 0.45rem;
     margin: 0;
     padding: 0;
@@ -443,6 +461,16 @@ const wizardSteps = [labels.quickTitle, labels.meals, labels.recommendationCount
     display: inline-flex;
     margin-bottom: 0.45rem;
     line-height: var(--surface-copy-line-height);
+  }
+
+  .planning-ai-textarea-field {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .planning-ai-textarea-field textarea {
+    width: 100%;
+    resize: vertical;
   }
 
   .planning-ai-form input[type='date'],
@@ -604,6 +632,17 @@ const wizardSteps = [labels.quickTitle, labels.meals, labels.recommendationCount
     background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
   }
 
+  .planning-ai-pending-card label {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .planning-ai-pending-card input {
+    flex: 0 0 auto;
+  }
+
   .planning-ai-pending-card header,
   .planning-ai-result-card header {
     display: flex;
@@ -694,10 +733,6 @@ const wizardSteps = [labels.quickTitle, labels.meals, labels.recommendationCount
     .planning-ai-hero {
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: end;
-    }
-
-    .planning-ai-grid {
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     }
 
     .planning-ai-wizard-actions {
