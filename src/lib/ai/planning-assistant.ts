@@ -141,14 +141,15 @@ export function assignPlanningRecommendations(input: {
     const slotKey = getSlotKey(entry.dayKey, entry.meal);
     if (!pendingKeys.has(slotKey) || seenSlots.has(slotKey)) return [];
 
-    const suggestions = [
+    const mappedSuggestions = [
       ...new Map(
         entry.dishes
           .map((dish) => mapSuggestedDish(dish, input.mode, ownByName, mixedByName, knownNames))
           .filter((dish): dish is PlanningRecommendationDish => Boolean(dish))
           .map((dish) => [normalizeDishName(dish.name), dish] as const)
       ).values(),
-    ].slice(0, limit);
+    ];
+    const suggestions = getBalancedSuggestions(mappedSuggestions, input.mode, limit);
 
     if (suggestions.length === 0) return [];
     seenSlots.add(slotKey);
@@ -243,13 +244,19 @@ function getTasteProfile(dishes: Dish[]) {
 function getModeRules(mode: PlanningRecommendationMode) {
   if (mode === 'own') return 'Mode rule: use only exact names from the saved own dishes catalog. Do not invent new dishes and do not use global-only dishes.';
   if (mode === 'new') return 'Mode rule: invent genuinely new dishes only. You must not reuse or rename any saved dish. Every returned dish must be new and absent from known catalog names.';
-  return 'Mode rule: you may mix exact saved dish names with genuinely new dishes, but mark new dishes with isNew=true.';
+  return [
+    'Mode rule: combine three sources whenever they are available: genuinely new dishes, saved own or group dishes, and saved global dishes.',
+    'For 3 or more requested dishes, include at least one new dish with isNew=true, at least one own/group saved dish, and at least one global saved dish when the catalogs contain them.',
+    'For 2 requested dishes, include one genuinely new dish and one saved dish if possible.',
+    'Never return only saved dishes in mixed mode unless no valid new dish can satisfy the food restrictions.',
+    'Use exact saved dish names for catalog dishes and mark only genuinely absent catalog names with isNew=true.',
+  ].join(' ');
 }
 
 function describeMode(mode: PlanningRecommendationMode) {
   if (mode === 'own') return 'saved own dishes only';
   if (mode === 'new') return 'new dishes only';
-  return 'mix of saved dishes and new dishes';
+  return 'balanced mix of new dishes, saved own/group dishes, and saved global dishes';
 }
 
 function mapSuggestedDish(
@@ -271,6 +278,19 @@ function mapSuggestedDish(
   if (mixedMatch && dish.isNew !== true) return mapCatalogDish(mixedMatch);
   if (!knownNames.has(normalizedName)) return mapNewDish(cleanName);
   return mixedMatch ? mapCatalogDish(mixedMatch) : null;
+}
+
+function getBalancedSuggestions(suggestions: PlanningRecommendationDish[], mode: PlanningRecommendationMode, limit: number) {
+  if (mode !== 'mix') return suggestions.slice(0, limit);
+
+  const balanced = [
+    suggestions.find((dish) => dish.isNew),
+    suggestions.find((dish) => !dish.isNew && !dish.isGlobal && dish.scope !== 'global'),
+    suggestions.find((dish) => !dish.isNew && (dish.isGlobal || dish.scope === 'global')),
+    ...suggestions,
+  ].filter((dish): dish is PlanningRecommendationDish => Boolean(dish));
+
+  return [...new Map(balanced.map((dish) => [normalizeDishName(dish.name), dish] as const)).values()].slice(0, limit);
 }
 
 function mapCatalogDish(dish: Dish): PlanningRecommendationDish {
