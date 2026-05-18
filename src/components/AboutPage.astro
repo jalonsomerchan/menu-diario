@@ -55,3 +55,121 @@ const values = [tp('aboutValueSimple'), tp('aboutValueGroup'), tp('aboutValueHis
     </section>
   </article>
 </Container>
+
+<style>
+  .about-page {
+    display: grid;
+    gap: 1rem;
+    max-width: 64rem;
+    margin-inline: auto;
+  }
+
+  .about-page__hero,
+  .about-page__panel,
+  .about-page__cta {
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-2xl);
+    background: var(--panel-background);
+    box-shadow: var(--shadow-sm);
+    padding: var(--surface-padding-lg);
+  }
+
+  .about-page__hero {
+    display: grid;
+    gap: 1rem;
+    background: var(--panel-background-strong);
+  }
+
+  .about-page__eyebrow {
+    width: fit-content;
+    margin: 0;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 16%);
+    color: var(--color-primary);
+    padding: 0.25rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .about-page h1,
+  .about-page h2,
+  .about-page p {
+    margin: 0;
+  }
+
+  .about-page h1 {
+    max-width: 11ch;
+    font-size: clamp(2.5rem, 11vw, 5rem);
+    line-height: 0.92;
+    letter-spacing: -0.075em;
+  }
+
+  .about-page h2 {
+    font-size: clamp(1.45rem, 5vw, 2.1rem);
+    line-height: 1;
+    letter-spacing: -0.05em;
+  }
+
+  .about-page p,
+  .about-page li {
+    color: var(--color-muted);
+    line-height: var(--surface-copy-line-height);
+  }
+
+  .about-page__actions,
+  .about-page__cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .about-page__grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .about-page__panel {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .about-page__list {
+    display: grid;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .about-page__list li {
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 18%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
+    padding: 0.85rem;
+  }
+
+  .about-page__cta {
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .about-page__cta div {
+    display: grid;
+    gap: 0.45rem;
+    min-width: min(100%, 20rem);
+  }
+
+  @media (min-width: 760px) {
+    .about-page {
+      gap: 1.25rem;
+    }
+
+    .about-page__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+  }
+</style>
