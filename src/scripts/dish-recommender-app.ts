@@ -62,6 +62,7 @@ if (root) {
   let recommendations: DishRecommendation[] = [];
   let syncedIntolerances = false;
   let isGenerating = false;
+  let showEmptyResults = true;
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeMenus: (() => void) | undefined;
   let unsubscribeRecentMenus: (() => void) | undefined;
@@ -210,7 +211,7 @@ if (root) {
       return;
     }
     if (!recommendations.length) {
-      resultsContainer.innerHTML = `<p class="dish-recommender-empty">${escapeHtml(labels.resultsEmpty)}</p>`;
+      resultsContainer.innerHTML = showEmptyResults ? `<p class="dish-recommender-empty">${escapeHtml(labels.resultsEmpty)}</p>` : '';
       return;
     }
 
@@ -364,12 +365,15 @@ if (root) {
     const request = readRequest();
 
     if (!isAiReady()) {
+      showEmptyResults = false;
+      renderResults();
       showAiStatus(labels.configError || labels.aiMissingConfig, true);
       return;
     }
 
     setBusy(true);
     isGenerating = true;
+    showEmptyResults = false;
     recommendations = [];
     showAiStatus(labels.generating);
     renderResults();
@@ -381,8 +385,10 @@ if (root) {
         validator: isDishRecommendationResponse,
       });
       recommendations = normalizeDishRecommendations(response);
+      showEmptyResults = recommendations.length === 0;
       showAiStatus(recommendations.length ? labels.generated : labels.invalidResponse, recommendations.length === 0);
     } catch (error) {
+      showEmptyResults = false;
       showAiStatus(formatAiError(error), true);
     } finally {
       isGenerating = false;
