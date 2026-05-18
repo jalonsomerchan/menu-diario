@@ -211,7 +211,7 @@ describe('dishes repository', () => {
     });
   });
 
-  it('registers menu dish usage on the global dish when there is no own duplicate', async () => {
+  it('registers global dish menu usage in an own document without mutating the global catalog', async () => {
     const globalDishId = createGlobalDishId('lasana');
     const { services, read } = createFirestoreHarness({
       dishes: {
@@ -225,6 +225,8 @@ describe('dishes repository', () => {
           createdBy: 'admin-1',
           timesUsed: 7,
           archived: false,
+          tags: ['pasta'],
+          quickTags: ['kids'],
           createdAt: new Date('2026-05-01T08:00:00.000Z'),
         },
       },
@@ -240,14 +242,34 @@ describe('dishes repository', () => {
       isGlobal: true,
       editable: false,
       createdBy: 'admin-1',
-      timesUsed: 8,
+      timesUsed: 7,
+      archived: false,
+      tags: ['pasta'],
+      quickTags: ['kids'],
+      createdAt: new Date('2026-05-01T08:00:00.000Z'),
+    });
+    assert.deepEqual(read('dishes', 'group_group-1_lasana'), {
+      name: 'Lasaña',
+      normalizedName: 'lasana',
+      scope: 'group',
+      groupId: 'group-1',
+      source: 'duplicated-global',
+      isGlobal: false,
+      editable: true,
+      createdBy: 'user-1',
+      members: ['user-1'],
+      timesUsed: 1,
+      favorite: false,
+      blocked: false,
       archived: false,
       archivedAt: null,
-      createdAt: new Date('2026-05-01T08:00:00.000Z'),
+      tags: ['pasta'],
+      quickTags: ['kids'],
+      duplicatedFrom: globalDishId,
+      createdAt: new Date('2026-05-16T08:00:00.000Z'),
       lastUsedAt: new Date('2026-05-16T08:00:00.000Z'),
       updatedAt: new Date('2026-05-16T08:00:00.000Z'),
     });
-    assert.equal(read('dishes', 'group_group-1_lasana'), undefined);
   });
 
   it('restores archived own dishes and preserves their custom metadata on menu usage', async () => {
