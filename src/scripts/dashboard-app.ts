@@ -24,6 +24,7 @@ import { notifyMenuChanged, requestChangeNotifications } from '../lib/notificati
 import { getNetworkStatus, watchNetworkStatus } from '../lib/pwa/network-status';
 import { readLastOfflineMenuCache, saveOfflineMenuCache } from '../lib/pwa/offline-cache';
 import { shouldBlockOfflineWrites } from '../lib/pwa/offline-sync';
+import { escapeHtml } from '../lib/ui/html';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 import { watchTuppers } from '../lib/tuppers/repository';
 import type { TupperItem } from '../lib/tuppers/types';
@@ -68,10 +69,6 @@ if (root) {
   });
 
   attachDishSuggestions(root, () => dishes);
-
-  function escapeHtml(value = '') {
-    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-  }
 
   function showStatus(message: string, isError = false) {
     if (isError) {
