@@ -18,6 +18,7 @@ import { hasFirebaseConfig } from '../lib/firebase/config';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { getDateOffset, getDatesInRange, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
+import { getGroupFoodIntolerancesForPrompt } from '../lib/menu/group-food-intolerances';
 import { normalizeDay } from '../lib/menu/normalizers';
 import {
   clearMenuDay,
@@ -574,7 +575,7 @@ if (root) {
                 pendingMeals,
                 days: getDaysForRequest(request),
                 dishes,
-                foodIntolerances: currentProfile?.foodIntolerances,
+                foodIntolerances: await getGroupFoodIntolerancesForPrompt(services, currentProfile),
                 mealLabels: {
                   breakfast: labels.breakfast,
                   lunch: labels.lunch,
