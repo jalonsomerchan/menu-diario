@@ -46,6 +46,10 @@ describe('dish recommender smoke checks', () => {
     assert.match(script, /watchUserMenus/);
     assert.match(script, /getRecentMealsForPrompt/);
     assert.match(script, /recentMeals: getRecentMealsForPrompt\(request\.meal\)/);
+    assert.match(script, /getAlreadyShownDishesForPrompt/);
+    assert.match(script, /alreadyShownDishes: previousRecommendations\.length/);
+    assert.match(script, /recommendations = append \? \[\.\.\.recommendations, \.\.\.newRecommendations\]/);
+    assert.match(script, /data-dish-generate-more/);
     assert.match(script, /renderLoading/);
     assert.match(script, /showEmptyResults = false/);
     assert.match(script, /formatAiError/);
@@ -58,6 +62,7 @@ describe('dish recommender smoke checks', () => {
     assert.match(styles, /dish-recommender-loading__spinner/);
     assert.match(styles, /dish-recommender-result__footer/);
     assert.match(styles, /dish-recommender-assign__controls/);
+    assert.match(styles, /dish-recommender-more/);
     assert.match(styles, /grid-template-columns: minmax\(10rem, 1fr\) auto/);
     assert.match(styles, /appearance: none/);
     assert.match(styles, /resize: vertical/);
@@ -65,8 +70,13 @@ describe('dish recommender smoke checks', () => {
     assert.match(aiIndex, /dish-recommender/);
     assert.match(aiHelper, /basic pantry items/);
     assert.match(aiHelper, /Recently eaten meals to avoid repeating/);
+    assert.match(aiHelper, /Dish recommendations already shown/);
+    assert.match(aiHelper, /normalizeDishRecommendations\(response: DishRecommendationResponse, existingDishes/);
     assert.match(aiHelper, /same main protein\/style/);
     assert.match(aiHelper, /isDishRecommendationResponse/);
+    assert.match(translations, /generateMore/);
+    assert.match(translations, /generatingMore/);
+    assert.match(translations, /noNewDishes/);
     assert.match(translations, /loadingTitle/);
     assert.match(translations, /requestError/);
     assert.match(translations, /timeoutError/);
