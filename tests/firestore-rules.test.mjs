@@ -9,13 +9,26 @@ function readText(path) {
   return readFileSync(join(root, path), 'utf8');
 }
 
+function getRulesBlock(rules, collection, idName) {
+  const match = rules.match(new RegExp(`match \\/${collection}\\/\\{${idName}\\} \\{(?<body>[\\s\\S]*?)\\n    \\}`));
+  assert.ok(match?.groups?.body, `${collection} rules block should exist`);
+  return match.groups.body;
+}
+
 describe('Firestore rules smoke checks', () => {
+  it('restricts weekly menu reads to document members', () => {
+    const rules = readText('firestore.rules');
+    const weeklyMenuRules = getRulesBlock(rules, 'weeklyMenus', 'menuId');
+
+    assert.match(weeklyMenuRules, /allow read: if isMemberDocument\(\);/);
+    assert.doesNotMatch(weeklyMenuRules, /allow read: if signedIn\(\);/);
+  });
+
   it('restricts tupper reads to document members', () => {
     const rules = readText('firestore.rules');
-    const tupperRulesMatch = rules.match(/match \/tuppers\/\{tupperId\} \{(?<body>[\s\S]*?)\n    \}/);
+    const tupperRules = getRulesBlock(rules, 'tuppers', 'tupperId');
 
-    assert.ok(tupperRulesMatch?.groups?.body, 'tupper rules block should exist');
-    assert.match(tupperRulesMatch.groups.body, /allow read: if isMemberDocument\(\);/);
-    assert.doesNotMatch(tupperRulesMatch.groups.body, /allow read: if signedIn\(\);/);
+    assert.match(tupperRules, /allow read: if isMemberDocument\(\);/);
+    assert.doesNotMatch(tupperRules, /allow read: if signedIn\(\);/);
   });
 });
