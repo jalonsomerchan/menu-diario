@@ -18,8 +18,17 @@ if (form) {
     title?.focus({ preventScroll: true });
   }
 
+  function scrollWizardTop() {
+    if (!window.matchMedia('(max-width: 719px)').matches) return;
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function selectedMeals() {
     return [...form.querySelectorAll<HTMLInputElement>('[data-plan-meal]')].filter((input) => input.checked);
+  }
+
+  function selectedPendingSlots() {
+    return [...form.querySelectorAll<HTMLInputElement>('[data-plan-pending-slot]')].filter((input) => input.checked);
   }
 
   function validate(panelIndex: number) {
@@ -31,10 +40,19 @@ if (form) {
       form.querySelector<HTMLInputElement>('[data-plan-meal]')?.focus();
       return labels.meals || 'Meals';
     }
+    if (panelIndex === 2 && selectedPendingSlots().length === 0) {
+      form.querySelector<HTMLInputElement>('[data-plan-pending-slot]')?.focus();
+      return labels.pendingEmpty || 'Pending slots';
+    }
     return '';
   }
 
+  function notifyStep() {
+    app?.dispatchEvent(new CustomEvent('planning-ai-wizard:step', { detail: { step: index } }));
+  }
+
   function go(nextIndex: number, focus = false) {
+    const previousIndex = index;
     index = Math.max(0, Math.min(panels.length - 1, nextIndex));
     panels.forEach((panel, panelIndex) => {
       panel.hidden = panelIndex !== index;
@@ -46,7 +64,9 @@ if (form) {
     if (back) back.disabled = index === 0;
     if (next) next.hidden = index === panels.length - 1;
     if (submit) submit.hidden = index !== panels.length - 1;
+    notifyStep();
     if (focus) focusPanel();
+    if (focus && previousIndex !== index) scrollWizardTop();
   }
 
   function validateBeforeSubmit(event: Event) {
