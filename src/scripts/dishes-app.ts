@@ -4,6 +4,7 @@ import { archiveDish, createManualDish, duplicateGlobalDish, saveDishEdits, upda
 import { getDishEditorState, getNextQuickTags, hasSameQuickTags } from '../lib/dishes/editor-state.mjs';
 import { filterDishes, isEditableDish, sortDishes } from '../lib/dishes/helpers.mjs';
 import { renderCompactDishRow, renderDishEditorBody } from '../lib/dishes/render.mjs';
+import { formatAppError } from '../lib/errors';
 import { ensureUserProfile, watchUserProfile } from '../lib/menu/repository';
 import { createConfirmDialog } from '../lib/ui/confirm-dialog';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
@@ -160,13 +161,8 @@ if (root) {
     syncEditor(dish, getEditorDraft(dish));
   }
 
-  function errorMessage(error: Error) {
-    if (error.message === 'dish-invalid-name') return labels.invalid;
-    if (error.message === 'dish-duplicate-global') return labels.duplicateGlobal;
-    if (error.message === 'dish-duplicate') return labels.duplicate;
-    if (error.message === 'dish-not-editable' || error.message === 'dish-not-global') return labels.notEditable;
-    if (error.message.toLowerCase().includes('permission')) return labels.permissionsError;
-    return error.message;
+  function errorMessage(error: unknown) {
+    return formatAppError(error, labels);
   }
 
   async function submitNewDish(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
