@@ -1,6 +1,7 @@
 import { getWeekDays, getWeekTitle } from './dates';
 import { getAddedDishNames, isSameDayMenu } from './day-state';
 import { getAddedDishNamesFromItems } from './dish-usage.mjs';
+import { createUniqueInviteCode } from './invite-codes';
 import { emptyDay, normalizeDay } from './normalizers';
 import { recordMenuDishUsage } from '../dishes/repository';
 import type {
@@ -26,10 +27,6 @@ type FirebaseServices = {
 
 function buildEmptyDays(weekStart: string) {
   return Object.fromEntries(getWeekDays(weekStart).map((day) => [day.key, emptyDay()]));
-}
-
-function createInviteCode() {
-  return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
 function normalizeEmail(email = '') {
@@ -123,7 +120,8 @@ export async function ensureDefaultGroup(services: FirebaseServices, user: Fireb
   if (profile.groupId) return profile.groupId;
   const { db, firestoreModule } = services;
   const email = normalizeEmail(user.email ?? profile.email);
-  const groupRef = await firestoreModule.addDoc(firestoreModule.collection(db, groupsCollection), { name: 'Menu Diario', ownerId: user.uid, members: [user.uid], memberEmails: email ? [email] : [], pendingEmails: [], inviteCode: createInviteCode(), enabledMeals: profile.enabledMeals, createdAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp() });
+  const inviteCode = await createUniqueInviteCode(services, groupsCollection);
+  const groupRef = await firestoreModule.addDoc(firestoreModule.collection(db, groupsCollection), { name: 'Menu Diario', ownerId: user.uid, members: [user.uid], memberEmails: email ? [email] : [], pendingEmails: [], inviteCode, enabledMeals: profile.enabledMeals, createdAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp() });
   await updateUserPreferences(services, user.uid, { groupId: groupRef.id });
   return groupRef.id;
 }
@@ -174,7 +172,8 @@ export async function leaveGroup(services: FirebaseServices, user: FirebaseUser,
 
 export async function createWeekMenu(services: FirebaseServices, userId: string, weekStart: string, locale: string) {
   const { db, firestoreModule } = services;
-  const document = await firestoreModule.addDoc(firestoreModule.collection(db, menusCollection), { title: getWeekTitle(weekStart, locale), ownerId: userId, members: [userId], inviteCode: createInviteCode(), weekStart, days: buildEmptyDays(weekStart), createdAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp(), updatedBy: userId });
+  const inviteCode = await createUniqueInviteCode(services, menusCollection);
+  const document = await firestoreModule.addDoc(firestoreModule.collection(db, menusCollection), { title: getWeekTitle(weekStart, locale), ownerId: userId, members: [userId], inviteCode, weekStart, days: buildEmptyDays(weekStart), createdAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp(), updatedBy: userId });
   return document.id;
 }
 
