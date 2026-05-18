@@ -57,8 +57,12 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     return options.getParticipants?.() ?? [];
   }
 
+  function capitalizeFirst(value = '') {
+    return value ? `${value.charAt(0).toLocaleUpperCase()}${value.slice(1)}` : value;
+  }
+
   function formatModalTitle(dayKey: string) {
-    return [options.getWeekday(dayKey), options.getDateLabel?.(dayKey)].filter(Boolean).join(' ');
+    return [capitalizeFirst(options.getWeekday(dayKey)), options.getDateLabel?.(dayKey)].filter(Boolean).join(' ');
   }
 
   function setHeading(dayKey: string) {
