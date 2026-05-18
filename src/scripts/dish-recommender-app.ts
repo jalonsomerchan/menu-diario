@@ -34,6 +34,7 @@ type RecommendationRequest = {
 };
 
 type AssignSlot = { dayKey: string; meal: MealSlot; label: string };
+type RenderResultsOptions = { preserveScroll?: boolean };
 
 if (root) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
@@ -196,6 +197,11 @@ if (root) {
     return recommendations.map((dish) => `${dish.title} · ${dish.description}`);
   }
 
+  function preserveScrollAfterRender(scrollY: number | null) {
+    if (scrollY === null) return;
+    window.requestAnimationFrame(() => window.scrollTo(window.scrollX, scrollY));
+  }
+
   function renderLoading(isMore = false) {
     if (!resultsContainer) return;
     resultsContainer.innerHTML = `
@@ -226,14 +232,17 @@ if (root) {
     `;
   }
 
-  function renderResults() {
+  function renderResults(options: RenderResultsOptions = {}) {
     if (!resultsContainer) return;
+    const scrollY = options.preserveScroll ? window.scrollY : null;
     if (isGenerating && !recommendations.length) {
       renderLoading();
+      preserveScrollAfterRender(scrollY);
       return;
     }
     if (!recommendations.length) {
       resultsContainer.innerHTML = showEmptyResults ? `<p class="dish-recommender-empty">${escapeHtml(labels.resultsEmpty)}</p>` : '';
+      preserveScrollAfterRender(scrollY);
       return;
     }
 
@@ -264,6 +273,7 @@ if (root) {
       </article>
     `).join('');
     resultsContainer.innerHTML = `${cards}${renderMoreControl()}`;
+    preserveScrollAfterRender(scrollY);
   }
 
   function go(nextStep: number, focus = false) {
@@ -299,7 +309,7 @@ if (root) {
     unsubscribeMenus?.();
     unsubscribeMenus = watchWeekMenusByIds(services, Object.values(idsByWeek), (menus) => {
       currentMenus = menus;
-      renderResults();
+      renderResults({ preserveScroll: isGeneratingMore });
     }, (error) => showStatus(formatError(error), true));
   }
 
@@ -313,7 +323,7 @@ if (root) {
 
     if (!isAiReady()) {
       showEmptyResults = false;
-      renderResults();
+      renderResults({ preserveScroll: append });
       showAiStatus(labels.configError || labels.aiMissingConfig, true);
       return;
     }
@@ -329,7 +339,7 @@ if (root) {
     }
 
     showEmptyResults = false;
-    renderResults();
+    renderResults({ preserveScroll: append });
 
     try {
       const previousRecommendations = append ? recommendations : [];
@@ -357,7 +367,7 @@ if (root) {
     } finally {
       isGenerating = false;
       isGeneratingMore = false;
-      renderResults();
+      renderResults({ preserveScroll: append });
       setBusy(false);
     }
   }
