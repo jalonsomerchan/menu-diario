@@ -1,3 +1,5 @@
+import './shopping-alexa-integration';
+
 const wizard = document.querySelector<HTMLElement>('[data-shopping-wizard]');
 
 if (wizard) {
