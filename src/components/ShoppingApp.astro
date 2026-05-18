@@ -156,26 +156,11 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-workspace hidden>
-    <section class="planning-ai-hero app-panel" aria-labelledby="shopping-title">
-      <div>
-        <p class="menu-app__eyebrow">{labels.helper}</p>
-        <h1 id="shopping-title">{labels.title}</h1>
+    <section class="planning-ai-panel app-panel" aria-labelledby="shopping-wizard-title" data-shopping-scroll-target>
+      <header class="planning-ai-panel-heading">
+        <h1 id="shopping-wizard-title">{labels.title}</h1>
         <p>{labels.description}</p>
-      </div>
-      <div class="planning-ai-hero__actions">
-        <a class="button button--ghost button--small" href={dashboardPath}>{labels.dashboardLabel}</a>
-        <a class="button button--ghost button--small" href={configurePath}>{labels.configureLabel}</a>
-      </div>
-    </section>
-
-    <section class="planning-ai-panel app-panel" aria-labelledby="shopping-wizard-title">
-      <div class="section-heading section-heading--simple">
-        <div>
-          <p class="menu-app__eyebrow">{labels.helper}</p>
-          <h2 id="shopping-wizard-title">{labels.title}</h2>
-          <p>{labels.description}</p>
-        </div>
-      </div>
+      </header>
 
       <div class="planning-ai-form" data-shopping-wizard>
         <ol class="planning-ai-wizard-progress" aria-label={labels.wizardProgress} data-wizard-progress>
@@ -265,150 +250,11 @@ const labels = {
     display: none;
   }
 
-  .shopping-app .planning-ai-hero,
-  .shopping-app .planning-ai-panel {
-    background: var(--panel-background);
-  }
-
-  .shopping-app .planning-ai-hero {
-    display: grid;
-    gap: var(--surface-gap);
-    padding: var(--surface-padding-lg);
-    padding-bottom: max(var(--surface-padding-lg), 1rem);
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
-    background:
-      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary-soft), transparent 30%), transparent 48%),
-      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-raised), transparent 4%), var(--color-surface));
-  }
-
-  .shopping-app .planning-ai-hero h1 {
-    margin: 0;
-  }
-
-  .shopping-app .planning-ai-hero p:last-child {
-    margin-bottom: 0;
-  }
-
-  .shopping-app .planning-ai-hero__actions,
   .shopping-toolbar {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
     align-items: center;
-  }
-
-  .shopping-app .planning-ai-form,
-  .shopping-app .planning-ai-pending,
-  .shopping-app .planning-ai-results,
-  .shopping-meals,
-  .shopping-draft {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .shopping-app .planning-ai-wizard-progress {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.45rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .shopping-app .planning-ai-wizard-step {
-    display: grid;
-    gap: 0.3rem;
-    width: 100%;
-    min-height: 4.25rem;
-    align-content: center;
-    padding: 0.6rem 0.45rem;
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
-    border-radius: var(--radius-lg);
-    background: color-mix(in srgb, var(--color-surface), transparent 3%);
-    color: var(--color-muted);
-    font: inherit;
-    text-align: center;
-  }
-
-  .shopping-app .planning-ai-wizard-step span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.55rem;
-    height: 1.55rem;
-    justify-self: center;
-    border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
-    color: var(--color-text);
-    font-size: 0.8rem;
-    font-weight: 950;
-  }
-
-  .shopping-app .planning-ai-wizard-step strong {
-    overflow: hidden;
-    font-size: 0.72rem;
-    font-weight: 850;
-    line-height: 1.15;
-    text-overflow: ellipsis;
-  }
-
-  .shopping-app [data-wizard-progress-step][aria-current='step'] .planning-ai-wizard-step,
-  .shopping-app .planning-ai-wizard-step[aria-current='step'] {
-    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 24%);
-    background: color-mix(in srgb, var(--color-primary-soft), transparent 18%);
-    color: var(--color-primary);
-  }
-
-  .shopping-app [data-wizard-progress-step][aria-current='step'] .planning-ai-wizard-step span,
-  .shopping-app .planning-ai-wizard-step[aria-current='step'] span {
-    background: var(--color-primary);
-    color: var(--color-on-primary, #fff);
-  }
-
-  .shopping-app .planning-ai-wizard-actions {
-    display: grid;
-    gap: 0.65rem;
-  }
-
-  .shopping-app .planning-ai-section-card,
-  .shopping-app .planning-ai-request-card {
-    display: grid;
-    gap: 0.9rem;
-    padding: var(--surface-padding-tight);
-    padding-bottom: max(var(--surface-padding-tight), 1rem);
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
-    border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
-  }
-
-  .shopping-app .planning-ai-results-panel {
-    display: grid;
-    gap: 0.9rem;
-    padding-top: 0.9rem;
-    border-top: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
-  }
-
-  .shopping-app .planning-ai-section-heading {
-    display: grid;
-    gap: 0.3rem;
-  }
-
-  .shopping-app .planning-ai-section-heading h3 {
-    margin: 0;
-    font-size: 1rem;
-    line-height: 1.1;
-    letter-spacing: -0.03em;
-  }
-
-  .shopping-app .planning-ai-section-heading p {
-    margin: 0;
-  }
-
-  .shopping-app .planning-ai-preset-row,
-  .shopping-app .planning-ai-request-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.55rem;
   }
 
   .shopping-range__day,
@@ -541,7 +387,9 @@ const labels = {
 
   .shopping-status,
   .shopping-item__actions,
-  .shopping-review-group {
+  .shopping-review-group,
+  .shopping-meals,
+  .shopping-draft {
     display: grid;
     gap: 0.75rem;
   }
@@ -592,35 +440,7 @@ const labels = {
     font-weight: 800;
   }
 
-  @media (min-width: 720px) {
-    .shopping-app .planning-ai-hero {
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: end;
-    }
-
-    .shopping-app .planning-ai-wizard-actions {
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
-    }
-
-    .shopping-app .planning-ai-wizard-actions [data-wizard-next] {
-      justify-self: end;
-    }
-  }
-
   @media (max-width: 539px) {
-    .shopping-app .planning-ai-wizard-progress {
-      display: flex;
-      overflow-x: auto;
-      padding-bottom: 0.2rem;
-      scroll-snap-type: x mandatory;
-    }
-
-    .shopping-app .planning-ai-wizard-progress li {
-      flex: 0 0 7.75rem;
-      scroll-snap-align: start;
-    }
-
     .shopping-app .planning-ai-wizard-actions .button,
     .shopping-app .planning-ai-submit {
       width: 100%;
@@ -630,4 +450,5 @@ const labels = {
 
 <script>
   import '../scripts/shopping-app.ts';
+  import '../scripts/shopping-wizard.ts';
 </script>
