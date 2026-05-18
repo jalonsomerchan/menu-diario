@@ -21,6 +21,10 @@ describe('AI planner wizard', () => {
     assert.match(component, /data-plan-step=\"6\"/);
     assert.match(component, /data-plan-pending/);
     assert.match(component, /data-plan-intolerances/);
+    assert.match(component, /data-plan-results/);
+    assert.match(component, /planning-ai-results-panel/);
+    assert.doesNotMatch(component, /planning-ai-panel--results/);
+    assert.match(component, /data-plan-step=\"6\"[\s\S]*data-plan-results/);
     assert.match(component, /data-plan-step-indicator/);
     assert.match(component, /data-plan-wizard-back/);
     assert.match(component, /data-plan-wizard-next/);
