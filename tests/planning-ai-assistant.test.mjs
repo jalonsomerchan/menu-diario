@@ -95,4 +95,80 @@ describe('planning AI assistant', () => {
       },
     ]);
   });
+
+  it('requires a genuinely new dish in mixed-mode assignments', () => {
+    const assigned = assignPlanningRecommendations({
+      mode: 'mix',
+      pendingMeals: [{ dayKey: '2026-05-20', meal: 'lunch' }],
+      dishes: catalog,
+      recommendationCount: 3,
+      response: {
+        recommendations: [
+          {
+            dayKey: '2026-05-20',
+            meal: 'lunch',
+            dishes: [
+              { name: 'Lentejas', isNew: false },
+              { name: 'Crema de calabaza', isNew: false },
+              { name: 'Lentejas', isNew: true },
+            ],
+            reason: 'Mezcla de ideas.',
+          },
+        ],
+      },
+    });
+
+    assert.deepEqual(assigned, []);
+  });
+
+  it('keeps a balanced mixed-mode assignment when it includes a real new dish', () => {
+    const assigned = assignPlanningRecommendations({
+      mode: 'mix',
+      pendingMeals: [{ dayKey: '2026-05-20', meal: 'lunch' }],
+      dishes: catalog,
+      recommendationCount: 3,
+      response: {
+        recommendations: [
+          {
+            dayKey: '2026-05-20',
+            meal: 'lunch',
+            dishes: [
+              { name: 'Lentejas', isNew: false },
+              { name: 'Crema de calabaza', isNew: false },
+              { name: 'Salteado de quinoa con verduras y yogur', isNew: true },
+            ],
+            reason: 'Mezcla de ideas.',
+          },
+        ],
+      },
+    });
+
+    assert.deepEqual(assigned, [
+      {
+        dayKey: '2026-05-20',
+        meal: 'lunch',
+        dishes: [
+          {
+            name: 'Salteado de quinoa con verduras y yogur',
+            isNew: true,
+            scope: 'new',
+            isGlobal: false,
+          },
+          {
+            name: 'Lentejas',
+            isNew: false,
+            scope: 'group',
+            isGlobal: false,
+          },
+          {
+            name: 'Crema de calabaza',
+            isNew: false,
+            scope: 'global',
+            isGlobal: true,
+          },
+        ],
+        reason: 'Mezcla de ideas.',
+      },
+    ]);
+  });
 });
