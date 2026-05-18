@@ -72,6 +72,8 @@ const labels = {
   loadingSlots: t('planningAi.loadingSlots'),
   loadingPlan: t('planningAi.loadingPlan'),
   generated: t('planningAi.generated'),
+  wizardBack: t('menu.previous'),
+  wizardNext: t('menu.next'),
   aiLoading: t('ai.loading'),
   aiError: t('ai.error'),
   aiMissingConfig: t('ai.missingConfig'),
@@ -111,6 +113,8 @@ const labels = {
   offlineReadOnly: t('pwa.offlineReadOnly'),
   homePath,
 };
+
+const wizardSteps = [labels.quickTitle, labels.meals, labels.recommendationCount, labels.mode, labels.summaryTitle];
 ---
 
 <section class="planning-ai-app" data-planning-ai-app data-labels={JSON.stringify(labels)}>
@@ -140,8 +144,19 @@ const labels = {
           </div>
         </div>
 
-        <form class="planning-ai-form" data-plan-form>
-          <section class="planning-ai-section-card">
+        <form class="planning-ai-form" data-plan-form data-plan-wizard>
+          <ol class="planning-ai-wizard-progress" aria-label={labels.formTitle}>
+            {wizardSteps.map((step, index) => (
+              <li>
+                <button type="button" class="planning-ai-wizard-step" data-plan-step-indicator={index} aria-current={index === 0 ? 'step' : undefined}>
+                  <span>{index + 1}</span>
+                  <strong>{step}</strong>
+                </button>
+              </li>
+            ))}
+          </ol>
+
+          <section class="planning-ai-section-card" data-plan-step="0">
             <div class="planning-ai-section-heading">
               <h3>{labels.quickTitle}</h3>
             </div>
@@ -164,7 +179,7 @@ const labels = {
             </div>
           </section>
 
-          <section class="planning-ai-section-card">
+          <section class="planning-ai-section-card" data-plan-step="1" hidden>
             <div class="planning-ai-section-heading">
               <h3>{labels.meals}</h3>
             </div>
@@ -177,7 +192,7 @@ const labels = {
             </fieldset>
           </section>
 
-          <section class="planning-ai-section-card">
+          <section class="planning-ai-section-card" data-plan-step="2" hidden>
             <div class="planning-ai-section-heading">
               <h3>{labels.recommendationCount}</h3>
               <p>{labels.recommendationHint}</p>
@@ -193,7 +208,7 @@ const labels = {
             <input type="hidden" value="3" data-plan-count />
           </section>
 
-          <section class="planning-ai-section-card">
+          <section class="planning-ai-section-card" data-plan-step="3" hidden>
             <div class="planning-ai-section-heading">
               <h3>{labels.mode}</h3>
             </div>
@@ -218,14 +233,18 @@ const labels = {
             </fieldset>
           </section>
 
-          <section class="planning-ai-request-card" aria-live="polite">
+          <section class="planning-ai-request-card" aria-live="polite" data-plan-step="4" hidden>
             <div class="planning-ai-section-heading">
               <h3>{labels.summaryTitle}</h3>
             </div>
             <div class="planning-ai-request-summary" data-plan-summary></div>
           </section>
 
-          <button class="button button--primary planning-ai-submit" type="submit" data-plan-submit>{labels.submit}</button>
+          <div class="planning-ai-wizard-actions">
+            <button class="button button--ghost" type="button" data-plan-wizard-back>{labels.wizardBack}</button>
+            <button class="button button--secondary" type="button" data-plan-wizard-next>{labels.wizardNext}</button>
+            <button class="button button--primary planning-ai-submit" type="submit" data-plan-submit hidden>{labels.submit}</button>
+          </div>
         </form>
       </section>
 
@@ -319,6 +338,68 @@ const labels = {
   .planning-ai-results {
     display: grid;
     gap: 1rem;
+  }
+
+  .planning-ai-wizard-progress {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .planning-ai-wizard-step {
+    display: grid;
+    gap: 0.3rem;
+    width: 100%;
+    min-height: 4.25rem;
+    align-content: center;
+    padding: 0.6rem 0.45rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface), transparent 3%);
+    color: var(--color-muted);
+    font: inherit;
+    text-align: center;
+  }
+
+  .planning-ai-wizard-step span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.55rem;
+    height: 1.55rem;
+    justify-self: center;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
+    color: var(--color-text);
+    font-size: 0.8rem;
+    font-weight: 950;
+  }
+
+  .planning-ai-wizard-step strong {
+    overflow: hidden;
+    font-size: 0.72rem;
+    font-weight: 850;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+  }
+
+  .planning-ai-wizard-step[aria-current='step'] {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 24%);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 18%);
+    color: var(--color-primary);
+  }
+
+  .planning-ai-wizard-step[aria-current='step'] span {
+    background: var(--color-primary);
+    color: var(--color-on-primary, #fff);
+  }
+
+  .planning-ai-wizard-actions {
+    display: grid;
+    gap: 0.65rem;
   }
 
   .planning-ai-section-card,
@@ -618,6 +699,16 @@ const labels = {
     .planning-ai-grid {
       grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     }
+
+    .planning-ai-wizard-actions {
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+    }
+
+    .planning-ai-wizard-actions [data-plan-wizard-next],
+    .planning-ai-wizard-actions [data-plan-submit] {
+      justify-self: end;
+    }
   }
 
   @media (max-width: 539px) {
@@ -629,6 +720,19 @@ const labels = {
       grid-template-columns: 1fr;
     }
 
+    .planning-ai-wizard-progress {
+      display: flex;
+      overflow-x: auto;
+      padding-bottom: 0.2rem;
+      scroll-snap-type: x mandatory;
+    }
+
+    .planning-ai-wizard-progress li {
+      flex: 0 0 7.75rem;
+      scroll-snap-align: start;
+    }
+
+    .planning-ai-wizard-actions .button,
     .planning-ai-submit {
       width: 100%;
     }
@@ -637,4 +741,5 @@ const labels = {
 
 <script>
   import '../scripts/planning-ai-app.ts';
+  import '../scripts/planning-ai-wizard.ts';
 </script>
