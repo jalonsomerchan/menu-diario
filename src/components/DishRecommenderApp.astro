@@ -39,7 +39,6 @@ const labels = {
   nav: tr('nav'),
   title: tr('title'),
   description: tr('description'),
-  eyebrow: tr('eyebrow'),
   stepContext: tr('stepContext'),
   stepIngredients: tr('stepIngredients'),
   stepIntolerances: tr('stepIntolerances'),
@@ -80,7 +79,14 @@ const labels = {
   generating: tr('generating'),
   generated: tr('generated'),
   resultsEmpty: tr('resultsEmpty'),
+  loadingTitle: tr('loadingTitle'),
+  loadingDescription: tr('loadingDescription'),
   invalidResponse: tr('invalidResponse'),
+  requestError: tr('requestError'),
+  quotaError: tr('quotaError'),
+  configError: tr('configError'),
+  appCheckError: tr('appCheckError'),
+  timeoutError: tr('timeoutError'),
   saveDish: tr('saveDish'),
   assignDish: tr('assignDish'),
   shareDish: tr('shareDish'),
@@ -106,7 +112,6 @@ const wizardSteps = [labels.stepContext, labels.stepIngredients, labels.stepInto
   <div data-content hidden>
     <section class="dish-recommender-panel app-panel" aria-labelledby="dish-recommender-title" data-dish-recommender-scroll-target>
       <header class="dish-recommender-heading">
-        <p class="menu-app__eyebrow">{labels.eyebrow}</p>
         <h1 id="dish-recommender-title">{labels.title}</h1>
         <p>{labels.description}</p>
       </header>
@@ -132,8 +137,8 @@ const wizardSteps = [labels.stepContext, labels.stepIngredients, labels.stepInto
             <label><input type="radio" name="dish-meal" value="dinner" data-dish-meal /> <span>{labels.dinner}</span></label>
           </fieldset>
 
-          <div class="dish-recommender-grid">
-            <label class="dish-recommender-field"><span>{labels.peopleLabel}</span><input type="number" min="1" max="20" value="2" data-dish-people /></label>
+          <div class="dish-recommender-grid dish-recommender-grid--compact">
+            <label class="dish-recommender-field"><span>{labels.peopleLabel}</span><input type="number" min="1" max="20" value="2" inputmode="numeric" data-dish-people /></label>
             <label class="dish-recommender-field"><span>{labels.difficultyLabel}</span><select data-dish-difficulty><option value="easy">{labels.difficultyEasy}</option><option value="medium">{labels.difficultyMedium}</option><option value="advanced">{labels.difficultyAdvanced}</option></select></label>
           </div>
 
@@ -153,12 +158,12 @@ const wizardSteps = [labels.stepContext, labels.stepIngredients, labels.stepInto
             <label><input type="radio" name="dish-ingredient-mode" value="have" data-dish-ingredient-mode checked /> <span>{labels.ingredientsHave}</span></label>
             <label><input type="radio" name="dish-ingredient-mode" value="shopping" data-dish-ingredient-mode /> <span>{labels.ingredientsShop}</span></label>
           </fieldset>
-          <label class="dish-recommender-field"><span>{labels.basicAssumption}</span><textarea rows="5" maxlength="900" data-dish-ingredients placeholder={labels.ingredientsPlaceholder}></textarea></label>
+          <label class="dish-recommender-field"><span>{labels.basicAssumption}</span><textarea rows="6" maxlength="900" data-dish-ingredients placeholder={labels.ingredientsPlaceholder}></textarea></label>
         </section>
 
         <section class="dish-recommender-card" data-dish-step="2" hidden>
           <div class="dish-recommender-section-heading"><h2>{labels.intolerancesTitle}</h2><p>{labels.intolerancesDescription}</p></div>
-          <label class="dish-recommender-field"><span>{labels.intolerancesTitle}</span><textarea rows="5" maxlength="900" data-dish-intolerances placeholder={labels.intolerancesPlaceholder}></textarea></label>
+          <label class="dish-recommender-field"><span>{labels.intolerancesTitle}</span><textarea rows="6" maxlength="900" data-dish-intolerances placeholder={labels.intolerancesPlaceholder}></textarea></label>
         </section>
 
         <section class="dish-recommender-card" data-dish-step="3" hidden>
@@ -174,7 +179,7 @@ const wizardSteps = [labels.stepContext, labels.stepIngredients, labels.stepInto
             <label><input type="checkbox" value="filling" data-dish-preference /> <span>{labels.preferenceFilling}</span></label>
             <label><input type="checkbox" value="hungry" data-dish-preference /> <span>{labels.preferenceHungry}</span></label>
           </fieldset>
-          <label class="dish-recommender-field"><span>{labels.preferenceExtra}</span><textarea rows="4" maxlength="900" data-dish-extra-preferences placeholder={labels.preferencePlaceholder}></textarea></label>
+          <label class="dish-recommender-field"><span>{labels.preferenceExtra}</span><textarea rows="5" maxlength="900" data-dish-extra-preferences placeholder={labels.preferencePlaceholder}></textarea></label>
         </section>
 
         <section class="dish-recommender-card" data-dish-step="4" hidden>
