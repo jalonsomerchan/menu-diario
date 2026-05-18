@@ -9,11 +9,19 @@ function readText(path) {
   return readFileSync(join(root, path), 'utf8');
 }
 
+function cssBlock(source, selector) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = source.match(new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`));
+  return match?.[1] ?? '';
+}
+
 describe('AI planner wizard', () => {
   it('keeps the AI planner as a guided wizard before generation', () => {
     const component = readText('src/components/PlanningAiApp.astro');
     const wizard = readText('src/scripts/planning-ai-wizard.ts');
     const planner = readText('src/scripts/planning-ai-app.ts');
+    const dateRange = readText('src/scripts/planning-ai-date-range.ts');
+    const wizardActionsBlock = cssBlock(component, '.planning-ai-wizard-actions');
 
     assert.match(component, /Planificador con IA/);
     assert.match(component, /Planifica tus próximas comidas con inteligencia artificial/);
@@ -25,6 +33,12 @@ describe('AI planner wizard', () => {
     assert.match(component, /data-plan-step=\"0\"/);
     assert.match(component, /data-plan-step=\"2\"/);
     assert.match(component, /data-plan-step=\"6\"/);
+    assert.match(component, /data-plan-date-range/);
+    assert.match(component, /data-plan-start/);
+    assert.match(component, /data-plan-end/);
+    assert.match(component, /planning-ai-date-range\.ts/);
+    assert.doesNotMatch(component, /type=\"date\" data-plan-start/);
+    assert.doesNotMatch(component, /type=\"date\" data-plan-end/);
     assert.match(component, /data-plan-pending/);
     assert.match(component, /data-plan-intolerances/);
     assert.match(component, /data-plan-results/);
@@ -36,6 +50,16 @@ describe('AI planner wizard', () => {
     assert.match(component, /data-plan-wizard-next/);
     assert.match(component, /planning-ai-wizard\.ts/);
     assert.match(component, /data-plan-submit hidden/);
+    assert.match(wizardActionsBlock, /display:\s*flex/);
+    assert.doesNotMatch(wizardActionsBlock, /display:\s*grid/);
+
+    assert.match(dateRange, /flatpickr/);
+    assert.match(dateRange, /cdnjs\.cloudflare\.com\/ajax\/libs\/flatpickr\/4\.6\.13/);
+    assert.match(dateRange, /mode: 'range'/);
+    assert.match(dateRange, /data-plan-date-range/);
+    assert.match(dateRange, /data-plan-start/);
+    assert.match(dateRange, /data-plan-end/);
+    assert.match(dateRange, /syncVisibleRange/);
 
     assert.match(wizard, /validateBeforeSubmit/);
     assert.match(wizard, /stopImmediatePropagation/);
