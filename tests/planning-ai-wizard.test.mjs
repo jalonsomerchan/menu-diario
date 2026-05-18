@@ -9,12 +9,19 @@ function readText(path) {
   return readFileSync(join(root, path), 'utf8');
 }
 
+function cssBlock(source, selector) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = source.match(new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`));
+  return match?.[1] ?? '';
+}
+
 describe('AI planner wizard', () => {
   it('keeps the AI planner as a guided wizard before generation', () => {
     const component = readText('src/components/PlanningAiApp.astro');
     const wizard = readText('src/scripts/planning-ai-wizard.ts');
     const planner = readText('src/scripts/planning-ai-app.ts');
     const dateRange = readText('src/scripts/planning-ai-date-range.ts');
+    const wizardActionsBlock = cssBlock(component, '.planning-ai-wizard-actions');
 
     assert.match(component, /Planificador con IA/);
     assert.match(component, /Planifica tus próximas comidas con inteligencia artificial/);
@@ -43,8 +50,8 @@ describe('AI planner wizard', () => {
     assert.match(component, /data-plan-wizard-next/);
     assert.match(component, /planning-ai-wizard\.ts/);
     assert.match(component, /data-plan-submit hidden/);
-    assert.match(component, /\.planning-ai-wizard-actions \{[\s\S]*display: flex/);
-    assert.doesNotMatch(component, /\.planning-ai-wizard-actions \{[\s\S]*display: grid/);
+    assert.match(wizardActionsBlock, /display:\s*flex/);
+    assert.doesNotMatch(wizardActionsBlock, /display:\s*grid/);
 
     assert.match(dateRange, /flatpickr/);
     assert.match(dateRange, /cdnjs\.cloudflare\.com\/ajax\/libs\/flatpickr\/4\.6\.13/);
