@@ -49,10 +49,16 @@ describe('dish recommender smoke checks', () => {
     assert.match(script, /renderLoading/);
     assert.match(script, /showEmptyResults = false/);
     assert.match(script, /formatAiError/);
+    assert.match(script, /dish-recommender-result__footer/);
+    assert.match(script, /dish-recommender-assign__controls/);
+    assert.doesNotMatch(script, /button--primary button--small" type="button" data-dish-assign/);
     assert.match(script, /navigator\.share/);
     assert.match(script, /data-dish-share/);
     assert.match(styles, /dish-recommender-progress/);
     assert.match(styles, /dish-recommender-loading__spinner/);
+    assert.match(styles, /dish-recommender-result__footer/);
+    assert.match(styles, /dish-recommender-assign__controls/);
+    assert.match(styles, /grid-template-columns: minmax\(10rem, 1fr\) auto/);
     assert.match(styles, /appearance: none/);
     assert.match(styles, /resize: vertical/);
     assert.match(styles, /@media \(max-width: 539px\)/);
