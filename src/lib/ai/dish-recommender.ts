@@ -14,6 +14,7 @@ export type DishRecommenderPromptInput = {
   intolerances: string;
   preferences: string[];
   extraPreferences: string;
+  recentMeals?: string[];
 };
 
 export type DishRecommendation = {
@@ -27,9 +28,11 @@ export type DishRecommendationResponse = {
 
 const maxTextLength = 700;
 const maxDishes = 12;
+const maxRecentMeals = 28;
 
 export function buildDishRecommenderPrompt(input: DishRecommenderPromptInput) {
   const preferenceText = input.preferences.length ? input.preferences.join(', ') : 'none';
+  const recentMeals = describeRecentMeals(input.recentMeals);
   const ingredientsRule =
     input.ingredientMode === 'shopping'
       ? 'The user will shop, so you may use any normal supermarket ingredient.'
@@ -42,6 +45,9 @@ export function buildDishRecommenderPrompt(input: DishRecommenderPromptInput) {
     'Use practical, realistic dishes. Do not include full recipes, long steps, calories or invented health claims.',
     'Assume basic pantry items are available: salt, oil, water, common spices, flour/sugar only when normal for the dish, and standard utensils.',
     'Respect intolerances and restrictions as hard constraints.',
+    recentMeals
+      ? 'Use the recent meals as avoidance context: do not recommend the same dish, very similar dishes, or the same main protein/style repeatedly unless the user preference makes it unavoidable.'
+      : 'No recent meal history was provided.',
     ingredientsRule,
     `Meal: ${input.meal}.`,
     `People: ${Math.max(1, Math.min(20, Math.round(input.people || 1)))}.`,
@@ -51,6 +57,8 @@ export function buildDishRecommenderPrompt(input: DishRecommenderPromptInput) {
     `Intolerances: ${trimText(input.intolerances) || 'none'}.`,
     `Preferences: ${preferenceText}.`,
     `Extra preferences: ${trimText(input.extraPreferences) || 'none'}.`,
+    'Recently eaten meals to avoid repeating or closely imitating:',
+    recentMeals || '- none',
     'Return JSON only with shape {"dishes":[{"title":"Dish title","description":"One short sentence"}]}.',
   ].join('\n\n');
 }
@@ -75,6 +83,15 @@ export function normalizeDishRecommendations(response: DishRecommendationRespons
     seen.add(key);
     return [{ title, description }];
   }).slice(0, maxDishes);
+}
+
+function describeRecentMeals(recentMeals: string[] = []) {
+  return recentMeals
+    .map((meal) => trimText(meal))
+    .filter(Boolean)
+    .slice(0, maxRecentMeals)
+    .map((meal) => `- ${meal}`)
+    .join('\n');
 }
 
 function trimText(value: string) {
