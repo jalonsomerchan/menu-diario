@@ -15,7 +15,7 @@ import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
 import { getGroupFoodIntolerancesForPrompt } from '../lib/menu/group-food-intolerances';
 import { normalizeDay } from '../lib/menu/normalizers';
-import { ensureUserProfile, getOrCreateWeekMenus, updateMenuDay, watchUserProfile, watchWeekMenusByIds } from '../lib/menu/repository';
+import { ensureUserProfile, getOrCreateWeekMenus, updateMenuDay, watchUserMenus, watchUserProfile, watchWeekMenusByIds } from '../lib/menu/repository';
 import type { DailyMenu, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
@@ -59,10 +59,12 @@ if (root) {
   let currentProfile: UserProfile | null = null;
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
+  let recentMenus: WeekMenu[] = [];
   let recommendations: DishRecommendation[] = [];
   let syncedIntolerances = false;
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeMenus: (() => void) | undefined;
+  let unsubscribeRecentMenus: (() => void) | undefined;
 
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
@@ -160,6 +162,22 @@ if (root) {
       if (dayState.skipped || dayState.meals[meal].skipped || dayState.meals[meal].items.length > 0) return [];
       return [{ dayKey, meal, label: `${formatDate(dayKey)} · ${mealLabel(meal)}` }];
     });
+  }
+
+  function getRecentMealsForPrompt(meal: MealSlot) {
+    const today = new Date().toISOString().slice(0, 10);
+    return recentMenus
+      .flatMap((menu) =>
+        Object.entries(menu.days).flatMap(([dayKey, rawDay]) => {
+          if (dayKey > today) return [];
+          const day = normalizeDay(rawDay);
+          if (day.skipped || day.meals[meal].skipped) return [];
+          return day.meals[meal].items.map((item) => `${dayKey} · ${mealLabel(meal)} · ${item}`);
+        })
+      )
+      .filter(Boolean)
+      .sort((left, right) => right.localeCompare(left))
+      .slice(0, 28);
   }
 
   function renderResults() {
@@ -331,7 +349,7 @@ if (root) {
     try {
       const response = await generateGeminiJson({
         userId: currentUser.uid,
-        prompt: buildDishRecommenderPrompt({ locale, ...request }),
+        prompt: buildDishRecommenderPrompt({ locale, ...request, recentMeals: getRecentMealsForPrompt(request.meal) }),
         validator: isDishRecommendationResponse,
       });
       recommendations = normalizeDishRecommendations(response);
@@ -374,6 +392,7 @@ if (root) {
         currentUser = user;
         unsubscribeProfile?.();
         unsubscribeMenus?.();
+        unsubscribeRecentMenus?.();
         if (!user) {
           window.location.assign(labels.homePath || '/');
           return;
@@ -383,6 +402,15 @@ if (root) {
           currentProfile = profile;
           syncedIntolerances = false;
         }, (error) => showStatus(formatError(error), true));
+        unsubscribeRecentMenus = watchUserMenus(
+          services,
+          user.uid,
+          (menus) => {
+            recentMenus = menus;
+          },
+          (error) => showStatus(formatError(error), true),
+          12
+        );
         showAiStatus(labels.loadingSlots);
         await syncUpcomingMenus(services);
         showAiStatus('');
