@@ -134,26 +134,11 @@ const wizardSteps = [
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>
-    <section class="planning-ai-hero app-panel">
-      <div>
-        <p class="menu-app__eyebrow">{labels.eyebrow}</p>
-        <h1>{labels.title}</h1>
+    <section class="planning-ai-panel app-panel" aria-labelledby="planning-ai-form-title" data-plan-scroll-target>
+      <header class="planning-ai-panel-heading">
+        <h1 id="planning-ai-form-title">{labels.title}</h1>
         <p>{labels.description}</p>
-      </div>
-      <div class="planning-ai-hero__actions">
-        <a class="button button--ghost button--small" href={configurePath}>{labels.openManual}</a>
-        <a class="button button--ghost button--small" href={dishesPath}>{labels.manageDishes}</a>
-      </div>
-    </section>
-
-    <section class="planning-ai-panel app-panel" aria-labelledby="planning-ai-form-title">
-      <div class="section-heading section-heading--simple">
-        <div>
-          <p class="menu-app__eyebrow">{labels.eyebrow}</p>
-          <h2 id="planning-ai-form-title">{labels.formTitle}</h2>
-          <p>{labels.formDescription}</p>
-        </div>
-      </div>
+      </header>
 
       <form class="planning-ai-form" data-plan-form data-plan-wizard>
         <ol class="planning-ai-wizard-progress" aria-label={labels.formTitle}>
@@ -309,40 +294,30 @@ const wizardSteps = [
     gap: 1rem;
   }
 
-  .planning-ai-hero,
   .planning-ai-panel {
+    display: grid;
+    gap: var(--surface-gap);
     background: var(--panel-background);
   }
 
-  .planning-ai-hero {
+  .planning-ai-panel-heading {
     display: grid;
-    gap: var(--surface-gap);
-    padding: var(--surface-padding-lg);
-    padding-bottom: max(var(--surface-padding-lg), 1rem);
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
-    background:
-      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary-soft), transparent 30%), transparent 48%),
-      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-raised), transparent 4%), var(--color-surface));
+    gap: 0.45rem;
   }
 
-  .planning-ai-hero h1 {
+  .planning-ai-panel-heading h1 {
     margin: 0;
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    line-height: 1.05;
+    letter-spacing: -0.055em;
   }
 
-  .planning-ai-hero p:last-child {
-    margin-bottom: 0;
-  }
-
-  .planning-ai-hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    align-items: center;
-  }
-
-  .planning-ai-grid {
-    display: grid;
-    gap: 1rem;
+  .planning-ai-panel-heading p {
+    max-width: 44rem;
+    margin: 0;
+    color: var(--color-muted);
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    line-height: var(--surface-copy-line-height);
   }
 
   .planning-ai-form,
@@ -734,11 +709,6 @@ const wizardSteps = [
   }
 
   @media (min-width: 720px) {
-    .planning-ai-hero {
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: end;
-    }
-
     .planning-ai-wizard-actions {
       grid-template-columns: auto 1fr auto;
       align-items: center;
