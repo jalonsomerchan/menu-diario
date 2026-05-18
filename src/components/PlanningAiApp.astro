@@ -174,16 +174,12 @@ const wizardSteps = [
             <button class="planning-ai-chip-button" type="button" data-plan-preset="14">{labels.presetLong}</button>
           </div>
 
-          <div class="planning-ai-form__dates">
-            <label>
-              <span>{labels.start}</span>
-              <input type="date" data-plan-start />
-            </label>
-            <label>
-              <span>{labels.end}</span>
-              <input type="date" data-plan-end />
-            </label>
-          </div>
+          <label class="planning-ai-date-range-field">
+            <span>{labels.start} / {labels.end}</span>
+            <input type="text" inputmode="none" data-plan-date-range />
+          </label>
+          <input type="hidden" data-plan-start />
+          <input type="hidden" data-plan-end />
         </section>
 
         <section class="planning-ai-section-card" data-plan-step="1" hidden>
@@ -399,8 +395,15 @@ const wizardSteps = [
   }
 
   .planning-ai-wizard-actions {
-    display: grid;
+    display: flex;
     gap: 0.65rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .planning-ai-wizard-actions .button {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .planning-ai-section-card,
@@ -453,14 +456,24 @@ const wizardSteps = [
     line-height: var(--surface-copy-line-height);
   }
 
+  .planning-ai-date-range-field,
   .planning-ai-textarea-field {
     display: grid;
     gap: 0.45rem;
   }
 
+  .planning-ai-date-range-field input,
   .planning-ai-textarea-field textarea {
     width: 100%;
+  }
+
+  .planning-ai-textarea-field textarea {
     resize: vertical;
+  }
+
+  .flatpickr-calendar {
+    color: #111827;
+    font-family: inherit;
   }
 
   .planning-ai-form input[type='date'],
@@ -719,18 +732,6 @@ const wizardSteps = [
     color: var(--color-danger);
   }
 
-  @media (min-width: 720px) {
-    .planning-ai-wizard-actions {
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
-    }
-
-    .planning-ai-wizard-actions [data-plan-wizard-next],
-    .planning-ai-wizard-actions [data-plan-submit] {
-      justify-self: end;
-    }
-  }
-
   @media (max-width: 539px) {
     .planning-ai-form__dates {
       grid-template-columns: 1fr;
@@ -750,11 +751,6 @@ const wizardSteps = [
     .planning-ai-wizard-progress li {
       flex: 0 0 7.75rem;
       scroll-snap-align: start;
-    }
-
-    .planning-ai-wizard-actions .button,
-    .planning-ai-submit {
-      width: 100%;
     }
   }
 </style>
