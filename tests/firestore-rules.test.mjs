@@ -24,6 +24,19 @@ describe('Firestore rules smoke checks', () => {
     assert.doesNotMatch(weeklyMenuRules, /allow read: if signedIn\(\);/);
   });
 
+  it('restricts weekly menu updates to content edits or member joins', () => {
+    const rules = readText('firestore.rules');
+    const weeklyMenuRules = getRulesBlock(rules, 'weeklyMenus', 'menuId');
+
+    assert.match(rules, /function changesOnlyFields\(fields\)/);
+    assert.match(rules, /function updatesMenuContent\(\)/);
+    assert.match(rules, /function joinsMenuDocument\(\)/);
+    assert.match(rules, /changesOnlyFields\(\['days', 'updatedAt', 'updatedBy'\]\)/);
+    assert.match(rules, /changesOnlyFields\(\['members', 'updatedAt', 'updatedBy'\]\)/);
+    assert.match(weeklyMenuRules, /allow update: if updatesMenuContent\(\) \|\| joinsMenuDocument\(\);/);
+    assert.doesNotMatch(weeklyMenuRules, /allow update: if isMemberDocument\(\) \|\| joinsDocument\(\);/);
+  });
+
   it('restricts tupper reads to document members', () => {
     const rules = readText('firestore.rules');
     const tupperRules = getRulesBlock(rules, 'tuppers', 'tupperId');
