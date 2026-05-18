@@ -35,12 +35,13 @@ describe('dish recommender smoke checks', () => {
     assert.match(component, /data-dish-recommender-app/);
     assert.match(component, /data-dish-step-indicator/);
     assert.match(component, /data-dish-submit/);
-    assert.match(component, /navigator\.share|data-dish-share/);
     assert.match(script, /buildDishRecommenderPrompt/);
     assert.match(script, /createManualDish/);
     assert.match(script, /updateMenuDay/);
     assert.match(script, /getGroupFoodIntolerancesForPrompt/);
     assert.match(script, /watchWeekMenusByIds/);
+    assert.match(script, /navigator\.share/);
+    assert.match(script, /data-dish-share/);
     assert.match(styles, /dish-recommender-progress/);
     assert.match(styles, /@media \(max-width: 539px\)/);
     assert.match(aiIndex, /dish-recommender/);
