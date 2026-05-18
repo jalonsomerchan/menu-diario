@@ -18,8 +18,13 @@ export function emptyDay(): DailyMenu {
   };
 }
 
+function normalizeParticipantIds(value: unknown) {
+  if (!Array.isArray(value)) return undefined;
+  return [...new Set(value.filter((id): id is string => typeof id === 'string' && id.trim()).map((id) => id.trim()))];
+}
+
 export function normalizeMeal(data?: Partial<MealEntry>): MealEntry {
-  return {
+  const meal = {
     ...emptyMeal(),
     ...data,
     items: Array.isArray(data?.items) ? data.items : [],
@@ -27,6 +32,14 @@ export function normalizeMeal(data?: Partial<MealEntry>): MealEntry {
     reason: data?.reason ?? '',
     note: data?.note ?? '',
   };
+  const participantIds = normalizeParticipantIds(data?.participantIds);
+
+  if (participantIds === undefined) {
+    delete meal.participantIds;
+    return meal;
+  }
+
+  return { ...meal, participantIds };
 }
 
 export function normalizeDay(data: Partial<DailyMenu> = {}): DailyMenu {
