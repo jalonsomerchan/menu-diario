@@ -2,6 +2,7 @@
 import { Icon } from 'astro-icon/components';
 import Container from './Container.astro';
 import { localeLabels, siteConfig, type Locale } from '../config/site';
+import { useDishRecommenderTranslations } from '../i18n/dish-recommender';
 import { usePlanningTranslations } from '../i18n/planning';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getAlternateLocales, getLocalizedEquivalentPath, getLocalizedPath, useTranslations } from '../i18n/ui';
@@ -13,11 +14,13 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const tp = usePlanningTranslations(locale);
+const td = useDishRecommenderTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
 const planningPath = getLocalizedPath('/planificacion', locale);
+const dishRecommenderPath = getLocalizedPath('/recomendador-platos', locale);
 const shoppingPath = getLocalizedPath('/compra', locale);
 const summaryPath = getLocalizedPath('/resumen-semanal', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
@@ -43,6 +46,7 @@ const primaryItems = [
 
 const moreItems = [
   { href: planningPath, icon: 'mdi:creation-outline', label: tp('nav') },
+  { href: dishRecommenderPath, icon: 'mdi:chef-hat', label: td('nav') },
   { href: summaryPath, icon: 'mdi:chart-box-outline', label: t('appNav.summary') },
   { href: historyPath, icon: 'mdi:history', label: t('appNav.history') },
   { href: settingsPath, icon: 'mdi:cog-outline', label: t('appNav.settings') },

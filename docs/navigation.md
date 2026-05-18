@@ -19,6 +19,7 @@ Rutas principales actuales de la app autenticada:
 
 - `/dashboard`: inicio privado del menú.
 - `/planificacion`: asistente de planificación con IA, con configuración previa de rango, comidas, número de platos y modo de recomendación.
+- `/recomendador-platos`: recomendador de platos con IA mediante wizard, guardado en Mis platos, asignación a huecos próximos y opción de compartir.
 - `/configurar`: edición manual de próximos días y acceso rápido al asistente IA.
 - `/compra`: lista de la compra con IA, edición manual y exportación ligera.
 - `/resumen-semanal`: resumen semanal con estadísticas, comparación histórica y recomendaciones básicas no-IA.
@@ -38,7 +39,7 @@ En escritorio, el header muestra directamente una navegación principal corta co
 - tuppers;
 - mis platos;
 - compra;
-- un desplegable `Más` para resumen, histórico, ajustes, idioma, tema del navegador, cerrar sesión y accesos secundarios como administración.
+- un desplegable `Más` para planificador IA, recomendador de platos, resumen, histórico, ajustes, idioma, tema del navegador, cerrar sesión y accesos secundarios como administración.
 
 En móvil, el header usa un botón hamburguesa accesible con:
 

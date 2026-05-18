@@ -10,6 +10,11 @@ export {
   isPendingMealRecommendationResponse,
 } from './pending-meal-recommendations';
 export {
+  buildDishRecommenderPrompt,
+  isDishRecommendationResponse,
+  normalizeDishRecommendations,
+} from './dish-recommender';
+export {
   assignPlanningRecommendations,
   buildPlanningAssistantPrompt,
   getPlanningCatalogDishes,
@@ -30,6 +35,11 @@ export type { AiGenerationConfig } from './config';
 export type { AiErrorCode } from './errors';
 export type { AiFeatureFlags } from './flags';
 export type { JsonValidator } from './json';
+export type {
+  DishRecommendation,
+  DishRecommendationResponse,
+  DishRecommenderPromptInput,
+} from './dish-recommender';
 export type {
   PendingMealRecommendation,
   PendingMealRecommendedDish,
