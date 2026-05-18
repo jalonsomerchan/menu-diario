@@ -1,26 +1,30 @@
 .meal-participants {
   display: grid;
   gap: 0.55rem;
-  margin-top: 0.15rem;
-  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 12%);
+  margin-top: 0.2rem;
+  border: 0;
   border-radius: var(--radius-xl);
-  background: color-mix(in srgb, var(--color-surface-raised), transparent 3%);
+  background: color-mix(in srgb, var(--color-surface-soft), transparent 18%);
   padding: 0.72rem;
 }
 
 .meal-participants legend {
-  padding-inline: 0.15rem;
-  color: var(--color-text);
-  font-size: 0.82rem;
+  float: left;
+  width: 100%;
+  margin-bottom: 0.2rem;
+  padding: 0;
+  color: var(--color-muted);
+  font-size: 0.72rem;
   font-weight: 950;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
   text-transform: uppercase;
 }
 
 .meal-participants p {
   margin: 0;
   color: var(--color-muted);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 750;
   line-height: 1.35;
 }
@@ -28,23 +32,36 @@
 .meal-participants__grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .meal-participant-chip {
-  display: inline-flex;
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.45rem;
-  max-width: 100%;
-  min-height: 2.75rem;
-  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 8%);
+  gap: 0.48rem;
+  max-width: min(100%, 14rem);
+  min-height: 2.35rem;
+  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-surface), transparent 2%);
+  background: color-mix(in srgb, var(--color-surface-raised), transparent 4%);
   color: var(--color-text);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   font-weight: 850;
-  padding: 0.36rem 0.68rem 0.36rem 0.42rem;
+  padding: 0.28rem 0.72rem 0.28rem 0.34rem;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.meal-participant-chip:hover {
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 44%);
+  transform: translateY(-1px);
 }
 
 .meal-participant-chip:focus-within {
@@ -53,15 +70,19 @@
 }
 
 .meal-participant-chip:has(input:checked) {
-  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 32%);
-  background: color-mix(in srgb, var(--color-primary-soft), transparent 12%);
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 28%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary-soft), transparent 8%), var(--color-surface-raised));
   color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary), transparent 78%);
 }
 
 .meal-participant-chip input {
-  flex: 0 0 auto;
-  width: 1.05rem;
-  height: 1.05rem;
+  position: absolute;
+  top: 0.1rem;
+  right: 0.08rem;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
   accent-color: var(--color-primary);
 }
 
@@ -69,18 +90,20 @@
   display: inline-grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 1.9rem;
+  height: 1.9rem;
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-primary-soft), var(--color-surface) 28%);
+  background: color-mix(in srgb, var(--color-primary-soft), var(--color-surface) 24%);
   color: var(--color-primary);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 950;
+  letter-spacing: -0.03em;
 }
 
 .meal-participant-chip__name {
   overflow: hidden;
   min-width: 0;
+  padding-right: 0.28rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -109,12 +132,24 @@
 }
 
 @media (max-width: 520px) {
+  .meal-participants {
+    padding: 0.62rem;
+  }
+
   .meal-participants__grid {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    margin-inline: -0.12rem;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding: 0.12rem 0.12rem 0.24rem;
+    scroll-snap-type: x proximity;
   }
 
   .meal-participant-chip {
-    width: 100%;
+    flex: 0 0 auto;
+    width: min(78vw, 13rem);
+    scroll-snap-align: start;
   }
 }
