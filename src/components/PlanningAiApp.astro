@@ -12,13 +12,25 @@ const t = useTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
 const dishesPath = getLocalizedPath('/mis-platos', locale);
+const headingCopy =
+  locale === 'es'
+    ? {
+        title: 'Planificador con IA',
+        description:
+          'Planifica tus próximas comidas con inteligencia artificial, obteniendo recomendaciones de nuevos platos y menús sanos y equilibrados',
+      }
+    : {
+        title: 'AI planner',
+        description:
+          'Plan your next meals with artificial intelligence, getting recommendations for new dishes and healthy, balanced menus',
+      };
 
 const labels = {
   configMissing: t('menu.configMissing'),
   loading: t('dashboard.loading'),
   eyebrow: t('planningAi.eyebrow'),
-  title: t('planningAi.title'),
-  description: t('planningAi.description'),
+  title: headingCopy.title,
+  description: headingCopy.description,
   formTitle: t('planningAi.formTitle'),
   formDescription: t('planningAi.formDescription'),
   quickTitle: t('planningAi.quickTitle'),
