@@ -294,21 +294,6 @@ export async function recordMenuDishUsage(services: FirebaseServices, userId: st
   }
 
   const globalDuplicate = await findGlobalDuplicate(services, normalizedName);
-  if (globalDuplicate) {
-    await firestoreModule.setDoc(
-      globalDishRef(services, normalizedName),
-      {
-        timesUsed: firestoreModule.increment(1),
-        lastUsedAt: firestoreModule.serverTimestamp(),
-        archived: false,
-        archivedAt: null,
-        updatedAt: firestoreModule.serverTimestamp(),
-      },
-      { merge: true }
-    );
-    return;
-  }
-
   await firestoreModule.setDoc(
     dishRef,
     ownDishPayload(services, {
@@ -316,13 +301,14 @@ export async function recordMenuDishUsage(services: FirebaseServices, userId: st
       groupId,
       cleanName,
       normalizedName,
-      source: 'menu',
+      source: globalDuplicate ? 'duplicated-global' : 'menu',
       timesUsed: 1,
       lastUsedAt: firestoreModule.serverTimestamp(),
       archived: false,
       archivedAt: null,
-      tags: [],
-      quickTags: [],
+      tags: globalDuplicate?.tags ?? [],
+      quickTags: globalDuplicate?.quickTags ?? [],
+      duplicatedFrom: globalDuplicate?.id ?? null,
     }),
     { merge: true }
   );

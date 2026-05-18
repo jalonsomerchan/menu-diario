@@ -94,7 +94,6 @@ const labels = {
 
   <div data-content hidden>
     <header class="tuppers-hero app-panel">
-      <p class="menu-app__eyebrow">{labels.backDashboard}</p>
       <h1>{labels.title}</h1>
       <p>{labels.description}</p>
       <a class="button button--ghost button--small" href={dashboardPath}>{labels.backDashboard}</a>
@@ -147,10 +146,7 @@ const labels = {
 
     <section class="dashboard-section" aria-labelledby="tuppers-list-title">
       <div class="section-heading section-heading--simple">
-        <div>
-          <p class="menu-app__eyebrow">{labels.filters}</p>
-          <h2 id="tuppers-list-title">{labels.title}</h2>
-        </div>
+        <h2 id="tuppers-list-title">{labels.title}</h2>
       </div>
       <div class="tupper-filters" data-filters role="group" aria-label={labels.filters}>
         <button type="button" data-filter="all" aria-pressed="true">{labels.filterAll}</button>

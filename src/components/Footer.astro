@@ -2,6 +2,7 @@
 import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
+import { usePublicPageCopy } from '../i18n/public-pages';
 
 interface Props {
   locale: Locale;
@@ -9,6 +10,8 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const tp = usePublicPageCopy(locale);
+const aboutPath = getLocalizedPath('/acerca-de', locale);
 ---
 
 <footer class="site-footer">
@@ -19,6 +22,9 @@ const t = useTranslations(locale);
         <a href={getLocalizedPath('/como-funciona', locale)}>{t('public.howItWorks.nav')}</a>
       </nav>
       <p class="site-footer__copy">© {new Date().getFullYear()} {siteConfig.name}. {t('footer.createdWith')}</p>
+      <nav class="site-footer__links" aria-label={t('nav.main')}>
+        <a href={aboutPath}>{tp('footerAbout')}</a>
+      </nav>
     </div>
   </Container>
 </footer>

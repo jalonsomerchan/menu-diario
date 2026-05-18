@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Container from '../components/Container.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
 import TuppersApp from '../components/TuppersApp.astro';
 import { defaultLocale, siteConfig } from '../config/site';
 import { useTupperTranslations } from '../i18n/tuppers';
@@ -11,6 +12,7 @@ const tt = useTupperTranslations(locale);
 
 <BaseLayout title={`${tt('title')} · ${siteConfig.name}`} description={tt('description')} locale={locale}>
   <Container class="py-4 sm:py-6">
+    <Breadcrumb locale={locale} items={[{ label: tt('title') }]} />
     <TuppersApp locale={locale} />
   </Container>
 </BaseLayout>
