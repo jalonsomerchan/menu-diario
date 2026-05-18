@@ -89,7 +89,7 @@ describe('project smoke checks', () => {
   });
 
   it('keeps shared and app components available', () => {
-    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'PlanningAiApp', 'DayEditModal', 'DishEditDialog', 'AdminGlobalDishesApp', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp', 'ShoppingApp'].forEach((component) => {
+    ['Button', 'Container', 'Footer', 'Header', 'AuthGate', 'DashboardApp', 'ConfiguratorApp', 'PlanningAiApp', 'DayEditModal', 'DishEditDialog', 'AdminGlobalDishesApp', 'SettingsApp', 'HistoryApp', 'DishesApp', 'MenuApp', 'ShoppingApp', 'Breadcrumb', 'PageHeader'].forEach((component) => {
       assert.equal(existsSync(join(root, `src/components/${component}.astro`)), true, `${component}.astro should exist`);
     });
     assert.equal(existsSync(join(root, 'src/components/AppHeader.astro')), false);
@@ -178,6 +178,7 @@ describe('project smoke checks', () => {
         'shopping.generate',
         'shopping.statusToBuy',
         'shopping.categoryVegetables',
+        'breadcrumb.label',
       ].forEach((key) => {
         assert.ok(translations[key], `${locale}.json should include ${key}`);
       });
@@ -187,6 +188,7 @@ describe('project smoke checks', () => {
   it('keeps routing and assets compatible with root and subpath deployments', () => {
     const layout = readText('src/layouts/BaseLayout.astro');
     const header = readText('src/components/Header.astro');
+    const breadcrumb = readText('src/components/Breadcrumb.astro');
     const manifest = readText('src/pages/manifest.webmanifest.ts');
     const robots = readText('src/pages/robots.txt.ts');
     const i18nHelper = readText('src/i18n/ui.ts');
@@ -196,6 +198,9 @@ describe('project smoke checks', () => {
       assert.doesNotMatch(source, /href=\"\//);
       assert.doesNotMatch(source, /src=\"\//);
     });
+    assert.match(breadcrumb, /getLocalizedPath/);
+    assert.match(breadcrumb, /aria-label/);
+    assert.match(breadcrumb, /aria-current/);
     assert.match(pathHelpers, /withBasePath/);
     assert.match(pathHelpers, /stripBasePath/);
     assert.match(pathHelpers, /getAbsoluteUrl/);

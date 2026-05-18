@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/Container.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
 import DishesApp from '../../components/DishesApp.astro';
 import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
 import { isLocale, useTranslations } from '../../i18n/ui';
@@ -14,11 +15,11 @@ export function getStaticPaths() {
 const localeParam = Astro.params.locale;
 const locale: Locale = isLocale(localeParam) ? localeParam : defaultLocale;
 const t = useTranslations(locale);
-const pageTitle = `${t('dishes.title')} · ${siteConfig.name}`;
 ---
 
-<BaseLayout title={pageTitle} description={t('dishes.description')} locale={locale}>
+<BaseLayout title={`${t('dishes.title')} · ${siteConfig.name}`} description={t('dishes.description')} locale={locale}>
   <Container class="py-4 sm:py-6">
+    <Breadcrumb locale={locale} items={[{ label: t('dishes.title') }]} />
     <DishesApp locale={locale} />
   </Container>
 </BaseLayout>
