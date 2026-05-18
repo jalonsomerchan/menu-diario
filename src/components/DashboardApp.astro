@@ -1,7 +1,6 @@
 ---
 import type { Locale } from '../config/site';
 import DayEditModal from './DayEditModal.astro';
-import { usePlanningTranslations } from '../i18n/planning';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -11,12 +10,9 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-const tp = usePlanningTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
-const planningPath = getLocalizedPath('/planificacion', locale);
-const shoppingPath = getLocalizedPath('/compra', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
 
 const labels = {
@@ -72,14 +68,9 @@ const labels = {
   offlineNoCache: t('pwa.offlineNoCache'),
   backOnline: t('pwa.backOnline'),
   tuppers: tt('nav'),
-  shopping: t('appNav.shopping'),
-  planning: tp('nav'),
-  planningTitle: tp('title'),
-  planningHint: tp('hint'),
   tuppersExpiryAlert: tt('expiryAlert'),
   homePath,
   configurePath,
-  planningPath,
 };
 ---
 
@@ -100,9 +91,6 @@ const labels = {
       <div class="dashboard-hero-actions">
         <button class="button button--ghost button--small" type="button" data-today-edit>{labels.editDay}</button>
         <a class="button button--primary button--small" href={configurePath}>{labels.configure}</a>
-        <a class="button button--secondary button--small" href={planningPath}>{labels.planning}</a>
-        <a class="button button--ghost button--small" href={shoppingPath}>{labels.shopping}</a>
-        <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
       </div>
     </section>
 
@@ -111,11 +99,6 @@ const labels = {
         <p class="menu-app__eyebrow">{labels.configure}</p>
         <h2>{labels.configure}</h2>
         <p>{labels.dashboardConfigureHint}</p>
-      </a>
-      <a class="dashboard-action-card dashboard-action-card--ai" href={planningPath}>
-        <p class="menu-app__eyebrow">{labels.planning}</p>
-        <h2>{labels.planningTitle}</h2>
-        <p>{labels.planningHint}</p>
       </a>
     </section>
 
@@ -180,13 +163,6 @@ const labels = {
     letter-spacing: -0.04em;
   }
 
-  .dashboard-action-card--ai {
-    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 48%);
-    background:
-      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary-soft), transparent 20%), transparent 45%),
-      var(--panel-background);
-  }
-
   .planner-day-card__notes {
     display: grid;
     gap: 0.35rem;
@@ -220,12 +196,6 @@ const labels = {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow-wrap: anywhere;
-  }
-
-  @media (min-width: 720px) {
-    .dashboard-action-strip {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
   }
 </style>
 
