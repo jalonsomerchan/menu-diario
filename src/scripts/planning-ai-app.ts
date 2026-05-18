@@ -22,7 +22,10 @@ import { normalizeDay } from '../lib/menu/normalizers';
 import {
   clearMenuDay,
   ensureUserProfile,
+  getCombinedFoodIntolerances,
+  getGroupById,
   getOrCreateWeekMenus,
+  getUserProfilesByIds,
   updateMenuDay,
   watchUserProfile,
   watchWeekMenusByIds,
@@ -389,6 +392,17 @@ if (root) {
     return hasFirebaseConfig() && isMenuSuggestionsAvailable(getAiFeatureFlags());
   }
 
+  async function getFoodIntolerancesForPrompt(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
+    if (!currentProfile) return '';
+    if (!currentProfile.groupId) return currentProfile.foodIntolerances;
+
+    const group = await getGroupById(services, currentProfile.groupId);
+    if (!group?.members.length) return currentProfile.foodIntolerances;
+
+    const profiles = await getUserProfilesByIds(services, group.members);
+    return getCombinedFoodIntolerances(profiles.length ? profiles : [currentProfile]);
+  }
+
   async function syncRangeMenus(services: Awaited<ReturnType<typeof getFirebaseServices>>, request: PlanningRequest) {
     const menuIdsByWeekStart = await getOrCreateWeekMenus(
       services,
@@ -574,7 +588,7 @@ if (root) {
                 pendingMeals,
                 days: getDaysForRequest(request),
                 dishes,
-                foodIntolerances: currentProfile?.foodIntolerances,
+                foodIntolerances: await getFoodIntolerancesForPrompt(services),
                 mealLabels: {
                   breakfast: labels.breakfast,
                   lunch: labels.lunch,
