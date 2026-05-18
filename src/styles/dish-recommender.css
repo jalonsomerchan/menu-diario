@@ -1,0 +1,224 @@
+.dish-recommender-app,
+.dish-recommender-form,
+.dish-recommender-panel,
+.dish-recommender-results {
+  display: grid;
+  gap: 1rem;
+}
+
+.dish-recommender-panel {
+  background: var(--panel-background);
+}
+
+.dish-recommender-heading,
+.dish-recommender-section-heading,
+.dish-recommender-field,
+.dish-recommender-result,
+.dish-recommender-result__body {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.dish-recommender-heading h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  line-height: 1.05;
+  letter-spacing: -0.055em;
+}
+
+.dish-recommender-heading p,
+.dish-recommender-section-heading p,
+.dish-recommender-result p {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: var(--surface-copy-line-height);
+}
+
+.dish-recommender-progress {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dish-recommender-step {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+  min-height: 4.25rem;
+  align-content: center;
+  padding: 0.6rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-surface), transparent 3%);
+  color: var(--color-muted);
+  font: inherit;
+  text-align: center;
+}
+
+.dish-recommender-step span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  justify-self: center;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 950;
+}
+
+.dish-recommender-step strong {
+  overflow: hidden;
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+}
+
+.dish-recommender-step[aria-current='step'] {
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 24%);
+  background: color-mix(in srgb, var(--color-primary-soft), transparent 18%);
+  color: var(--color-primary);
+}
+
+.dish-recommender-step[aria-current='step'] span {
+  background: var(--color-primary);
+  color: var(--color-on-primary, #fff);
+}
+
+.dish-recommender-card,
+.dish-recommender-result {
+  padding: var(--surface-padding-tight);
+  padding-bottom: max(var(--surface-padding-tight), 1rem);
+  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+}
+
+.dish-recommender-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.dish-recommender-field span,
+.dish-recommender-options legend {
+  font-weight: 850;
+  color: var(--color-text);
+}
+
+.dish-recommender-field input,
+.dish-recommender-field select,
+.dish-recommender-field textarea,
+.dish-recommender-result select {
+  width: 100%;
+}
+
+.dish-recommender-options {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.dish-recommender-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 3rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-surface), transparent 3%);
+  color: var(--color-text);
+  font-weight: 800;
+}
+
+.dish-recommender-options label:has(input:checked) {
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 30%);
+  background: color-mix(in srgb, var(--color-primary-soft), transparent 10%);
+  color: var(--color-primary);
+}
+
+.dish-recommender-options--wrap {
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.dish-recommender-summary,
+.dish-recommender-result__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.dish-recommender-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.3rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
+  color: var(--color-text);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.dish-recommender-ai-status,
+.dish-recommender-empty {
+  margin: 0;
+  min-height: 1.3rem;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.dish-recommender-ai-status[data-variant='error'] {
+  color: var(--color-danger);
+}
+
+.dish-recommender-result h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  letter-spacing: -0.03em;
+}
+
+.dish-recommender-actions {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dish-recommender-actions .button {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .dish-recommender-grid,
+  .dish-recommender-options:not(.dish-recommender-options--time):not(.dish-recommender-options--wrap) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dish-recommender-options--time {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 539px) {
+  .dish-recommender-progress {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+    scroll-snap-type: x mandatory;
+  }
+
+  .dish-recommender-progress li {
+    flex: 0 0 7.75rem;
+    scroll-snap-align: start;
+  }
+}
