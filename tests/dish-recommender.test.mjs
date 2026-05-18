@@ -40,12 +40,17 @@ describe('dish recommender smoke checks', () => {
     assert.match(script, /updateMenuDay/);
     assert.match(script, /getGroupFoodIntolerancesForPrompt/);
     assert.match(script, /watchWeekMenusByIds/);
+    assert.match(script, /watchUserMenus/);
+    assert.match(script, /getRecentMealsForPrompt/);
+    assert.match(script, /recentMeals: getRecentMealsForPrompt\(request\.meal\)/);
     assert.match(script, /navigator\.share/);
     assert.match(script, /data-dish-share/);
     assert.match(styles, /dish-recommender-progress/);
     assert.match(styles, /@media \(max-width: 539px\)/);
     assert.match(aiIndex, /dish-recommender/);
     assert.match(aiHelper, /basic pantry items/);
+    assert.match(aiHelper, /Recently eaten meals to avoid repeating/);
+    assert.match(aiHelper, /same main protein\/style/);
     assert.match(aiHelper, /isDishRecommendationResponse/);
   });
 
