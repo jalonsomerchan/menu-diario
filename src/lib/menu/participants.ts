@@ -1,4 +1,4 @@
-import type { MealEntry, MenuParticipant } from './types';
+import type { FirebaseUser, MealEntry, MenuGroup, MenuParticipant, UserProfile } from './types';
 
 type ParticipantLabels = Record<string, string>;
 
@@ -16,6 +16,28 @@ export function getParticipantInitials(participant: MenuParticipant) {
     .join('');
 
   return initials || '?';
+}
+
+export function getMenuParticipants(
+  group: MenuGroup | null | undefined,
+  user: FirebaseUser | null | undefined,
+  profile: UserProfile | null | undefined,
+  guestLabel = ''
+): MenuParticipant[] {
+  const currentUserName = profile?.displayName || user?.displayName || user?.email || guestLabel;
+
+  if (!group?.members?.length) {
+    return user ? [{ id: user.uid, name: currentUserName, email: profile?.email || user.email || '' }] : [];
+  }
+
+  return group.members.map((id, index) => {
+    const email = group.memberEmails[index] ?? '';
+    return {
+      id,
+      name: id === user?.uid ? currentUserName : '',
+      email,
+    };
+  });
 }
 
 export function getSelectedParticipantIds(meal: Pick<MealEntry, 'participantIds'>, participants: MenuParticipant[]) {
@@ -45,10 +67,11 @@ export function formatParticipantSummary(
   participants: MenuParticipant[],
   labels: ParticipantLabels
 ) {
-  if (!participants.length || !Array.isArray(meal.participantIds)) return labels.participantsAll ?? labels.statusAll ?? 'Todos';
+  const allLabel = labels.participantsAll ?? labels.statusAll ?? 'All';
+  if (!participants.length || !Array.isArray(meal.participantIds)) return allLabel;
 
   const selected = getSelectedParticipants(meal, participants);
-  if (selected.length === participants.length) return labels.participantsAll ?? labels.statusAll ?? 'Todos';
+  if (selected.length === participants.length) return allLabel;
   if (!selected.length) return '0';
 
   const visibleNames = selected.slice(0, 2).map(getParticipantDisplayName).join(', ');
