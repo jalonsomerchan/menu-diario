@@ -21,14 +21,18 @@ import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import { normalizeDay } from '../lib/menu/normalizers';
 import {
   clearMenuDay,
+  ensureDefaultGroup,
   ensureUserProfile,
+  getGroupFoodIntolerances,
   getOrCreateWeekMenus,
+  syncGroupFoodIntolerances,
   updateMenuDay,
+  watchGroup,
   watchUserProfile,
   watchWeekMenusByIds,
 } from '../lib/menu/repository';
 import { serializeDay } from '../lib/menu/day-state';
-import type { DailyMenu, Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, Dish, FirebaseUser, MealSlot, MenuGroup, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
@@ -61,6 +65,7 @@ if (root) {
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
+  let currentGroup: MenuGroup | null = null;
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
   let dishes: Dish[] = [];
@@ -70,6 +75,7 @@ if (root) {
   let syncedMealsFromProfile = false;
   let unsubscribeMenus: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  let unsubscribeGroup: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
@@ -574,7 +580,7 @@ if (root) {
                 pendingMeals,
                 days: getDaysForRequest(request),
                 dishes,
-                foodIntolerances: currentProfile?.foodIntolerances,
+                foodIntolerances: getGroupFoodIntolerances(currentGroup, currentProfile?.foodIntolerances),
                 mealLabels: {
                   breakfast: labels.breakfast,
                   lunch: labels.lunch,
@@ -638,8 +644,10 @@ if (root) {
 
         services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
           currentUser = user;
+          currentGroup = null;
           unsubscribeMenus?.();
           unsubscribeProfile?.();
+          unsubscribeGroup?.();
           unsubscribeDishes?.();
 
           if (!user) {
@@ -668,6 +676,24 @@ if (root) {
                 false,
                 profile.groupId
               );
+
+              ensureDefaultGroup(services, user, profile)
+                .then(async (groupId) => {
+                  if (profile.foodIntolerances) {
+                    await syncGroupFoodIntolerances(services, groupId, user.uid, profile.foodIntolerances);
+                  }
+                  unsubscribeGroup?.();
+                  unsubscribeGroup = watchGroup(
+                    services,
+                    groupId,
+                    (group) => {
+                      currentGroup = group;
+                      renderCurrentState();
+                    },
+                    (error) => showStatus(formatError(error), true)
+                  );
+                })
+                .catch((error) => showStatus(formatError(error), true));
             },
             (error) => showStatus(formatError(error), true)
           );
