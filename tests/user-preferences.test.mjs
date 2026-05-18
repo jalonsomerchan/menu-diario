@@ -28,11 +28,26 @@ describe('user preference settings', () => {
     assert.match(settingsApp, /data-food-intolerances-form/);
     assert.match(settingsApp, /data-food-intolerances/);
     assert.match(settingsScript, /maxFoodIntolerancesLength = 1000/);
+    assert.match(settingsScript, /syncGroupFoodIntolerances/);
     assert.match(settingsScript, /foodIntolerancesSaved/);
     assert.match(docs, /foodIntolerances/);
   });
 
-  it('includes food intolerances in AI planning prompts with a bounded payload', () => {
+  it('keeps group food intolerances aggregated without reading other user profiles', () => {
+    const types = readText('src/lib/menu/types.ts');
+    const repository = readText('src/lib/menu/repository.ts');
+    const docs = readText('docs/user-preferences.md');
+
+    assert.match(types, /memberFoodIntolerances: Record<string, string>/);
+    assert.match(repository, /normalizeGroupFoodIntolerances/);
+    assert.match(repository, /memberFoodIntolerances/);
+    assert.match(repository, /getGroupFoodIntolerances/);
+    assert.match(repository, /export async function syncGroupFoodIntolerances/);
+    assert.match(docs, /memberFoodIntolerances/);
+    assert.match(docs, /agregado/);
+  });
+
+  it('includes group food intolerances in AI planning prompts with a bounded payload', () => {
     const planningPrompt = readText('src/lib/ai/planning-assistant.ts');
     const planningScript = readText('src/scripts/planning-ai-app.ts');
     const docs = readText('docs/user-preferences.md');
@@ -41,8 +56,11 @@ describe('user preference settings', () => {
     assert.match(planningPrompt, /maxFoodIntolerancesPromptLength = 500/);
     assert.match(planningPrompt, /describeFoodIntolerances/);
     assert.match(planningPrompt, /Food restrictions/);
-    assert.match(planningScript, /foodIntolerances: currentProfile\?\.foodIntolerances/);
+    assert.match(planningScript, /watchGroup/);
+    assert.match(planningScript, /currentGroup/);
+    assert.match(planningScript, /getGroupFoodIntolerances\(currentGroup, currentProfile\?\.foodIntolerances\)/);
     assert.match(docs, /planificación con IA/);
+    assert.match(docs, /todo el grupo/);
   });
 
   it('keeps settings namespace translations aligned', () => {
