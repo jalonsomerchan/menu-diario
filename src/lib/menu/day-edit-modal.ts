@@ -3,7 +3,7 @@ import { appendRecommendedMealDraft, applyRecommendedMealDraft, setDaySkippedDra
 import { renderDayEditor, renderPlateRow } from './day-editor';
 import { normalizeDay } from './normalizers';
 import { serializeDay } from './day-state';
-import type { DailyMenu, Dish, MealSlot } from './types';
+import type { DailyMenu, Dish, MealSlot, MenuParticipant } from './types';
 
 type DayEditModalLabels = Record<string, string>;
 
@@ -13,6 +13,7 @@ type DayEditModalControllerOptions = {
   getDay: (dayKey: string) => DailyMenu;
   getDishes: () => Dish[];
   getEnabledMeals: () => MealSlot[];
+  getParticipants?: () => MenuParticipant[];
   getSavedDayState: (dayKey: string) => string;
   getDayNumber: (dayKey: string) => string;
   getWeekday: (dayKey: string) => string;
@@ -51,6 +52,10 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
       applyRecommendedDishes: (_dayKey: string, _meal: MealSlot, _dishes: string[]) => {},
       appendRecommendedDish: (_dayKey: string, _meal: MealSlot, _dish: string) => {},
     };
+  }
+
+  function getParticipants() {
+    return options.getParticipants?.() ?? [];
   }
 
   function setHeading(dayKey: string) {
@@ -112,7 +117,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   function hasUnsavedChanges() {
     if (!activeDayKey || !options.canWrite()) return false;
     const card = getEditorCard();
-    const currentDraft = card ? readDayDraft(card, options.getEnabledMeals(), draftDay) : draftDay;
+    const currentDraft = card ? readDayDraft(card, options.getEnabledMeals(), draftDay, getParticipants()) : draftDay;
     return serializeDay(currentDraft) !== options.getSavedDayState(activeDayKey);
   }
 
@@ -143,6 +148,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
       enabledMeals: options.getEnabledMeals(),
       dishes: options.getDishes(),
       labels: options.labels,
+      participants: getParticipants(),
       compact: true,
     });
     getEditorCard()?.setAttribute('data-day-state', options.getSavedDayState(dayKey));
@@ -178,7 +184,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   }
 
   function refreshDraftFromDom(card: HTMLElement) {
-    draftDay = readDayDraft(card, options.getEnabledMeals(), draftDay);
+    draftDay = readDayDraft(card, options.getEnabledMeals(), draftDay, getParticipants());
     return draftDay;
   }
 
@@ -300,7 +306,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     }
 
     try {
-      draftDay = readDayDraft(card, options.getEnabledMeals(), draftDay);
+      draftDay = readDayDraft(card, options.getEnabledMeals(), draftDay, getParticipants());
       setSaveBusy(true);
       await options.onSaveDay(activeDayKey, draftDay, card);
       setSaveMessage(options.labels.saveSaved || defaultSaveState, 'saved');

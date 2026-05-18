@@ -8,15 +8,17 @@ import { serializeDay } from '../lib/menu/day-state';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
+import { formatParticipantSummary, getMenuParticipants } from '../lib/menu/participants';
 import {
   clearMenuDay,
   ensureUserProfile,
   getOrCreateWeekMenus,
   updateMenuDay,
+  watchGroup,
   watchUserProfile,
   watchWeekMenusByIds,
 } from '../lib/menu/repository';
-import type { DailyMenu, Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, Dish, FirebaseUser, MealSlot, MenuGroup, MenuParticipant, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
@@ -33,6 +35,7 @@ if (root) {
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
+  let currentGroup: MenuGroup | null = null;
   let currentMenu: WeekMenu | null = null;
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
@@ -41,6 +44,7 @@ if (root) {
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
+  let unsubscribeGroup: (() => void) | undefined;
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -63,6 +67,10 @@ if (root) {
 
   function formatError(error: unknown) {
     return formatAppError(error, labels);
+  }
+
+  function getParticipants(): MenuParticipant[] {
+    return getMenuParticipants(currentGroup, currentUser, currentProfile, labels.guestSession);
   }
 
   function getEnabledMeals(): MealSlot[] {
@@ -149,6 +157,13 @@ if (root) {
     return mealState.items.length ? mealState.items.join(', ') : labels.todayEmpty;
   }
 
+  function renderParticipantSummary(day: WeekMenu['days'][string], meal: MealSlot) {
+    const participants = getParticipants();
+    if (!participants.length || day.skipped) return '';
+
+    return `<span class="meal-participants-summary">${escapeHtml(formatParticipantSummary(day.meals[meal], participants, labels))}</span>`;
+  }
+
   function renderConfig(menu: WeekMenu) {
     if (!configDays) return;
 
@@ -161,6 +176,7 @@ if (root) {
               <div class="day-meal-row">
                 <span>${escapeHtml(mealLabel(meal))}:</span>
                 <strong>${escapeHtml(renderMealSummary(day, meal))}</strong>
+                ${renderParticipantSummary(day, meal)}
               </div>
             `
           )
@@ -231,6 +247,7 @@ if (root) {
     getDay: (dayKey) => normalizeDay(currentMenu?.days[dayKey]),
     getDishes: () => dishes,
     getEnabledMeals,
+    getParticipants,
     getSavedDayState: (dayKey) => serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined)),
     getDayNumber,
     getWeekday: formatWeekday,
@@ -306,6 +323,7 @@ if (root) {
           unsubscribeMenu?.();
           unsubscribeDishes?.();
           unsubscribeProfile?.();
+          unsubscribeGroup?.();
 
           if (!user) {
             window.location.assign(labels.homePath || '/');
@@ -334,6 +352,19 @@ if (root) {
                 false,
                 profile.groupId
               );
+              unsubscribeGroup?.();
+              currentGroup = null;
+              if (profile.groupId) {
+                unsubscribeGroup = watchGroup(
+                  services,
+                  profile.groupId,
+                  (group) => {
+                    currentGroup = group;
+                    if (currentMenu) renderConfig(currentMenu);
+                  },
+                  (error) => showStatus(formatError(error), true)
+                );
+              }
               if (currentMenu) renderConfig(currentMenu);
             },
             (error) => showStatus(formatError(error), true)

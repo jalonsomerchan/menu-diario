@@ -16,7 +16,7 @@ describe('day edit modal unsaved changes protection', () => {
     assert.match(source, /let allowNextClose = false/);
     assert.match(source, /const discardChangesMessage = options\.labels\.discardChangesConfirm \?\? options\.labels\.savePending/);
     assert.match(source, /function hasUnsavedChanges\(\)/);
-    assert.match(source, /readDayDraft\(card, options\.getEnabledMeals\(\), draftDay\)/);
+    assert.match(source, /readDayDraft\(card, options\.getEnabledMeals\(\), draftDay(?:, getParticipants\(\))?\)/);
     assert.match(source, /serializeDay\(currentDraft\) !== options\.getSavedDayState\(activeDayKey\)/);
     assert.match(source, /function requestCloseWithConfirmation\(\)/);
     assert.match(source, /window\.confirm\(discardChangesMessage\)/);

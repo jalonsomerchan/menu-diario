@@ -12,6 +12,12 @@ export type WeekDay = {
   isoDate: string;
 };
 
+export type MenuParticipant = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 export type NoMealReason = 'away' | 'eating-out' | 'not-hungry' | 'other';
 export type ThemePreference = 'system' | 'light' | 'dark';
 export type DishScope = 'global' | 'group' | 'user';
@@ -22,6 +28,7 @@ export type MealEntry = {
   skipped: boolean;
   reason: NoMealReason | '';
   note: string;
+  participantIds?: string[];
 };
 
 export type DailyMenu = {
