@@ -1,5 +1,6 @@
+import { getParticipantDisplayName, getParticipantInitials, getSelectedParticipantIds } from './participants';
 import { emptyMeal } from './normalizers';
-import type { DailyMenu, Dish, MealEntry, MealSlot } from './types';
+import type { DailyMenu, Dish, MealEntry, MealSlot, MenuParticipant } from './types';
 
 type DayEditorLabels = Record<string, string>;
 
@@ -12,6 +13,7 @@ type DayEditorOptions = {
   enabledMeals: MealSlot[];
   dishes: Dish[];
   labels: DayEditorLabels;
+  participants?: MenuParticipant[];
   compact?: boolean;
 };
 
@@ -76,7 +78,36 @@ export function renderPlateRow(labels: DayEditorLabels, meal: MealSlot, value = 
   `;
 }
 
-function renderMeal(labels: DayEditorLabels, meal: MealSlot, mealData: MealEntry, dishes: Dish[]) {
+function renderParticipantSelector(labels: DayEditorLabels, meal: MealSlot, mealData: MealEntry, participants: MenuParticipant[]) {
+  if (!participants.length) return '';
+
+  const selectedIds = new Set(getSelectedParticipantIds(mealData, participants));
+  const legend = labels.participants ?? labels.membersTitle ?? labels.members ?? 'Participantes';
+  const help = labels.participantsAll ?? labels.statusAll ?? 'Todos';
+
+  return `
+    <fieldset class="meal-participants" data-participant-list="${meal}">
+      <legend>${escapeHtml(legend)}</legend>
+      <p>${escapeHtml(help)}</p>
+      <div class="meal-participants__grid">
+        ${participants
+          .map((participant) => {
+            const name = getParticipantDisplayName(participant);
+            return `
+              <label class="meal-participant-chip">
+                <input type="checkbox" value="${escapeHtml(participant.id)}" ${selectedIds.has(participant.id) ? 'checked' : ''} data-participant-input="${meal}" />
+                <span class="meal-participant-chip__avatar" aria-hidden="true">${escapeHtml(getParticipantInitials(participant))}</span>
+                <span class="meal-participant-chip__name">${escapeHtml(name)}</span>
+              </label>
+            `;
+          })
+          .join('')}
+      </div>
+    </fieldset>
+  `;
+}
+
+function renderMeal(labels: DayEditorLabels, meal: MealSlot, mealData: MealEntry, dishes: Dish[], participants: MenuParticipant[]) {
   const values = mealData.items.length ? mealData.items : [''];
 
   return `
@@ -92,18 +123,19 @@ function renderMeal(labels: DayEditorLabels, meal: MealSlot, mealData: MealEntry
       <div class="plate-list" data-plate-list="${meal}">
         ${values.map((value, index) => renderPlateRow(labels, meal, value, index, dishes)).join('')}
       </div>
+      ${renderParticipantSelector(labels, meal, mealData, participants)}
     </section>
   `;
 }
 
 export function renderDayEditor(options: DayEditorOptions) {
-  const { dayKey, dayNumber, weekday, dateLabel, day, enabledMeals, dishes, labels, compact = false } = options;
+  const { dayKey, dayNumber, weekday, dateLabel, day, enabledMeals, dishes, labels, participants = [], compact = false } = options;
   const skipped = Boolean(day.skipped);
   const editorBody = skipped
     ? renderReasonFields(labels, day.reason, day.skipNote)
     : `
       <div class="day-meals-block" data-day-meals-block>
-        ${enabledMeals.map((meal) => renderMeal(labels, meal, day.meals[meal] ?? emptyMeal(), dishes)).join('')}
+        ${enabledMeals.map((meal) => renderMeal(labels, meal, day.meals[meal] ?? emptyMeal(), dishes, participants)).join('')}
         <label class="day-edit-field day-edit-field--textarea day-edit-block day-edit-notes">${escapeHtml(labels.notes)}
           <textarea data-field="notes" rows="3">${escapeHtml(day.notes ?? '')}</textarea>
         </label>
