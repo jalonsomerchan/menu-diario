@@ -35,7 +35,23 @@ describe('app error formatter', () => {
     assert.match(index, /formatAppError/);
     assert.match(index, /getAppErrorKey/);
     assert.match(source, /export function formatAppError/);
-    assert.match(source, /labels\[key\]/);
-    assert.match(source, /labels\['errors\.generic'\]/);
+    assert.match(source, /findLabel\(labels, key\)/);
+    assert.match(source, /findLabel\(labels, 'errors\.generic'\)/);
+  });
+
+  it('normalizes visible errors in the main data screens', () => {
+    [
+      'src/scripts/dashboard-app.ts',
+      'src/scripts/configurator-app.ts',
+      'src/scripts/history-app.ts',
+      'src/scripts/dishes-app.ts',
+      'src/scripts/settings-app.ts',
+    ].forEach((path) => {
+      const source = readText(path);
+      assert.match(source, /formatAppError/);
+      assert.doesNotMatch(source, /return error instanceof Error \? error\.message : String\(error\)/);
+      assert.doesNotMatch(source, /showStatus\(error instanceof Error \? error\.message : String\(error\), true\)/);
+      assert.doesNotMatch(source, /return error\.message;/);
+    });
   });
 });
