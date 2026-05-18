@@ -1,9 +1,8 @@
 import {
   buildDishRecommenderPrompt,
   generateGeminiJson,
+  getAiErrorCode,
   getAiFeatureFlags,
-  getAiUiMessageKey,
-  getAiUiStateFromError,
   isDishRecommendationResponse,
   isMenuSuggestionsAvailable,
   normalizeDishRecommendations,
@@ -15,7 +14,7 @@ import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
 import { getGroupFoodIntolerancesForPrompt } from '../lib/menu/group-food-intolerances';
 import { normalizeDay } from '../lib/menu/normalizers';
-import { ensureUserProfile, getOrCreateWeekMenus, updateMenuDay, watchUserProfile, watchWeekMenusByIds } from '../lib/menu/repository';
+import { ensureUserProfile, getOrCreateWeekMenus, updateMenuDay, watchUserMenus, watchUserProfile, watchWeekMenusByIds } from '../lib/menu/repository';
 import type { DailyMenu, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
@@ -59,10 +58,14 @@ if (root) {
   let currentProfile: UserProfile | null = null;
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
+  let recentMenus: WeekMenu[] = [];
   let recommendations: DishRecommendation[] = [];
   let syncedIntolerances = false;
+  let isGenerating = false;
+  let showEmptyResults = true;
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeMenus: (() => void) | undefined;
+  let unsubscribeRecentMenus: (() => void) | undefined;
 
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
@@ -99,6 +102,16 @@ if (root) {
   function formatError(error: unknown) {
     if (error instanceof Error && error.message.toLowerCase().includes('permission')) return labels.permissionsError;
     return error instanceof Error ? error.message : String(error);
+  }
+
+  function formatAiError(error: unknown) {
+    const code = getAiErrorCode(error);
+    if (code === 'invalid-response') return labels.invalidResponse;
+    if (code === 'quota-exhausted') return labels.quotaError;
+    if (code === 'missing-config' || code === 'disabled') return labels.configError;
+    if (code === 'app-check-unavailable') return labels.appCheckError;
+    if (code === 'timeout') return labels.timeoutError;
+    return labels.requestError || labels.aiError;
   }
 
   function selectedValue<T extends string>(selector: string, fallback: T): T {
@@ -162,10 +175,43 @@ if (root) {
     });
   }
 
+  function getRecentMealsForPrompt(meal: MealSlot) {
+    const today = new Date().toISOString().slice(0, 10);
+    return recentMenus
+      .flatMap((menu) =>
+        Object.entries(menu.days).flatMap(([dayKey, rawDay]) => {
+          if (dayKey > today) return [];
+          const day = normalizeDay(rawDay);
+          if (day.skipped || day.meals[meal].skipped) return [];
+          return day.meals[meal].items.map((item) => `${dayKey} · ${mealLabel(meal)} · ${item}`);
+        })
+      )
+      .filter(Boolean)
+      .sort((left, right) => right.localeCompare(left))
+      .slice(0, 28);
+  }
+
+  function renderLoading() {
+    if (!resultsContainer) return;
+    resultsContainer.innerHTML = `
+      <div class="dish-recommender-loading" role="status" aria-live="polite">
+        <span class="dish-recommender-loading__spinner" aria-hidden="true"></span>
+        <div>
+          <strong>${escapeHtml(labels.loadingTitle)}</strong>
+          <p>${escapeHtml(labels.loadingDescription)}</p>
+        </div>
+      </div>
+    `;
+  }
+
   function renderResults() {
     if (!resultsContainer) return;
+    if (isGenerating) {
+      renderLoading();
+      return;
+    }
     if (!recommendations.length) {
-      resultsContainer.innerHTML = `<p class="dish-recommender-empty">${escapeHtml(labels.resultsEmpty)}</p>`;
+      resultsContainer.innerHTML = showEmptyResults ? `<p class="dish-recommender-empty">${escapeHtml(labels.resultsEmpty)}</p>` : '';
       return;
     }
 
@@ -319,29 +365,34 @@ if (root) {
     const request = readRequest();
 
     if (!isAiReady()) {
-      showAiStatus(labels.aiMissingConfig, true);
+      showEmptyResults = false;
+      renderResults();
+      showAiStatus(labels.configError || labels.aiMissingConfig, true);
       return;
     }
 
     setBusy(true);
+    isGenerating = true;
+    showEmptyResults = false;
     recommendations = [];
-    renderResults();
     showAiStatus(labels.generating);
+    renderResults();
 
     try {
       const response = await generateGeminiJson({
         userId: currentUser.uid,
-        prompt: buildDishRecommenderPrompt({ locale, ...request }),
+        prompt: buildDishRecommenderPrompt({ locale, ...request, recentMeals: getRecentMealsForPrompt(request.meal) }),
         validator: isDishRecommendationResponse,
       });
       recommendations = normalizeDishRecommendations(response);
-      renderResults();
-      showAiStatus(recommendations.length ? labels.generated : labels.resultsEmpty, recommendations.length === 0);
+      showEmptyResults = recommendations.length === 0;
+      showAiStatus(recommendations.length ? labels.generated : labels.invalidResponse, recommendations.length === 0);
     } catch (error) {
-      const state = getAiUiStateFromError(error);
-      const key = getAiUiMessageKey(state);
-      showAiStatus((key && labels[key]) || labels.aiError, true);
+      showEmptyResults = false;
+      showAiStatus(formatAiError(error), true);
     } finally {
+      isGenerating = false;
+      renderResults();
       setBusy(false);
     }
   });
@@ -374,6 +425,7 @@ if (root) {
         currentUser = user;
         unsubscribeProfile?.();
         unsubscribeMenus?.();
+        unsubscribeRecentMenus?.();
         if (!user) {
           window.location.assign(labels.homePath || '/');
           return;
@@ -383,6 +435,15 @@ if (root) {
           currentProfile = profile;
           syncedIntolerances = false;
         }, (error) => showStatus(formatError(error), true));
+        unsubscribeRecentMenus = watchUserMenus(
+          services,
+          user.uid,
+          (menus) => {
+            recentMenus = menus;
+          },
+          (error) => showStatus(formatError(error), true),
+          12
+        );
         showAiStatus(labels.loadingSlots);
         await syncUpcomingMenus(services);
         showAiStatus('');
