@@ -18,7 +18,7 @@ describe('shopping Alexa shortcut smoke checks', () => {
 
     assert.match(wizardScript, /shopping-alexa-integration/);
     assert.match(alexaScript, /data-shopping-app/);
-    assert.match(alexaScript, /data\.alexa/);
+    assert.match(alexaScript, /dataset\.alexa/);
     assert.match(alexaScript, /Añadir a Alexa/);
     assert.match(alexaScript, /Add to Alexa/);
     assert.match(alexaScript, /navigator\.clipboard\.writeText\(command\)/);
