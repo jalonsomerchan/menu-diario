@@ -79,7 +79,7 @@ export function buildPlanningAssistantPrompt(input: {
     foodIntolerances
       ? 'Use the food restrictions as hard constraints and avoid dishes that conflict with them.'
       : 'No food restrictions were provided.',
-    getModeRules(input.mode),
+    getModeRules(input.mode, recommendationCount),
     `Return JSON with shape {"recommendations":[{"dayKey":"YYYY-MM-DD","meal":"breakfast|lunch|dinner","dishes":[{"name":"Dish","isNew":true}],"reason":"short string"}]}.`,
     'Pending slots to plan:',
     pendingMeals || '- none',
@@ -91,7 +91,7 @@ export function buildPlanningAssistantPrompt(input: {
     tasteProfile || '- none',
     'Saved dishes available to reuse when allowed:',
     catalogSection,
-    'Known dish names already in the catalog:',
+    'Known dish names already in the catalog. Any dish in this list is NOT a new dish:',
     knownNames || '- none',
   ].join('\n\n');
 }
@@ -152,6 +152,7 @@ export function assignPlanningRecommendations(input: {
     const suggestions = getBalancedSuggestions(mappedSuggestions, input.mode, limit);
 
     if (suggestions.length === 0) return [];
+    if (input.mode === 'mix' && !suggestions.some((dish) => dish.isNew)) return [];
     seenSlots.add(slotKey);
     return [{ dayKey: entry.dayKey, meal: entry.meal, dishes: suggestions, reason: entry.reason.trim() }];
   });
@@ -241,14 +242,17 @@ function getTasteProfile(dishes: Dish[]) {
     .join('\n');
 }
 
-function getModeRules(mode: PlanningRecommendationMode) {
+function getModeRules(mode: PlanningRecommendationMode, recommendationCount: number) {
   if (mode === 'own') return 'Mode rule: use only exact names from the saved own dishes catalog. Do not invent new dishes and do not use global-only dishes.';
   if (mode === 'new') return 'Mode rule: invent genuinely new dishes only. You must not reuse or rename any saved dish. Every returned dish must be new and absent from known catalog names.';
   return [
-    'Mode rule: combine three sources whenever they are available: genuinely new dishes, saved own or group dishes, and saved global dishes.',
-    'For 3 or more requested dishes, include at least one new dish with isNew=true, at least one own/group saved dish, and at least one global saved dish when the catalogs contain them.',
-    'For 2 requested dishes, include one genuinely new dish and one saved dish if possible.',
-    'Never return only saved dishes in mixed mode unless no valid new dish can satisfy the food restrictions.',
+    'Mode rule: every mixed-mode recommendation must include at least one genuinely new dish that is absent from known catalog names.',
+    'The first dish in every mixed-mode dishes array MUST be a never-saved dish with isNew=true and a name that does not appear in Known dish names already in the catalog.',
+    recommendationCount >= 3
+      ? 'Also include at least one own/group saved dish and at least one global saved dish when the catalogs contain them.'
+      : 'Also include one saved dish when possible.',
+    'Do not mark saved catalog dishes as new. Do not return only saved dishes in mixed mode.',
+    'If you cannot provide a genuinely new dish for a slot, omit that slot instead of returning only saved dishes.',
     'Use exact saved dish names for catalog dishes and mark only genuinely absent catalog names with isNew=true.',
   ].join(' ');
 }
@@ -256,7 +260,7 @@ function getModeRules(mode: PlanningRecommendationMode) {
 function describeMode(mode: PlanningRecommendationMode) {
   if (mode === 'own') return 'saved own dishes only';
   if (mode === 'new') return 'new dishes only';
-  return 'balanced mix of new dishes, saved own/group dishes, and saved global dishes';
+  return 'balanced mix with a mandatory genuinely new dish plus saved own/group and global dishes';
 }
 
 function mapSuggestedDish(
@@ -275,8 +279,7 @@ function mapSuggestedDish(
 
   if (mode === 'own') return ownMatch ? mapCatalogDish(ownMatch) : null;
   if (mode === 'new') return dish.isNew === true && !knownNames.has(normalizedName) ? mapNewDish(cleanName) : null;
-  if (mixedMatch && dish.isNew !== true) return mapCatalogDish(mixedMatch);
-  if (!knownNames.has(normalizedName)) return mapNewDish(cleanName);
+  if (dish.isNew === true) return knownNames.has(normalizedName) ? null : mapNewDish(cleanName);
   return mixedMatch ? mapCatalogDish(mixedMatch) : null;
 }
 
