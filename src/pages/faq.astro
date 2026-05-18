@@ -1,0 +1,13 @@
+---
+import FaqPage from '../components/FaqPage.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { defaultLocale, siteConfig } from '../config/site';
+import { usePublicPageCopy } from '../i18n/public-pages';
+
+const locale = defaultLocale;
+const tp = usePublicPageCopy(locale);
+---
+
+<BaseLayout title={`${tp('faqTitle')} · ${siteConfig.name}`} description={tp('faqDescription')} locale={locale}>
+  <FaqPage locale={locale} />
+</BaseLayout>

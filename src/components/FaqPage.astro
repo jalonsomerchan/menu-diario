@@ -1,0 +1,139 @@
+---
+import Button from './Button.astro';
+import Container from './Container.astro';
+import { type Locale } from '../config/site';
+import { getLocalizedPath } from '../i18n/ui';
+import { getPublicFaqItems, usePublicPageCopy } from '../i18n/public-pages';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const tp = usePublicPageCopy(locale);
+const faqItems = getPublicFaqItems(locale);
+const dashboardPath = getLocalizedPath('/dashboard', locale);
+---
+
+<Container class="py-12 sm:py-16">
+  <article class="faq-page">
+    <header class="faq-page__hero">
+      <p class="faq-page__eyebrow">{tp('faqEyebrow')}</p>
+      <h1>{tp('faqTitle')}</h1>
+      <p>{tp('faqIntro')}</p>
+    </header>
+
+    <section class="faq-page__list" aria-label={tp('faqTitle')}>
+      {faqItems.map((item) => (
+        <section class="faq-page__item">
+          <h2>{item.question}</h2>
+          <p>{item.answer}</p>
+        </section>
+      ))}
+    </section>
+
+    <section class="faq-page__cta" aria-labelledby="faq-cta-title">
+      <div>
+        <h2 id="faq-cta-title">{tp('faqCtaTitle')}</h2>
+        <p>{tp('faqCtaDescription')}</p>
+      </div>
+      <Button href={dashboardPath}>{tp('faqPrimaryCta')}</Button>
+    </section>
+  </article>
+</Container>
+
+<style>
+  .faq-page {
+    display: grid;
+    gap: 1rem;
+    max-width: 58rem;
+    margin-inline: auto;
+  }
+
+  .faq-page__hero,
+  .faq-page__item,
+  .faq-page__cta {
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-2xl);
+    background: var(--panel-background);
+    box-shadow: var(--shadow-sm);
+    padding: var(--surface-padding-lg);
+  }
+
+  .faq-page__hero {
+    display: grid;
+    gap: 1rem;
+    background: var(--panel-background-strong);
+  }
+
+  .faq-page__eyebrow {
+    width: fit-content;
+    margin: 0;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 16%);
+    color: var(--color-primary);
+    padding: 0.25rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .faq-page h1,
+  .faq-page h2,
+  .faq-page p {
+    margin: 0;
+  }
+
+  .faq-page h1 {
+    max-width: 12ch;
+    font-size: clamp(2.5rem, 11vw, 5rem);
+    line-height: 0.92;
+    letter-spacing: -0.075em;
+  }
+
+  .faq-page h2 {
+    font-size: clamp(1.25rem, 4.5vw, 1.75rem);
+    line-height: 1.05;
+    letter-spacing: -0.045em;
+  }
+
+  .faq-page p {
+    color: var(--color-muted);
+    line-height: var(--surface-copy-line-height);
+  }
+
+  .faq-page__list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .faq-page__item {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .faq-page__cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .faq-page__cta div {
+    display: grid;
+    gap: 0.45rem;
+    min-width: min(100%, 20rem);
+  }
+
+  @media (min-width: 760px) {
+    .faq-page {
+      gap: 1.25rem;
+    }
+
+    .faq-page__list {
+      gap: 1rem;
+    }
+  }
+</style>
