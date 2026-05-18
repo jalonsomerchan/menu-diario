@@ -148,14 +148,10 @@ export async function updateUserPreferences(services: FirebaseServices, userId: 
 
 export async function syncGroupFoodIntolerances(services: FirebaseServices, groupId: string, userId: string, foodIntolerances: string) {
   const { db, firestoreModule } = services;
-  await firestoreModule.setDoc(
-    firestoreModule.doc(db, groupsCollection, groupId),
-    {
-      [`memberFoodIntolerances.${userId}`]: normalizeFoodIntolerances(foodIntolerances),
-      updatedAt: firestoreModule.serverTimestamp(),
-    },
-    { merge: true }
-  );
+  await firestoreModule.updateDoc(firestoreModule.doc(db, groupsCollection, groupId), {
+    [`memberFoodIntolerances.${userId}`]: normalizeFoodIntolerances(foodIntolerances),
+    updatedAt: firestoreModule.serverTimestamp(),
+  });
 }
 
 export async function ensureDefaultGroup(services: FirebaseServices, user: FirebaseUser, profile: UserProfile) {
