@@ -54,6 +54,21 @@ service cloud.firestore {
         && keepsExistingMembers();
     }
 
+    function changesOnlyFields(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    function updatesMenuContent() {
+      return isMemberDocument()
+        && request.resource.data.members == resource.data.members
+        && changesOnlyFields(['days', 'updatedAt', 'updatedBy']);
+    }
+
+    function joinsMenuDocument() {
+      return joinsDocument()
+        && changesOnlyFields(['members', 'updatedAt', 'updatedBy']);
+    }
+
     function isGlobalDishData(data) {
       return data.scope == 'global' || data.isGlobal == true;
     }
@@ -112,7 +127,7 @@ service cloud.firestore {
     match /weeklyMenus/{menuId} {
       allow create: if createsOwnMenu();
       allow read: if isMemberDocument();
-      allow update: if isMemberDocument() || joinsDocument();
+      allow update: if updatesMenuContent() || joinsMenuDocument();
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
     }
 
