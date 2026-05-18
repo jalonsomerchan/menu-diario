@@ -1,4 +1,5 @@
 ---
+import ConfirmDialog from './ConfirmDialog.astro';
 import type { Locale } from '../config/site';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -11,7 +12,12 @@ const dishesPath = getLocalizedPath('/mis-platos', locale);
 const labels = {
   configMissing: t('menu.configMissing'),
   loading: t('dashboard.loading'),
-  settings: t('dashboard.settings'),
+  settings: t('settings.title'),
+  description: t('settings.description'),
+  personalTitle: t('settings.personalTitle'),
+  personalDescription: t('settings.personalDescription'),
+  appearanceTitle: t('settings.appearanceTitle'),
+  appearanceDescription: t('settings.appearanceDescription'),
   theme: t('dashboard.theme'),
   themeSystem: t('dashboard.themeSystem'),
   themeLight: t('dashboard.themeLight'),
@@ -26,16 +32,30 @@ const labels = {
   foodIntolerancesPlaceholder: t('settings.foodIntolerancesPlaceholder'),
   saveFoodIntolerances: t('settings.saveFoodIntolerances'),
   foodIntolerancesSaved: t('settings.foodIntolerancesSaved'),
-  groupTitle: t('group.title'),
-  groupDescription: t('group.description'),
+  groupTitle: t('settings.groupTitle'),
+  groupDescription: t('settings.groupDescription'),
+  groupOptionsTitle: t('settings.groupOptionsTitle'),
+  groupOptionsDescription: t('settings.groupOptionsDescription'),
+  inviteTitle: t('settings.inviteTitle'),
+  inviteDescription: t('settings.inviteDescription'),
+  joinTitle: t('settings.joinTitle'),
+  joinDescription: t('settings.joinDescription'),
+  membersTitle: t('settings.membersTitle'),
+  pendingTitle: t('settings.pendingTitle'),
+  dangerTitle: t('settings.dangerTitle'),
+  leaveDescription: t('settings.leaveDescription'),
+  ownerOnly: t('settings.ownerOnly'),
+  membersEmpty: t('settings.membersEmpty'),
+  pendingEmpty: t('settings.pendingEmpty'),
+  leaveConfirmTitle: t('settings.leaveConfirmTitle'),
+  leaveConfirmDescription: t('settings.leaveConfirmDescription'),
+  leaveConfirmConfirm: t('settings.leaveConfirmConfirm'),
+  leaveConfirmCancel: t('settings.leaveConfirmCancel'),
   inviteEmail: t('group.inviteEmail'),
   addEmail: t('group.addEmail'),
   joinCode: t('group.joinCode'),
   joinGroup: t('group.joinGroup'),
   leaveGroup: t('group.leaveGroup'),
-  members: t('group.members'),
-  pending: t('group.pending'),
-  options: t('group.options'),
   copied: t('group.copied'),
   updated: t('group.updated'),
   dishesTitle: t('dishes.title'),
@@ -49,73 +69,256 @@ const labels = {
 <section class="settings-app" data-settings-app data-labels={JSON.stringify(labels)}>
   <div class="menu-app__status" data-status hidden></div>
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
-  <div data-content hidden>
-    <section class="settings-card app-panel">
+  <div class="settings-app__content" data-content hidden>
+    <header class="settings-hero app-panel">
+      <p class="menu-app__eyebrow">{labels.settings}</p>
       <h1>{labels.settings}</h1>
-      <label>{labels.theme}
-        <select data-theme-select>
-          <option value="system">{labels.themeSystem}</option>
-          <option value="light">{labels.themeLight}</option>
-          <option value="dark">{labels.themeDark}</option>
-        </select>
-      </label>
-    </section>
+      <p>{labels.description}</p>
+    </header>
 
-    <section class="settings-card app-panel">
-      <p class="menu-app__eyebrow">{labels.options}</p>
-      <h2>{labels.groupTitle}</h2>
-      <p>{labels.groupDescription}</p>
-      <fieldset class="meal-preferences">
-        <legend>{labels.enabledMeals}</legend>
-        <label><input type="checkbox" value="breakfast" data-meal-preference /> {labels.breakfast}</label>
-        <label><input type="checkbox" value="lunch" data-meal-preference /> {labels.lunch}</label>
-        <label><input type="checkbox" value="dinner" data-meal-preference /> {labels.dinner}</label>
-      </fieldset>
-    </section>
+    <div class="settings-layout">
+      <section class="settings-column" aria-labelledby="settings-personal-title">
+        <div class="settings-section-heading">
+          <h2 id="settings-personal-title">{labels.personalTitle}</h2>
+          <p>{labels.personalDescription}</p>
+        </div>
 
-    <section class="settings-card app-panel">
-      <p class="menu-app__eyebrow">{labels.foodIntolerancesTitle}</p>
-      <h2>{labels.foodIntolerancesTitle}</h2>
-      <p>{labels.foodIntolerancesDescription}</p>
-      <form class="settings-form" data-food-intolerances-form>
-        <label for="food-intolerances">{labels.foodIntolerancesLabel}</label>
-        <textarea
-          id="food-intolerances"
-          rows="5"
-          maxlength="1000"
-          data-food-intolerances
-          placeholder={labels.foodIntolerancesPlaceholder}
-        ></textarea>
-        <button class="button button--primary" type="submit">{labels.saveFoodIntolerances}</button>
-      </form>
-    </section>
+        <article class="settings-card app-panel">
+          <h3>{labels.appearanceTitle}</h3>
+          <p>{labels.appearanceDescription}</p>
+          <label>{labels.theme}
+            <select data-theme-select>
+              <option value="system">{labels.themeSystem}</option>
+              <option value="light">{labels.themeLight}</option>
+              <option value="dark">{labels.themeDark}</option>
+            </select>
+          </label>
+        </article>
 
-    <section class="settings-card app-panel">
-      <p class="menu-app__eyebrow">{labels.dishesTitle}</p>
-      <h2>{labels.dishesTitle}</h2>
-      <p>{labels.dishesDescription}</p>
-      <a class="button button--secondary" href={dishesPath}>{labels.manageDishes}</a>
-    </section>
+        <article class="settings-card app-panel">
+          <h3>{labels.foodIntolerancesTitle}</h3>
+          <p>{labels.foodIntolerancesDescription}</p>
+          <form class="settings-form" data-food-intolerances-form>
+            <label for="food-intolerances">{labels.foodIntolerancesLabel}</label>
+            <textarea
+              id="food-intolerances"
+              rows="4"
+              maxlength="1000"
+              data-food-intolerances
+              placeholder={labels.foodIntolerancesPlaceholder}
+            ></textarea>
+            <button class="button button--primary" type="submit">{labels.saveFoodIntolerances}</button>
+          </form>
+        </article>
 
-    <section class="settings-card app-panel">
-      <h2>{labels.groupTitle}</h2>
-      <div class="group-code" data-invite-code></div>
-      <form class="join-form" data-invite-form>
-        <input type="email" data-invite-email placeholder={labels.inviteEmail} />
-        <button class="button button--primary" type="submit">{labels.addEmail}</button>
-      </form>
-      <form class="join-form" data-join-form>
-        <input type="text" data-join-code placeholder={labels.joinCode} />
-        <button class="button button--secondary" type="submit">{labels.joinGroup}</button>
-      </form>
-      <button class="button button--ghost" type="button" data-leave-group>{labels.leaveGroup}</button>
-      <div class="group-lists">
-        <div><h3>{labels.members}</h3><ul data-members></ul></div>
-        <div><h3>{labels.pending}</h3><ul data-pending></ul></div>
-      </div>
-    </section>
+        <article class="settings-card app-panel">
+          <h3>{labels.dishesTitle}</h3>
+          <p>{labels.dishesDescription}</p>
+          <a class="button button--secondary" href={dishesPath}>{labels.manageDishes}</a>
+        </article>
+      </section>
+
+      <section class="settings-column" aria-labelledby="settings-group-title">
+        <div class="settings-section-heading">
+          <h2 id="settings-group-title">{labels.groupTitle}</h2>
+          <p>{labels.groupDescription}</p>
+        </div>
+
+        <article class="settings-card app-panel" data-group-admin-section>
+          <h3>{labels.groupOptionsTitle}</h3>
+          <p>{labels.groupOptionsDescription}</p>
+          <p class="settings-permission-note" data-group-permission-note hidden>{labels.ownerOnly}</p>
+          <fieldset class="meal-preferences" data-group-admin-control>
+            <legend>{labels.enabledMeals}</legend>
+            <label><input type="checkbox" value="breakfast" data-meal-preference /> {labels.breakfast}</label>
+            <label><input type="checkbox" value="lunch" data-meal-preference /> {labels.lunch}</label>
+            <label><input type="checkbox" value="dinner" data-meal-preference /> {labels.dinner}</label>
+          </fieldset>
+        </article>
+
+        <article class="settings-card app-panel" data-group-admin-section>
+          <h3>{labels.inviteTitle}</h3>
+          <p>{labels.inviteDescription}</p>
+          <p class="settings-permission-note" data-group-permission-note hidden>{labels.ownerOnly}</p>
+          <div class="group-code" data-invite-code></div>
+          <form class="join-form" data-invite-form data-group-admin-control>
+            <label>
+              <span>{labels.inviteEmail}</span>
+              <input type="email" data-invite-email autocomplete="email" />
+            </label>
+            <button class="button button--primary" type="submit">{labels.addEmail}</button>
+          </form>
+        </article>
+
+        <article class="settings-card app-panel">
+          <h3>{labels.joinTitle}</h3>
+          <p>{labels.joinDescription}</p>
+          <form class="join-form" data-join-form>
+            <label>
+              <span>{labels.joinCode}</span>
+              <input type="text" data-join-code autocomplete="off" />
+            </label>
+            <button class="button button--secondary" type="submit">{labels.joinGroup}</button>
+          </form>
+        </article>
+
+        <article class="settings-card app-panel">
+          <h3>{labels.membersTitle}</h3>
+          <div class="group-lists">
+            <section aria-labelledby="settings-members-title">
+              <h4 id="settings-members-title">{labels.membersTitle}</h4>
+              <ul data-members></ul>
+            </section>
+            <section aria-labelledby="settings-pending-title">
+              <h4 id="settings-pending-title">{labels.pendingTitle}</h4>
+              <ul data-pending></ul>
+            </section>
+          </div>
+        </article>
+
+        <article class="settings-card settings-card--danger app-panel">
+          <h3>{labels.dangerTitle}</h3>
+          <p>{labels.leaveDescription}</p>
+          <button class="button button--ghost" type="button" data-leave-group>{labels.leaveGroup}</button>
+        </article>
+      </section>
+    </div>
   </div>
+
+  <ConfirmDialog
+    dialogId="settings-leave-group-dialog"
+    cancelLabel={labels.leaveConfirmCancel}
+    confirmLabel={labels.leaveConfirmConfirm}
+  />
 </section>
+
+<style>
+  .settings-app__content,
+  .settings-layout,
+  .settings-column,
+  .settings-section-heading,
+  .settings-form,
+  .join-form,
+  .group-lists {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .settings-hero h1,
+  .settings-section-heading h2,
+  .settings-card h3,
+  .settings-card h4,
+  .settings-hero p,
+  .settings-section-heading p,
+  .settings-card p {
+    margin: 0;
+  }
+
+  .settings-hero h1 {
+    font-size: clamp(2rem, 9vw, 4rem);
+    line-height: 0.95;
+    letter-spacing: -0.07em;
+  }
+
+  .settings-section-heading {
+    gap: 0.35rem;
+    padding-inline: 0.15rem;
+  }
+
+  .settings-section-heading h2 {
+    font-size: clamp(1.55rem, 6vw, 2.3rem);
+    line-height: 1;
+    letter-spacing: -0.05em;
+  }
+
+  .settings-card h3 {
+    font-size: clamp(1.2rem, 5vw, 1.55rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+  }
+
+  .settings-card h4 {
+    font-size: 0.86rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .settings-permission-note {
+    border: 1px solid color-mix(in srgb, var(--color-accent), var(--color-border) 45%);
+    border-radius: var(--radius-xl);
+    background: var(--color-accent-soft);
+    padding: 0.75rem 0.85rem;
+    color: var(--color-text) !important;
+    font-weight: 850;
+  }
+
+  .settings-card--danger {
+    border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 55%);
+  }
+
+  .settings-card--danger .button {
+    justify-self: start;
+  }
+
+  .settings-form .button,
+  .join-form .button,
+  .settings-card > .button {
+    justify-self: start;
+  }
+
+  .join-form label,
+  .settings-form label {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .join-form input,
+  .settings-form textarea {
+    width: 100%;
+    min-height: var(--form-control-min-height);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 5%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+    color: var(--color-text);
+    padding: var(--form-control-padding-block) var(--form-control-padding-inline);
+    line-height: 1.5;
+  }
+
+  .group-code:empty {
+    display: none;
+  }
+
+  .group-code .button {
+    overflow-wrap: anywhere;
+  }
+
+  .group-lists ul {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0.45rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .group-lists li {
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 18%);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
+    padding: 0.62rem 0.75rem;
+    overflow-wrap: anywhere;
+  }
+
+  [data-group-admin-section][data-disabled='true'] {
+    opacity: 0.78;
+  }
+
+  @media (min-width: 860px) {
+    .settings-layout {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+</style>
 
 <script>
   import '../scripts/settings-app.ts';
