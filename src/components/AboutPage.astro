@@ -1,0 +1,57 @@
+---
+import Button from './Button.astro';
+import Container from './Container.astro';
+import { siteConfig, type Locale } from '../config/site';
+import { getLocalizedPath } from '../i18n/ui';
+import { usePublicPageCopy } from '../i18n/public-pages';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const tp = usePublicPageCopy(locale);
+const dashboardPath = getLocalizedPath('/dashboard', locale);
+const values = [tp('aboutValueSimple'), tp('aboutValueGroup'), tp('aboutValueHistory'), tp('aboutValueMobile')];
+---
+
+<Container class="py-12 sm:py-16">
+  <article class="about-page">
+    <header class="about-page__hero">
+      <p class="about-page__eyebrow">{tp('aboutEyebrow')}</p>
+      <h1>{tp('aboutTitle')}</h1>
+      <p>{tp('aboutIntro')}</p>
+      <div class="about-page__actions" aria-label={tp('aboutCtaTitle')}>
+        <Button href={dashboardPath}>{tp('aboutPrimaryCta')}</Button>
+        <Button href={siteConfig.repositoryUrl} variant="secondary">{tp('aboutSecondaryCta')}</Button>
+      </div>
+    </header>
+
+    <section class="about-page__grid" aria-labelledby="about-who-title">
+      <div class="about-page__panel">
+        <h2 id="about-who-title">{tp('aboutWhoTitle')}</h2>
+        <p>{tp('aboutWhoDescription')}</p>
+      </div>
+
+      <div class="about-page__panel">
+        <h2>{tp('aboutValuesTitle')}</h2>
+        <ul class="about-page__list">
+          {values.map((value) => <li>{value}</li>)}
+        </ul>
+      </div>
+    </section>
+
+    <section class="about-page__panel about-page__panel--wide" aria-labelledby="about-practical-title">
+      <h2 id="about-practical-title">{tp('aboutPrivacyTitle')}</h2>
+      <p>{tp('aboutPrivacyDescription')}</p>
+    </section>
+
+    <section class="about-page__cta" aria-labelledby="about-cta-title">
+      <div>
+        <h2 id="about-cta-title">{tp('aboutCtaTitle')}</h2>
+        <p>{tp('aboutCtaDescription')}</p>
+      </div>
+      <Button href={dashboardPath}>{tp('aboutPrimaryCta')}</Button>
+    </section>
+  </article>
+</Container>
