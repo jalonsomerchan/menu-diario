@@ -1,6 +1,7 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
+import { formatAppError } from '../lib/errors';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates, toIsoDate } from '../lib/menu/dates';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { renderDaySummaryCard } from '../lib/menu/day-summary-card';
@@ -77,10 +78,7 @@ if (root) {
   }
 
   function formatError(error: unknown) {
-    if (error instanceof Error && error.message.toLowerCase().includes('permission')) {
-      return labels.permissionsError;
-    }
-    return error instanceof Error ? error.message : String(error);
+    return formatAppError(error, labels);
   }
 
   function updateOfflineState(message = labels.offlineReadOnly) {
