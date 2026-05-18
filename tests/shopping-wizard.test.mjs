@@ -31,13 +31,14 @@ describe('shopping wizard smoke checks', () => {
     const component = readText('src/components/ShoppingApp.astro');
 
     assert.match(component, /planning-ai-app/);
-    assert.match(component, /planning-ai-hero/);
     assert.match(component, /planning-ai-panel/);
+    assert.match(component, /planning-ai-panel-heading/);
     assert.match(component, /planning-ai-wizard-progress/);
     assert.match(component, /planning-ai-wizard-step/);
     assert.match(component, /planning-ai-section-card/);
     assert.match(component, /planning-ai-request-card/);
     assert.match(component, /planning-ai-wizard-actions/);
+    assert.match(component, /shopping-wizard\.ts/);
   });
 
   it('keeps AI generation behind the summary confirmation step', () => {
@@ -51,5 +52,17 @@ describe('shopping wizard smoke checks', () => {
     assert.match(script, /data-wizard-next/);
     assert.match(script, /data-wizard-prev/);
     assert.match(script, /renderWizardSummary/);
+  });
+
+  it('has a dedicated wizard controller with planning-like navigation behavior', () => {
+    const script = readText('src/scripts/shopping-wizard.ts');
+
+    assert.match(script, /data-shopping-wizard/);
+    assert.match(script, /data-shopping-app/);
+    assert.match(script, /planning-ai-wizard-step/);
+    assert.match(script, /shopping-wizard:step/);
+    assert.match(script, /focusPanel/);
+    assert.match(script, /scrollWizardTop/);
+    assert.match(script, /MutationObserver/);
   });
 });
