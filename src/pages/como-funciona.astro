@@ -1,0 +1,13 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PublicHowItWorksPage from '../components/PublicHowItWorksPage.astro';
+import { defaultLocale } from '../config/site';
+import { useTranslations } from '../i18n/ui';
+
+const locale = defaultLocale;
+const t = useTranslations(locale);
+---
+
+<BaseLayout title={t('public.howItWorks.title')} description={t('public.howItWorks.description')} locale={locale}>
+  <PublicHowItWorksPage locale={locale} />
+</BaseLayout>
