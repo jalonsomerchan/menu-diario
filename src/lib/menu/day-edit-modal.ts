@@ -39,6 +39,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   const clearButton = options.root.querySelector<HTMLButtonElement>('[data-day-edit-clear]');
   const defaultSaveState = saveState?.textContent ?? '';
   const pendingSaveState = saveState?.dataset.pendingLabel ?? options.labels.savePending ?? defaultSaveState;
+  const discardChangesMessage = options.labels.discardChangesConfirm ?? options.labels.savePending ?? pendingSaveState;
   let activeDayKey = '';
   let draftDay = normalizeDay(undefined);
   let returnFocusTo: HTMLElement | null = null;
@@ -122,7 +123,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
       return;
     }
 
-    if (window.confirm(options.labels.discardChangesConfirm)) {
+    if (window.confirm(discardChangesMessage)) {
       allowNextClose = true;
       modal.close('discard');
     }
