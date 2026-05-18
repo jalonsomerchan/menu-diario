@@ -2,6 +2,7 @@ const form = document.querySelector<HTMLElement>('[data-plan-wizard]');
 
 if (form) {
   const app = form.closest<HTMLElement>('[data-planning-ai-app]');
+  const scrollTarget = form.closest<HTMLElement>('[data-plan-scroll-target]') ?? form;
   const labels = JSON.parse(app?.dataset.labels ?? '{}') as Record<string, string>;
   const panels = [...form.querySelectorAll<HTMLElement>('[data-plan-step]')];
   const dots = [...form.querySelectorAll<HTMLButtonElement>('[data-plan-step-indicator]')];
@@ -20,7 +21,7 @@ if (form) {
 
   function scrollWizardTop() {
     if (!window.matchMedia('(max-width: 719px)').matches) return;
-    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function selectedMeals() {
