@@ -227,14 +227,18 @@ if (root) {
           <h3>${escapeHtml(dish.title)}</h3>
           <p>${escapeHtml(dish.description)}</p>
         </div>
-        <label class="dish-recommender-field">
-          <span>${escapeHtml(labels.assignLabel)}</span>
-          <select data-dish-assign-slot="${index}" ${slots.length ? '' : 'disabled'}>${slotOptions}</select>
-        </label>
-        <div class="dish-recommender-result__actions">
-          <button class="button button--secondary button--small" type="button" data-dish-save="${index}">${escapeHtml(labels.saveDish)}</button>
-          <button class="button button--primary button--small" type="button" data-dish-assign="${index}" ${slots.length ? '' : 'disabled'}>${escapeHtml(labels.assignDish)}</button>
-          <button class="button button--ghost button--small" type="button" data-dish-share="${index}">${escapeHtml(labels.shareDish)}</button>
+        <div class="dish-recommender-result__footer">
+          <div class="dish-recommender-result__secondary-actions">
+            <button class="button button--ghost button--small" type="button" data-dish-save="${index}">${escapeHtml(labels.saveDish)}</button>
+            <button class="button button--ghost button--small" type="button" data-dish-share="${index}">${escapeHtml(labels.shareDish)}</button>
+          </div>
+          <label class="dish-recommender-assign">
+            <span>${escapeHtml(labels.assignLabel)}</span>
+            <span class="dish-recommender-assign__controls">
+              <select data-dish-assign-slot="${index}" ${slots.length ? '' : 'disabled'}>${slotOptions}</select>
+              <button class="button button--ghost button--small" type="button" data-dish-assign="${index}" ${slots.length ? '' : 'disabled'}>${escapeHtml(labels.assignDish)}</button>
+            </span>
+          </label>
         </div>
       </article>
     `).join('');
