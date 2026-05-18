@@ -9,6 +9,7 @@ import {
   hasPlanningCatalogForMode,
   isMenuSuggestionsAvailable,
   isPlanningRecommendationResponse,
+  type PendingMealSlot,
   type PlanningRecommendation,
   type PlanningRecommendationMode,
 } from '../lib/ai';
@@ -59,6 +60,7 @@ if (root) {
   const resultsContainer = root.querySelector<HTMLElement>('[data-plan-results]');
   const aiStatus = root.querySelector<HTMLElement>('[data-ai-status]');
   const summaryContainer = root.querySelector<HTMLElement>('[data-plan-summary]');
+  const intolerancesInput = root.querySelector<HTMLTextAreaElement>('[data-plan-intolerances]');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -67,8 +69,10 @@ if (root) {
   let dishes: Dish[] = [];
   let currentRequest: PlanningRequest | null = null;
   let recommendations: PlanningRecommendation[] = [];
+  let selectedPendingKeys = new Set<string>();
   let hasGeneratedResults = false;
   let syncedMealsFromProfile = false;
+  let syncedIntolerances = false;
   let unsubscribeMenus: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
@@ -135,6 +139,8 @@ if (root) {
     if (!startInput || !endInput) return;
     startInput.value = getDateOffset(new Date(), 1);
     endInput.value = getDateOffset(new Date(), totalDays);
+    currentRequest = readRequestFromForm();
+    selectedPendingKeys.clear();
     renderCurrentState();
   }
 
@@ -227,6 +233,15 @@ if (root) {
     return getPendingMealSlots(getDaysForRequest(request), request.dates, request.meals);
   }
 
+  function getPendingKey(slot: PendingMealSlot) {
+    return `${slot.dayKey}::${slot.meal}`;
+  }
+
+  function getSelectedPendingMealsForRequest(request: PlanningRequest) {
+    const pendingMeals = getPendingMealsForRequest(request);
+    return pendingMeals.filter((slot) => selectedPendingKeys.has(getPendingKey(slot)));
+  }
+
   function formatWeekday(isoDate: string) {
     return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(new Date(`${isoDate}T00:00:00`));
   }
@@ -269,22 +284,33 @@ if (root) {
     }
 
     const pendingMeals = getPendingMealsForRequest(currentRequest);
+    const pendingKeys = new Set(pendingMeals.map(getPendingKey));
+    selectedPendingKeys = new Set([...selectedPendingKeys].filter((key) => pendingKeys.has(key)));
+
+    if (selectedPendingKeys.size === 0 && pendingMeals.length > 0) {
+      selectedPendingKeys = new Set(pendingMeals.map(getPendingKey));
+    }
+
     if (pendingMeals.length === 0) {
       pendingContainer.innerHTML = `<p class="planning-ai-empty">${escapeHtml(labels.pendingEmpty)}</p>`;
       return;
     }
 
     pendingContainer.innerHTML = pendingMeals
-      .map(
-        (slot) => `
+      .map((slot) => {
+        const key = getPendingKey(slot);
+        return `
           <article class="planning-ai-pending-card">
-            <header>
-              <h3>${escapeHtml(formatPendingMealTitle(slot.dayKey, slot.meal))}</h3>
-              <span class="planning-ai-slot-badge">${escapeHtml(mealLabel(slot.meal))}</span>
-            </header>
+            <label>
+              <input type="checkbox" data-plan-pending-slot="${escapeHtml(key)}" ${selectedPendingKeys.has(key) ? 'checked' : ''} />
+              <span>
+                <strong>${escapeHtml(formatPendingMealTitle(slot.dayKey, slot.meal))}</strong>
+                <span class="planning-ai-slot-badge">${escapeHtml(mealLabel(slot.meal))}</span>
+              </span>
+            </label>
           </article>
-        `
-      )
+        `;
+      })
       .join('');
   }
 
@@ -296,7 +322,7 @@ if (root) {
       return;
     }
 
-    const pendingKeys = new Set(getPendingMealsForRequest(currentRequest).map((slot) => `${slot.dayKey}::${slot.meal}`));
+    const pendingKeys = new Set(getSelectedPendingMealsForRequest(currentRequest).map(getPendingKey));
     recommendations = recommendations.filter((recommendation) =>
       pendingKeys.has(`${recommendation.dayKey}::${recommendation.meal}`)
     );
@@ -368,12 +394,14 @@ if (root) {
 
     const dayCount = request.dates.length;
     const mealCount = request.meals.length;
+    const selectedPendingCount = currentRequest ? getSelectedPendingMealsForRequest(currentRequest).length : 0;
     const dayLabel = dayCount === 1 ? labels.daysSingular : labels.daysPlural;
     const mealLabelText = mealCount === 1 ? labels.mealsSingular : labels.mealsPlural;
 
     summaryContainer.innerHTML = `
       <div class="planning-ai-request-pill"><span>${escapeHtml(labels.summaryRange)}</span>${escapeHtml(`${dayCount} ${dayLabel}`)}</div>
       <div class="planning-ai-request-pill"><span>${escapeHtml(labels.summaryMeals)}</span>${escapeHtml(`${mealCount} ${mealLabelText}`)}</div>
+      <div class="planning-ai-request-pill"><span>${escapeHtml(labels.pendingTitle)}</span>${escapeHtml(String(selectedPendingCount))}</div>
       <div class="planning-ai-request-pill"><span>${escapeHtml(labels.summaryMode)}</span>${escapeHtml(modeLabel(request.mode))}</div>
       <div class="planning-ai-request-pill"><span>${escapeHtml(labels.summaryIdeas)}</span>${escapeHtml(`${request.recommendationCount} ${labels.ideasSuffix}`)}</div>
     `;
@@ -514,6 +542,19 @@ if (root) {
     showAiStatus(labels.added);
   }
 
+  async function syncWizardRequest(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
+    const request = readRequestFromForm();
+    if (!request || !currentUser) return;
+    currentRequest = request;
+    await syncRangeMenus(services, request);
+  }
+
+  async function syncIntolerances(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
+    if (!intolerancesInput || syncedIntolerances) return;
+    intolerancesInput.value = await getGroupFoodIntolerancesForPrompt(services, currentProfile);
+    syncedIntolerances = true;
+  }
+
   applyDefaultRange();
   setSelectedCount(getSelectedCount());
 
@@ -523,6 +564,18 @@ if (root) {
   } else {
     getFirebaseServices()
       .then((services) => {
+        root.addEventListener('planning-ai-wizard:step', async (event) => {
+          const step = (event as CustomEvent<{ step: number }>).detail?.step;
+          if (step === 2) {
+            showAiStatus(labels.loadingSlots);
+            await syncWizardRequest(services);
+            showAiStatus('');
+          }
+          if (step === 3) {
+            await syncIntolerances(services);
+          }
+        });
+
         form?.addEventListener('submit', async (event) => {
           event.preventDefault();
           if (!currentUser) return;
@@ -533,8 +586,10 @@ if (root) {
             return;
           }
 
+          currentRequest = request;
+          await syncRangeMenus(services, request);
+
           if (request.mode === 'own' && !hasPlanningCatalogForMode(dishes, 'own')) {
-            currentRequest = request;
             recommendations = [];
             hasGeneratedResults = false;
             renderCurrentState();
@@ -542,18 +597,16 @@ if (root) {
             return;
           }
 
-          currentRequest = request;
           recommendations = [];
           hasGeneratedResults = false;
           showAiStatus(labels.loadingSlots);
           setBusy(true);
 
           try {
-            await syncRangeMenus(services, request);
-            const pendingMeals = getPendingMealsForRequest(request);
+            const pendingMeals = getSelectedPendingMealsForRequest(request);
 
             if (pendingMeals.length === 0) {
-              showAiStatus('');
+              showAiStatus(labels.pendingEmpty, true);
               renderCurrentState();
               return;
             }
@@ -575,7 +628,7 @@ if (root) {
                 pendingMeals,
                 days: getDaysForRequest(request),
                 dishes,
-                foodIntolerances: await getGroupFoodIntolerancesForPrompt(services, currentProfile),
+                foodIntolerances: intolerancesInput?.value.trim() || (await getGroupFoodIntolerancesForPrompt(services, currentProfile)),
                 mealLabels: {
                   breakfast: labels.breakfast,
                   lunch: labels.lunch,
@@ -616,10 +669,33 @@ if (root) {
           });
         });
 
-        startInput?.addEventListener('input', () => renderCurrentState());
-        endInput?.addEventListener('input', () => renderCurrentState());
+        startInput?.addEventListener('input', () => {
+          currentRequest = readRequestFromForm();
+          selectedPendingKeys.clear();
+          renderCurrentState();
+        });
+        endInput?.addEventListener('input', () => {
+          currentRequest = readRequestFromForm();
+          selectedPendingKeys.clear();
+          renderCurrentState();
+        });
         root.querySelectorAll<HTMLInputElement>('[data-plan-meal], [data-plan-mode]').forEach((input) => {
-          input.addEventListener('change', () => renderCurrentState());
+          input.addEventListener('change', () => {
+            currentRequest = readRequestFromForm();
+            if (input.matches('[data-plan-meal]')) selectedPendingKeys.clear();
+            renderCurrentState();
+          });
+        });
+
+        pendingContainer?.addEventListener('change', (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement) || !target.matches('[data-plan-pending-slot]')) return;
+          const key = target.dataset.planPendingSlot ?? '';
+          if (!key) return;
+          if (target.checked) selectedPendingKeys.add(key);
+          else selectedPendingKeys.delete(key);
+          renderRequestSummary();
+          renderResults();
         });
 
         resultsContainer?.addEventListener('click', (event) => {
@@ -656,6 +732,7 @@ if (root) {
             labels.guestSession,
             (profile) => {
               currentProfile = profile;
+              syncedIntolerances = false;
               applyProfileMeals(profile.enabledMeals);
               unsubscribeDishes?.();
               unsubscribeDishes = watchUserDishes(

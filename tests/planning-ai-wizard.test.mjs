@@ -17,7 +17,10 @@ describe('AI planner wizard', () => {
 
     assert.match(component, /data-plan-wizard/);
     assert.match(component, /data-plan-step=\"0\"/);
-    assert.match(component, /data-plan-step=\"4\"/);
+    assert.match(component, /data-plan-step=\"2\"/);
+    assert.match(component, /data-plan-step=\"6\"/);
+    assert.match(component, /data-plan-pending/);
+    assert.match(component, /data-plan-intolerances/);
     assert.match(component, /data-plan-step-indicator/);
     assert.match(component, /data-plan-wizard-back/);
     assert.match(component, /data-plan-wizard-next/);
@@ -28,9 +31,16 @@ describe('AI planner wizard', () => {
     assert.match(wizard, /stopImmediatePropagation/);
     assert.match(wizard, /start\.value > end\.value/);
     assert.match(wizard, /selectedMeals\(\)\.length === 0/);
+    assert.match(wizard, /selectedPendingSlots\(\)\.length === 0/);
+    assert.match(wizard, /planning-ai-wizard:step/);
+    assert.match(wizard, /scrollIntoView/);
+    assert.match(wizard, /max-width: 719px/);
     assert.match(wizard, /aria-current', 'step'/);
 
     assert.match(planner, /generateGeminiJson/);
+    assert.match(planner, /getSelectedPendingMealsForRequest/);
+    assert.match(planner, /data-plan-pending-slot/);
+    assert.match(planner, /data-plan-intolerances/);
     assert.match(planner, /getGroupFoodIntolerancesForPrompt/);
   });
 });
