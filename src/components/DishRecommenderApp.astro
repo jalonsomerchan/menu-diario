@@ -1,0 +1,199 @@
+---
+import type { Locale } from '../config/site';
+import { useDishRecommenderTranslations } from '../i18n/dish-recommender';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+import '../styles/dish-recommender.css';
+
+interface Props { locale: Locale }
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const tr = useDishRecommenderTranslations(locale);
+const homePath = getLocalizedPath('/', locale);
+const dishesPath = getLocalizedPath('/mis-platos', locale);
+const configurePath = getLocalizedPath('/configurar', locale);
+
+const labels = {
+  configMissing: t('menu.configMissing'),
+  loading: t('dashboard.loading'),
+  breakfast: t('dashboard.breakfast'),
+  lunch: t('dashboard.lunch'),
+  dinner: t('dashboard.dinner'),
+  permissionsError: t('menu.permissionsError'),
+  guestSession: t('menu.guestSession'),
+  offlineReadOnly: t('pwa.offlineReadOnly'),
+  aiError: t('ai.error'),
+  aiMissingConfig: t('ai.missingConfig'),
+  'ai.loading': t('ai.loading'),
+  'ai.error': t('ai.error'),
+  'ai.quotaExhausted': t('ai.quotaExhausted'),
+  'ai.missingConfig': t('ai.missingConfig'),
+  'ai.appCheckUnavailable': t('ai.appCheckUnavailable'),
+  'ai.invalidResponse': t('ai.invalidResponse'),
+  savePending: t('menu.savePending'),
+  saveSaving: t('menu.saveSaving'),
+  saveSaved: t('menu.saveSaved'),
+  homePath,
+  dishesPath,
+  configurePath,
+  nav: tr('nav'),
+  title: tr('title'),
+  description: tr('description'),
+  eyebrow: tr('eyebrow'),
+  stepContext: tr('stepContext'),
+  stepIngredients: tr('stepIngredients'),
+  stepIntolerances: tr('stepIntolerances'),
+  stepPreferences: tr('stepPreferences'),
+  stepResults: tr('stepResults'),
+  mealQuestion: tr('mealQuestion'),
+  peopleLabel: tr('peopleLabel'),
+  difficultyLabel: tr('difficultyLabel'),
+  difficultyEasy: tr('difficultyEasy'),
+  difficultyMedium: tr('difficultyMedium'),
+  difficultyAdvanced: tr('difficultyAdvanced'),
+  timeLabel: tr('timeLabel'),
+  timeShort: tr('timeShort'),
+  timeEnough: tr('timeEnough'),
+  timeLong: tr('timeLong'),
+  timePreviousDay: tr('timePreviousDay'),
+  ingredientsQuestion: tr('ingredientsQuestion'),
+  ingredientsHave: tr('ingredientsHave'),
+  ingredientsShop: tr('ingredientsShop'),
+  ingredientsHelp: tr('ingredientsHelp'),
+  ingredientsPlaceholder: tr('ingredientsPlaceholder'),
+  intolerancesTitle: tr('intolerancesTitle'),
+  intolerancesDescription: tr('intolerancesDescription'),
+  intolerancesPlaceholder: tr('intolerancesPlaceholder'),
+  preferencesQuestion: tr('preferencesQuestion'),
+  preferenceCold: tr('preferenceCold'),
+  preferenceHot: tr('preferenceHot'),
+  preferenceMeat: tr('preferenceMeat'),
+  preferenceFish: tr('preferenceFish'),
+  preferenceHealthy: tr('preferenceHealthy'),
+  preferenceBalanced: tr('preferenceBalanced'),
+  preferenceFilling: tr('preferenceFilling'),
+  preferenceHungry: tr('preferenceHungry'),
+  preferenceExtra: tr('preferenceExtra'),
+  preferencePlaceholder: tr('preferencePlaceholder'),
+  summaryTitle: tr('summaryTitle'),
+  generate: tr('generate'),
+  generating: tr('generating'),
+  generated: tr('generated'),
+  resultsEmpty: tr('resultsEmpty'),
+  invalidResponse: tr('invalidResponse'),
+  saveDish: tr('saveDish'),
+  assignDish: tr('assignDish'),
+  shareDish: tr('shareDish'),
+  savedDish: tr('savedDish'),
+  assignedDish: tr('assignedDish'),
+  sharedDish: tr('sharedDish'),
+  copiedDish: tr('copiedDish'),
+  assignLabel: tr('assignLabel'),
+  assignEmpty: tr('assignEmpty'),
+  loadingSlots: tr('loadingSlots'),
+  basicAssumption: tr('basicAssumption'),
+  back: tr('back'),
+  next: tr('next'),
+};
+
+const wizardSteps = [labels.stepContext, labels.stepIngredients, labels.stepIntolerances, labels.stepPreferences, labels.stepResults];
+---
+
+<section class="dish-recommender-app" data-dish-recommender-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
+  <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
+
+  <div data-content hidden>
+    <section class="dish-recommender-panel app-panel" aria-labelledby="dish-recommender-title" data-dish-recommender-scroll-target>
+      <header class="dish-recommender-heading">
+        <p class="menu-app__eyebrow">{labels.eyebrow}</p>
+        <h1 id="dish-recommender-title">{labels.title}</h1>
+        <p>{labels.description}</p>
+      </header>
+
+      <form class="dish-recommender-form" data-dish-recommender-form>
+        <ol class="dish-recommender-progress" aria-label={labels.nav}>
+          {wizardSteps.map((step, index) => (
+            <li>
+              <button type="button" class="dish-recommender-step" data-dish-step-indicator={index} aria-current={index === 0 ? 'step' : undefined}>
+                <span>{index + 1}</span>
+                <strong>{step}</strong>
+              </button>
+            </li>
+          ))}
+        </ol>
+
+        <section class="dish-recommender-card" data-dish-step="0">
+          <div class="dish-recommender-section-heading"><h2>{labels.mealQuestion}</h2></div>
+          <fieldset class="dish-recommender-options">
+            <legend class="sr-only">{labels.mealQuestion}</legend>
+            <label><input type="radio" name="dish-meal" value="breakfast" data-dish-meal /> <span>{labels.breakfast}</span></label>
+            <label><input type="radio" name="dish-meal" value="lunch" data-dish-meal checked /> <span>{labels.lunch}</span></label>
+            <label><input type="radio" name="dish-meal" value="dinner" data-dish-meal /> <span>{labels.dinner}</span></label>
+          </fieldset>
+
+          <div class="dish-recommender-grid">
+            <label class="dish-recommender-field"><span>{labels.peopleLabel}</span><input type="number" min="1" max="20" value="2" data-dish-people /></label>
+            <label class="dish-recommender-field"><span>{labels.difficultyLabel}</span><select data-dish-difficulty><option value="easy">{labels.difficultyEasy}</option><option value="medium">{labels.difficultyMedium}</option><option value="advanced">{labels.difficultyAdvanced}</option></select></label>
+          </div>
+
+          <fieldset class="dish-recommender-options dish-recommender-options--time">
+            <legend>{labels.timeLabel}</legend>
+            <label><input type="radio" name="dish-time" value="short" data-dish-time /> <span>{labels.timeShort}</span></label>
+            <label><input type="radio" name="dish-time" value="enough" data-dish-time checked /> <span>{labels.timeEnough}</span></label>
+            <label><input type="radio" name="dish-time" value="long" data-dish-time /> <span>{labels.timeLong}</span></label>
+            <label><input type="radio" name="dish-time" value="previous-day" data-dish-time /> <span>{labels.timePreviousDay}</span></label>
+          </fieldset>
+        </section>
+
+        <section class="dish-recommender-card" data-dish-step="1" hidden>
+          <div class="dish-recommender-section-heading"><h2>{labels.ingredientsQuestion}</h2><p>{labels.ingredientsHelp}</p></div>
+          <fieldset class="dish-recommender-options">
+            <legend class="sr-only">{labels.ingredientsQuestion}</legend>
+            <label><input type="radio" name="dish-ingredient-mode" value="have" data-dish-ingredient-mode checked /> <span>{labels.ingredientsHave}</span></label>
+            <label><input type="radio" name="dish-ingredient-mode" value="shopping" data-dish-ingredient-mode /> <span>{labels.ingredientsShop}</span></label>
+          </fieldset>
+          <label class="dish-recommender-field"><span>{labels.basicAssumption}</span><textarea rows="5" maxlength="900" data-dish-ingredients placeholder={labels.ingredientsPlaceholder}></textarea></label>
+        </section>
+
+        <section class="dish-recommender-card" data-dish-step="2" hidden>
+          <div class="dish-recommender-section-heading"><h2>{labels.intolerancesTitle}</h2><p>{labels.intolerancesDescription}</p></div>
+          <label class="dish-recommender-field"><span>{labels.intolerancesTitle}</span><textarea rows="5" maxlength="900" data-dish-intolerances placeholder={labels.intolerancesPlaceholder}></textarea></label>
+        </section>
+
+        <section class="dish-recommender-card" data-dish-step="3" hidden>
+          <div class="dish-recommender-section-heading"><h2>{labels.preferencesQuestion}</h2></div>
+          <fieldset class="dish-recommender-options dish-recommender-options--wrap">
+            <legend class="sr-only">{labels.preferencesQuestion}</legend>
+            <label><input type="checkbox" value="cold" data-dish-preference /> <span>{labels.preferenceCold}</span></label>
+            <label><input type="checkbox" value="hot" data-dish-preference /> <span>{labels.preferenceHot}</span></label>
+            <label><input type="checkbox" value="meat" data-dish-preference /> <span>{labels.preferenceMeat}</span></label>
+            <label><input type="checkbox" value="fish" data-dish-preference /> <span>{labels.preferenceFish}</span></label>
+            <label><input type="checkbox" value="healthy" data-dish-preference /> <span>{labels.preferenceHealthy}</span></label>
+            <label><input type="checkbox" value="balanced" data-dish-preference checked /> <span>{labels.preferenceBalanced}</span></label>
+            <label><input type="checkbox" value="filling" data-dish-preference /> <span>{labels.preferenceFilling}</span></label>
+            <label><input type="checkbox" value="hungry" data-dish-preference /> <span>{labels.preferenceHungry}</span></label>
+          </fieldset>
+          <label class="dish-recommender-field"><span>{labels.preferenceExtra}</span><textarea rows="4" maxlength="900" data-dish-extra-preferences placeholder={labels.preferencePlaceholder}></textarea></label>
+        </section>
+
+        <section class="dish-recommender-card" data-dish-step="4" hidden>
+          <div class="dish-recommender-section-heading"><h2>{labels.summaryTitle}</h2></div>
+          <div class="dish-recommender-summary" data-dish-summary></div>
+          <div class="dish-recommender-ai-status" data-ai-status role="status" aria-live="polite"></div>
+          <div class="dish-recommender-results" data-dish-results><p class="dish-recommender-empty">{labels.resultsEmpty}</p></div>
+        </section>
+
+        <div class="dish-recommender-actions">
+          <button class="button button--ghost" type="button" data-dish-back>{labels.back}</button>
+          <button class="button button--secondary" type="button" data-dish-next>{labels.next}</button>
+          <button class="button button--primary" type="submit" data-dish-submit hidden>{labels.generate}</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</section>
+
+<script>
+  import '../scripts/dish-recommender-app.ts';
+</script>
