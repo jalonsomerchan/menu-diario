@@ -9,25 +9,42 @@ const themes: ThemePreference[] = ['system', 'light', 'dark'];
 
 if (root) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
-  const toggle = root.querySelector<HTMLButtonElement>('[data-site-menu-toggle]');
+  const toggle = root.querySelector<HTMLElement>('[data-site-menu-toggle]');
   const panel = root.querySelector<HTMLElement>('[data-site-menu-panel]');
+  const mobileMenu = root.querySelector<HTMLDetailsElement>('[data-mobile-menu]');
 
   function setMenuOpen(isOpen: boolean) {
+    if (mobileMenu && mobileMenu.open !== isOpen) {
+      mobileMenu.open = isOpen;
+    }
+
     root!.dataset.menuOpen = String(isOpen);
     toggle?.setAttribute('aria-expanded', String(isOpen));
     toggle?.setAttribute('aria-label', isOpen ? labels.closeMenu : labels.openMenu);
   }
 
-  toggle?.addEventListener('click', () => setMenuOpen(root.dataset.menuOpen !== 'true'));
+  mobileMenu?.addEventListener('toggle', () => {
+    root!.dataset.menuOpen = String(mobileMenu.open);
+    toggle?.setAttribute('aria-expanded', String(mobileMenu.open));
+    toggle?.setAttribute('aria-label', mobileMenu.open ? labels.closeMenu : labels.openMenu);
+  });
 
   panel?.addEventListener('click', (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLElement) || !target.closest('a')) return;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.closest('a') || target.closest('[data-global-logout]')) setMenuOpen(false);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!mobileMenu?.open) return;
+    const target = event.target;
+    if (!(target instanceof Element) || mobileMenu.contains(target)) return;
     setMenuOpen(false);
   });
 
   document.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape' || root.dataset.menuOpen !== 'true') return;
+    if (event.key !== 'Escape') return;
+    if (root.dataset.menuOpen !== 'true' && !mobileMenu?.open) return;
     setMenuOpen(false);
     toggle?.focus();
   });
@@ -36,9 +53,9 @@ if (root) {
 if (root && hasFirebaseConfig()) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
   const guestLabel = labels.guestSession ?? 'Guest session';
-  const themeSelect = root.querySelector<HTMLSelectElement>('[data-global-theme]');
-  const logoutButton = root.querySelector<HTMLButtonElement>('[data-global-logout]');
-  const adminLink = root.querySelector<HTMLAnchorElement>('[data-admin-link]');
+  const themeSelects = [...root.querySelectorAll<HTMLSelectElement>('[data-global-theme]')];
+  const logoutButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-global-logout]')];
+  const adminLinks = [...root.querySelectorAll<HTMLAnchorElement>('[data-admin-link]')];
 
   function applyTheme(theme: ThemePreference) {
     if (theme === 'system') {
@@ -47,17 +64,23 @@ if (root && hasFirebaseConfig()) {
       document.documentElement.dataset.theme = theme;
     }
 
-    if (themeSelect) themeSelect.value = theme;
+    themeSelects.forEach((themeSelect) => {
+      themeSelect.value = theme;
+    });
   }
 
   getFirebaseServices().then((services) => {
-    logoutButton?.addEventListener('click', () => closeSession());
+    logoutButtons.forEach((logoutButton) => {
+      logoutButton.addEventListener('click', () => closeSession());
+    });
 
     services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
-      logoutButton?.toggleAttribute('hidden', !user);
-      adminLink?.toggleAttribute('hidden', !user);
+      logoutButtons.forEach((logoutButton) => logoutButton.toggleAttribute('hidden', !user));
+      adminLinks.forEach((adminLink) => adminLink.toggleAttribute('hidden', !user));
       if (!user) return;
-      adminLink?.toggleAttribute('hidden', !(await isAdminUser(user)));
+
+      const isAdmin = await isAdminUser(user);
+      adminLinks.forEach((adminLink) => adminLink.toggleAttribute('hidden', !isAdmin));
 
       const unsubscribe = watchUserProfile(
         services,
@@ -67,9 +90,11 @@ if (root && hasFirebaseConfig()) {
         () => undefined
       );
 
-      themeSelect?.addEventListener('change', async () => {
-        if (!themes.includes(themeSelect.value as ThemePreference)) return;
-        await updateUserPreferences(services, user.uid, { theme: themeSelect.value as ThemePreference });
+      themeSelects.forEach((themeSelect) => {
+        themeSelect.addEventListener('change', async () => {
+          if (!themes.includes(themeSelect.value as ThemePreference)) return;
+          await updateUserPreferences(services, user.uid, { theme: themeSelect.value as ThemePreference });
+        });
       });
 
       window.addEventListener('beforeunload', () => unsubscribe());
