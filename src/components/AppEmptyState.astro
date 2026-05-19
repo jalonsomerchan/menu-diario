@@ -1,0 +1,23 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  actionLabel?: string;
+  actionHref?: string;
+  actionData?: string;
+  variant?: 'empty' | 'error';
+}
+
+const { title, description, actionLabel, actionHref, actionData, variant = 'empty' } = Astro.props;
+const dataAttributes = actionData ? { [`data-${actionData}`]: true } : {};
+---
+
+<article class:list={['app-state', `app-state--${variant}`]} role={variant === 'error' ? 'alert' : 'status'} aria-live="polite">
+  <div class="app-state__icon" aria-hidden="true">{variant === 'error' ? '!' : '·'}</div>
+  <div class="app-state__copy">
+    <h2>{title}</h2>
+    <p>{description}</p>
+  </div>
+  {actionLabel && actionHref && <a class="button button--primary" href={actionHref}>{actionLabel}</a>}
+  {actionLabel && !actionHref && <button class="button button--primary" type="button" {...dataAttributes}>{actionLabel}</button>}
+</article>
