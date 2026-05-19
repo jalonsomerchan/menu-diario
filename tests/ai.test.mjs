@@ -27,6 +27,7 @@ describe('Firebase AI foundation', () => {
       'src/lib/ai/shopping-list.ts',
       'src/lib/ai/remote-config.ts',
       'src/lib/ai/ui-state.ts',
+      'docs/ai-api.md',
     ].forEach((path) => {
       assert.equal(existsSync(join(root, path)), true, `${path} should exist`);
     });
@@ -137,11 +138,10 @@ describe('Firebase AI foundation', () => {
 
   it('documents App Check, authenticated API and client-side limit caveats', () => {
     const firebaseDocs = readText('docs/firebase.md');
+    const aiApiDocs = readText('docs/ai-api.md');
     const readme = readText('README.md');
 
     assert.match(firebaseDocs, /App Check/);
-    assert.match(firebaseDocs, /API autenticada de IA/);
-    assert.match(firebaseDocs, /https:\/\/alon\.one\/api-ia\/auth\.php/);
     assert.match(firebaseDocs, /Remote Config/);
     assert.match(firebaseDocs, /shopping list|lista de la compra/i);
     assert.match(firebaseDocs, /sessionStorage/);
@@ -149,9 +149,14 @@ describe('Firebase AI foundation', () => {
     assert.match(firebaseDocs, /comidas pendientes/);
     assert.match(firebaseDocs, /no incluye emails ni notas personales/);
     assert.match(firebaseDocs, /shoppingLists/);
-    assert.match(readme, /API autenticada de IA/);
+    assert.match(aiApiDocs, /API autenticada de IA/);
+    assert.match(aiApiDocs, /https:\/\/alon\.one\/api-ia\/auth\.php/);
+    assert.match(aiApiDocs, /PUBLIC_AI_API_ENDPOINT/);
+    assert.match(aiApiDocs, /Authorization: Bearer/);
+    assert.match(aiApiDocs, /application\/x-www-form-urlencoded/);
+    assert.match(aiApiDocs, /system_prompt/);
+    assert.match(aiApiDocs, /user_prompt/);
     assert.match(readme, /PUBLIC_AI_ENABLED/);
-    assert.match(readme, /PUBLIC_AI_API_ENDPOINT/);
     assert.match(readme, /comidas pendientes/);
     assert.match(readme, /lista de la compra/i);
   });
