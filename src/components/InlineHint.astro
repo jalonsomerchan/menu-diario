@@ -1,0 +1,16 @@
+---
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<aside class="inline-hint" aria-label={title}>
+  <span class="inline-hint__icon" aria-hidden="true">?</span>
+  <div>
+    <strong>{title}</strong>
+    <p>{description}</p>
+  </div>
+</aside>
