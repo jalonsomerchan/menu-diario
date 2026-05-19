@@ -1,0 +1,302 @@
+.app-dialog,
+.quick-edit-modal,
+.day-edit-modal,
+.dish-editor-dialog,
+.dishes-create-dialog,
+.tuppers-create-dialog {
+  width: min(100% - 1rem, 54rem) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  color: var(--color-text);
+}
+
+.app-dialog--confirm {
+  width: min(100% - 1rem, 42rem) !important;
+}
+
+.app-dialog--editor,
+.quick-edit-modal--day,
+.day-edit-modal,
+.dish-editor-dialog {
+  width: min(100% - 1rem, 58rem) !important;
+}
+
+.app-dialog::backdrop,
+.quick-edit-modal::backdrop,
+.day-edit-modal::backdrop,
+.dish-editor-dialog::backdrop,
+.dishes-create-dialog::backdrop,
+.tuppers-create-dialog::backdrop {
+  background: color-mix(in srgb, var(--color-bg), transparent 18%) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+.app-dialog__surface,
+.quick-edit-modal__box,
+.day-edit-modal__box,
+.dish-editor-dialog__surface,
+.confirm-dialog__box,
+.tuppers-create-dialog__surface {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  max-height: min(92dvh, 56rem) !important;
+  overflow: hidden !important;
+  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 16%) !important;
+  border-radius: 0.42rem !important;
+  background: var(--color-surface) !important;
+  box-shadow: 0 1.25rem 4rem rgb(15 23 42 / 0.18) !important;
+  padding: 0 !important;
+}
+
+.app-dialog__header,
+.day-edit-modal__header,
+.dish-editor-dialog__header,
+.confirm-dialog__header,
+.quick-edit-modal__box > header {
+  position: relative !important;
+  top: auto !important;
+  z-index: 2 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  min-height: 5.75rem !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  background: var(--color-surface) !important;
+  padding: clamp(1.2rem, 4vw, 1.8rem) clamp(1.25rem, 4vw, 2rem) !important;
+}
+
+.dish-editor-dialog__header {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+}
+
+.dish-editor-dialog__icon,
+.app-dialog__heading .menu-app__eyebrow,
+.dish-editor-dialog__heading .menu-app__eyebrow {
+  display: none !important;
+}
+
+.app-dialog__heading,
+.day-edit-modal__heading,
+.dish-editor-dialog__heading {
+  display: grid !important;
+  gap: 0.25rem !important;
+  min-width: 0 !important;
+}
+
+.app-dialog__heading h2,
+.day-edit-modal__heading h2,
+.dish-editor-dialog__heading h2,
+.confirm-dialog__header h2,
+.quick-edit-modal__box h2 {
+  margin: 0 !important;
+  overflow: hidden !important;
+  color: var(--color-text) !important;
+  font-size: clamp(1.7rem, 5vw, 2.25rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.045em !important;
+  line-height: 1.05 !important;
+  text-overflow: ellipsis !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+}
+
+.app-dialog__heading p,
+.dish-editor-dialog__description,
+.day-edit-modal__heading p:not(.sr-only) {
+  margin: 0 !important;
+  max-width: 64ch !important;
+  color: var(--color-muted) !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+  white-space: normal !important;
+}
+
+.app-dialog__dismiss,
+.day-edit-modal__close,
+.dish-editor-dialog__close,
+.quick-edit-modal__box [data-quick-cancel],
+.quick-edit-modal__box [data-history-edit-cancel] {
+  display: grid !important;
+  place-items: center !important;
+  width: 2.65rem !important;
+  height: 2.65rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--color-muted) !important;
+  box-shadow: none !important;
+  font-size: 2.1rem !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  transition: color var(--transition-base), transform var(--transition-base) !important;
+}
+
+.app-dialog__dismiss:hover,
+.day-edit-modal__close:hover,
+.dish-editor-dialog__close:hover,
+.quick-edit-modal__box [data-quick-cancel]:hover,
+.quick-edit-modal__box [data-history-edit-cancel]:hover {
+  background: transparent !important;
+  color: var(--color-text) !important;
+  transform: scale(1.04) !important;
+}
+
+.app-dialog__body,
+.day-edit-modal__body,
+.dish-editor-dialog .app-dialog__body,
+.dish-editor-dialog__body,
+.quick-edit-modal__box [data-quick-fields],
+.quick-edit-modal__box [data-history-edit-fields] {
+  flex: 1 1 auto !important;
+  min-height: 8rem !important;
+  overflow: auto !important;
+  overscroll-behavior: contain !important;
+  border: 0 !important;
+  background: var(--color-surface) !important;
+  padding: clamp(1.35rem, 4vw, 2rem) clamp(1.25rem, 4vw, 2rem) !important;
+}
+
+.app-dialog__footer,
+.day-edit-modal__footer,
+.dish-editor-dialog__footer,
+.confirm-dialog__actions,
+.quick-edit-modal__box > footer {
+  position: relative !important;
+  bottom: auto !important;
+  z-index: 2 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 0.75rem !important;
+  border-top: 1px solid var(--color-border) !important;
+  background: color-mix(in srgb, var(--color-surface-soft), var(--color-surface) 72%) !important;
+  padding: 1rem clamp(1.25rem, 4vw, 2rem) calc(1rem + env(safe-area-inset-bottom)) !important;
+}
+
+.day-edit-modal__footer {
+  grid-template-columns: none !important;
+}
+
+.day-edit-modal__hint {
+  flex: 1 1 14rem !important;
+  margin-right: auto !important;
+}
+
+.day-edit-modal__actions,
+.dish-editor-dialog__footer,
+.confirm-dialog__actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  gap: 0.75rem !important;
+}
+
+.app-dialog__footer .button,
+.day-edit-modal__actions .button,
+.dish-editor-dialog__footer .button,
+.confirm-dialog__actions .button,
+.quick-edit-modal__box > footer .button {
+  width: auto !important;
+  min-width: 7.25rem !important;
+  min-height: 3rem !important;
+  border-radius: 0.4rem !important;
+  padding: 0.72rem 1.1rem !important;
+  box-shadow: none !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+}
+
+.app-dialog__footer .button--primary,
+.day-edit-modal__actions .button--primary,
+.dish-editor-dialog__footer .button--primary,
+.confirm-dialog__actions .button--danger,
+.quick-edit-modal__box > footer .button--primary {
+  min-width: 9.25rem !important;
+}
+
+.day-edit-modal__action-icon {
+  display: none !important;
+}
+
+.day-edit-modal__action-label {
+  display: inline !important;
+}
+
+:root[data-theme='dark'] .app-dialog__surface,
+:root[data-theme='dark'] .quick-edit-modal__box,
+:root[data-theme='dark'] .day-edit-modal__box,
+:root[data-theme='dark'] .dish-editor-dialog__surface,
+:root[data-theme='dark'] .confirm-dialog__box,
+:root[data-theme='dark'] .tuppers-create-dialog__surface {
+  box-shadow: 0 1.25rem 4rem rgb(0 0 0 / 0.46) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .app-dialog__surface,
+  :root:not([data-theme='light']) .quick-edit-modal__box,
+  :root:not([data-theme='light']) .day-edit-modal__box,
+  :root:not([data-theme='light']) .dish-editor-dialog__surface,
+  :root:not([data-theme='light']) .confirm-dialog__box,
+  :root:not([data-theme='light']) .tuppers-create-dialog__surface {
+    box-shadow: 0 1.25rem 4rem rgb(0 0 0 / 0.46) !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .app-dialog,
+  .quick-edit-modal,
+  .day-edit-modal,
+  .dish-editor-dialog,
+  .dishes-create-dialog,
+  .tuppers-create-dialog {
+    width: min(100% - 0.75rem, 54rem) !important;
+  }
+
+  .app-dialog__header,
+  .day-edit-modal__header,
+  .dish-editor-dialog__header,
+  .confirm-dialog__header,
+  .quick-edit-modal__box > header {
+    min-height: 4.75rem !important;
+    padding: 1rem !important;
+  }
+
+  .app-dialog__body,
+  .day-edit-modal__body,
+  .dish-editor-dialog .app-dialog__body,
+  .dish-editor-dialog__body,
+  .quick-edit-modal__box [data-quick-fields],
+  .quick-edit-modal__box [data-history-edit-fields] {
+    padding: 1rem !important;
+  }
+
+  .app-dialog__footer,
+  .day-edit-modal__footer,
+  .dish-editor-dialog__footer,
+  .confirm-dialog__actions,
+  .quick-edit-modal__box > footer {
+    justify-content: stretch !important;
+    padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .app-dialog__footer .button,
+  .day-edit-modal__actions .button,
+  .dish-editor-dialog__footer .button,
+  .confirm-dialog__actions .button,
+  .quick-edit-modal__box > footer .button {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+
+  .day-edit-modal__actions,
+  .dish-editor-dialog__footer,
+  .confirm-dialog__actions {
+    width: 100% !important;
+  }
+}
