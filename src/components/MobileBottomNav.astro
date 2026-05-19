@@ -29,10 +29,10 @@ const items: NavItem[] = [
     match: ['/dashboard'],
   },
   {
-    href: getLocalizedPath('/configurar', locale),
+    href: getLocalizedPath('/planificador', locale),
     icon: 'mdi:calendar-edit',
     label: t('appNav.planning'),
-    match: ['/configurar', '/planificacion'],
+    match: ['/planificador', '/planificador-ai', '/configurar', '/planificacion'],
   },
   {
     href: getLocalizedPath('/compra', locale),
