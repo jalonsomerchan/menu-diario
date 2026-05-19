@@ -20,7 +20,7 @@ export async function generateAuthenticatedAiApiJson<T>({
   userPrompt,
   validator,
   timeoutMs,
-  fetcher = fetch,
+  fetcher = globalThis.fetch.bind(globalThis),
 }: AuthenticatedAiApiJsonOptions<T>) {
   const text = await withTimeout(
     requestAuthenticatedAiApiText({ token, projectId, systemPrompt, userPrompt, fetcher }),
