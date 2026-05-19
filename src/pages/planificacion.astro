@@ -1,18 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import AppPageShell from '../components/AppPageShell.astro';
-import PlanningAiApp from '../components/PlanningAiApp.astro';
-import { defaultLocale, siteConfig } from '../config/site';
-import { usePlanningTranslations } from '../i18n/planning';
-import { useTranslations } from '../i18n/ui';
+import { getLocalizedPath } from '../i18n/ui';
+import { defaultLocale } from '../config/site';
 
-const locale = defaultLocale;
-const t = useTranslations(locale);
-const tp = usePlanningTranslations(locale);
+return Astro.redirect(getLocalizedPath('/planificador-ai', defaultLocale), 301);
 ---
-
-<BaseLayout title={`${tp('title')} · ${siteConfig.name}`} description={tp('description')} locale={locale}>
-  <AppPageShell locale={locale} title={tp('title')} description={tp('description')}>
-    <PlanningAiApp locale={locale} />
-  </AppPageShell>
-</BaseLayout>
