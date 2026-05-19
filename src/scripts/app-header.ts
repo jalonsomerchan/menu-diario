@@ -23,8 +23,6 @@ if (root) {
     toggle?.setAttribute('aria-label', isOpen ? labels.closeMenu : labels.openMenu);
   }
 
-  toggle?.addEventListener('click', () => setMenuOpen(!(mobileMenu?.open ?? root.dataset.menuOpen === 'true')));
-
   mobileMenu?.addEventListener('toggle', () => {
     root!.dataset.menuOpen = String(mobileMenu.open);
     toggle?.setAttribute('aria-expanded', String(mobileMenu.open));

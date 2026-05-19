@@ -143,7 +143,7 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     display: grid;
     flex: 1 1 auto;
     gap: 1rem;
-    min-height: 0;
+    min-height: min(54vh, 28rem);
     overflow: auto;
     overscroll-behavior: contain;
     padding: var(--surface-padding);
@@ -219,6 +219,11 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
 
   .day-edit-modal .day-edit-card__content {
     gap: 0.9rem;
+  }
+
+  .day-edit-modal .day-card[data-day-mode='skipped'] .day-edit-card__content {
+    align-content: start;
+    min-height: clamp(20rem, 46vh, 30rem);
   }
 
   .day-edit-modal .day-edit-block {
@@ -396,6 +401,10 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
   }
 
   @media (max-width: 520px) {
+    .day-edit-modal__body {
+      min-height: min(58vh, 30rem);
+    }
+
     .day-edit-modal__footer {
       grid-template-columns: 1fr;
     }

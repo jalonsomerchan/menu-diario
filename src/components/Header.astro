@@ -67,12 +67,13 @@ const moreItems = [
           <span>{item.label}</span>
         </a>
       ))}
+
       <details class="nav-dropdown site-header__more">
         <summary>
           <Icon name="mdi:dots-horizontal-circle-outline" aria-hidden="true" />
           <span>{t('appNav.more')}</span>
         </summary>
-        <div class="nav-dropdown__list">
+        <div class="nav-dropdown__list site-header__more-panel">
           {moreItems.map((item) => (
             <a href={item.href}>
               <Icon name={item.icon} aria-hidden="true" />
@@ -85,6 +86,7 @@ const moreItems = [
           </a>
         </div>
       </details>
+
       <details class="locale-menu">
         <summary>{t('appNav.language')}</summary>
         <div class="locale-menu__list">
@@ -93,6 +95,7 @@ const moreItems = [
           ))}
         </div>
       </details>
+
       <details class="nav-dropdown nav-dropdown--settings">
         <summary>{t('nav.settings')}</summary>
         <div class="nav-dropdown__list nav-dropdown__list--settings">
@@ -110,7 +113,7 @@ const moreItems = [
     </nav>
 
     <details class="mobile-menu" data-mobile-menu>
-      <summary data-site-menu-toggle aria-expanded="false" aria-label={t('nav.main')} aria-controls={panelId}>
+      <summary data-site-menu-toggle aria-expanded="false" aria-label={t('appNav.openMenu')} aria-controls={panelId}>
         <span></span>
         <span></span>
         <span></span>
@@ -123,8 +126,10 @@ const moreItems = [
         <nav aria-label={t('nav.main')} class="mobile-menu__nav">
           {primaryItems.map((item) => (
             <a href={item.href}>
-              <Icon name={item.icon} aria-hidden="true" />
-              <span>{item.label}</span>
+              <span>
+                <Icon name={item.icon} aria-hidden="true" />
+                {item.label}
+              </span>
             </a>
           ))}
           <details class="mobile-menu__section">
@@ -132,13 +137,17 @@ const moreItems = [
             <div>
               {moreItems.map((item) => (
                 <a href={item.href}>
-                  <Icon name={item.icon} aria-hidden="true" />
-                  <span>{item.label}</span>
+                  <span>
+                    <Icon name={item.icon} aria-hidden="true" />
+                    {item.label}
+                  </span>
                 </a>
               ))}
               <a href={adminDishesPath} data-admin-link hidden>
-                <Icon name="mdi:shield-crown-outline" aria-hidden="true" />
-                <span>{t('appNav.adminDishes')}</span>
+                <span>
+                  <Icon name="mdi:shield-crown-outline" aria-hidden="true" />
+                  {t('appNav.adminDishes')}
+                </span>
               </a>
             </div>
           </details>
@@ -165,29 +174,28 @@ const moreItems = [
   </Container>
 </header>
 
-<style>
-  .site-header {
-    position: sticky;
-    top: 0;
-    z-index: 40;
+<style is:global>
+  .app-header {
     border-bottom: 1px solid var(--color-border);
-    background: color-mix(in srgb, var(--color-bg), transparent 8%);
-    backdrop-filter: blur(16px);
+    background: color-mix(in srgb, var(--color-bg), transparent 7%);
+    backdrop-filter: blur(18px);
   }
 
   .header-inner {
     display: flex;
-    min-height: 4rem;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.75rem;
+    padding-block: 0.7rem;
   }
 
   .site-brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.65rem;
-    color: inherit;
+    gap: 0.6rem;
+    min-width: 0;
+    min-height: 2.65rem;
+    color: var(--color-text);
     font-weight: 950;
     letter-spacing: -0.04em;
     text-decoration: none;
@@ -195,113 +203,147 @@ const moreItems = [
 
   .site-brand__mark {
     display: grid;
-    width: 2.35rem;
-    height: 2.35rem;
     place-items: center;
-    border-radius: 0.85rem;
-    background: var(--color-primary);
+    flex: 0 0 auto;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.8rem;
+    background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary), #fff 35%));
     color: #fff;
-    font-size: 0.84rem;
-    font-weight: 950;
-    letter-spacing: -0.05em;
-    box-shadow: 0 10px 26px rgb(15 23 42 / 0.12);
+    font-size: 0.78rem;
+    letter-spacing: -0.06em;
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary), transparent 68%);
   }
 
   .site-brand__text {
-    max-width: 10rem;
     overflow: hidden;
+    max-width: 58vw;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .main-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-muted);
+    font-size: 0.94rem;
   }
 
   .main-nav--desktop {
     display: none;
   }
 
-  .main-nav a,
-  .nav-dropdown summary,
-  .locale-menu summary,
-  .settings-trigger,
-  .mobile-menu summary {
-    min-height: 40px;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: var(--color-bg);
-    color: var(--color-text);
-    cursor: pointer;
-    font: inherit;
-    font-weight: 800;
-  }
-
-  .main-nav a,
+  .main-nav > a,
   .nav-dropdown summary,
   .locale-menu summary {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+    min-height: 2.45rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-primary);
+    cursor: pointer;
     padding: 0.45rem 0.8rem;
+    font: inherit;
+    font-weight: 850;
+    list-style: none;
     text-decoration: none;
-    transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base), transform var(--transition-base);
   }
 
-  .main-nav a:hover,
-  .nav-dropdown summary:hover,
+  .main-nav > a {
+    color: var(--color-muted);
+  }
+
+  .main-nav > a:hover,
   .locale-menu summary:hover,
-  .settings-trigger:hover,
-  .mobile-menu summary:hover {
+  .nav-dropdown summary:hover,
+  .nav-dropdown[open] summary,
+  .locale-menu[open] summary {
     border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 30%);
+    background: color-mix(in srgb, var(--color-primary), transparent 90%);
+    color: var(--color-text);
     transform: translateY(-1px);
   }
 
-  .main-nav :global(svg),
-  .mobile-menu__nav :global(svg) {
-    width: 1rem;
-    height: 1rem;
-  }
-
-  .nav-dropdown,
-  .locale-menu {
+  .locale-menu,
+  .nav-dropdown {
     position: relative;
   }
 
-  .nav-dropdown summary,
-  .locale-menu summary {
-    list-style: none;
-  }
-
-  .nav-dropdown summary::-webkit-details-marker,
   .locale-menu summary::-webkit-details-marker,
+  .nav-dropdown summary::-webkit-details-marker,
   .mobile-menu summary::-webkit-details-marker {
     display: none;
   }
 
-  .nav-dropdown__list,
-  .locale-menu__list {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    right: 0;
-    z-index: 30;
-    display: grid;
-    min-width: 14rem;
-    gap: 0.45rem;
-    border: 1px solid var(--color-border);
-    border-radius: 1.25rem;
-    background: color-mix(in srgb, var(--color-bg), transparent 4%);
-    box-shadow: 0 20px 55px rgb(15 23 42 / 0.14);
-    padding: 0.65rem;
+  .locale-menu summary::after,
+  .nav-dropdown summary::after {
+    content: '⌄';
+    margin-left: 0.35rem;
+    font-size: 0.82em;
   }
 
-  .nav-dropdown__list a,
-  .locale-menu__list a {
-    justify-content: flex-start;
-    width: 100%;
+  .locale-menu__list,
+  .nav-dropdown__list {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    z-index: 40;
+    display: grid;
+    gap: 0.2rem;
+    min-width: 10rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-bg);
+    box-shadow: 0 18px 42px rgb(15 23 42 / 0.16);
+    padding: 0.45rem;
+  }
+
+  .nav-dropdown__list {
+    right: auto;
+    left: 0;
+    min-width: 13rem;
+  }
+
+  .nav-dropdown--settings .nav-dropdown__list {
+    right: 0;
+    left: auto;
   }
 
   .nav-dropdown__list--settings {
     min-width: 16rem;
   }
 
-  .nav-dropdown__list--settings label {
+  .nav-dropdown__list a,
+  .locale-menu__list a,
+  .nav-dropdown__list button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    border: 0;
+    border-radius: 0.75rem;
+    background: transparent;
+    color: var(--color-text);
+    padding: 0.55rem 0.7rem;
+    font: inherit;
+    font-weight: 800;
+    text-align: left;
+    text-decoration: none;
+  }
+
+  .locale-menu__list a:hover,
+  .nav-dropdown__list a:hover,
+  .nav-dropdown__list button:hover {
+    background: color-mix(in srgb, var(--color-primary), transparent 88%);
+  }
+
+  .nav-dropdown__list--settings label,
+  .mobile-menu__theme {
     display: grid;
     gap: 0.4rem;
     color: var(--color-muted);
@@ -322,133 +364,232 @@ const moreItems = [
     font-weight: 750;
   }
 
-  .settings-trigger {
-    padding: 0.45rem 0.8rem;
-    color: var(--color-primary);
-  }
-
   .mobile-menu {
     position: relative;
+    z-index: 45;
+    flex: 0 0 auto;
   }
 
-  .mobile-menu summary {
+  .mobile-menu > summary {
     display: grid;
-    width: 2.7rem;
-    height: 2.7rem;
     place-items: center;
-    padding: 0;
+    gap: 0.22rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-bg), var(--color-primary) 5%);
+    box-shadow: 0 10px 28px rgb(15 23 42 / 0.08);
+    cursor: pointer;
     list-style: none;
+    touch-action: manipulation;
   }
 
-  .mobile-menu summary span {
+  .mobile-menu > summary span {
     display: block;
-    width: 1.15rem;
+    width: 1.12rem;
     height: 2px;
     border-radius: 999px;
-    background: currentColor;
+    background: var(--color-text);
+    transition: transform 0.18s ease, opacity 0.18s ease;
   }
 
-  .mobile-menu summary span + span {
-    margin-top: -0.55rem;
+  .mobile-menu[open] > summary span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .mobile-menu[open] > summary span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu[open] > summary span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
   }
 
   .mobile-menu__panel {
-    position: absolute;
-    top: calc(100% + 0.6rem);
-    right: 0;
-    z-index: 40;
+    position: fixed;
+    top: 4.35rem;
+    right: 0.75rem;
+    left: 0.75rem;
+    z-index: 44;
     display: grid;
-    width: min(21rem, calc(100vw - 2rem));
-    max-height: calc(100dvh - 5rem);
+    gap: 0.7rem;
+    max-height: calc(100dvh - 5.25rem);
     overflow: auto;
-    gap: 0.8rem;
     border: 1px solid var(--color-border);
-    border-radius: 1.5rem;
-    background: color-mix(in srgb, var(--color-bg), transparent 4%);
-    box-shadow: 0 20px 55px rgb(15 23 42 / 0.18);
-    padding: 1rem;
+    border-radius: 1.35rem;
+    background: color-mix(in srgb, var(--color-bg), var(--color-primary) 2%);
+    box-shadow: 0 24px 70px rgb(15 23 42 / 0.24);
+    padding: 0.8rem;
   }
 
   .mobile-menu__head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.25rem 0.3rem 0.55rem;
   }
 
-  .mobile-menu__head small,
-  .mobile-menu__theme span {
-    color: var(--color-muted);
-    font-weight: 800;
+  .mobile-menu__head strong {
+    font-size: 1.05rem;
+  }
+
+  .mobile-menu__head small {
+    color: var(--color-primary);
+    font-weight: 900;
   }
 
   .mobile-menu__nav,
-  .mobile-menu__section div,
-  .mobile-menu__languages,
-  .mobile-menu__theme {
+  .mobile-menu__section,
+  .mobile-menu__section > div {
     display: grid;
-    gap: 0.55rem;
+    gap: 0.35rem;
   }
 
-  .mobile-menu__nav a,
-  .mobile-menu__nav button,
-  .mobile-menu__section summary,
-  .mobile-menu__languages a,
-  .mobile-menu__logout {
-    display: inline-flex;
-    min-height: 2.75rem;
+  .mobile-menu__panel a,
+  .mobile-menu__panel button,
+  .mobile-menu__section > summary {
+    display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 0.5rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: var(--color-bg);
+    justify-content: space-between;
+    min-height: 3rem;
+    width: 100%;
+    border: 0;
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--color-bg), transparent 0%);
     color: var(--color-text);
-    padding: 0.65rem 0.8rem;
+    padding: 0.75rem 0.9rem;
     font: inherit;
-    font-weight: 800;
+    font-weight: 900;
+    list-style: none;
+    text-align: left;
     text-decoration: none;
   }
 
-  .mobile-menu__section summary {
-    cursor: pointer;
-    list-style: none;
+  .mobile-menu__panel a span,
+  .mobile-menu__nav a span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
   }
 
-  .mobile-menu__section div {
-    margin-top: 0.55rem;
-    padding-left: 0.55rem;
+  .mobile-menu__panel a::after,
+  .mobile-menu__panel button::after,
+  .mobile-menu__section > summary::after {
+    content: '›';
+    color: var(--color-muted);
+    font-size: 1.25rem;
+    line-height: 1;
   }
 
-  .mobile-menu__languages div {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
+  .mobile-menu__panel a:hover,
+  .mobile-menu__panel button:hover,
+  .mobile-menu__section > summary:hover {
+    background: color-mix(in srgb, var(--color-primary), transparent 88%);
   }
 
-  .mobile-menu__languages strong {
-    color: var(--color-primary);
-    font-size: 0.78rem;
-    font-weight: 900;
-    letter-spacing: 0.14em;
+  .mobile-menu__section[open] > summary::after {
+    transform: rotate(90deg);
+  }
+
+  .mobile-menu__section > div {
+    padding-left: 0.7rem;
+  }
+
+  .mobile-menu__section > div a {
+    min-height: 2.7rem;
+    color: var(--color-muted);
+  }
+
+  .mobile-menu__languages {
+    display: grid;
+    gap: 0.55rem;
+    margin-top: 0.1rem;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.7rem;
+  }
+
+  .mobile-menu__languages > strong {
+    padding: 0 0.3rem;
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
+  .mobile-menu__languages > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
   .mobile-menu__languages a {
-    min-height: 2.35rem;
-    padding: 0.45rem 0.7rem;
+    justify-content: center;
+    min-height: 2.55rem;
+    padding: 0.55rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .mobile-menu__languages a::after {
+    display: none;
+  }
+
+  .mobile-menu__logout {
+    justify-content: center;
+  }
+
+  .main-nav :global(svg),
+  .mobile-menu__nav :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  @media (min-width: 760px) {
+    .site-brand__text {
+      max-width: none;
+    }
+
+    .header-inner {
+      padding-block: 1rem;
+    }
   }
 
   @media (min-width: 980px) {
     .main-nav--desktop {
       display: flex;
-      align-items: center;
-      gap: 0.45rem;
     }
 
     .mobile-menu {
       display: none;
     }
+  }
+
+  @media (max-width: 380px) {
+    .site-brand__text {
+      max-width: 46vw;
+    }
+
+    .site-brand__mark {
+      width: 2.1rem;
+      height: 2.1rem;
+    }
+
+    .mobile-menu__languages > div {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .mobile-menu__panel {
+      box-shadow: 0 24px 70px rgb(0 0 0 / 0.42);
+    }
+  }
+
+  :root[data-theme='dark'] .mobile-menu__panel {
+    box-shadow: 0 24px 70px rgb(0 0 0 / 0.42);
   }
 </style>
 
