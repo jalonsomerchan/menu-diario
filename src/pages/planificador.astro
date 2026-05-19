@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AppPageShell from '../components/AppPageShell.astro';
+import ConfiguratorApp from '../components/ConfiguratorApp.astro';
+import { defaultLocale, siteConfig } from '../config/site';
+import { useTranslations } from '../i18n/ui';
+
+const locale = defaultLocale;
+const t = useTranslations(locale);
+---
+
+<BaseLayout title={`${t('dashboard.configure')} · ${siteConfig.name}`} description={t('dashboard.configureDescription')} locale={locale}>
+  <AppPageShell locale={locale} title={t('dashboard.configure')} description={t('dashboard.configureDescription')} showHeader={false}>
+    <ConfiguratorApp locale={locale} />
+  </AppPageShell>
+</BaseLayout>

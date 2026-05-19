@@ -18,9 +18,12 @@ describe('mobile bottom navigation', () => {
     assert.match(layout, /MobileBottomNav/);
     assert.match(layout, /mobile-bottom-nav\.css/);
     assert.match(component, /getLocalizedPath\('\/dashboard'/);
-    assert.match(component, /getLocalizedPath\('\/configurar'/);
+    assert.match(component, /getLocalizedPath\('\/planificador'/);
     assert.match(component, /getLocalizedPath\('\/compra'/);
     assert.match(component, /getLocalizedPath\('\/tuppers'/);
+    assert.match(component, /'\/planificador-ai'/);
+    assert.match(component, /'\/configurar'/);
+    assert.match(component, /'\/planificacion'/);
     assert.match(component, /appNav\.planning/);
     assert.match(component, /aria-current/);
     assert.match(styles, /repeat\(4, minmax\(0, 1fr\)\)/);
