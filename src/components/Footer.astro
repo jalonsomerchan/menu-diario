@@ -1,74 +1,39 @@
 ---
 import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
-import { getLocalizedPath, useTranslations } from '../i18n/ui';
-import { usePlanningTranslations } from '../i18n/planning';
-import { usePublicPageCopy } from '../i18n/public-pages';
-import { useTupperTranslations } from '../i18n/tuppers';
+import { footerGames, footerTools, formatProjectLabel, getFooterLabels } from '../i18n/footer-projects';
 
 interface Props {
   locale: Locale;
 }
 
 const { locale } = Astro.props;
-const t = useTranslations(locale);
-const tp = usePublicPageCopy(locale);
-const tplanning = usePlanningTranslations(locale);
-const ttuppers = useTupperTranslations(locale);
-const year = new Date().getFullYear();
-const routeLabel = (path: string) => path.replace(/\/$/, '').replace(/^\//, '') || siteConfig.url.replace(/^https?:\/\//, '');
-
-const footerGroups = [
-  {
-    title: t('appNav.more'),
-    links: [
-      { href: getLocalizedPath('/', locale), label: t('nav.home') },
-      { href: getLocalizedPath('/dashboard', locale), label: t('appNav.dashboard') },
-      { href: getLocalizedPath('/configurar', locale), label: t('appNav.planning') },
-      { href: getLocalizedPath('/compra', locale), label: t('appNav.shopping') },
-    ],
-  },
-  {
-    title: t('dashboard.shortcuts'),
-    links: [
-      { href: getLocalizedPath('/planificacion', locale), label: tplanning('nav') },
-      { href: getLocalizedPath('/mis-platos', locale), label: t('appNav.dishes') },
-      { href: getLocalizedPath('/tuppers', locale), label: ttuppers('nav') },
-      { href: getLocalizedPath('/historico', locale), label: t('appNav.history') },
-    ],
-  },
-  {
-    title: t('appNav.settings'),
-    links: [
-      { href: getLocalizedPath('/ajustes', locale), label: t('appNav.settings') },
-      { href: getLocalizedPath('/como-funciona', locale), label: t('public.howItWorks.nav') },
-      { href: getLocalizedPath('/acerca-de', locale), label: tp('footerAbout') },
-      { href: getLocalizedPath('/faq', locale), label: tp('footerFaq') },
-    ],
-  },
+const labels = getFooterLabels(locale);
+const projectGroups = [
+  { title: labels.tools, projects: footerTools },
+  { title: labels.games, projects: footerGames },
 ];
 ---
 
 <footer class="site-footer">
   <Container class="site-footer__inner">
     <section class="site-footer__brand" aria-labelledby="site-footer-title">
-      <p class="site-footer__eyebrow">{t('home.eyebrow')}</p>
-      <h2 id="site-footer-title">{siteConfig.name}</h2>
-      <p>{t('site.description')}</p>
-      <strong>{t('footer.createdWith')}</strong>
-      <small>© {year} {siteConfig.name}</small>
+      <p class="site-footer__eyebrow">{labels.eyebrow}</p>
+      <h2 id="site-footer-title">{labels.title}</h2>
+      <p>{labels.copy}</p>
+      <strong>{siteConfig.name}</strong>
     </section>
 
-    <nav class="site-footer__projects" aria-label={t('nav.main')}>
-      {footerGroups.map((group) => (
+    <nav class="site-footer__projects" aria-label={labels.title}>
+      {projectGroups.map((group) => (
         <section class="site-footer__group" aria-labelledby={`footer-${group.title.toLowerCase().replaceAll(' ', '-')}`}>
           <h3 id={`footer-${group.title.toLowerCase().replaceAll(' ', '-')}`}>{group.title}</h3>
           <ul>
-            {group.links.map((link) => (
+            {group.projects.map((project) => (
               <li>
-                <a href={link.href}>
-                  <span>{link.label}</span>
-                  <small>{routeLabel(link.href)}</small>
+                <a href={project.href} target="_blank" rel="noopener noreferrer" aria-label={formatProjectLabel(labels.openProject, project.name)}>
+                  <span>{project.name}</span>
+                  <small>{new URL(project.href).hostname}</small>
                 </a>
               </li>
             ))}
@@ -239,20 +204,6 @@ const footerGroups = [
     .site-footer__projects {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-items: start;
-    }
-
-    .site-footer__group:last-child:nth-child(odd) {
-      grid-column: 1 / -1;
-    }
-  }
-
-  @media (min-width: 1120px) {
-    .site-footer__projects {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .site-footer__group:last-child:nth-child(odd) {
-      grid-column: auto;
     }
   }
 
