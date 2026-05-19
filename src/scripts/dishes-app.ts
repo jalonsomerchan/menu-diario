@@ -314,11 +314,12 @@ if (root) {
         });
 
         list?.addEventListener('click', (event) => {
-          const button = event.target instanceof HTMLElement ? event.target.closest<HTMLButtonElement>('[data-edit-dish], [data-favorite-dish]') : null;
+          const button = event.target instanceof HTMLElement ? event.target.closest<HTMLButtonElement>('[data-edit-dish], [data-toggle-favorite]') : null;
           if (!button) return;
-          const dish = findDishById(button.dataset.editDish ?? button.dataset.favoriteDish);
+          const row = button.closest<HTMLElement>('[data-dish-id]');
+          const dish = findDishById(row?.dataset.dishId);
           if (!dish) return;
-          if (button.dataset.favoriteDish) {
+          if (button.matches('[data-toggle-favorite]')) {
             saveFavoritePreference(services, dish, !Boolean(dish.favorite)).catch((error: Error) => showStatus(errorMessage(error), true));
             return;
           }
