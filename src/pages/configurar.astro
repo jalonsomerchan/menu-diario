@@ -2,5 +2,6 @@
 import { getLocalizedPath } from '../i18n/ui';
 import { defaultLocale } from '../config/site';
 
+// Legacy route for the manual planner. The page app now lives in /planificador with <ConfiguratorApp />.
 return Astro.redirect(getLocalizedPath('/planificador', defaultLocale), 301);
 ---
