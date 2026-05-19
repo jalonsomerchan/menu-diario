@@ -1,9 +1,6 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import AppPageShell from '../../components/AppPageShell.astro';
-import ConfiguratorApp from '../../components/ConfiguratorApp.astro';
-import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
-import { isLocale, useTranslations } from '../../i18n/ui';
+import { defaultLocale, locales, type Locale } from '../../config/site';
+import { getLocalizedPath, isLocale } from '../../i18n/ui';
 
 export function getStaticPaths() {
   return locales
@@ -13,11 +10,5 @@ export function getStaticPaths() {
 
 const localeParam = Astro.params.locale;
 const locale: Locale = isLocale(localeParam) ? localeParam : defaultLocale;
-const t = useTranslations(locale);
+return Astro.redirect(getLocalizedPath('/planificador', locale), 301);
 ---
-
-<BaseLayout title={`${t('dashboard.configure')} · ${siteConfig.name}`} description={t('dashboard.configureDescription')} locale={locale}>
-  <AppPageShell locale={locale} title={t('dashboard.configure')} description={t('dashboard.configureDescription')} showHeader={false}>
-    <ConfiguratorApp locale={locale} />
-  </AppPageShell>
-</BaseLayout>
