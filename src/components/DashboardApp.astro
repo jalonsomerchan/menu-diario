@@ -28,8 +28,6 @@ const labels = {
   nextSeven: t('dashboard.nextSeven'),
   configure: t('dashboard.configure'),
   configureDescription: t('dashboard.configureDescription'),
-  dashboardShortcuts: t('dashboard.shortcuts'),
-  dashboardConfigureHint: t('dashboard.configureCardHint'),
   editDay: t('dashboard.editDay'),
   quickEdit: t('dashboard.quickEdit'),
   deleteDay: t('dashboard.deleteDay'),
@@ -96,14 +94,6 @@ const labels = {
       </div>
     </section>
 
-    <section class="dashboard-action-strip" aria-label={labels.dashboardShortcuts}>
-      <a class="dashboard-action-card" href={configurePath}>
-        <p class="menu-app__eyebrow">{labels.configure}</p>
-        <h2>{labels.configure}</h2>
-        <p>{labels.dashboardConfigureHint}</p>
-      </a>
-    </section>
-
     <section class="expiry-banner" data-expiry-banner hidden role="status" aria-live="polite">
       <strong>{labels.tuppersExpiryAlert}</strong>
       <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
@@ -138,31 +128,6 @@ const labels = {
 
   .today-hero__notes {
     margin-top: 0.9rem;
-  }
-
-  .dashboard-action-strip {
-    display: grid;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .dashboard-action-card {
-    display: grid;
-    gap: 0.35rem;
-    padding: var(--surface-padding);
-    padding-bottom: max(var(--surface-padding), 1rem);
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
-    border-radius: var(--radius-2xl);
-    background: var(--panel-background);
-    box-shadow: var(--shadow-xs);
-    text-decoration: none;
-  }
-
-  .dashboard-action-card h2 {
-    margin: 0;
-    font-size: clamp(1.2rem, 5vw, 1.75rem);
-    line-height: 1;
-    letter-spacing: -0.04em;
   }
 
   .planner-day-card__notes {
