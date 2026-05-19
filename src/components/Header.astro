@@ -68,12 +68,12 @@ const moreItems = [
         </a>
       ))}
 
-      <details class="nav-dropdown">
+      <details class="nav-dropdown site-header__more">
         <summary>
           <Icon name="mdi:dots-horizontal-circle-outline" aria-hidden="true" />
           <span>{t('appNav.more')}</span>
         </summary>
-        <div class="nav-dropdown__list">
+        <div class="nav-dropdown__list site-header__more-panel">
           {moreItems.map((item) => (
             <a href={item.href}>
               <Icon name={item.icon} aria-hidden="true" />
