@@ -34,6 +34,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   const fields = options.root.querySelector<HTMLElement>('[data-day-edit-fields]');
   const title = options.root.querySelector<HTMLElement>('[data-day-edit-title]');
   const subtitle = options.root.querySelector<HTMLElement>('[data-day-edit-subtitle]');
+  const dayNumber = options.root.querySelector<HTMLElement>('[data-day-edit-number]');
   const saveButton = options.root.querySelector<HTMLButtonElement>('[data-day-edit-save]');
   const saveState = options.root.querySelector<HTMLElement>('[data-day-edit-save-state]');
   const clearButton = options.root.querySelector<HTMLButtonElement>('[data-day-edit-clear]');
@@ -61,13 +62,37 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     return value ? `${value.charAt(0).toLocaleUpperCase()}${value.slice(1)}` : value;
   }
 
+  function getLocale() {
+    return document.documentElement.lang || navigator.language || 'es-ES';
+  }
+
+  function formatFallbackDateLabel(dayKey: string) {
+    const date = new Date(`${dayKey}T00:00:00`);
+    const locale = getLocale();
+
+    if (locale.startsWith('es')) {
+      const month = new Intl.DateTimeFormat(locale, { month: 'long' }).format(date);
+      return `${options.getDayNumber(dayKey)} de ${capitalizeFirst(month)}`;
+    }
+
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(date);
+  }
+
+  function formatDateLabel(dayKey: string) {
+    return options.getDateLabel?.(dayKey) ?? formatFallbackDateLabel(dayKey);
+  }
+
   function formatModalTitle(dayKey: string) {
-    return [capitalizeFirst(options.getWeekday(dayKey)), options.getDateLabel?.(dayKey)].filter(Boolean).join(' ');
+    return [capitalizeFirst(options.getWeekday(dayKey)), formatDateLabel(dayKey)].filter(Boolean).join(' ');
   }
 
   function setHeading(dayKey: string) {
     if (title) {
       title.textContent = formatModalTitle(dayKey);
+    }
+
+    if (dayNumber) {
+      dayNumber.textContent = options.getDayNumber(dayKey);
     }
 
     if (subtitle) {
@@ -147,7 +172,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
       dayKey,
       dayNumber: options.getDayNumber(dayKey),
       weekday: options.getWeekday(dayKey),
-      dateLabel: options.getDateLabel?.(dayKey),
+      dateLabel: formatDateLabel(dayKey),
       day: draftDay,
       enabledMeals: options.getEnabledMeals(),
       dishes: options.getDishes(),
