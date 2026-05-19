@@ -1,14 +1,11 @@
 .tuppers-app { display: grid; gap: 1rem; max-width: none; }
 
-.tuppers-hero { display: grid; gap: 1rem; margin-bottom: 0; padding: var(--surface-padding-lg); padding-bottom: max(var(--surface-padding-lg), 1rem); border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 70%); background: var(--panel-background-strong); }
-.tuppers-hero__copy { display: grid; gap: 0.45rem; }
-.tuppers-hero__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
-.tuppers-hero h2 { margin: 0; font-size: clamp(2rem, 8vw, 3.4rem); line-height: 0.95; letter-spacing: -0.06em; }
-.tuppers-hero p { margin: 0; color: var(--color-muted); font-weight: 700; line-height: var(--surface-copy-line-height); letter-spacing: var(--surface-copy-letter-spacing); }
+.tuppers-page-header { display: grid; gap: 1rem; margin-bottom: 1.2rem; }
+.tuppers-page-header__copy { display: grid; gap: 0.55rem; }
+.tuppers-page-header h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.8rem); line-height: 0.94; letter-spacing: -0.07em; }
+.tuppers-page-header p { margin: 0; max-width: 72ch; color: var(--color-muted); font-size: clamp(1rem, 2.4vw, 1.15rem); line-height: var(--surface-copy-line-height); letter-spacing: var(--surface-copy-letter-spacing); }
 .expiry-banner[hidden] { display: none; }
 
-.tuppers-overview-card { display: grid; gap: 0.55rem; }
-.tuppers-overview-card h3 { margin: 0; font-size: clamp(1.25rem, 4vw, 1.7rem); letter-spacing: -0.04em; }
 .tuppers-form { display: grid; gap: 0.8rem; }
 .tuppers-form label { display: grid; gap: 0.35rem; color: var(--color-muted); font-size: 0.88rem; font-weight: 850; }
 .tuppers-form input,
@@ -51,14 +48,12 @@
 }
 
 @media (min-width: 720px) {
+  .tuppers-page-header { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .tuppers-page-header .button { margin-top: 0.15rem; }
   .tuppers-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tuppers-form__wide { grid-column: 1 / -1; }
   .tupper-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tupper-assign { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
-  .tuppers-hero {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-  }
 }
 
 @media (min-width: 1024px) {
