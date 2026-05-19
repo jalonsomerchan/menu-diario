@@ -16,6 +16,7 @@ function readJson(path) {
 describe('Firebase AI foundation', () => {
   it('keeps modular AI foundation files available', () => {
     [
+      'src/lib/ai/authenticated-api-client.ts',
       'src/lib/ai/client.ts',
       'src/lib/ai/config.ts',
       'src/lib/ai/errors.ts',
@@ -37,13 +38,13 @@ describe('Firebase AI foundation', () => {
     const envExample = readText('.env.example');
     const config = readText('src/lib/ai/config.ts');
     const flags = readText('src/lib/ai/flags.ts');
+    const apiClient = readText('src/lib/ai/authenticated-api-client.ts');
 
     [
       'PUBLIC_AI_ENABLED=false',
       'PUBLIC_AI_MENU_SUGGESTIONS_ENABLED=false',
       'PUBLIC_AI_SHOPPING_LIST_ENABLED=false',
       'PUBLIC_AI_REMOTE_CONFIG_ENABLED=false',
-      'PUBLIC_AI_API_ENDPOINT=https://alon.one/api-ia/auth.php',
       'PUBLIC_FIREBASE_AI_MODEL=gemini-2.5-flash-lite',
       'PUBLIC_FIREBASE_AI_TEMPERATURE=0.35',
       'PUBLIC_FIREBASE_AI_TOP_P=0.9',
@@ -53,9 +54,10 @@ describe('Firebase AI foundation', () => {
       'PUBLIC_AI_MAX_USER_DAILY_REQUESTS=20',
     ].forEach((key) => assert.ok(envExample.includes(key), `.env.example should include ${key}`));
 
-    assert.match(config, /aiApiConfig/);
-    assert.match(config, /PUBLIC_AI_API_ENDPOINT/);
-    assert.match(config, /https:\/\/alon\.one\/api-ia\/auth\.php/);
+    assert.doesNotMatch(envExample, /PUBLIC_AI_API_ENDPOINT/);
+    assert.doesNotMatch(config, /PUBLIC_AI_API_ENDPOINT/);
+    assert.match(apiClient, /authenticatedAiApiEndpoint/);
+    assert.match(apiClient, /https:\/\/alon\.one\/api-ia\/auth\.php/);
     assert.match(config, /aiGenerationConfig/);
     assert.match(config, /aiPromptConfig/);
     assert.match(config, /aiClientLimits/);
@@ -65,29 +67,37 @@ describe('Firebase AI foundation', () => {
     assert.match(flags, /ai_shopping_list_enabled/);
   });
 
-  it('keeps authenticated AI API wrapper guarded by flags, token auth, timeout, JSON validation and safe logs', () => {
+  it('keeps reusable authenticated AI API client guarded by token auth, project id, timeout and JSON validation', () => {
     const client = readText('src/lib/ai/client.ts');
+    const apiClient = readText('src/lib/ai/authenticated-api-client.ts');
     const json = readText('src/lib/ai/json.ts');
     const errors = readText('src/lib/ai/errors.ts');
 
+    assert.match(apiClient, /generateAuthenticatedAiApiJson/);
+    assert.match(apiClient, /authenticatedAiApiEndpoint/);
+    assert.match(apiClient, /token:\s*string/);
+    assert.match(apiClient, /projectId:\s*string/);
+    assert.match(apiClient, /Authorization:\s*'Bearer ' \+ input\.token/);
+    assert.match(apiClient, /application\/x-www-form-urlencoded/);
+    assert.match(apiClient, /project_id:\s*input\.projectId/);
+    assert.match(apiClient, /system_prompt:\s*input\.systemPrompt/);
+    assert.match(apiClient, /user_prompt:\s*input\.userPrompt/);
+    assert.match(apiClient, /withTimeout/);
+    assert.match(apiClient, /parseValidatedJson/);
+    assert.match(apiClient, /status === 401 \|\| status === 403/);
+
     assert.match(client, /generateAuthenticatedAiJson/);
     assert.match(client, /generateGeminiJson/);
-    assert.match(client, /aiApiConfig\.endpoint/);
+    assert.match(client, /generateAuthenticatedAiApiJson/);
     assert.match(client, /getFirebaseServices/);
+    assert.match(client, /getFirebaseConfig\(\)\.projectId/);
     assert.match(client, /currentUser/);
     assert.match(client, /getIdToken/);
-    assert.match(client, /Authorization:\s*`Bearer \$\{token\}`/);
-    assert.match(client, /application\/x-www-form-urlencoded/);
-    assert.match(client, /system_prompt/);
-    assert.match(client, /user_prompt/);
     assert.match(client, /hasFirebaseConfig/);
     assert.match(client, /isAiAvailable/);
     assert.match(client, /assertFirebaseAppCheckReadyForAi/);
-    assert.match(client, /withTimeout/);
-    assert.match(client, /parseValidatedJson/);
     assert.match(client, /assertAiClientLimit/);
     assert.match(client, /registerAiClientUse/);
-    assert.match(client, /status === 401 \|\| status === 403/);
     assert.match(errors, /console\.warn\('\[ai\]'/);
     assert.match(json, /JSON\.parse/);
     assert.match(json, /stripJsonFence/);
@@ -151,11 +161,13 @@ describe('Firebase AI foundation', () => {
     assert.match(firebaseDocs, /shoppingLists/);
     assert.match(aiApiDocs, /API autenticada de IA/);
     assert.match(aiApiDocs, /https:\/\/alon\.one\/api-ia\/auth\.php/);
-    assert.match(aiApiDocs, /PUBLIC_AI_API_ENDPOINT/);
+    assert.match(aiApiDocs, /src\/lib\/ai\/authenticated-api-client\.ts/);
+    assert.match(aiApiDocs, /project_id/);
     assert.match(aiApiDocs, /Authorization: Bearer/);
     assert.match(aiApiDocs, /application\/x-www-form-urlencoded/);
     assert.match(aiApiDocs, /system_prompt/);
     assert.match(aiApiDocs, /user_prompt/);
+    assert.doesNotMatch(aiApiDocs, /PUBLIC_AI_API_ENDPOINT/);
     assert.match(readme, /PUBLIC_AI_ENABLED/);
     assert.match(readme, /comidas pendientes/);
     assert.match(readme, /lista de la compra/i);
