@@ -87,11 +87,12 @@ describe('Firebase AI foundation', () => {
     assert.match(apiClient, /project_id:\s*input\.projectId/);
     assert.match(apiClient, /system_prompt:\s*input\.systemPrompt/);
     assert.match(apiClient, /user_prompt:\s*input\.userPrompt/);
-    assert.match(apiClient, /options\[temperature\]/);
-    assert.match(apiClient, /options\[topP\]/);
-    assert.match(apiClient, /options\[maxOutputTokens\]/);
-    assert.match(apiClient, /options\[response_format\]\[type\]/);
-    assert.match(apiClient, /options\[response_mime_type\]/);
+    assert.match(apiClient, /appendOption\(body, 'temperature', options\.temperature\)/);
+    assert.match(apiClient, /appendOption\(body, 'topP', options\.topP\)/);
+    assert.match(apiClient, /appendOption\(body, 'maxOutputTokens', options\.maxOutputTokens\)/);
+    assert.match(apiClient, /body\.set\('options\[response_format\]\[type\]', options\.responseFormat\.type\)/);
+    assert.match(apiClient, /appendOption\(body, 'response_mime_type', options\.responseMimeType\)/);
+    assert.match(apiClient, /body\.set\(`options\[\$\{name\}\]`, String\(value\)\)/);
     assert.match(apiClient, /json_object/);
     assert.match(apiClient, /application\/json/);
     assert.match(apiClient, /withTimeout/);
