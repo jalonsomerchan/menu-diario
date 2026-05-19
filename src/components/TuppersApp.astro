@@ -2,7 +2,7 @@
 import ConfirmDialog from './ConfirmDialog.astro';
 import type { Locale } from '../config/site';
 import { useTupperTranslations } from '../i18n/tuppers';
-import { getLocalizedPath, useTranslations } from '../i18n/ui';
+import { useTranslations } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -11,7 +11,6 @@ interface Props {
 const { locale } = Astro.props;
 const t = useTranslations(locale);
 const tt = useTupperTranslations(locale);
-const dashboardPath = getLocalizedPath('/dashboard', locale);
 const labels = {
   configMissing: t('menu.configMissing'),
   loading: t('dashboard.loading'),
@@ -85,8 +84,6 @@ const labels = {
   breakfast: t('dashboard.breakfast'),
   lunch: t('dashboard.lunch'),
   dinner: t('dashboard.dinner'),
-  backDashboard: t('dashboard.backDashboard'),
-  dashboardPath,
 };
 ---
 
@@ -95,20 +92,16 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>
-    <header class="tuppers-hero app-panel">
-      <div class="tuppers-hero__actions">
-        <button class="button button--primary" type="button" data-open-create>{labels.openCreate}</button>
-        <a class="button button--ghost button--small" href={dashboardPath}>{labels.backDashboard}</a>
+    <header class="tuppers-page-header">
+      <div class="tuppers-page-header__copy">
+        <h1>{labels.title}</h1>
+        <p>{labels.description}</p>
       </div>
+      <button class="button button--primary" type="button" data-open-create>{labels.openCreate}</button>
     </header>
 
     <section class="expiry-banner" data-expiry-alert hidden role="status" aria-live="polite">
       <strong>{labels.expiryAlert}</strong>
-    </section>
-
-    <section class="app-panel tuppers-overview-card" aria-labelledby="tuppers-overview-title">
-      <h3 id="tuppers-overview-title">{labels.createTitle}</h3>
-      <p>{labels.createDescription}</p>
     </section>
 
     <section class="dashboard-section" aria-labelledby="tuppers-list-title">
