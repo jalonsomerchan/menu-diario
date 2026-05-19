@@ -37,19 +37,28 @@ async function requestAuthenticatedAiApiText(input: {
   userPrompt: string;
   fetcher: typeof fetch;
 }) {
-  const response = await input.fetcher(authenticatedAiApiEndpoint, {
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer ' + input.token,
-      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-      Accept: 'application/json',
-    },
-    body: new URLSearchParams({
-      project_id: input.projectId,
-      system_prompt: input.systemPrompt,
-      user_prompt: input.userPrompt,
-    }),
-  });
+  let response: Response;
+
+  try {
+    response = await input.fetcher(authenticatedAiApiEndpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + input.token,
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        Accept: 'application/json',
+      },
+      body: new URLSearchParams({
+        project_id: input.projectId,
+        system_prompt: input.systemPrompt,
+        user_prompt: input.userPrompt,
+      }),
+    });
+  } catch (error) {
+    throw new AiClientError('request-failed', 'Authenticated AI API network request failed.', {
+      retryable: true,
+      cause: error,
+    });
+  }
 
   const text = await response.text();
 

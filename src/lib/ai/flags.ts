@@ -6,10 +6,10 @@ export type AiFeatureFlags = {
 };
 
 const envFlags: AiFeatureFlags = {
-  aiEnabled: import.meta.env.PUBLIC_AI_ENABLED === 'true',
-  menuSuggestionsEnabled: import.meta.env.PUBLIC_AI_MENU_SUGGESTIONS_ENABLED === 'true',
-  shoppingListEnabled: import.meta.env.PUBLIC_AI_SHOPPING_LIST_ENABLED === 'true',
-  remoteConfigEnabled: import.meta.env.PUBLIC_AI_REMOTE_CONFIG_ENABLED === 'true',
+  aiEnabled: readEnvBoolean(import.meta.env.PUBLIC_AI_ENABLED, true),
+  menuSuggestionsEnabled: readEnvBoolean(import.meta.env.PUBLIC_AI_MENU_SUGGESTIONS_ENABLED, true),
+  shoppingListEnabled: readEnvBoolean(import.meta.env.PUBLIC_AI_SHOPPING_LIST_ENABLED, false),
+  remoteConfigEnabled: readEnvBoolean(import.meta.env.PUBLIC_AI_REMOTE_CONFIG_ENABLED, false),
 };
 
 const remoteFlagKeys: Record<keyof Omit<AiFeatureFlags, 'remoteConfigEnabled'>, string> = {
@@ -52,4 +52,12 @@ function readBoolean(value: unknown, fallback: boolean) {
   }
 
   return fallback;
+}
+
+function readEnvBoolean(value: unknown, fallback: boolean) {
+  if (value === undefined || value === '') {
+    return fallback;
+  }
+
+  return readBoolean(value, fallback);
 }
