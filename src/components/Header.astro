@@ -53,80 +53,545 @@ const moreItems = [
 ] as const;
 ---
 
-<header class="site-header" data-site-header data-labels={JSON.stringify(labels)}>
-  <Container class="site-header__container">
-    <div class="site-header__bar">
-      <a class="site-header__brand" href={homePath} aria-label={siteConfig.name}>{siteConfig.name}</a>
-      <button
-        class="site-header__toggle"
-        type="button"
-        data-site-menu-toggle
-        aria-expanded="false"
-        aria-controls={panelId}
-        aria-label={t('appNav.openMenu')}
-      >
-        <Icon name="mdi:menu" aria-hidden="true" />
-      </button>
-    </div>
+<header class="site-header app-header" data-site-header data-labels={JSON.stringify(labels)}>
+  <Container class="header-inner">
+    <a class="site-brand" href={homePath} aria-label={siteConfig.name}>
+      <span class="site-brand__mark">MD</span>
+      <span class="site-brand__text">{siteConfig.name}</span>
+    </a>
 
-    <div class="site-header__panel" id={panelId} data-site-menu-panel>
-      <nav class="site-header__nav" aria-label={t('nav.main')}>
-        {primaryItems.map((item) => (
-          <a class="site-header__nav-link" href={item.href}>
-            <Icon name={item.icon} aria-hidden="true" />
-            {item.label}
+    <nav aria-label={t('nav.main')} class="main-nav main-nav--desktop">
+      {primaryItems.map((item) => (
+        <a href={item.href}>
+          <Icon name={item.icon} aria-hidden="true" />
+          <span>{item.label}</span>
+        </a>
+      ))}
+
+      <details class="nav-dropdown">
+        <summary>
+          <Icon name="mdi:dots-horizontal-circle-outline" aria-hidden="true" />
+          <span>{t('appNav.more')}</span>
+        </summary>
+        <div class="nav-dropdown__list">
+          {moreItems.map((item) => (
+            <a href={item.href}>
+              <Icon name={item.icon} aria-hidden="true" />
+              <span>{item.label}</span>
+            </a>
+          ))}
+          <a href={adminDishesPath} data-admin-link hidden>
+            <Icon name="mdi:shield-crown-outline" aria-hidden="true" />
+            <span>{t('appNav.adminDishes')}</span>
           </a>
-        ))}
-        <details class="site-header__more">
-          <summary class="site-header__more-trigger">
-            <Icon name="mdi:dots-horizontal-circle-outline" aria-hidden="true" />
-            {t('appNav.more')}
-          </summary>
+        </div>
+      </details>
 
-          <div class="site-header__more-panel">
-            <div class="site-header__more-links">
+      <details class="locale-menu">
+        <summary>{t('appNav.language')}</summary>
+        <div class="locale-menu__list">
+          {alternateLocales.map((alternateLocale) => (
+            <a href={getLocalizedEquivalentPath(Astro.url.pathname, alternateLocale)} hreflang={alternateLocale}>{localeLabels[alternateLocale]}</a>
+          ))}
+        </div>
+      </details>
+
+      <details class="nav-dropdown nav-dropdown--settings">
+        <summary>{t('nav.settings')}</summary>
+        <div class="nav-dropdown__list nav-dropdown__list--settings">
+          <label>
+            <span>{t('appNav.browserTheme')}</span>
+            <select data-global-theme aria-label={t('dashboard.theme')}>
+              <option value="system">{t('dashboard.themeSystem')}</option>
+              <option value="light">{t('dashboard.themeLight')}</option>
+              <option value="dark">{t('dashboard.themeDark')}</option>
+            </select>
+          </label>
+          <button class="settings-trigger" type="button" data-global-logout hidden>{t('menu.signOut')}</button>
+        </div>
+      </details>
+    </nav>
+
+    <details class="mobile-menu" data-mobile-menu>
+      <summary data-site-menu-toggle aria-expanded="false" aria-label={t('appNav.openMenu')} aria-controls={panelId}>
+        <span></span>
+        <span></span>
+        <span></span>
+      </summary>
+      <div id={panelId} class="mobile-menu__panel" data-site-menu-panel>
+        <div class="mobile-menu__head">
+          <strong>{t('nav.main')}</strong>
+          <small>{localeLabels[locale]}</small>
+        </div>
+        <nav aria-label={t('nav.main')} class="mobile-menu__nav">
+          {primaryItems.map((item) => (
+            <a href={item.href}>
+              <span>
+                <Icon name={item.icon} aria-hidden="true" />
+                {item.label}
+              </span>
+            </a>
+          ))}
+          <details class="mobile-menu__section">
+            <summary>{t('appNav.more')}</summary>
+            <div>
               {moreItems.map((item) => (
-                <a class="site-header__nav-link" href={item.href}>
-                  <Icon name={item.icon} aria-hidden="true" />
-                  {item.label}
+                <a href={item.href}>
+                  <span>
+                    <Icon name={item.icon} aria-hidden="true" />
+                    {item.label}
+                  </span>
                 </a>
               ))}
-              <a class="site-header__nav-link" href={adminDishesPath} data-admin-link hidden>
-                <Icon name="mdi:shield-crown-outline" aria-hidden="true" />
-                {t('appNav.adminDishes')}
+              <a href={adminDishesPath} data-admin-link hidden>
+                <span>
+                  <Icon name="mdi:shield-crown-outline" aria-hidden="true" />
+                  {t('appNav.adminDishes')}
+                </span>
               </a>
             </div>
-
-            <div class="site-header__more-section">
-              <p class="site-header__more-label">{t('appNav.language')}</p>
-              <div class="site-header__locales">
-                {alternateLocales.map((alternateLocale) => (
-                  <a href={getLocalizedEquivalentPath(Astro.url.pathname, alternateLocale)} hreflang={alternateLocale}>
-                    {localeLabels[alternateLocale]}
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            <label class="site-header__more-section">
-              <span class="site-header__more-label">{t('appNav.browserTheme')}</span>
-              <select data-global-theme aria-label={t('dashboard.theme')}>
-                <option value="system">{t('dashboard.themeSystem')}</option>
-                <option value="light">{t('dashboard.themeLight')}</option>
-                <option value="dark">{t('dashboard.themeDark')}</option>
-              </select>
-            </label>
-
-            <button class="button button--ghost button--small site-header__logout" type="button" data-global-logout hidden>
-              <Icon name="mdi:logout" aria-hidden="true" />
-              {t('menu.signOut')}
-            </button>
+          </details>
+        </nav>
+        <div class="mobile-menu__languages" aria-label={t('appNav.language')}>
+          <strong>{t('appNav.language')}</strong>
+          <div>
+            {alternateLocales.map((alternateLocale) => (
+              <a href={getLocalizedEquivalentPath(Astro.url.pathname, alternateLocale)} hreflang={alternateLocale}>{localeLabels[alternateLocale]}</a>
+            ))}
           </div>
-        </details>
-      </nav>
-    </div>
+        </div>
+        <label class="mobile-menu__theme">
+          <span>{t('appNav.browserTheme')}</span>
+          <select data-global-theme aria-label={t('dashboard.theme')}>
+            <option value="system">{t('dashboard.themeSystem')}</option>
+            <option value="light">{t('dashboard.themeLight')}</option>
+            <option value="dark">{t('dashboard.themeDark')}</option>
+          </select>
+        </label>
+        <button class="settings-trigger mobile-menu__logout" type="button" data-global-logout hidden>{t('menu.signOut')}</button>
+      </div>
+    </details>
   </Container>
 </header>
+
+<style is:global>
+  .app-header {
+    border-bottom: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-bg), transparent 7%);
+    backdrop-filter: blur(18px);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-block: 0.7rem;
+  }
+
+  .site-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+    min-height: 2.65rem;
+    color: var(--color-text);
+    font-weight: 950;
+    letter-spacing: -0.04em;
+    text-decoration: none;
+  }
+
+  .site-brand__mark {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.8rem;
+    background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary), #fff 35%));
+    color: #fff;
+    font-size: 0.78rem;
+    letter-spacing: -0.06em;
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary), transparent 68%);
+  }
+
+  .site-brand__text {
+    overflow: hidden;
+    max-width: 58vw;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .main-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-muted);
+    font-size: 0.94rem;
+  }
+
+  .main-nav--desktop {
+    display: none;
+  }
+
+  .main-nav > a,
+  .nav-dropdown summary,
+  .locale-menu summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.45rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-primary);
+    cursor: pointer;
+    padding: 0.45rem 0.8rem;
+    font: inherit;
+    font-weight: 850;
+    list-style: none;
+    text-decoration: none;
+    transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base), transform var(--transition-base);
+  }
+
+  .main-nav > a {
+    color: var(--color-muted);
+  }
+
+  .main-nav > a:hover,
+  .locale-menu summary:hover,
+  .nav-dropdown summary:hover,
+  .nav-dropdown[open] summary,
+  .locale-menu[open] summary {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 30%);
+    background: color-mix(in srgb, var(--color-primary), transparent 90%);
+    color: var(--color-text);
+    transform: translateY(-1px);
+  }
+
+  .locale-menu,
+  .nav-dropdown {
+    position: relative;
+  }
+
+  .locale-menu summary::-webkit-details-marker,
+  .nav-dropdown summary::-webkit-details-marker,
+  .mobile-menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .locale-menu summary::after,
+  .nav-dropdown summary::after {
+    content: '⌄';
+    margin-left: 0.35rem;
+    font-size: 0.82em;
+  }
+
+  .locale-menu__list,
+  .nav-dropdown__list {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    z-index: 40;
+    display: grid;
+    gap: 0.2rem;
+    min-width: 10rem;
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    background: var(--color-bg);
+    box-shadow: 0 18px 42px rgb(15 23 42 / 0.16);
+    padding: 0.45rem;
+  }
+
+  .nav-dropdown__list {
+    right: auto;
+    left: 0;
+    min-width: 13rem;
+  }
+
+  .nav-dropdown--settings .nav-dropdown__list {
+    right: 0;
+    left: auto;
+  }
+
+  .nav-dropdown__list--settings {
+    min-width: 16rem;
+  }
+
+  .nav-dropdown__list a,
+  .locale-menu__list a,
+  .nav-dropdown__list button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    border: 0;
+    border-radius: 0.75rem;
+    background: transparent;
+    color: var(--color-text);
+    padding: 0.55rem 0.7rem;
+    font: inherit;
+    font-weight: 800;
+    text-align: left;
+    text-decoration: none;
+  }
+
+  .locale-menu__list a:hover,
+  .nav-dropdown__list a:hover,
+  .nav-dropdown__list button:hover {
+    background: color-mix(in srgb, var(--color-primary), transparent 88%);
+  }
+
+  .nav-dropdown__list--settings label,
+  .mobile-menu__theme {
+    display: grid;
+    gap: 0.4rem;
+    color: var(--color-muted);
+    font-size: 0.82rem;
+    font-weight: 850;
+  }
+
+  .nav-dropdown__list--settings select,
+  .mobile-menu__theme select {
+    min-height: 2.7rem;
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    padding: 0 0.8rem;
+    font: inherit;
+    font-weight: 750;
+  }
+
+  .mobile-menu {
+    position: relative;
+    z-index: 45;
+    flex: 0 0 auto;
+  }
+
+  .mobile-menu > summary {
+    display: grid;
+    place-items: center;
+    gap: 0.22rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-bg), var(--color-primary) 5%);
+    box-shadow: 0 10px 28px rgb(15 23 42 / 0.08);
+    cursor: pointer;
+    list-style: none;
+    touch-action: manipulation;
+  }
+
+  .mobile-menu > summary span {
+    display: block;
+    width: 1.12rem;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--color-text);
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+
+  .mobile-menu[open] > summary span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .mobile-menu[open] > summary span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu[open] > summary span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .mobile-menu__panel {
+    position: fixed;
+    top: 4.35rem;
+    right: 0.75rem;
+    left: 0.75rem;
+    z-index: 44;
+    display: grid;
+    gap: 0.7rem;
+    max-height: calc(100dvh - 5.25rem);
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 1.35rem;
+    background: color-mix(in srgb, var(--color-bg), var(--color-primary) 2%);
+    box-shadow: 0 24px 70px rgb(15 23 42 / 0.24);
+    padding: 0.8rem;
+  }
+
+  .mobile-menu__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.25rem 0.3rem 0.55rem;
+  }
+
+  .mobile-menu__head strong {
+    font-size: 1.05rem;
+  }
+
+  .mobile-menu__head small {
+    color: var(--color-primary);
+    font-weight: 900;
+  }
+
+  .mobile-menu__nav,
+  .mobile-menu__section,
+  .mobile-menu__section > div {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .mobile-menu__panel a,
+  .mobile-menu__panel button,
+  .mobile-menu__section > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 3rem;
+    width: 100%;
+    border: 0;
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--color-bg), transparent 0%);
+    color: var(--color-text);
+    padding: 0.75rem 0.9rem;
+    font: inherit;
+    font-weight: 900;
+    list-style: none;
+    text-align: left;
+    text-decoration: none;
+  }
+
+  .mobile-menu__panel a span,
+  .mobile-menu__nav a span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .mobile-menu__panel a::after,
+  .mobile-menu__panel button::after,
+  .mobile-menu__section > summary::after {
+    content: '›';
+    color: var(--color-muted);
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .mobile-menu__panel a:hover,
+  .mobile-menu__panel button:hover,
+  .mobile-menu__section > summary:hover {
+    background: color-mix(in srgb, var(--color-primary), transparent 88%);
+  }
+
+  .mobile-menu__section[open] > summary::after {
+    transform: rotate(90deg);
+  }
+
+  .mobile-menu__section > div {
+    padding-left: 0.7rem;
+  }
+
+  .mobile-menu__section > div a {
+    min-height: 2.7rem;
+    color: var(--color-muted);
+  }
+
+  .mobile-menu__languages {
+    display: grid;
+    gap: 0.55rem;
+    margin-top: 0.1rem;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.7rem;
+  }
+
+  .mobile-menu__languages > strong {
+    padding: 0 0.3rem;
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .mobile-menu__languages > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .mobile-menu__languages a {
+    justify-content: center;
+    min-height: 2.55rem;
+    padding: 0.55rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .mobile-menu__languages a::after {
+    display: none;
+  }
+
+  .mobile-menu__logout {
+    justify-content: center;
+  }
+
+  .main-nav :global(svg),
+  .mobile-menu__nav :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  @media (min-width: 760px) {
+    .site-brand__text {
+      max-width: none;
+    }
+
+    .header-inner {
+      padding-block: 1rem;
+    }
+  }
+
+  @media (min-width: 980px) {
+    .main-nav--desktop {
+      display: flex;
+    }
+
+    .mobile-menu {
+      display: none;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .site-brand__text {
+      max-width: 46vw;
+    }
+
+    .site-brand__mark {
+      width: 2.1rem;
+      height: 2.1rem;
+    }
+
+    .mobile-menu__languages > div {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .mobile-menu__panel {
+      box-shadow: 0 24px 70px rgb(0 0 0 / 0.42);
+    }
+  }
+
+  :root[data-theme='dark'] .mobile-menu__panel {
+    box-shadow: 0 24px 70px rgb(0 0 0 / 0.42);
+  }
+</style>
 
 <script>
   import '../scripts/app-header.ts';
