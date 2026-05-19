@@ -1,20 +1,12 @@
 import { assertFirebaseAppCheckReadyForAi } from '../firebase/app-check';
-import { getFirebaseApp, hasFirebaseConfig } from '../firebase/client';
+import { getFirebaseServices, hasFirebaseConfig } from '../firebase/client';
+import { getFirebaseConfig } from '../firebase/config';
+import { generateAuthenticatedAiApiJson } from './authenticated-api-client';
 import { aiGenerationConfig, aiPromptConfig } from './config';
 import { AiClientError, logAiError } from './errors';
 import { getAiFeatureFlags, isAiAvailable } from './flags';
-import { parseValidatedJson, type JsonValidator } from './json';
+import { type JsonValidator } from './json';
 import { assertAiClientLimit, registerAiClientUse } from './limits';
-
-type FirebaseAiModule = {
-  GoogleAIBackend: new () => unknown;
-  getAI: (app: unknown, options: { backend: unknown }) => unknown;
-  getGenerativeModel: (ai: unknown, options: Record<string, unknown>) => GenerativeModel;
-};
-
-type GenerativeModel = {
-  generateContent: (prompt: string) => Promise<unknown>;
-};
 
 type GenerateJsonOptions<T> = {
   prompt: string;
@@ -23,38 +15,36 @@ type GenerateJsonOptions<T> = {
   timeoutMs?: number;
 };
 
-const firebaseVersion = '12.6.0';
-let aiModulePromise: Promise<FirebaseAiModule> | undefined;
-
-async function importFirebaseAiModule() {
-  aiModulePromise ??= import(
-    /* @vite-ignore */ `https://www.gstatic.com/firebasejs/${firebaseVersion}/firebase-ai.js`
-  ) as Promise<FirebaseAiModule>;
-
-  return aiModulePromise;
+export async function generateGeminiJson<T>({ prompt, validator, userId, timeoutMs }: GenerateJsonOptions<T>) {
+  return generateAuthenticatedAiJson({ prompt, validator, userId, timeoutMs });
 }
 
-export async function generateGeminiJson<T>({ prompt, validator, userId, timeoutMs }: GenerateJsonOptions<T>) {
+export async function generateAuthenticatedAiJson<T>({ prompt, validator, userId, timeoutMs }: GenerateJsonOptions<T>) {
   if (!isAiAvailable(getAiFeatureFlags())) {
     throw new AiClientError('disabled', 'AI features are disabled.');
   }
 
   if (!hasFirebaseConfig()) {
-    throw new AiClientError('missing-config', 'Firebase AI public config is missing.');
+    throw new AiClientError('missing-config', 'Firebase public config is missing.');
   }
 
   assertAiClientLimit(userId);
 
   try {
-    const app = await getFirebaseApp();
     await ensureAppCheckForAi();
-    const result = await withTimeout(generateText(prompt, app), timeoutMs ?? aiGenerationConfig.timeoutMs);
-    const json = parseValidatedJson(result, validator);
+    const json = await generateAuthenticatedAiApiJson({
+      token: await getCurrentUserIdToken(),
+      projectId: getFirebaseConfig().projectId,
+      systemPrompt: getSystemPrompt(),
+      userPrompt: prompt,
+      validator,
+      timeoutMs: timeoutMs ?? aiGenerationConfig.timeoutMs,
+    });
     registerAiClientUse(userId);
 
     return json;
   } catch (error) {
-    logAiError(error, 'generateGeminiJson');
+    logAiError(error, 'generateAuthenticatedAiJson');
     throw normalizeAiError(error);
   }
 }
@@ -70,48 +60,19 @@ async function ensureAppCheckForAi() {
   }
 }
 
-async function generateText(prompt: string, app: unknown) {
-  const aiModule = await importFirebaseAiModule();
-  const ai = aiModule.getAI(app, { backend: new aiModule.GoogleAIBackend() });
-  const model = aiModule.getGenerativeModel(ai, {
-    model: aiGenerationConfig.model,
-    generationConfig: {
-      temperature: aiGenerationConfig.temperature,
-      topP: aiGenerationConfig.topP,
-      maxOutputTokens: aiGenerationConfig.maxOutputTokens,
-      responseMimeType: 'application/json',
-    },
-  });
+async function getCurrentUserIdToken() {
+  const { auth } = await getFirebaseServices();
+  const user = auth.currentUser as { getIdToken?: (forceRefresh?: boolean) => Promise<string> } | null;
 
-  const response = await model.generateContent(
-    [aiPromptConfig.baseSafety, aiPromptConfig.localeInstruction, aiPromptConfig.jsonOnly, prompt].join('\n\n')
-  );
-
-  return readGeneratedText(response);
-}
-
-function readGeneratedText(response: unknown) {
-  const candidate = response as { response?: { text?: () => string } };
-  const text = candidate.response?.text?.();
-
-  if (!text) {
-    throw new AiClientError('invalid-response', 'AI response is empty.');
+  if (!user?.getIdToken) {
+    throw new AiClientError('missing-config', 'A signed-in Firebase user is required for AI requests.');
   }
 
-  return text;
+  return user.getIdToken();
 }
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
-  return new Promise<T>((resolve, reject) => {
-    const timeoutId = window.setTimeout(() => {
-      reject(new AiClientError('timeout', 'AI request timed out.', { retryable: true }));
-    }, timeoutMs);
-
-    promise
-      .then(resolve)
-      .catch(reject)
-      .finally(() => window.clearTimeout(timeoutId));
-  });
+function getSystemPrompt() {
+  return [aiPromptConfig.baseSafety, aiPromptConfig.localeInstruction, aiPromptConfig.jsonOnly].join('\n\n');
 }
 
 function normalizeAiError(error: unknown) {

@@ -36,7 +36,7 @@ export const aiPromptConfig = {
   jsonOnly:
     'Return only valid JSON. Do not wrap it in Markdown, comments, explanations or code fences.',
   baseSafety:
-    'Do not include private data, credentials, medical advice or unsafe food handling instructions.',
+    'Do not include private data or unsafe food handling instructions.',
 } as const;
 
 export type AiModelKey = keyof typeof aiModels;
