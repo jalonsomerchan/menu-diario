@@ -34,17 +34,17 @@ describe('Firebase AI foundation', () => {
     });
   });
 
-  it('keeps authenticated AI API config centralized and disabled by default', () => {
+  it('keeps authenticated AI API config centralized and menu AI enabled by default', () => {
     const envExample = readText('.env.example');
     const config = readText('src/lib/ai/config.ts');
     const flags = readText('src/lib/ai/flags.ts');
     const apiClient = readText('src/lib/ai/authenticated-api-client.ts');
 
     [
-      'PUBLIC_AI_ENABLED=false',
-      'PUBLIC_AI_MENU_SUGGESTIONS_ENABLED=false',
-      'PUBLIC_AI_SHOPPING_LIST_ENABLED=false',
-      'PUBLIC_AI_REMOTE_CONFIG_ENABLED=false',
+      'PUBLIC_AI_ENABLED',
+      'PUBLIC_AI_MENU_SUGGESTIONS_ENABLED',
+      'PUBLIC_AI_SHOPPING_LIST_ENABLED',
+      'PUBLIC_AI_REMOTE_CONFIG_ENABLED',
       'PUBLIC_FIREBASE_AI_MODEL=gemini-2.5-flash-lite',
       'PUBLIC_FIREBASE_AI_TEMPERATURE=0.35',
       'PUBLIC_FIREBASE_AI_TOP_P=0.9',
@@ -61,7 +61,9 @@ describe('Firebase AI foundation', () => {
     assert.match(config, /aiGenerationConfig/);
     assert.match(config, /aiPromptConfig/);
     assert.match(config, /aiClientLimits/);
-    assert.match(flags, /PUBLIC_AI_ENABLED/);
+    assert.match(flags, /readEnvBoolean\(import\.meta\.env\.PUBLIC_AI_ENABLED, true\)/);
+    assert.match(flags, /readEnvBoolean\(import\.meta\.env\.PUBLIC_AI_MENU_SUGGESTIONS_ENABLED, true\)/);
+    assert.match(flags, /readEnvBoolean\(import\.meta\.env\.PUBLIC_AI_SHOPPING_LIST_ENABLED, false\)/);
     assert.match(flags, /ai_enabled/);
     assert.match(flags, /ai_menu_suggestions_enabled/);
     assert.match(flags, /ai_shopping_list_enabled/);
@@ -85,6 +87,8 @@ describe('Firebase AI foundation', () => {
     assert.match(apiClient, /user_prompt:\s*input\.userPrompt/);
     assert.match(apiClient, /withTimeout/);
     assert.match(apiClient, /parseValidatedJson/);
+    assert.match(apiClient, /catch \(error\)/);
+    assert.match(apiClient, /network request failed/);
     assert.match(apiClient, /status === 401 \|\| status === 403/);
 
     assert.match(index, /authenticatedAiApiEndpoint/);
