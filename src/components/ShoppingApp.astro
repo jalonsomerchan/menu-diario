@@ -158,10 +158,7 @@ const labels = {
 
   <div data-workspace hidden>
     <section class="planning-ai-panel app-panel" aria-labelledby="shopping-wizard-title" data-shopping-scroll-target>
-      <header class="planning-ai-panel-heading">
-        <h2 id="shopping-wizard-title">{labels.title}</h2>
-        <p>{labels.description}</p>
-      </header>
+      <h2 id="shopping-wizard-title" class="sr-only">{labels.title}</h2>
 
       <div class="planning-ai-form" data-shopping-wizard>
         <ol class="planning-ai-wizard-progress" aria-label={labels.wizardProgress} data-wizard-progress>

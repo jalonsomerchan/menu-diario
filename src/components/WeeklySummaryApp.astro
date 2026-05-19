@@ -57,11 +57,7 @@ const labels = {
 
   <div class="weekly-summary-app__content" data-content hidden>
     <section class="weekly-summary-hero app-panel" aria-labelledby="weekly-summary-title">
-      <div>
-        <p class="menu-app__eyebrow">{labels.eyebrow}</p>
-        <h2 id="weekly-summary-title">{labels.title}</h2>
-        <p>{labels.description}</p>
-      </div>
+      <h2 id="weekly-summary-title" class="sr-only">{labels.title}</h2>
       <label class="weekly-summary-week">
         <span>{labels.weekLabel}</span>
         <select data-week-select></select>

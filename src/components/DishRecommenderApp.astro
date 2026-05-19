@@ -117,10 +117,7 @@ const wizardSteps = [labels.stepContext, labels.stepIngredients, labels.stepInto
 
   <div data-content hidden>
     <section class="dish-recommender-panel app-panel" aria-labelledby="dish-recommender-title" data-dish-recommender-scroll-target>
-      <header class="dish-recommender-heading">
-        <h2 id="dish-recommender-title">{labels.title}</h2>
-        <p>{labels.description}</p>
-      </header>
+      <h2 id="dish-recommender-title" class="sr-only">{labels.title}</h2>
 
       <form class="dish-recommender-form" data-dish-recommender-form>
         <ol class="dish-recommender-progress" aria-label={labels.nav}>
