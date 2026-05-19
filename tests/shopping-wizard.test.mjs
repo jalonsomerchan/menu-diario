@@ -32,7 +32,7 @@ describe('shopping wizard smoke checks', () => {
 
     assert.match(component, /planning-ai-app/);
     assert.match(component, /planning-ai-panel/);
-    assert.match(component, /planning-ai-panel-heading/);
+    assert.match(component, /planning-ai-section-heading/);
     assert.match(component, /planning-ai-wizard-progress/);
     assert.match(component, /planning-ai-wizard-step/);
     assert.match(component, /planning-ai-section-card/);
