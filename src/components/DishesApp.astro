@@ -3,7 +3,7 @@ import ConfirmDialog from './ConfirmDialog.astro';
 import DishEditDialog from './DishEditDialog.astro';
 import { quickDishTags } from '../data/dish-tags';
 import type { Locale } from '../config/site';
-import { getLocalizedPath, useTranslations, type TranslationKey } from '../i18n/ui';
+import { useTranslations, type TranslationKey } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -11,7 +11,6 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-const homePath = getLocalizedPath('/', locale);
 const tagLabels = Object.fromEntries(
   quickDishTags.map((tag) => [tag, t(`dishTags.${tag}` as TranslationKey)])
 );
@@ -112,7 +111,6 @@ const labels = {
   confirmArchiveDescription: t('dishes.confirmArchiveDescription'),
   confirmArchiveConfirm: t('dishes.confirmArchiveConfirm'),
   confirmArchiveCancel: t('dishes.confirmArchiveCancel'),
-  homePath,
   quickTagsList: quickDishTags,
   tagLabels,
 };
@@ -123,20 +121,13 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div class="dishes-app__content" data-content hidden>
-    <section class="app-panel dishes-hero">
-      <p class="dishes-hero__future">{labels.future}</p>
-    </section>
-
-    <section class="app-panel dishes-form-card" aria-labelledby="dish-add-title">
-      <h2 id="dish-add-title">{labels.addTitle}</h2>
-      <form class="dishes-form" data-dish-form>
-        <label for="dish-name">{labels.addName}</label>
-        <div class="dishes-form__row">
-          <input id="dish-name" type="text" data-dish-name minlength="2" maxlength="90" autocomplete="off" placeholder={labels.addPlaceholder} />
-          <button class="button button--primary" type="submit">{labels.addButton}</button>
-        </div>
-      </form>
-    </section>
+    <header class="dishes-page-header">
+      <div class="dishes-page-header__copy">
+        <h1>{labels.title}</h1>
+        <p>{labels.description}</p>
+      </div>
+      <button class="button button--primary" type="button" data-open-dish-create>{labels.addButton}</button>
+    </header>
 
     <section class="dishes-toolbar" aria-label={labels.title}>
       <label>{labels.search}
@@ -167,6 +158,34 @@ const labels = {
 
     <div class="dishes-list" data-dishes-list aria-label={labels.compactList}></div>
   </div>
+
+  <dialog
+    class="app-dialog app-dialog--editor dishes-create-dialog"
+    data-dish-create-dialog
+    aria-labelledby="dish-create-title"
+  >
+    <form method="dialog" class="app-dialog__surface" data-dish-form>
+      <header class="app-dialog__header">
+        <div class="app-dialog__heading">
+          <p class="menu-app__eyebrow">{labels.title}</p>
+          <h2 id="dish-create-title">{labels.addTitle}</h2>
+        </div>
+        <button class="app-dialog__dismiss" type="button" data-close-dish-create aria-label={labels.cancel}>
+          <span aria-hidden="true">×</span>
+        </button>
+      </header>
+      <div class="app-dialog__body">
+        <div class="dishes-form">
+          <label for="dish-name">{labels.addName}</label>
+          <input id="dish-name" type="text" data-dish-name minlength="2" maxlength="90" autocomplete="off" placeholder={labels.addPlaceholder} />
+        </div>
+      </div>
+      <footer class="app-dialog__footer">
+        <button class="button button--ghost" type="button" data-close-dish-create>{labels.cancel}</button>
+        <button class="button button--primary" type="submit">{labels.addButton}</button>
+      </footer>
+    </form>
+  </dialog>
 
   <DishEditDialog
     dialogId="dish-editor-dialog"

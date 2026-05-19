@@ -1,7 +1,6 @@
 .dishes-app {
-  max-width: 62rem;
-  margin-inline: auto;
-  margin-top: 1rem;
+  max-width: none;
+  margin-top: 0;
 }
 
 .dishes-app__content,
@@ -10,8 +9,39 @@
   gap: 1rem;
 }
 
-.dishes-hero,
-.dishes-form-card,
+.dishes-page-header {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.dishes-page-header__copy {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.dishes-page-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  line-height: 0.94;
+  letter-spacing: -0.07em;
+}
+
+.dishes-page-header p {
+  margin: 0;
+  max-width: 72ch;
+  color: var(--color-muted);
+  font-size: clamp(1rem, 2.4vw, 1.15rem);
+  line-height: var(--surface-copy-line-height);
+  letter-spacing: var(--surface-copy-letter-spacing);
+}
+
+.dishes-form,
+.dishes-toolbar {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .dishes-empty {
   display: grid;
   gap: var(--surface-gap);
@@ -19,8 +49,6 @@
   padding-bottom: max(var(--surface-padding), 1rem);
 }
 
-.dishes-hero h1,
-.dishes-form-card h2,
 .dishes-empty h2,
 .dish-row h2,
 .dish-editor-dialog h2 {
@@ -29,8 +57,6 @@
   letter-spacing: -0.05em;
 }
 
-.dishes-hero h1,
-.dishes-form-card h2,
 .dishes-empty h2 {
   font-size: clamp(1.6rem, 7vw, 3rem);
 }
@@ -40,7 +66,6 @@
   font-size: clamp(1.05rem, 4vw, 1.45rem);
 }
 
-.dishes-hero p,
 .dishes-empty p,
 .dish-editor-dialog__description,
 .dish-editor-note,
@@ -51,19 +76,12 @@
   letter-spacing: var(--surface-copy-letter-spacing);
 }
 
-.dishes-hero__future,
 .dish-editor-note {
   border-radius: var(--radius-lg);
   border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 55%);
   background: color-mix(in srgb, var(--color-primary-soft), transparent 12%);
   padding: 0.8rem;
   font-weight: 800;
-}
-
-.dishes-form,
-.dishes-toolbar {
-  display: grid;
-  gap: 0.75rem;
 }
 
 .dishes-form label,
@@ -74,24 +92,6 @@
   color: var(--color-muted);
   font-size: 0.88rem;
   font-weight: 850;
-}
-
-.dishes-form__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
-  min-width: 0;
-}
-
-.dishes-form__row input {
-  flex: 1 1 14rem;
-  min-width: 0;
-}
-
-.dishes-form__row .button {
-  flex: 0 0 auto;
 }
 
 .dishes-form input,
@@ -191,7 +191,12 @@
   color: var(--color-text);
 }
 
-.dish-editor-dialog::backdrop {
+.dishes-create-dialog {
+  width: min(100% - 1.2rem, 34rem);
+}
+
+.dish-editor-dialog::backdrop,
+.dishes-create-dialog::backdrop {
   background: rgb(15 23 42 / 0.62);
   backdrop-filter: blur(6px);
 }
@@ -258,129 +263,105 @@
 .dish-editor-meta {
   display: grid;
   gap: 0.75rem;
+}
+
+.dish-editor-meta dl,
+.dish-editor-stats dl {
+  display: grid;
+  gap: 0.55rem;
   margin: 0;
 }
 
-.dish-editor-stats div,
-.dish-editor-meta div {
+.dish-editor-meta div,
+.dish-editor-stats div {
   display: grid;
-  gap: 0.2rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border), transparent 18%);
+  padding-bottom: 0.45rem;
 }
 
-.dish-editor-stats dt,
-.dish-editor-meta dt {
+.dish-editor-meta dt,
+.dish-editor-stats dt {
   color: var(--color-muted);
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
-.dish-editor-stats dd,
-.dish-editor-meta dd {
+.dish-editor-meta dd,
+.dish-editor-stats dd {
   margin: 0;
+  font-weight: 850;
+  text-align: right;
+}
+
+.dish-editor-quick-tags,
+.dish-editor-quick-tag-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.dish-editor-tag-chip,
+.dish-editor-tag-add,
+.dish-editor-tags-empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  padding: 0.36rem 0.65rem;
+  font-size: 0.8rem;
   font-weight: 850;
 }
 
-.dish-tag-list,
-.dish-tag-actions,
-.dish-editor-dialog__footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
-.dish-tag-chip,
-.dish-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-surface-raised), #000 4%);
-  color: var(--color-text);
-  font-weight: 750;
-}
-
-.dish-badge {
-  padding: 0.32rem 0.7rem;
-}
-
-.dish-tag-chip {
-  overflow: hidden;
-}
-
-.dish-tag-chip button {
-  min-width: 2rem;
+.dish-editor-tag-chip button {
   border: 0;
-  border-right: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface-raised), #000 8%);
-  color: var(--color-muted);
-  cursor: pointer;
-  font-size: 1.35rem;
-  line-height: 1;
-}
-
-.dish-tag-chip span,
-.dish-tag-add,
-.dish-tags-empty {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  padding: 0.32rem 0.7rem;
-}
-
-.dish-tag-add {
-  border: 1px dashed var(--color-border);
-  border-radius: 999px;
   background: transparent;
-  color: var(--color-muted);
+  color: inherit;
+  font-weight: 950;
+}
+
+.dish-editor-tag-add {
   cursor: pointer;
-  font-weight: 750;
 }
 
-.dish-tags-empty {
-  color: var(--color-muted);
-  font-size: 0.9rem;
+.dish-editor-tag-add:hover {
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 40%);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
-.dish-editor-dialog__footer {
-  justify-content: flex-end;
-  padding-top: 0.25rem;
-}
-
-.dish-editor-dialog__footer .button {
-  min-height: 2.75rem;
-}
-
-.confirm-dialog[data-confirm-dialog] .button--danger {
-  width: 100%;
+.dish-editor-status {
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-soft);
+  padding: 0.75rem;
 }
 
 @media (min-width: 720px) {
-  .dishes-app {
-    max-width: 68rem;
+  .dishes-page-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
   }
 
-  .dishes-form__row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
+  .dishes-page-header .button {
+    margin-top: 0.15rem;
   }
 
   .dishes-toolbar {
-    grid-template-columns: minmax(14rem, 1.4fr) repeat(3, minmax(10rem, 1fr));
-    align-items: end;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .dish-editor-grid {
+  .dishes-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
-  .dish-editor-field,
-  .dish-editor-note {
-    grid-column: 1 / -1;
-  }
-
-  .dish-editor-stats {
+@media (min-width: 1024px) {
+  .dishes-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
