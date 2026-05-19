@@ -1,4 +1,4 @@
-# AGENTS.md
+# agents.md
 
 ## Regla principal
 
@@ -66,7 +66,7 @@ Ese prompt debe cumplir estas condiciones:
 
 - Hacer referencia explícita a este repositorio e incluir su URL.
 - Explicar con claridad qué problema, mejora o tarea debe resolverse.
-- Indicar que la solución debe respetar todas las condiciones de este `AGENTS.md`.
+- Indicar que la solución debe respetar todas las condiciones de este `agents.md`.
 - Indicar que se deben mantener ficheros pequeños, modularidad, i18n, accesibilidad, SEO, rendimiento y compatibilidad con dominio raíz, subrutas y GitHub Pages cuando aplique.
 - Pedir que se actualicen tests y documentación cuando el cambio lo requiera.
 - Evitar instrucciones ambiguas sin contexto suficiente.
@@ -78,7 +78,7 @@ Formato recomendado:
 
 Trabaja en este repositorio: [añade aquí la URL del repositorio].
 
-Resuelve esta issue manteniendo todas las condiciones descritas en `AGENTS.md`: ficheros lo más pequeños posible, código modular, soporte completo de idiomas/i18n, accesibilidad, SEO, rendimiento, compatibilidad con dominio raíz (`/`), subrutas (`/nombre-del-repositorio/`) y GitHub Pages cuando aplique, además de tests smoke útiles.
+Resuelve esta issue manteniendo todas las condiciones descritas en `agents.md`: ficheros lo más pequeños posible, código modular, soporte completo de idiomas/i18n, accesibilidad, SEO, rendimiento, compatibilidad con dominio raíz (`/`), subrutas (`/nombre-del-repositorio/`) y GitHub Pages cuando aplique, además de tests smoke útiles.
 
 [Describe aquí la tarea concreta, el comportamiento esperado y los ficheros o zonas afectadas si se conocen.]
 
@@ -330,7 +330,7 @@ Si se cambia una convención importante, actualizar el documento correspondiente
 
 ## Checklist antes de terminar una tarea
 
-- ¿Se han aplicado las reglas de este `AGENTS.md`?
+- ¿Se han aplicado las reglas de este `agents.md`?
 - ¿Sigue funcionando el idioma por defecto en `/`?
 - ¿Siguen funcionando los idiomas secundarios como `/en/` y cualquier otro locale configurado?
 - ¿Las rutas internas funcionan tanto con `base = '/'` como con `base = '/nombre-del-repositorio/'`?
