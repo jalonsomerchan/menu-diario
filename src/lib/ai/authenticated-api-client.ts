@@ -3,6 +3,14 @@ import { parseValidatedJson, type JsonValidator } from './json';
 
 export const authenticatedAiApiEndpoint = 'https://alon.one/api-ia/auth.php';
 
+export type AuthenticatedAiApiOptions = {
+  temperature?: number;
+  topP?: number;
+  maxOutputTokens?: number;
+  responseFormat?: { type: 'json_object' };
+  responseMimeType?: 'application/json' | string;
+};
+
 export type AuthenticatedAiApiJsonOptions<T> = {
   token: string;
   projectId: string;
@@ -10,7 +18,13 @@ export type AuthenticatedAiApiJsonOptions<T> = {
   userPrompt: string;
   validator: JsonValidator<T>;
   timeoutMs: number;
+  options?: AuthenticatedAiApiOptions;
   fetcher?: typeof fetch;
+};
+
+const defaultJsonOptions: AuthenticatedAiApiOptions = {
+  responseFormat: { type: 'json_object' },
+  responseMimeType: 'application/json',
 };
 
 export async function generateAuthenticatedAiApiJson<T>({
@@ -20,10 +34,11 @@ export async function generateAuthenticatedAiApiJson<T>({
   userPrompt,
   validator,
   timeoutMs,
+  options,
   fetcher = globalThis.fetch.bind(globalThis),
 }: AuthenticatedAiApiJsonOptions<T>) {
   const text = await withTimeout(
-    requestAuthenticatedAiApiText({ token, projectId, systemPrompt, userPrompt, fetcher }),
+    requestAuthenticatedAiApiText({ token, projectId, systemPrompt, userPrompt, options, fetcher }),
     timeoutMs
   );
 
@@ -35,6 +50,7 @@ async function requestAuthenticatedAiApiText(input: {
   projectId: string;
   systemPrompt: string;
   userPrompt: string;
+  options?: AuthenticatedAiApiOptions;
   fetcher: typeof fetch;
 }) {
   let response: Response;
@@ -47,11 +63,7 @@ async function requestAuthenticatedAiApiText(input: {
         'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
         Accept: 'application/json',
       },
-      body: new URLSearchParams({
-        project_id: input.projectId,
-        system_prompt: input.systemPrompt,
-        user_prompt: input.userPrompt,
-      }),
+      body: buildAuthenticatedAiApiBody(input),
     });
   } catch (error) {
     throw new AiClientError('request-failed', 'Authenticated AI API network request failed.', {
@@ -71,6 +83,36 @@ async function requestAuthenticatedAiApiText(input: {
   }
 
   return text;
+}
+
+function buildAuthenticatedAiApiBody(input: {
+  projectId: string;
+  systemPrompt: string;
+  userPrompt: string;
+  options?: AuthenticatedAiApiOptions;
+}) {
+  const body = new URLSearchParams({
+    project_id: input.projectId,
+    system_prompt: input.systemPrompt,
+    user_prompt: input.userPrompt,
+  });
+  const options = { ...defaultJsonOptions, ...input.options };
+
+  appendOption(body, 'temperature', options.temperature);
+  appendOption(body, 'topP', options.topP);
+  appendOption(body, 'maxOutputTokens', options.maxOutputTokens);
+  appendOption(body, 'response_mime_type', options.responseMimeType);
+
+  if (options.responseFormat?.type) {
+    body.set('options[response_format][type]', options.responseFormat.type);
+  }
+
+  return body;
+}
+
+function appendOption(body: URLSearchParams, name: string, value: string | number | undefined) {
+  if (value === undefined || value === '') return;
+  body.set(`options[${name}]`, String(value));
 }
 
 function createHttpError(status: number, body: string) {

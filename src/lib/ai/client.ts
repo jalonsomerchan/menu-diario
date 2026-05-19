@@ -39,6 +39,13 @@ export async function generateAuthenticatedAiJson<T>({ prompt, validator, userId
       userPrompt: prompt,
       validator,
       timeoutMs: timeoutMs ?? aiGenerationConfig.timeoutMs,
+      options: {
+        temperature: aiGenerationConfig.temperature,
+        topP: aiGenerationConfig.topP,
+        maxOutputTokens: aiGenerationConfig.maxOutputTokens,
+        responseFormat: { type: 'json_object' },
+        responseMimeType: 'application/json',
+      },
     });
     registerAiClientUse(userId);
 

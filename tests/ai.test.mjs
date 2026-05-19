@@ -69,7 +69,7 @@ describe('Firebase AI foundation', () => {
     assert.match(flags, /ai_shopping_list_enabled/);
   });
 
-  it('keeps reusable authenticated AI API client guarded by token auth, project id, timeout and JSON validation', () => {
+  it('keeps reusable authenticated AI API client guarded by token auth, project id, options, timeout and JSON validation', () => {
     const client = readText('src/lib/ai/client.ts');
     const apiClient = readText('src/lib/ai/authenticated-api-client.ts');
     const index = readText('src/lib/ai/index.ts');
@@ -78,6 +78,7 @@ describe('Firebase AI foundation', () => {
 
     assert.match(apiClient, /generateAuthenticatedAiApiJson/);
     assert.match(apiClient, /authenticatedAiApiEndpoint/);
+    assert.match(apiClient, /AuthenticatedAiApiOptions/);
     assert.match(apiClient, /token:\s*string/);
     assert.match(apiClient, /projectId:\s*string/);
     assert.match(apiClient, /fetcher = globalThis\.fetch\.bind\(globalThis\)/);
@@ -86,6 +87,14 @@ describe('Firebase AI foundation', () => {
     assert.match(apiClient, /project_id:\s*input\.projectId/);
     assert.match(apiClient, /system_prompt:\s*input\.systemPrompt/);
     assert.match(apiClient, /user_prompt:\s*input\.userPrompt/);
+    assert.match(apiClient, /appendOption\(body, 'temperature', options\.temperature\)/);
+    assert.match(apiClient, /appendOption\(body, 'topP', options\.topP\)/);
+    assert.match(apiClient, /appendOption\(body, 'maxOutputTokens', options\.maxOutputTokens\)/);
+    assert.match(apiClient, /body\.set\('options\[response_format\]\[type\]', options\.responseFormat\.type\)/);
+    assert.match(apiClient, /appendOption\(body, 'response_mime_type', options\.responseMimeType\)/);
+    assert.match(apiClient, /body\.set\(`options\[\$\{name\}\]`, String\(value\)\)/);
+    assert.match(apiClient, /json_object/);
+    assert.match(apiClient, /application\/json/);
     assert.match(apiClient, /withTimeout/);
     assert.match(apiClient, /parseValidatedJson/);
     assert.match(apiClient, /catch \(error\)/);
@@ -103,6 +112,11 @@ describe('Firebase AI foundation', () => {
     assert.match(client, /getFirebaseConfig\(\)\.projectId/);
     assert.match(client, /currentUser/);
     assert.match(client, /getIdToken/);
+    assert.match(client, /temperature:\s*aiGenerationConfig\.temperature/);
+    assert.match(client, /topP:\s*aiGenerationConfig\.topP/);
+    assert.match(client, /maxOutputTokens:\s*aiGenerationConfig\.maxOutputTokens/);
+    assert.match(client, /responseFormat:\s*\{ type: 'json_object' \}/);
+    assert.match(client, /responseMimeType:\s*'application\/json'/);
     assert.match(client, /hasFirebaseConfig/);
     assert.match(client, /isAiAvailable/);
     assert.match(client, /assertFirebaseAppCheckReadyForAi/);
