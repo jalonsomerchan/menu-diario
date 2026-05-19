@@ -77,38 +77,40 @@ function createHttpError(status: number, body: string) {
   if (status === 401 || status === 403) {
     return new AiClientError('request-failed', 'Authenticated AI API rejected the Firebase token.', {
       retryable: false,
-      cause: readErrorBody(body),
+      cause: readErrorBody(status, body),
     });
   }
 
   if (status === 429) {
     return new AiClientError('quota-exhausted', 'Authenticated AI API quota was exhausted.', {
       retryable: true,
-      cause: readErrorBody(body),
+      cause: readErrorBody(status, body),
     });
   }
 
   if (status >= 500) {
     return new AiClientError('request-failed', 'Authenticated AI API failed.', {
       retryable: true,
-      cause: readErrorBody(body),
+      cause: readErrorBody(status, body),
     });
   }
 
   return new AiClientError('request-failed', 'Authenticated AI API request failed.', {
-    cause: readErrorBody(body),
+    cause: readErrorBody(status, body),
   });
 }
 
-function readErrorBody(body: string) {
+function readErrorBody(status: number, body: string) {
   try {
     const parsed = JSON.parse(body) as { error?: unknown; detalles?: unknown };
     return {
+      status,
       error: typeof parsed.error === 'string' ? parsed.error : undefined,
       detalles: typeof parsed.detalles === 'string' ? parsed.detalles : undefined,
+      body: typeof parsed.error === 'string' || typeof parsed.detalles === 'string' ? undefined : body.slice(0, 300),
     };
   } catch {
-    return undefined;
+    return { status, body: body.slice(0, 300) };
   }
 }
 
