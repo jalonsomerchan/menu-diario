@@ -6,6 +6,7 @@ import type { FirebaseUser, ThemePreference } from '../lib/menu/types';
 
 const root = document.querySelector<HTMLElement>('[data-site-header]');
 const themes: ThemePreference[] = ['system', 'light', 'dark'];
+const themeStorageKey = 'menu-diario-theme';
 
 if (root) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
@@ -57,6 +58,18 @@ if (root && hasFirebaseConfig()) {
   const logoutButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-global-logout]')];
   const adminLinks = [...root.querySelectorAll<HTMLAnchorElement>('[data-admin-link]')];
 
+  function rememberTheme(theme: ThemePreference) {
+    try {
+      if (theme === 'system') {
+        window.localStorage.removeItem(themeStorageKey);
+      } else {
+        window.localStorage.setItem(themeStorageKey, theme);
+      }
+    } catch {
+      // Storage can be disabled in private contexts; the live theme still applies.
+    }
+  }
+
   function applyTheme(theme: ThemePreference) {
     if (theme === 'system') {
       document.documentElement.removeAttribute('data-theme');
@@ -64,6 +77,7 @@ if (root && hasFirebaseConfig()) {
       document.documentElement.dataset.theme = theme;
     }
 
+    rememberTheme(theme);
     themeSelects.forEach((themeSelect) => {
       themeSelect.value = theme;
     });
@@ -93,7 +107,9 @@ if (root && hasFirebaseConfig()) {
       themeSelects.forEach((themeSelect) => {
         themeSelect.addEventListener('change', async () => {
           if (!themes.includes(themeSelect.value as ThemePreference)) return;
-          await updateUserPreferences(services, user.uid, { theme: themeSelect.value as ThemePreference });
+          const theme = themeSelect.value as ThemePreference;
+          applyTheme(theme);
+          await updateUserPreferences(services, user.uid, { theme });
         });
       });
 
