@@ -2,6 +2,8 @@
 import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
 import { footerGames, footerTools, formatProjectLabel, getFooterLabels } from '../i18n/footer-projects';
+import { usePublicPageCopy } from '../i18n/public-pages';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -9,6 +11,13 @@ interface Props {
 
 const { locale } = Astro.props;
 const labels = getFooterLabels(locale);
+const t = useTranslations(locale);
+const tp = usePublicPageCopy(locale);
+const appLinks = [
+  { href: getLocalizedPath('/como-funciona', locale), label: t('public.howItWorks.nav') },
+  { href: getLocalizedPath('/acerca-de', locale), label: tp('footerAbout') },
+  { href: getLocalizedPath('/faq', locale), label: tp('footerFaq') },
+];
 const projectGroups = [
   { title: labels.tools, projects: footerTools },
   { title: labels.games, projects: footerGames },
@@ -22,6 +31,11 @@ const projectGroups = [
       <h2 id="site-footer-title">{labels.title}</h2>
       <p>{labels.copy}</p>
       <strong>{siteConfig.name}</strong>
+      <nav class="site-footer__links" aria-label={siteConfig.name}>
+        {appLinks.map((link) => (
+          <a href={link.href}>{link.label}</a>
+        ))}
+      </nav>
     </section>
 
     <nav class="site-footer__projects" aria-label={labels.title}>
@@ -114,6 +128,26 @@ const projectGroups = [
     color: var(--color-primary);
     font-size: 1.02rem;
     font-weight: 950;
+  }
+
+  .site-footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem 0.95rem;
+    margin-top: 0.15rem;
+  }
+
+  .site-footer__links a {
+    color: var(--color-primary);
+    font-weight: 900;
+    text-decoration: none;
+  }
+
+  .site-footer__links a:hover,
+  .site-footer__links a:focus-visible {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-underline-offset: 0.22em;
   }
 
   .site-footer small {
