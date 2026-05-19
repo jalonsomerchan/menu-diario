@@ -80,6 +80,7 @@ describe('Firebase AI foundation', () => {
     assert.match(apiClient, /authenticatedAiApiEndpoint/);
     assert.match(apiClient, /token:\s*string/);
     assert.match(apiClient, /projectId:\s*string/);
+    assert.match(apiClient, /fetcher = globalThis\.fetch\.bind\(globalThis\)/);
     assert.match(apiClient, /Authorization:\s*'Bearer ' \+ input\.token/);
     assert.match(apiClient, /application\/x-www-form-urlencoded/);
     assert.match(apiClient, /project_id:\s*input\.projectId/);
