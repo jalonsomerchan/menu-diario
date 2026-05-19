@@ -1,20 +1,10 @@
 import { assertFirebaseAppCheckReadyForAi } from '../firebase/app-check';
-import { getFirebaseApp, hasFirebaseConfig } from '../firebase/client';
-import { aiGenerationConfig, aiPromptConfig } from './config';
+import { getFirebaseServices, hasFirebaseConfig } from '../firebase/client';
+import { aiApiConfig, aiGenerationConfig, aiPromptConfig } from './config';
 import { AiClientError, logAiError } from './errors';
 import { getAiFeatureFlags, isAiAvailable } from './flags';
 import { parseValidatedJson, type JsonValidator } from './json';
 import { assertAiClientLimit, registerAiClientUse } from './limits';
-
-type FirebaseAiModule = {
-  GoogleAIBackend: new () => unknown;
-  getAI: (app: unknown, options: { backend: unknown }) => unknown;
-  getGenerativeModel: (ai: unknown, options: Record<string, unknown>) => GenerativeModel;
-};
-
-type GenerativeModel = {
-  generateContent: (prompt: string) => Promise<unknown>;
-};
 
 type GenerateJsonOptions<T> = {
   prompt: string;
@@ -23,38 +13,30 @@ type GenerateJsonOptions<T> = {
   timeoutMs?: number;
 };
 
-const firebaseVersion = '12.6.0';
-let aiModulePromise: Promise<FirebaseAiModule> | undefined;
-
-async function importFirebaseAiModule() {
-  aiModulePromise ??= import(
-    /* @vite-ignore */ `https://www.gstatic.com/firebasejs/${firebaseVersion}/firebase-ai.js`
-  ) as Promise<FirebaseAiModule>;
-
-  return aiModulePromise;
+export async function generateGeminiJson<T>({ prompt, validator, userId, timeoutMs }: GenerateJsonOptions<T>) {
+  return generateAuthenticatedAiJson({ prompt, validator, userId, timeoutMs });
 }
 
-export async function generateGeminiJson<T>({ prompt, validator, userId, timeoutMs }: GenerateJsonOptions<T>) {
+export async function generateAuthenticatedAiJson<T>({ prompt, validator, userId, timeoutMs }: GenerateJsonOptions<T>) {
   if (!isAiAvailable(getAiFeatureFlags())) {
     throw new AiClientError('disabled', 'AI features are disabled.');
   }
 
   if (!hasFirebaseConfig()) {
-    throw new AiClientError('missing-config', 'Firebase AI public config is missing.');
+    throw new AiClientError('missing-config', 'Firebase public config is missing.');
   }
 
   assertAiClientLimit(userId);
 
   try {
-    const app = await getFirebaseApp();
     await ensureAppCheckForAi();
-    const result = await withTimeout(generateText(prompt, app), timeoutMs ?? aiGenerationConfig.timeoutMs);
+    const result = await withTimeout(requestAuthenticatedAiText(prompt), timeoutMs ?? aiGenerationConfig.timeoutMs);
     const json = parseValidatedJson(result, validator);
     registerAiClientUse(userId);
 
     return json;
   } catch (error) {
-    logAiError(error, 'generateGeminiJson');
+    logAiError(error, 'generateAuthenticatedAiJson');
     throw normalizeAiError(error);
   }
 }
@@ -70,35 +52,86 @@ async function ensureAppCheckForAi() {
   }
 }
 
-async function generateText(prompt: string, app: unknown) {
-  const aiModule = await importFirebaseAiModule();
-  const ai = aiModule.getAI(app, { backend: new aiModule.GoogleAIBackend() });
-  const model = aiModule.getGenerativeModel(ai, {
-    model: aiGenerationConfig.model,
-    generationConfig: {
-      temperature: aiGenerationConfig.temperature,
-      topP: aiGenerationConfig.topP,
-      maxOutputTokens: aiGenerationConfig.maxOutputTokens,
-      responseMimeType: 'application/json',
+async function requestAuthenticatedAiText(prompt: string) {
+  const token = await getCurrentUserIdToken();
+  const response = await fetch(aiApiConfig.endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+      Accept: 'application/json',
     },
+    body: new URLSearchParams({
+      system_prompt: getSystemPrompt(),
+      user_prompt: prompt,
+    }),
   });
 
-  const response = await model.generateContent(
-    [aiPromptConfig.baseSafety, aiPromptConfig.localeInstruction, aiPromptConfig.jsonOnly, prompt].join('\n\n')
-  );
+  const text = await response.text();
 
-  return readGeneratedText(response);
-}
+  if (!response.ok) {
+    throw createHttpError(response.status, text);
+  }
 
-function readGeneratedText(response: unknown) {
-  const candidate = response as { response?: { text?: () => string } };
-  const text = candidate.response?.text?.();
-
-  if (!text) {
+  if (!text.trim()) {
     throw new AiClientError('invalid-response', 'AI response is empty.');
   }
 
   return text;
+}
+
+async function getCurrentUserIdToken() {
+  const { auth } = await getFirebaseServices();
+  const user = auth.currentUser as { getIdToken?: (forceRefresh?: boolean) => Promise<string> } | null;
+
+  if (!user?.getIdToken) {
+    throw new AiClientError('missing-config', 'A signed-in Firebase user is required for AI requests.');
+  }
+
+  return user.getIdToken();
+}
+
+function getSystemPrompt() {
+  return [aiPromptConfig.baseSafety, aiPromptConfig.localeInstruction, aiPromptConfig.jsonOnly].join('\n\n');
+}
+
+function createHttpError(status: number, body: string) {
+  if (status === 401 || status === 403) {
+    return new AiClientError('request-failed', 'Authenticated AI API rejected the Firebase token.', {
+      retryable: false,
+      cause: readErrorBody(body),
+    });
+  }
+
+  if (status === 429) {
+    return new AiClientError('quota-exhausted', 'Authenticated AI API quota was exhausted.', {
+      retryable: true,
+      cause: readErrorBody(body),
+    });
+  }
+
+  if (status >= 500) {
+    return new AiClientError('request-failed', 'Authenticated AI API failed.', {
+      retryable: true,
+      cause: readErrorBody(body),
+    });
+  }
+
+  return new AiClientError('request-failed', 'Authenticated AI API request failed.', {
+    cause: readErrorBody(body),
+  });
+}
+
+function readErrorBody(body: string) {
+  try {
+    const parsed = JSON.parse(body) as { error?: unknown; detalles?: unknown };
+    return {
+      error: typeof parsed.error === 'string' ? parsed.error : undefined,
+      detalles: typeof parsed.detalles === 'string' ? parsed.detalles : undefined,
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
