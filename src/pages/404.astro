@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Button from '../components/Button.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
 import Container from '../components/Container.astro';
 import { defaultLocale } from '../config/site';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
@@ -11,7 +12,8 @@ const homeUrl = getLocalizedPath('/', locale);
 ---
 
 <BaseLayout title={t('notFound.title')} description={t('notFound.description')} locale={locale}>
-  <Container class="py-20 text-center">
+  <Container class="py-4 sm:py-6 text-center" size="page">
+    <Breadcrumb locale={locale} rootItem={{ label: t('nav.home'), href: homeUrl }} items={[{ label: t('notFound.title') }]} />
     <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">{t('notFound.eyebrow')}</p>
     <h1 class="mt-3 text-4xl font-black tracking-tight">{t('notFound.title')}</h1>
     <p class="mx-auto mt-4 max-w-xl text-[var(--color-muted)]">

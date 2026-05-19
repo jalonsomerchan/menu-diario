@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Container from '../../components/Container.astro';
-import Breadcrumb from '../../components/Breadcrumb.astro';
+import AppPageShell from '../../components/AppPageShell.astro';
 import PlanningAiApp from '../../components/PlanningAiApp.astro';
 import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
 import { usePlanningTranslations } from '../../i18n/planning';
@@ -19,9 +18,8 @@ const t = useTranslations(locale);
 const tp = usePlanningTranslations(locale);
 ---
 
-<BaseLayout title={`${tp('title')} · ${siteConfig.name}`} description={t('site.description')} locale={locale}>
-  <Container class="py-4 sm:py-6">
-    <Breadcrumb locale={locale} items={[{ label: tp('title') }]} />
+<BaseLayout title={`${tp('title')} · ${siteConfig.name}`} description={tp('description')} locale={locale}>
+  <AppPageShell locale={locale} title={tp('title')} description={tp('description')}>
     <PlanningAiApp locale={locale} />
-  </Container>
+  </AppPageShell>
 </BaseLayout>

@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Container from '../../components/Container.astro';
-import Breadcrumb from '../../components/Breadcrumb.astro';
+import AppPageShell from '../../components/AppPageShell.astro';
 import TuppersApp from '../../components/TuppersApp.astro';
 import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
 import { useTupperTranslations } from '../../i18n/tuppers';
@@ -19,8 +18,7 @@ const tt = useTupperTranslations(locale);
 ---
 
 <BaseLayout title={`${tt('title')} · ${siteConfig.name}`} description={tt('description')} locale={locale}>
-  <Container class="py-4 sm:py-6">
-    <Breadcrumb locale={locale} items={[{ label: tt('title') }]} />
+  <AppPageShell locale={locale} title={tt('title')} description={tt('description')}>
     <TuppersApp locale={locale} />
-  </Container>
+  </AppPageShell>
 </BaseLayout>

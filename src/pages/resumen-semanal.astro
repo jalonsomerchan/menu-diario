@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Container from '../components/Container.astro';
-import Breadcrumb from '../components/Breadcrumb.astro';
+import AppPageShell from '../components/AppPageShell.astro';
 import WeeklySummaryApp from '../components/WeeklySummaryApp.astro';
 import { defaultLocale, siteConfig } from '../config/site';
 import { useTranslations } from '../i18n/ui';
@@ -11,8 +10,7 @@ const t = useTranslations(locale);
 ---
 
 <BaseLayout title={`${t('summary.title')} · ${siteConfig.name}`} description={t('summary.description')} locale={locale}>
-  <Container class="py-4 sm:py-6">
-    <Breadcrumb locale={locale} items={[{ label: t('summary.title') }]} />
+  <AppPageShell locale={locale} title={t('summary.title')} description={t('summary.description')}>
     <WeeklySummaryApp locale={locale} />
-  </Container>
+  </AppPageShell>
 </BaseLayout>

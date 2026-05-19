@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Container from '../../components/Container.astro';
-import Breadcrumb from '../../components/Breadcrumb.astro';
+import AppPageShell from '../../components/AppPageShell.astro';
 import DishRecommenderApp from '../../components/DishRecommenderApp.astro';
 import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
 import { useDishRecommenderTranslations } from '../../i18n/dish-recommender';
@@ -19,9 +18,8 @@ const t = useTranslations(locale);
 const tr = useDishRecommenderTranslations(locale);
 ---
 
-<BaseLayout title={`${tr('title')} · ${siteConfig.name}`} description={t('site.description')} locale={locale}>
-  <Container class="py-4 sm:py-6">
-    <Breadcrumb locale={locale} items={[{ label: tr('title') }]} />
+<BaseLayout title={`${tr('title')} · ${siteConfig.name}`} description={tr('description')} locale={locale}>
+  <AppPageShell locale={locale} title={tr('title')} description={tr('description')}>
     <DishRecommenderApp locale={locale} />
-  </Container>
+  </AppPageShell>
 </BaseLayout>

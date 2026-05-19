@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Container from '../components/Container.astro';
-import Breadcrumb from '../components/Breadcrumb.astro';
+import AppPageShell from '../components/AppPageShell.astro';
 import HistoryApp from '../components/HistoryApp.astro';
 import { defaultLocale, siteConfig } from '../config/site';
 import { useTranslations } from '../i18n/ui';
@@ -10,9 +9,8 @@ const locale = defaultLocale;
 const t = useTranslations(locale);
 ---
 
-<BaseLayout title={`${t('history.title')} · ${siteConfig.name}`} description={t('site.description')} locale={locale}>
-  <Container class="py-4 sm:py-6">
-    <Breadcrumb locale={locale} items={[{ label: t('history.title') }]} />
+<BaseLayout title={`${t('history.title')} · ${siteConfig.name}`} description={t('history.description')} locale={locale}>
+  <AppPageShell locale={locale} title={t('history.title')} description={t('history.description')}>
     <HistoryApp locale={locale} />
-  </Container>
+  </AppPageShell>
 </BaseLayout>

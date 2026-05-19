@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Button from '../../components/Button.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
 import Container from '../../components/Container.astro';
 import AuthGate from '../../components/AuthGate.astro';
 import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
@@ -20,7 +21,8 @@ const t = useTranslations(locale);
 ---
 
 <BaseLayout title={siteConfig.name} description={t('site.description')} locale={locale}>
-  <Container class="py-12 sm:py-16">
+  <Container class="py-4 sm:py-6" size="page">
+    <Breadcrumb locale={locale} rootItem={{ label: t('nav.home') }} items={[]} />
     <section class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
       <div>
         <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">{t('home.eyebrow')}</p>

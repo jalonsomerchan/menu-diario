@@ -1,0 +1,20 @@
+---
+import type { Locale } from '../config/site';
+import Breadcrumb from './Breadcrumb.astro';
+import Container from './Container.astro';
+import PageHeader from './PageHeader.astro';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+}
+
+const { locale, title, description } = Astro.props;
+---
+
+<Container class="app-page-shell" size="page">
+  <Breadcrumb locale={locale} items={[{ label: title }]} />
+  <PageHeader title={title} description={description} />
+  <slot />
+</Container>

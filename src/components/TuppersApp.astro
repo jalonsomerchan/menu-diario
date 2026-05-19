@@ -18,7 +18,9 @@ const labels = {
   title: tt('title'),
   description: tt('description'),
   expiryAlert: tt('expiryAlert'),
+  openCreate: tt('openCreate'),
   createTitle: tt('createTitle'),
+  createDescription: tt('createDescription'),
   name: tt('name'),
   namePlaceholder: tt('namePlaceholder'),
   dish: tt('dish'),
@@ -94,59 +96,28 @@ const labels = {
 
   <div data-content hidden>
     <header class="tuppers-hero app-panel">
-      <h1>{labels.title}</h1>
-      <p>{labels.description}</p>
-      <a class="button button--ghost button--small" href={dashboardPath}>{labels.backDashboard}</a>
+      <div class="tuppers-hero__copy">
+        <h2>{labels.title}</h2>
+        <p>{labels.description}</p>
+      </div>
+      <div class="tuppers-hero__actions">
+        <button class="button button--primary" type="button" data-open-create>{labels.openCreate}</button>
+        <a class="button button--ghost button--small" href={dashboardPath}>{labels.backDashboard}</a>
+      </div>
     </header>
 
     <section class="expiry-banner" data-expiry-alert hidden role="status" aria-live="polite">
       <strong>{labels.expiryAlert}</strong>
     </section>
 
-    <section class="app-panel tuppers-form-card" aria-labelledby="tuppers-create-title">
-      <h2 id="tuppers-create-title">{labels.createTitle}</h2>
-      <form data-tupper-form class="tuppers-form">
-        <label>
-          <span>{labels.dish}</span>
-          <select data-dish-select>
-            <option value="">{labels.freeTextDish}</option>
-          </select>
-        </label>
-        <label>
-          <span>{labels.name}</span>
-          <input name="name" data-name required minlength="2" placeholder={labels.namePlaceholder} autocomplete="off" />
-        </label>
-        <label>
-          <span>{labels.preparedAt}</span>
-          <input name="preparedAt" data-prepared type="date" required />
-        </label>
-        <label>
-          <span>{labels.expiresAt}</span>
-          <input name="expiresAt" data-expires type="date" required />
-        </label>
-        <label>
-          <span>{labels.portions}</span>
-          <input name="portions" data-portions type="number" min="1" step="1" inputmode="numeric" />
-        </label>
-        <label>
-          <span>{labels.location}</span>
-          <select name="location" data-location>
-            <option value="fridge">{labels.locationFridge}</option>
-            <option value="freezer">{labels.locationFreezer}</option>
-            <option value="other">{labels.locationOther}</option>
-          </select>
-        </label>
-        <label class="tuppers-form__wide">
-          <span>{labels.notes}</span>
-          <textarea name="notes" data-notes rows="3"></textarea>
-        </label>
-        <button class="button button--primary tuppers-form__wide" type="submit">{labels.create}</button>
-      </form>
+    <section class="app-panel tuppers-overview-card" aria-labelledby="tuppers-overview-title">
+      <h3 id="tuppers-overview-title">{labels.createTitle}</h3>
+      <p>{labels.createDescription}</p>
     </section>
 
     <section class="dashboard-section" aria-labelledby="tuppers-list-title">
       <div class="section-heading section-heading--simple">
-        <h2 id="tuppers-list-title">{labels.title}</h2>
+        <h3 id="tuppers-list-title">{labels.title}</h3>
       </div>
       <div class="tupper-filters" data-filters role="group" aria-label={labels.filters}>
         <button type="button" data-filter="all" aria-pressed="true">{labels.filterAll}</button>
@@ -159,6 +130,68 @@ const labels = {
       <div class="tupper-list" data-tupper-list></div>
     </section>
   </div>
+
+  <dialog
+    class="app-dialog app-dialog--editor tuppers-create-dialog"
+    data-create-dialog
+    aria-labelledby="tuppers-create-title"
+    aria-describedby="tuppers-create-description"
+  >
+    <form method="dialog" class="app-dialog__surface tuppers-create-dialog__surface" data-tupper-form>
+      <header class="app-dialog__header">
+        <div class="app-dialog__heading">
+          <p class="menu-app__eyebrow">{labels.title}</p>
+          <h2 id="tuppers-create-title">{labels.createTitle}</h2>
+          <p id="tuppers-create-description">{labels.createDescription}</p>
+        </div>
+        <button class="app-dialog__dismiss" type="button" data-close-create aria-label={labels.cancel}>
+          <span aria-hidden="true">×</span>
+        </button>
+      </header>
+      <div class="app-dialog__body">
+        <div class="tuppers-form">
+          <label>
+            <span>{labels.dish}</span>
+            <select data-dish-select>
+              <option value="">{labels.freeTextDish}</option>
+            </select>
+          </label>
+          <label>
+            <span>{labels.name}</span>
+            <input name="name" data-name required minlength="2" placeholder={labels.namePlaceholder} autocomplete="off" />
+          </label>
+          <label>
+            <span>{labels.preparedAt}</span>
+            <input name="preparedAt" data-prepared type="date" required />
+          </label>
+          <label>
+            <span>{labels.expiresAt}</span>
+            <input name="expiresAt" data-expires type="date" required />
+          </label>
+          <label>
+            <span>{labels.portions}</span>
+            <input name="portions" data-portions type="number" min="1" step="1" inputmode="numeric" />
+          </label>
+          <label>
+            <span>{labels.location}</span>
+            <select name="location" data-location>
+              <option value="fridge">{labels.locationFridge}</option>
+              <option value="freezer">{labels.locationFreezer}</option>
+              <option value="other">{labels.locationOther}</option>
+            </select>
+          </label>
+          <label class="tuppers-form__wide">
+            <span>{labels.notes}</span>
+            <textarea name="notes" data-notes rows="4"></textarea>
+          </label>
+        </div>
+      </div>
+      <footer class="app-dialog__footer">
+        <button class="button button--ghost" type="button" data-close-create>{labels.cancel}</button>
+        <button class="button button--primary" type="submit">{labels.create}</button>
+      </footer>
+    </form>
+  </dialog>
 
   <ConfirmDialog
     dialogId="tuppers-confirm"

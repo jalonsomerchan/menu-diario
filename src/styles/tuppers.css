@@ -1,12 +1,14 @@
-.tuppers-app { max-width: 72rem; margin-inline: auto; }
+.tuppers-app { display: grid; gap: 1rem; max-width: none; }
 
-.tuppers-hero { display: grid; gap: var(--surface-gap); margin-bottom: 1rem; padding: var(--surface-padding-lg); padding-bottom: max(var(--surface-padding-lg), 1rem); border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 70%); background: var(--panel-background-strong); }
-.tuppers-hero h1 { margin: 0; font-size: clamp(2.2rem, 11vw, 4rem); line-height: 0.95; letter-spacing: -0.06em; }
+.tuppers-hero { display: grid; gap: 1rem; margin-bottom: 0; padding: var(--surface-padding-lg); padding-bottom: max(var(--surface-padding-lg), 1rem); border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 70%); background: var(--panel-background-strong); }
+.tuppers-hero__copy { display: grid; gap: 0.45rem; }
+.tuppers-hero__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+.tuppers-hero h2 { margin: 0; font-size: clamp(2rem, 8vw, 3.4rem); line-height: 0.95; letter-spacing: -0.06em; }
 .tuppers-hero p { margin: 0; color: var(--color-muted); font-weight: 700; line-height: var(--surface-copy-line-height); letter-spacing: var(--surface-copy-letter-spacing); }
 .expiry-banner[hidden] { display: none; }
 
-.tuppers-form-card { display: grid; gap: var(--surface-gap); margin-bottom: 1rem; padding: var(--surface-padding); padding-bottom: max(var(--surface-padding), 1rem); }
-.tuppers-form-card h2 { margin: 0; font-size: clamp(1.35rem, 6vw, 2rem); letter-spacing: -0.04em; }
+.tuppers-overview-card { display: grid; gap: 0.55rem; }
+.tuppers-overview-card h3 { margin: 0; font-size: clamp(1.25rem, 4vw, 1.7rem); letter-spacing: -0.04em; }
 .tuppers-form { display: grid; gap: 0.8rem; }
 .tuppers-form label { display: grid; gap: 0.35rem; color: var(--color-muted); font-size: 0.88rem; font-weight: 850; }
 .tuppers-form input,
@@ -44,11 +46,19 @@
 .tupper-card__actions button[data-action='archive'],
 .tupper-card__actions button[data-action='unassign'] { border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 65%); background: color-mix(in srgb, var(--color-danger-soft), transparent 18%); color: var(--color-danger); }
 
+.tuppers-create-dialog__surface {
+  max-height: min(92dvh, 56rem);
+}
+
 @media (min-width: 720px) {
   .tuppers-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tuppers-form__wide { grid-column: 1 / -1; }
   .tupper-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tupper-assign { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+  .tuppers-hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
 }
 
 @media (min-width: 1024px) {

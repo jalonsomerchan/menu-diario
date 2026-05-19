@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
 import Container from '../components/Container.astro';
 import AuthGate from '../components/AuthGate.astro';
 import { defaultLocale, siteConfig } from '../config/site';
@@ -62,7 +63,8 @@ const homeCopy =
 ---
 
 <BaseLayout title={homeCopy.title} description={homeCopy.subtitle} locale={locale}>
-  <Container class="py-10 sm:py-16">
+  <Container class="py-4 sm:py-6" size="page">
+    <Breadcrumb locale={locale} rootItem={{ label: t('nav.home') }} items={[]} />
     <section class="home-hero" aria-labelledby="home-title">
       <div class="home-hero__content">
         <p class="home-hero__eyebrow">{homeCopy.eyebrow}</p>

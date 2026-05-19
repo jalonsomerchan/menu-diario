@@ -1,8 +1,9 @@
 ---
 import Button from './Button.astro';
+import Breadcrumb from './Breadcrumb.astro';
 import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
-import { getLocalizedPath } from '../i18n/ui';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
 import { usePublicPageCopy } from '../i18n/public-pages';
 
 interface Props {
@@ -11,11 +12,13 @@ interface Props {
 
 const { locale } = Astro.props;
 const tp = usePublicPageCopy(locale);
+const t = useTranslations(locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
 const values = [tp('aboutValueSimple'), tp('aboutValueGroup'), tp('aboutValueHistory'), tp('aboutValueMobile')];
 ---
 
-<Container class="py-12 sm:py-16">
+<Container class="py-4 sm:py-6" size="page">
+  <Breadcrumb locale={locale} rootItem={{ label: t('nav.home'), href: getLocalizedPath('/', locale) }} items={[{ label: tp('aboutTitle') }]} />
   <article class="about-page">
     <header class="about-page__hero">
       <p class="about-page__eyebrow">{tp('aboutEyebrow')}</p>
@@ -60,8 +63,6 @@ const values = [tp('aboutValueSimple'), tp('aboutValueGroup'), tp('aboutValueHis
   .about-page {
     display: grid;
     gap: 1rem;
-    max-width: 64rem;
-    margin-inline: auto;
   }
 
   .about-page__hero,

@@ -17,14 +17,14 @@
   padding-bottom: max(var(--surface-padding), 1rem);
 }
 
-.weekly-summary-hero h1,
+.weekly-summary-hero h2,
 .weekly-summary-panel h2 {
   margin: 0;
   line-height: 1;
   letter-spacing: -0.05em;
 }
 
-.weekly-summary-hero h1 {
+.weekly-summary-hero h2 {
   font-size: clamp(2rem, 10vw, 4.5rem);
 }
 

@@ -1,5 +1,6 @@
 ---
 import Button from './Button.astro';
+import Breadcrumb from './Breadcrumb.astro';
 import Container from './Container.astro';
 import { type Locale } from '../config/site';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
@@ -33,7 +34,8 @@ const benefits = [
 ];
 ---
 
-<Container class="py-12 sm:py-16">
+<Container class="py-4 sm:py-6" size="page">
+  <Breadcrumb locale={locale} rootItem={{ label: t('nav.home'), href: getLocalizedPath('/', locale) }} items={[{ label: t('public.howItWorks.title') }]} />
   <section class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
     <div>
       <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">

@@ -1,8 +1,9 @@
 ---
 import Button from './Button.astro';
+import Breadcrumb from './Breadcrumb.astro';
 import Container from './Container.astro';
 import { type Locale } from '../config/site';
-import { getLocalizedPath } from '../i18n/ui';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
 import { getPublicFaqItems, usePublicPageCopy } from '../i18n/public-pages';
 
 interface Props {
@@ -11,11 +12,13 @@ interface Props {
 
 const { locale } = Astro.props;
 const tp = usePublicPageCopy(locale);
+const t = useTranslations(locale);
 const faqItems = getPublicFaqItems(locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
 ---
 
-<Container class="py-12 sm:py-16">
+<Container class="py-4 sm:py-6" size="page">
+  <Breadcrumb locale={locale} rootItem={{ label: t('nav.home'), href: getLocalizedPath('/', locale) }} items={[{ label: tp('faqTitle') }]} />
   <article class="faq-page">
     <header class="faq-page__hero">
       <p class="faq-page__eyebrow">{tp('faqEyebrow')}</p>
@@ -46,8 +49,6 @@ const dashboardPath = getLocalizedPath('/dashboard', locale);
   .faq-page {
     display: grid;
     gap: 1rem;
-    max-width: 58rem;
-    margin-inline: auto;
   }
 
   .faq-page__hero,

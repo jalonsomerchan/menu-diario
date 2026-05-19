@@ -1,7 +1,19 @@
 ---
-const { class: className = '' } = Astro.props;
+interface Props {
+  class?: string;
+  size?: 'page' | 'content' | 'narrow';
+}
+
+const { class: className = '', size = 'page' } = Astro.props;
+
+const sizeClass =
+  size === 'narrow'
+    ? 'container-shell--narrow'
+    : size === 'content'
+      ? 'container-shell--content'
+      : 'container-shell--page';
 ---
 
-<div class:list={['mx-auto w-full max-w-[var(--container-width)] px-4 sm:px-6 lg:px-8', className]}>
+<div class:list={['container-shell', sizeClass, className]}>
   <slot />
 </div>

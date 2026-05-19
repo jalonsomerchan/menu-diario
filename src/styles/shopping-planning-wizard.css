@@ -9,7 +9,7 @@
   gap: 0.45rem;
 }
 
-.shopping-app .planning-ai-panel-heading h1 {
+.shopping-app .planning-ai-panel-heading h2 {
   margin: 0;
   font-size: clamp(1.8rem, 5vw, 2.6rem);
   line-height: 1.05;

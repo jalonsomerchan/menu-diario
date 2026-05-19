@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Container from '../../components/Container.astro';
-import Breadcrumb from '../../components/Breadcrumb.astro';
+import AppPageShell from '../../components/AppPageShell.astro';
 import DishesApp from '../../components/DishesApp.astro';
 import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
 import { isLocale, useTranslations } from '../../i18n/ui';
@@ -18,8 +17,7 @@ const t = useTranslations(locale);
 ---
 
 <BaseLayout title={`${t('dishes.title')} · ${siteConfig.name}`} description={t('dishes.description')} locale={locale}>
-  <Container class="py-4 sm:py-6">
-    <Breadcrumb locale={locale} items={[{ label: t('dishes.title') }]} />
+  <AppPageShell locale={locale} title={t('dishes.title')} description={t('dishes.description')}>
     <DishesApp locale={locale} />
-  </Container>
+  </AppPageShell>
 </BaseLayout>

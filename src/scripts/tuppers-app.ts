@@ -25,6 +25,8 @@ if (root) {
   const status = root.querySelector<HTMLElement>('[data-status]');
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const content = root.querySelector<HTMLElement>('[data-content]');
+  const createDialog = root.querySelector<HTMLDialogElement>('[data-create-dialog]');
+  const openCreateButton = root.querySelector<HTMLButtonElement>('[data-open-create]');
   const form = root.querySelector<HTMLFormElement>('[data-tupper-form]');
   const dishSelect = root.querySelector<HTMLSelectElement>('[data-dish-select]');
   const nameInput = root.querySelector<HTMLInputElement>('[data-name]');
@@ -37,6 +39,7 @@ if (root) {
   const filterButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-filter]')];
   const expiryAlert = root.querySelector<HTMLElement>('[data-expiry-alert]');
   const confirmDialog = root.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
+  const closeCreateButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-close-create]')];
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -50,8 +53,7 @@ if (root) {
   const assignmentConfirmation = confirmDialog ? createConfirmDialog(confirmDialog) : null;
 
   const today = toIsoDate(new Date());
-  if (preparedInput) preparedInput.value = today;
-  if (expiresInput) expiresInput.value = today;
+  resetCreateForm();
 
   function escapeHtml(value = '') {
     return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -62,6 +64,12 @@ if (root) {
     status.hidden = false;
     status.textContent = message;
     status.dataset.variant = isError ? 'error' : 'info';
+  }
+
+  function resetCreateForm() {
+    form?.reset();
+    if (preparedInput) preparedInput.value = today;
+    if (expiresInput) expiresInput.value = today;
   }
 
   function setReady() {
@@ -276,6 +284,15 @@ if (root) {
     if (selected?.dataset.name && nameInput) nameInput.value = selected.dataset.name;
   });
 
+  openCreateButton?.addEventListener('click', () => {
+    resetCreateForm();
+    createDialog?.showModal();
+  });
+
+  closeCreateButtons.forEach((button) => {
+    button.addEventListener('click', () => createDialog?.close());
+  });
+
   filterButtons.forEach((button) => {
     button.addEventListener('click', () => {
       currentFilter = (button.dataset.filter ?? 'all') as TupperFilter;
@@ -298,9 +315,8 @@ if (root) {
         location: (locationInput?.value ?? 'fridge') as TupperLocation,
         notes: notesInput?.value ?? '',
       });
-      form.reset();
-      if (preparedInput) preparedInput.value = today;
-      if (expiresInput) expiresInput.value = today;
+      resetCreateForm();
+      createDialog?.close();
       showStatus(labels.created);
     } catch (error) {
       showStatus(formatError(error), true);
