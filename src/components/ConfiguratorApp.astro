@@ -73,25 +73,15 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>
-    <section id="configurador" class="dashboard-section app-panel configurator-planner-panel">
-      <div class="section-heading section-heading--simple">
-        <div class="configurator-planner-panel__actions">
-          <a class="button button--secondary button--small" href={homePath}>{labels.dashboard}</a>
-          <a class="button button--primary button--small" href={planningPath}>{labels.planning}</a>
-          <a class="button button--ghost button--small" href={shoppingPath}>{labels.shopping}</a>
-          <a class="button button--ghost button--small" href={tuppersPath}>{labels.tuppers}</a>
-        </div>
+    <header class="configurator-page-header">
+      <div class="configurator-page-header__copy">
+        <h1>{labels.configure}</h1>
+        <p>{labels.configureDescription}</p>
       </div>
+      <a class="button button--primary" href={planningPath}>{labels.planning}</a>
+    </header>
 
-      <a class="configurator-ai-shortcut" href={planningPath}>
-        <div class="configurator-ai-shortcut__copy">
-          <p class="menu-app__eyebrow">{labels.planning}</p>
-          <h2>{labels.planningTitle}</h2>
-          <p>{labels.planningHint}</p>
-        </div>
-        <span class="button button--primary button--small">{labels.planning}</span>
-      </a>
-
+    <section id="configurador" class="dashboard-section app-panel configurator-planner-panel">
       <div class="menu-days menu-days--cards" data-config-days></div>
       <div class="configurator-app__load-more">
         <button class="button button--secondary" type="button" data-config-load-more>
@@ -122,55 +112,37 @@ const labels = {
     gap: 0.35rem;
   }
 
+  .configurator-page-header {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .configurator-page-header__copy {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .configurator-page-header h1 {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    line-height: 0.94;
+    letter-spacing: -0.07em;
+  }
+
+  .configurator-page-header p {
+    margin: 0;
+    max-width: 72ch;
+    color: var(--color-muted);
+    font-size: clamp(1rem, 2.4vw, 1.15rem);
+    line-height: var(--surface-copy-line-height);
+    letter-spacing: var(--surface-copy-letter-spacing);
+  }
+
   .configurator-planner-panel {
     display: grid;
     gap: 1rem;
     background: var(--panel-background);
-  }
-
-  .configurator-planner-panel .section-heading {
-    margin-bottom: 0;
-    gap: 1rem;
-  }
-
-  .configurator-planner-panel__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.65rem;
-    align-items: center;
-  }
-
-  .configurator-planner-panel__intro {
-    display: grid;
-    gap: 0.35rem;
-  }
-
-  .configurator-ai-shortcut {
-    display: grid;
-    gap: 1rem;
-    align-items: center;
-    padding: var(--surface-padding);
-    padding-bottom: max(var(--surface-padding), 1rem);
-    border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 48%);
-    border-radius: var(--radius-2xl);
-    background:
-      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary-soft), transparent 18%), transparent 48%),
-      color-mix(in srgb, var(--color-surface), transparent 1%);
-    box-shadow: var(--shadow-xs);
-    text-decoration: none;
-  }
-
-  .configurator-ai-shortcut__copy {
-    display: grid;
-    gap: 0.35rem;
-    min-width: 0;
-  }
-
-  .configurator-ai-shortcut__copy h2 {
-    margin: 0;
-    font-size: clamp(1.35rem, 5vw, 2rem);
-    line-height: 0.98;
-    letter-spacing: -0.05em;
   }
 
   .configurator-planner-panel .menu-days--cards {
@@ -188,11 +160,15 @@ const labels = {
   }
 
   @media (min-width: 720px) {
-    .configurator-ai-shortcut {
+    .configurator-page-header {
       grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+    }
+
+    .configurator-page-header .button {
+      margin-top: 0.15rem;
     }
   }
-
 </style>
 
 <script>
