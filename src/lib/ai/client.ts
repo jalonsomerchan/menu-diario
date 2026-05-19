@@ -1,9 +1,11 @@
 import { assertFirebaseAppCheckReadyForAi } from '../firebase/app-check';
 import { getFirebaseServices, hasFirebaseConfig } from '../firebase/client';
-import { aiApiConfig, aiGenerationConfig, aiPromptConfig } from './config';
+import { getFirebaseConfig } from '../firebase/config';
+import { generateAuthenticatedAiApiJson } from './authenticated-api-client';
+import { aiGenerationConfig, aiPromptConfig } from './config';
 import { AiClientError, logAiError } from './errors';
 import { getAiFeatureFlags, isAiAvailable } from './flags';
-import { parseValidatedJson, type JsonValidator } from './json';
+import { type JsonValidator } from './json';
 import { assertAiClientLimit, registerAiClientUse } from './limits';
 
 type GenerateJsonOptions<T> = {
@@ -30,8 +32,14 @@ export async function generateAuthenticatedAiJson<T>({ prompt, validator, userId
 
   try {
     await ensureAppCheckForAi();
-    const result = await withTimeout(requestAuthenticatedAiText(prompt), timeoutMs ?? aiGenerationConfig.timeoutMs);
-    const json = parseValidatedJson(result, validator);
+    const json = await generateAuthenticatedAiApiJson({
+      token: await getCurrentUserIdToken(),
+      projectId: getFirebaseConfig().projectId,
+      systemPrompt: getSystemPrompt(),
+      userPrompt: prompt,
+      validator,
+      timeoutMs: timeoutMs ?? aiGenerationConfig.timeoutMs,
+    });
     registerAiClientUse(userId);
 
     return json;
@@ -52,34 +60,6 @@ async function ensureAppCheckForAi() {
   }
 }
 
-async function requestAuthenticatedAiText(prompt: string) {
-  const token = await getCurrentUserIdToken();
-  const response = await fetch(aiApiConfig.endpoint, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-      Accept: 'application/json',
-    },
-    body: new URLSearchParams({
-      system_prompt: getSystemPrompt(),
-      user_prompt: prompt,
-    }),
-  });
-
-  const text = await response.text();
-
-  if (!response.ok) {
-    throw createHttpError(response.status, text);
-  }
-
-  if (!text.trim()) {
-    throw new AiClientError('invalid-response', 'AI response is empty.');
-  }
-
-  return text;
-}
-
 async function getCurrentUserIdToken() {
   const { auth } = await getFirebaseServices();
   const user = auth.currentUser as { getIdToken?: (forceRefresh?: boolean) => Promise<string> } | null;
@@ -93,58 +73,6 @@ async function getCurrentUserIdToken() {
 
 function getSystemPrompt() {
   return [aiPromptConfig.baseSafety, aiPromptConfig.localeInstruction, aiPromptConfig.jsonOnly].join('\n\n');
-}
-
-function createHttpError(status: number, body: string) {
-  if (status === 401 || status === 403) {
-    return new AiClientError('request-failed', 'Authenticated AI API rejected the Firebase token.', {
-      retryable: false,
-      cause: readErrorBody(body),
-    });
-  }
-
-  if (status === 429) {
-    return new AiClientError('quota-exhausted', 'Authenticated AI API quota was exhausted.', {
-      retryable: true,
-      cause: readErrorBody(body),
-    });
-  }
-
-  if (status >= 500) {
-    return new AiClientError('request-failed', 'Authenticated AI API failed.', {
-      retryable: true,
-      cause: readErrorBody(body),
-    });
-  }
-
-  return new AiClientError('request-failed', 'Authenticated AI API request failed.', {
-    cause: readErrorBody(body),
-  });
-}
-
-function readErrorBody(body: string) {
-  try {
-    const parsed = JSON.parse(body) as { error?: unknown; detalles?: unknown };
-    return {
-      error: typeof parsed.error === 'string' ? parsed.error : undefined,
-      detalles: typeof parsed.detalles === 'string' ? parsed.detalles : undefined,
-    };
-  } catch {
-    return undefined;
-  }
-}
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
-  return new Promise<T>((resolve, reject) => {
-    const timeoutId = window.setTimeout(() => {
-      reject(new AiClientError('timeout', 'AI request timed out.', { retryable: true }));
-    }, timeoutMs);
-
-    promise
-      .then(resolve)
-      .catch(reject)
-      .finally(() => window.clearTimeout(timeoutId));
-  });
 }
 
 function normalizeAiError(error: unknown) {
