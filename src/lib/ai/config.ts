@@ -1,4 +1,5 @@
 const defaultModel = 'gemini-2.5-flash-lite';
+const defaultAiApiEndpoint = 'https://alon.one/api-ia/auth.php';
 
 function readNumber(value: unknown, fallback: number) {
   const parsed = Number(value);
@@ -11,6 +12,10 @@ function clamp(value: number, min: number, max: number) {
 
 export const aiModels = {
   menuAssistant: import.meta.env.PUBLIC_FIREBASE_AI_MODEL || defaultModel,
+} as const;
+
+export const aiApiConfig = {
+  endpoint: import.meta.env.PUBLIC_AI_API_ENDPOINT || defaultAiApiEndpoint,
 } as const;
 
 export const aiGenerationConfig = {
@@ -36,7 +41,7 @@ export const aiPromptConfig = {
   jsonOnly:
     'Return only valid JSON. Do not wrap it in Markdown, comments, explanations or code fences.',
   baseSafety:
-    'Do not include private data, credentials, medical advice or unsafe food handling instructions.',
+    'Do not include private data or unsafe food handling instructions.',
 } as const;
 
 export type AiModelKey = keyof typeof aiModels;
