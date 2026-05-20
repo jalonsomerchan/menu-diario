@@ -165,10 +165,20 @@ if (root) {
     return '';
   }
 
+  function scrollResultsToStart() {
+    const resultsPanel = root.querySelector<HTMLElement>('[data-wizard-step="results"]');
+
+    window.requestAnimationFrame(() => {
+      draft?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      resultsPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   function goToWizardStep(step: WizardStep) {
     currentWizardStep = step;
     showWizardError('');
     renderWizard();
+    if (step === 'results') scrollResultsToStart();
   }
 
   function renderWizardSummary() {
@@ -307,12 +317,13 @@ if (root) {
   }
 
   function renderStatusButton(item: ShoppingItem, value: ShoppingItem['status'], label: string) {
+    const isSelected = value === 'dismissed' ? item.status !== 'to-buy' : item.status === value;
     return `
       <button
         class="shopping-status__button"
         type="button"
         data-set-status="${value}"
-        data-selected="${item.status === value}"
+        data-selected="${isSelected}"
         data-status="${value}"
       >
         ${escapeHtml(label)}
@@ -331,7 +342,6 @@ if (root) {
         <div class="shopping-item__actions">
           <div class="shopping-status" role="group" aria-label="${escapeHtml(labels.itemStatus)}">
             ${renderStatusButton(item, 'to-buy', labels.markToBuy)}
-            ${renderStatusButton(item, 'owned', labels.markOwned)}
             ${renderStatusButton(item, 'dismissed', labels.markDismissed)}
           </div>
         </div>
