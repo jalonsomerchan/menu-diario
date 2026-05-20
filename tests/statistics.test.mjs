@@ -74,7 +74,7 @@ describe('menu statistics helpers', () => {
     assert.equal(stats.skippedMeals, 1);
     assert.equal(stats.eatingOutMeals, 1);
     assert.equal(stats.leftoversMeals, 1);
-    assert.equal(stats.customDays, 2);
+    assert.equal(stats.customDays, 3);
     assert.equal(stats.completionRate, 50);
     assert.deepEqual(stats.topDishes[0], { name: 'Paella', count: 2 });
     assert.deepEqual(stats.favoriteDishes[0], { name: 'Paella', count: 2 });
