@@ -1,6 +1,7 @@
 ---
 import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
+import { getPublicSeoPages } from '../data/public-seo-pages';
 import { footerGames, footerTools, formatProjectLabel, getFooterLabels } from '../i18n/footer-projects';
 import { usePublicPageCopy } from '../i18n/public-pages';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
@@ -13,10 +14,15 @@ const { locale } = Astro.props;
 const labels = getFooterLabels(locale);
 const t = useTranslations(locale);
 const tp = usePublicPageCopy(locale);
+const seoLinks = getPublicSeoPages(locale).map((page) => ({
+  href: getLocalizedPath(`/${page.slug}`, locale),
+  label: page.navLabel,
+}));
 const appLinks = [
   { href: getLocalizedPath('/como-funciona', locale), label: t('public.howItWorks.nav') },
   { href: getLocalizedPath('/acerca-de', locale), label: tp('footerAbout') },
   { href: getLocalizedPath('/faq', locale), label: tp('footerFaq') },
+  ...seoLinks,
 ];
 const projectGroups = [
   { title: labels.tools, projects: footerTools },

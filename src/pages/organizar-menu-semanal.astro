@@ -1,0 +1,13 @@
+---
+import PublicSeoPage from '../components/PublicSeoPage.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getPublicSeoPage } from '../data/public-seo-pages';
+import { defaultLocale } from '../config/site';
+
+const locale = defaultLocale;
+const page = getPublicSeoPage(locale, 'weeklyMenu');
+---
+
+<BaseLayout title={page.title} description={page.description} locale={locale}>
+  <PublicSeoPage locale={locale} pageKey="weeklyMenu" />
+</BaseLayout>

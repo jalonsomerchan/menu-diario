@@ -1,0 +1,21 @@
+---
+import PublicSeoPage from '../../components/PublicSeoPage.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublicSeoPage } from '../../data/public-seo-pages';
+import { defaultLocale, locales, type Locale } from '../../config/site';
+import { isLocale } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return locales
+    .filter((locale) => locale !== defaultLocale)
+    .map((locale) => ({ params: { locale } }));
+}
+
+const localeParam = Astro.params.locale;
+const locale: Locale = isLocale(localeParam) ? localeParam : defaultLocale;
+const page = getPublicSeoPage(locale, 'weeklyMenu');
+---
+
+<BaseLayout title={page.title} description={page.description} locale={locale}>
+  <PublicSeoPage locale={locale} pageKey="weeklyMenu" />
+</BaseLayout>
