@@ -1,11 +1,18 @@
+.day-edit-modal {
+  max-height: 100dvh;
+}
+
 .day-edit-modal .day-edit-modal__box {
+  height: min(94dvh, 52rem);
   max-height: min(94dvh, 52rem);
+  min-height: 0;
 }
 
 .day-edit-modal .day-edit-modal__body {
   flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+  min-height: 0 !important;
+  max-height: none;
+  overflow-y: auto !important;
   overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -14,7 +21,7 @@
 .day-edit-modal .day-card--compact-editor {
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: min-content;
 }
 
 .day-edit-modal .day-edit-card__content,
@@ -23,6 +30,10 @@
   display: grid;
   gap: 1.25rem;
   min-height: 0;
+}
+
+.day-edit-modal .day-card[data-day-mode='skipped'] .day-edit-card__content {
+  min-height: auto !important;
 }
 
 .day-edit-modal .day-edit-block {
@@ -64,7 +75,7 @@
 }
 
 @media (max-width: 520px) {
-  .day-edit-modal .day-edit-modal__body {
-    max-height: calc(100dvh - 11rem);
+  .day-edit-modal .day-edit-modal__box {
+    height: min(94dvh, 46rem);
   }
 }
