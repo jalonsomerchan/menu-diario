@@ -1,6 +1,7 @@
 ---
 import type { Locale } from '../config/site';
 import DayEditModal from './DayEditModal.astro';
+import { useStatisticsTranslations } from '../i18n/statistics';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -10,9 +11,11 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const ts = useStatisticsTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const configurePath = getLocalizedPath('/planificador', locale);
+const statisticsPath = getLocalizedPath('/estadisticas', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
 
 const labels = {
@@ -67,6 +70,7 @@ const labels = {
   offlineReadOnly: t('pwa.offlineReadOnly'),
   offlineNoCache: t('pwa.offlineNoCache'),
   backOnline: t('pwa.backOnline'),
+  statistics: ts('title'),
   tuppers: tt('nav'),
   tuppersExpiryAlert: tt('expiryAlert'),
   homePath,
@@ -91,6 +95,7 @@ const labels = {
       <div class="dashboard-hero-actions">
         <button class="button button--ghost button--small" type="button" data-today-edit>{labels.editDay}</button>
         <a class="button button--primary button--small" href={configurePath}>{labels.configure}</a>
+        <a class="button button--secondary button--small" href={statisticsPath}>{labels.statistics}</a>
       </div>
     </section>
 
