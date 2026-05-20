@@ -1,11 +1,16 @@
+import { useShoppingActionTranslations } from '../i18n/shopping-actions';
 import './shopping-alexa-integration';
 
 const wizard = document.querySelector<HTMLElement>('[data-shopping-wizard]');
 
 if (wizard) {
   const app = wizard.closest<HTMLElement>('[data-shopping-app]');
+  const locale = document.documentElement.lang === 'en' ? 'en' : 'es';
+  const ta = useShoppingActionTranslations(locale);
   const scrollTarget = wizard.closest<HTMLElement>('.planning-ai-panel') ?? wizard;
   const panels = [...wizard.querySelectorAll<HTMLElement>('[data-wizard-step]')];
+  const resultsPanel = wizard.querySelector<HTMLElement>('[data-wizard-step="results"]');
+  const draft = wizard.querySelector<HTMLElement>('[data-draft]');
   const indicators = [...wizard.querySelectorAll<HTMLButtonElement>('.planning-ai-wizard-step')];
   const back = wizard.querySelector<HTMLButtonElement>('[data-wizard-prev]');
   const next = wizard.querySelector<HTMLButtonElement>('[data-wizard-next]');
@@ -27,6 +32,29 @@ if (wizard) {
     scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  function scrollResultsTop() {
+    if (!resultsPanel || resultsPanel.hidden) return;
+    const panel = resultsPanel;
+    window.requestAnimationFrame(() => {
+      draft?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      panel.scrollIntoView({ behavior: 'auto', block: 'start' });
+    });
+  }
+
+  function simplifyResultActions() {
+    draft?.querySelectorAll<HTMLButtonElement>('[data-set-status="owned"]').forEach((button) => {
+      button.hidden = true;
+      button.setAttribute('aria-hidden', 'true');
+      button.tabIndex = -1;
+    });
+
+    draft?.querySelectorAll<HTMLButtonElement>('[data-set-status="dismissed"]').forEach((button) => {
+      button.textContent = ta('doNotBuy');
+      const item = button.closest<HTMLElement>('[data-item-id]');
+      if (item?.dataset.status && item.dataset.status !== 'to-buy') button.dataset.selected = 'true';
+    });
+  }
+
   function syncIndicators() {
     indicators.forEach((indicator, index) => {
       if (index === currentIndex) {
@@ -42,6 +70,7 @@ if (wizard) {
   function notifyStep(previousIndex: number, shouldFocus: boolean) {
     app?.dispatchEvent(new CustomEvent('shopping-wizard:step', { detail: { step: currentIndex } }));
     syncIndicators();
+    if (panels[currentIndex] === resultsPanel) scrollResultsTop();
     if (!shouldFocus || previousIndex === currentIndex) return;
     focusPanel();
     scrollWizardTop();
@@ -82,5 +111,10 @@ if (wizard) {
 
   const observer = new MutationObserver(() => updateFromDom(false));
   panels.forEach((panel) => observer.observe(panel, { attributes: true, attributeFilter: ['hidden'] }));
+
+  const draftObserver = new MutationObserver(() => simplifyResultActions());
+  if (draft) draftObserver.observe(draft, { childList: true, subtree: true });
+
+  simplifyResultActions();
   updateFromDom(false);
 }
