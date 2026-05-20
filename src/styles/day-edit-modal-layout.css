@@ -1,8 +1,28 @@
+.day-edit-modal .day-edit-modal__box {
+  max-height: min(94dvh, 52rem);
+}
+
+.day-edit-modal .day-edit-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.day-edit-modal .day-card--compact-editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .day-edit-modal .day-edit-card__content,
 .day-edit-modal .day-meals-block,
 .day-edit-modal .day-skipped-block {
   display: grid;
   gap: 1.25rem;
+  min-height: 0;
 }
 
 .day-edit-modal .day-edit-block {
@@ -41,4 +61,10 @@
   gap: 0.9rem;
   order: -1;
   padding: 1rem 1.1rem;
+}
+
+@media (max-width: 520px) {
+  .day-edit-modal .day-edit-modal__body {
+    max-height: calc(100dvh - 11rem);
+  }
 }
