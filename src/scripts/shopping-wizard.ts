@@ -1,12 +1,9 @@
-import { useShoppingActionTranslations } from '../i18n/shopping-actions';
 import './shopping-alexa-integration';
 
 const wizard = document.querySelector<HTMLElement>('[data-shopping-wizard]');
 
 if (wizard) {
   const app = wizard.closest<HTMLElement>('[data-shopping-app]');
-  const locale = document.documentElement.lang === 'en' ? 'en' : 'es';
-  const ta = useShoppingActionTranslations(locale);
   const scrollTarget = wizard.closest<HTMLElement>('.planning-ai-panel') ?? wizard;
   const panels = [...wizard.querySelectorAll<HTMLElement>('[data-wizard-step]')];
   const resultsPanel = wizard.querySelector<HTMLElement>('[data-wizard-step="results"]');
@@ -48,22 +45,6 @@ if (wizard) {
     window.requestAnimationFrame(() => {
       draft?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
       panel.scrollIntoView({ behavior: 'auto', block: 'start' });
-    });
-  }
-
-  function simplifyResultActions() {
-    draft?.querySelectorAll<HTMLButtonElement>('[data-set-status="owned"]:not([data-review-hidden="true"])').forEach((button) => {
-      button.hidden = true;
-      button.setAttribute('aria-hidden', 'true');
-      button.tabIndex = -1;
-      button.dataset.reviewHidden = 'true';
-    });
-
-    draft?.querySelectorAll<HTMLButtonElement>('[data-set-status="dismissed"]').forEach((button) => {
-      const doNotBuyLabel = ta('doNotBuy');
-      if (button.textContent !== doNotBuyLabel) button.textContent = doNotBuyLabel;
-      const item = button.closest<HTMLElement>('[data-item-id]');
-      if (item?.dataset.status && item.dataset.status !== 'to-buy') button.dataset.selected = 'true';
     });
   }
 
@@ -124,9 +105,5 @@ if (wizard) {
   const observer = new MutationObserver(() => updateFromDom(false));
   panels.forEach((panel) => observer.observe(panel, { attributes: true, attributeFilter: ['hidden'] }));
 
-  const draftObserver = new MutationObserver(() => simplifyResultActions());
-  if (draft) draftObserver.observe(draft, { childList: true, subtree: true });
-
-  simplifyResultActions();
   updateFromDom(false);
 }
