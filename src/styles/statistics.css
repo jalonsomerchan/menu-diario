@@ -1,0 +1,224 @@
+.statistics-app {
+  display: grid;
+  gap: 1rem;
+}
+
+.statistics-panel,
+.statistics-empty,
+.statistics-kpi,
+.statistics-insights {
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-2xl);
+  background: var(--panel-background);
+  box-shadow: var(--shadow-sm);
+  padding: var(--surface-padding-lg);
+}
+
+.statistics-panel--filters {
+  background: var(--panel-background-strong);
+}
+
+.statistics-filters {
+  display: grid;
+  gap: 1rem;
+}
+
+.statistics-filters h2,
+.statistics-panel h2,
+.statistics-empty h2,
+.statistics-filters p,
+.statistics-empty p,
+.statistics-insights p {
+  margin: 0;
+}
+
+.statistics-filters h2,
+.statistics-panel h2,
+.statistics-empty h2 {
+  font-size: clamp(1.35rem, 5vw, 2rem);
+  line-height: 1.05;
+  letter-spacing: -0.05em;
+}
+
+.statistics-filters p,
+.statistics-empty p,
+.statistics-muted,
+.statistics-insights p {
+  color: var(--color-muted);
+  line-height: var(--surface-copy-line-height);
+}
+
+.statistics-filters__presets,
+.statistics-filters__dates {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.statistics-filters__presets label,
+.statistics-filters__dates label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.statistics-filters__presets label {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-border), transparent 8%);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-surface), transparent 4%);
+  padding: 0.75rem;
+}
+
+.statistics-filters__presets input {
+  accent-color: var(--color-primary);
+}
+
+.statistics-filters__dates input {
+  min-height: 2.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+}
+
+.statistics-kpis,
+.statistics-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.statistics-kpi {
+  display: grid;
+  gap: 0.4rem;
+  min-height: 7rem;
+}
+
+.statistics-kpi span {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.statistics-kpi strong {
+  align-self: end;
+  color: var(--color-text);
+  font-size: clamp(2rem, 9vw, 3.1rem);
+  letter-spacing: -0.07em;
+  line-height: 0.95;
+}
+
+.statistics-insights {
+  display: grid;
+  gap: 0.55rem;
+  background: color-mix(in srgb, var(--color-primary-soft), var(--color-surface) 72%);
+}
+
+.statistics-panel {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.statistics-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.statistics-list li {
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid color-mix(in srgb, var(--color-border), transparent 10%);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-surface-soft), transparent 10%);
+  padding: 0.85rem;
+}
+
+.statistics-list span {
+  color: var(--color-text);
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.statistics-list strong {
+  color: var(--color-primary);
+  font-size: 0.88rem;
+}
+
+.statistics-bars {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.statistics-bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-surface-soft), transparent 4%);
+  padding: 0.85rem;
+}
+
+.statistics-bar span,
+.statistics-bar strong {
+  position: relative;
+  z-index: 1;
+  font-weight: 900;
+}
+
+.statistics-bar span {
+  overflow: hidden;
+  color: var(--color-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statistics-bar strong {
+  color: var(--color-primary);
+}
+
+.statistics-bar i {
+  position: absolute;
+  inset: auto auto 0 0;
+  width: var(--bar-width, 0%);
+  height: 0.28rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+}
+
+.statistics-empty {
+  display: grid;
+  gap: 0.55rem;
+}
+
+@media (min-width: 680px) {
+  .statistics-filters {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .statistics-filters__presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statistics-filters__dates {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .statistics-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .statistics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

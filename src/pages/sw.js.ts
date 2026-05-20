@@ -19,6 +19,7 @@ export function GET() {
     withBasePath('mis-platos'),
     withBasePath('platos'),
     withBasePath('historico'),
+    withBasePath('estadisticas'),
     withBasePath('ajustes'),
     withBasePath('admin/platos'),
     withBasePath('resumen-semanal'),
