@@ -1,0 +1,249 @@
+---
+import Button from './Button.astro';
+import Breadcrumb from './Breadcrumb.astro';
+import Container from './Container.astro';
+import { type Locale } from '../config/site';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+import { getPublicSeoPage, getPublicSeoRelatedPages, type PublicSeoPageKey } from '../data/public-seo-pages';
+
+interface Props {
+  locale: Locale;
+  pageKey: PublicSeoPageKey;
+}
+
+const { locale, pageKey } = Astro.props;
+const t = useTranslations(locale);
+const page = getPublicSeoPage(locale, pageKey);
+const relatedPages = getPublicSeoRelatedPages(locale, pageKey);
+const dashboardPath = getLocalizedPath('/dashboard', locale);
+const secondaryPath = pageKey === 'manual' || pageKey === 'mealPlanner'
+  ? getLocalizedPath('/como-funciona', locale)
+  : pageKey === 'privacy'
+    ? getLocalizedPath('/faq', locale)
+    : getLocalizedPath('/manual', locale);
+---
+
+<Container class="py-4 sm:py-6" size="page">
+  <Breadcrumb locale={locale} rootItem={{ label: t('nav.home'), href: getLocalizedPath('/', locale) }} items={[{ label: page.title }]} />
+  <article class="public-seo-page">
+    <header class="public-seo-page__hero">
+      <div class="public-seo-page__hero-copy">
+        <p class="public-seo-page__eyebrow">{page.eyebrow}</p>
+        <h1>{page.title}</h1>
+        <p>{page.intro}</p>
+        <div class="public-seo-page__actions" aria-label={page.title}>
+          <Button href={dashboardPath}>{page.primaryCta}</Button>
+          <Button href={secondaryPath} variant="secondary">{page.secondaryCta}</Button>
+        </div>
+      </div>
+
+      <aside class="public-seo-page__highlights" aria-label={page.eyebrow}>
+        {page.highlights.map((highlight, index) => (
+          <p>
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            {highlight}
+          </p>
+        ))}
+      </aside>
+    </header>
+
+    <section class="public-seo-page__sections" aria-label={page.title}>
+      {page.sections.map((section) => (
+        <section class="public-seo-page__panel">
+          <h2>{section.title}</h2>
+          <p>{section.body}</p>
+          {section.items && (
+            <ul>
+              {section.items.map((item) => <li>{item}</li>)}
+            </ul>
+          )}
+        </section>
+      ))}
+    </section>
+
+    <section class="public-seo-page__related" aria-labelledby="public-related-title">
+      <div>
+        <p class="public-seo-page__eyebrow">{t('nav.main')}</p>
+        <h2 id="public-related-title">{pageKey === 'privacy' ? 'Páginas útiles' : locale === 'es' ? 'Sigue aprendiendo' : 'Keep learning'}</h2>
+      </div>
+      <div class="public-seo-page__related-grid">
+        {relatedPages.map((related) => (
+          <a href={getLocalizedPath(`/${related.slug}`, locale)}>
+            <span>{related.navLabel}</span>
+            <strong>{related.title}</strong>
+            <small>{related.description}</small>
+          </a>
+        ))}
+      </div>
+    </section>
+  </article>
+</Container>
+
+<style>
+  .public-seo-page {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .public-seo-page__hero,
+  .public-seo-page__panel,
+  .public-seo-page__related {
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-2xl);
+    background: var(--panel-background);
+    box-shadow: var(--shadow-sm);
+    padding: var(--surface-padding-lg);
+  }
+
+  .public-seo-page__hero {
+    display: grid;
+    gap: 1rem;
+    background:
+      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary-soft), transparent 18%), transparent 16rem),
+      var(--panel-background-strong);
+  }
+
+  .public-seo-page__hero-copy,
+  .public-seo-page__panel,
+  .public-seo-page__related,
+  .public-seo-page__related > div:first-child {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .public-seo-page__eyebrow {
+    width: fit-content;
+    margin: 0;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 16%);
+    color: var(--color-primary);
+    padding: 0.25rem 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .public-seo-page h1,
+  .public-seo-page h2,
+  .public-seo-page p,
+  .public-seo-page ul {
+    margin: 0;
+  }
+
+  .public-seo-page h1 {
+    max-width: 13ch;
+    font-size: clamp(2.45rem, 10vw, 5.25rem);
+    line-height: 0.92;
+    letter-spacing: -0.075em;
+  }
+
+  .public-seo-page h2 {
+    font-size: clamp(1.45rem, 5vw, 2.2rem);
+    line-height: 1.02;
+    letter-spacing: -0.05em;
+  }
+
+  .public-seo-page p,
+  .public-seo-page li,
+  .public-seo-page small {
+    color: var(--color-muted);
+    line-height: var(--surface-copy-line-height);
+  }
+
+  .public-seo-page__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  .public-seo-page__highlights {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .public-seo-page__highlights p {
+    display: grid;
+    gap: 0.45rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 14%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface), transparent 5%);
+    padding: 0.95rem;
+    color: var(--color-text);
+    font-weight: 800;
+  }
+
+  .public-seo-page__highlights span {
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 950;
+    letter-spacing: 0.14em;
+  }
+
+  .public-seo-page__sections {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .public-seo-page__panel ul {
+    display: grid;
+    gap: 0.55rem;
+    padding-left: 1.1rem;
+  }
+
+  .public-seo-page__related-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .public-seo-page__related-grid a {
+    display: grid;
+    gap: 0.35rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 10%);
+    color: var(--color-text);
+    padding: 0.9rem;
+    text-decoration: none;
+    transition:
+      border-color var(--transition-base),
+      background var(--transition-base),
+      transform var(--transition-base);
+  }
+
+  .public-seo-page__related-grid a:hover,
+  .public-seo-page__related-grid a:focus-visible {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 45%);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 24%);
+    outline: 0;
+    transform: translateY(-1px);
+  }
+
+  .public-seo-page__related-grid span {
+    color: var(--color-primary);
+    font-size: 0.82rem;
+    font-weight: 900;
+  }
+
+  .public-seo-page__related-grid strong {
+    font-size: 1.08rem;
+    line-height: 1.18;
+  }
+
+  @media (min-width: 760px) {
+    .public-seo-page {
+      gap: 1.25rem;
+    }
+
+    .public-seo-page__hero {
+      grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.52fr);
+      align-items: center;
+    }
+
+    .public-seo-page__sections,
+    .public-seo-page__related-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
