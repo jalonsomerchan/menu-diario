@@ -18,6 +18,8 @@ export type PublicSeoPage = {
   intro: string;
   primaryCta: string;
   secondaryCta: string;
+  relatedTitle: string;
+  relatedEyebrow: string;
   sections: PublicSeoSection[];
   highlights: string[];
 };
@@ -36,6 +38,8 @@ const publicSeoPages = {
         'Aprende a usar Menu Diario desde el primer acceso: entra con tu cuenta, crea o únete a un grupo, configura las comidas activas y empieza a planificar desayunos, comidas y cenas sin depender de hojas de cálculo ni mensajes sueltos.',
       primaryCta: 'Entrar al dashboard',
       secondaryCta: 'Ver cómo funciona',
+      relatedTitle: 'Sigue aprendiendo',
+      relatedEyebrow: 'Páginas útiles',
       highlights: [
         'Primeros pasos para crear o unirse a un grupo.',
         'Planificación diaria de desayuno, comida y cena.',
@@ -76,6 +80,8 @@ const publicSeoPages = {
         'Esta página resume de forma clara qué datos puede necesitar Menu Diario para funcionar, por qué se usan y cómo se protegen dentro de la experiencia de planificación compartida.',
       primaryCta: 'Entrar al dashboard',
       secondaryCta: 'Leer preguntas frecuentes',
+      relatedTitle: 'Páginas útiles',
+      relatedEyebrow: 'Más información',
       highlights: [
         'La app usa autenticación para identificar a cada persona.',
         'Los menús y platos se vinculan al usuario o grupo correspondiente.',
@@ -114,10 +120,13 @@ const publicSeoPages = {
         'Organizar un menú semanal reduce compras improvisadas, evita repetir platos y ayuda a que todos sepan qué toca comer. Menu Diario centraliza esa planificación en una webapp rápida y pensada para grupos.',
       primaryCta: 'Planificar mi menú',
       secondaryCta: 'Ver manual',
+      relatedTitle: 'Más guías de Menu Diario',
+      relatedEyebrow: 'Enlazado interno',
       highlights: [
         'Planificación visual por días para familias y grupos.',
         'Menos dudas antes de comprar o cocinar.',
-        'Más variedad gracias a platos guardados e histórico.'],
+        'Más variedad gracias a platos guardados e histórico.',
+      ],
       sections: [
         {
           title: 'Empieza por las comidas fijas',
@@ -150,10 +159,13 @@ const publicSeoPages = {
         'Menu Diario funciona como un planificador de comidas online: reúne calendario, platos, notas, histórico y coordinación de grupo en una experiencia sencilla para el día a día.',
       primaryCta: 'Abrir planificador',
       secondaryCta: 'Cómo funciona',
+      relatedTitle: 'También te puede ayudar',
+      relatedEyebrow: 'Guías relacionadas',
       highlights: [
         'Dashboard claro para saber qué toca comer.',
         'Edición compartida para familias, parejas y pisos.',
-        'Ideas de platos para completar huecos del menú.'],
+        'Ideas de platos para completar huecos del menú.',
+      ],
       sections: [
         {
           title: 'Qué resuelve un planificador de comidas',
@@ -188,6 +200,8 @@ const publicSeoPages = {
         'Learn how to use Menu Diario from the first visit: sign in, create or join a group, configure active meals and start planning breakfasts, lunches and dinners without spreadsheets or scattered messages.',
       primaryCta: 'Open dashboard',
       secondaryCta: 'See how it works',
+      relatedTitle: 'Keep learning',
+      relatedEyebrow: 'Useful pages',
       highlights: ['First steps to create or join a group.', 'Daily planning for breakfast, lunch and dinner.', 'Saved dishes, history and AI recommendations.'],
       sections: [
         {
@@ -224,6 +238,8 @@ const publicSeoPages = {
         'This page explains in plain language which data Menu Diario may need to work, why it is used and how it supports shared meal planning.',
       primaryCta: 'Open dashboard',
       secondaryCta: 'Read FAQ',
+      relatedTitle: 'Useful pages',
+      relatedEyebrow: 'More information',
       highlights: ['The app uses authentication to identify each person.', 'Menus and dishes are linked to the correct user or group.', 'Sensitive details should not be added to notes or dish names.'],
       sections: [
         {
@@ -258,6 +274,8 @@ const publicSeoPages = {
         'A weekly menu reduces improvised shopping, avoids repeating dishes and helps everyone know what is planned. Menu Diario centralizes that planning in a fast group-friendly web app.',
       primaryCta: 'Plan my menu',
       secondaryCta: 'Read guide',
+      relatedTitle: 'More Menu Diario guides',
+      relatedEyebrow: 'Internal links',
       highlights: ['Visual planning by day for families and groups.', 'Fewer doubts before shopping or cooking.', 'More variety through saved dishes and history.'],
       sections: [
         {
@@ -291,6 +309,8 @@ const publicSeoPages = {
         'Menu Diario works as an online meal planner: it combines calendar, dishes, notes, history and group coordination in a simple everyday experience.',
       primaryCta: 'Open planner',
       secondaryCta: 'How it works',
+      relatedTitle: 'This may also help',
+      relatedEyebrow: 'Related guides',
       highlights: ['Clear dashboard to know what is planned.', 'Shared editing for families, couples and flats.', 'Dish ideas to fill menu gaps.'],
       sections: [
         {
