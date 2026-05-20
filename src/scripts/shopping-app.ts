@@ -47,7 +47,6 @@ if (root) {
   const wizardSummary = root.querySelector<HTMLElement>('[data-wizard-summary]');
   const wizardPrev = root.querySelector<HTMLButtonElement>('[data-wizard-prev]');
   const wizardNext = root.querySelector<HTMLButtonElement>('[data-wizard-next]');
-  const wizardCancel = root.querySelector<HTMLButtonElement>('[data-wizard-cancel]');
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -213,10 +212,9 @@ if (root) {
 
     if (wizardPrev) wizardPrev.disabled = currentWizardStep === 'range';
     if (wizardNext) {
-      wizardNext.hidden = currentWizardStep === 'summary' || currentWizardStep === 'results';
-      wizardNext.disabled = currentWizardStep === 'range' ? selectedDayKeys.length === 0 : false;
+      wizardNext.disabled =
+        currentWizardStep === 'results' || (currentWizardStep === 'range' && selectedDayKeys.length === 0);
     }
-    if (wizardCancel) wizardCancel.hidden = currentWizardStep === 'range';
 
     if (currentWizardStep === 'summary') renderWizardSummary();
     updateToolbarState();
@@ -596,11 +594,6 @@ if (root) {
       }
       const index = wizardSteps.indexOf(currentWizardStep);
       goToWizardStep(wizardSteps[Math.min(wizardSteps.length - 1, index + 1)]);
-    });
-    wizardCancel?.addEventListener('click', () => {
-      showAiStatus('');
-      showStatus(labels.wizardCancelled);
-      goToWizardStep('range');
     });
 
     rangePicker?.addEventListener('click', (event) => {
