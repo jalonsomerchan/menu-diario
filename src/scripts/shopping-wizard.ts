@@ -33,10 +33,11 @@ if (wizard) {
   }
 
   function scrollResultsTop() {
-    if (resultsPanel?.hidden) return;
+    if (!resultsPanel || resultsPanel.hidden) return;
+    const panel = resultsPanel;
     window.requestAnimationFrame(() => {
       draft?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      resultsPanel.scrollIntoView({ behavior: 'auto', block: 'start' });
+      panel.scrollIntoView({ behavior: 'auto', block: 'start' });
     });
   }
 
