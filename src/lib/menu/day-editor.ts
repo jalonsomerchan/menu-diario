@@ -44,6 +44,15 @@ function renderReasonFields(labels: DayEditorLabels, reason = '', note = '') {
   `;
 }
 
+function renderSkipToggle(labels: DayEditorLabels, skipped: boolean) {
+  return `
+    <label class="checkbox-row day-skip-toggle day-edit-block day-edit-toggle-card">
+      <input type="checkbox" data-field="skipped" ${skipped ? 'checked' : ''} />
+      <span>${escapeHtml(labels.noDay)}</span>
+    </label>
+  `;
+}
+
 function renderSuggestionContainer(labels: DayEditorLabels, meal: MealSlot, _dishes: Dish[]) {
   return `
     <div class="dish-suggestions" role="listbox" aria-label="${escapeHtml(labels.dishSuggestions)}" data-suggestion-list="${meal}" hidden></div>
@@ -129,14 +138,21 @@ function renderMeal(labels: DayEditorLabels, meal: MealSlot, mealData: MealEntry
 export function renderDayEditor(options: DayEditorOptions) {
   const { dayKey, dayNumber, weekday, dateLabel, day, enabledMeals, dishes, labels, participants = [], compact = false } = options;
   const skipped = Boolean(day.skipped);
+  const skipToggle = renderSkipToggle(labels, skipped);
   const editorBody = skipped
-    ? renderReasonFields(labels, day.reason, day.skipNote)
+    ? `
+      <div class="day-skipped-block" data-day-skipped-block>
+        ${skipToggle}
+        ${renderReasonFields(labels, day.reason, day.skipNote)}
+      </div>
+    `
     : `
       <div class="day-meals-block" data-day-meals-block>
         ${enabledMeals.map((meal) => renderMeal(labels, meal, day.meals[meal] ?? emptyMeal(), dishes, participants)).join('')}
         <label class="day-edit-field day-edit-field--textarea day-edit-block day-edit-notes">${escapeHtml(labels.notes)}
           <textarea data-field="notes" rows="3">${escapeHtml(day.notes ?? '')}</textarea>
         </label>
+        ${skipToggle}
       </div>
     `;
 
@@ -148,10 +164,6 @@ export function renderDayEditor(options: DayEditorOptions) {
       </header>
       <div class="day-card__content day-edit-card__content">
         ${editorBody}
-        <label class="checkbox-row day-skip-toggle day-edit-block day-edit-toggle-card">
-          <input type="checkbox" data-field="skipped" ${skipped ? 'checked' : ''} />
-          <span>${escapeHtml(labels.noDay)}</span>
-        </label>
       </div>
     </article>
   `;
