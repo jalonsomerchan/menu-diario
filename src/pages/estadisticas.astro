@@ -1,0 +1,18 @@
+---
+import AppPageShell from '../components/AppPageShell.astro';
+import StatisticsApp from '../components/StatisticsApp.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { defaultLocale, siteConfig } from '../config/site';
+import { useStatisticsTranslations } from '../i18n/statistics';
+
+const locale = defaultLocale;
+const ts = useStatisticsTranslations(locale);
+const title = ts('title');
+const description = ts('description');
+---
+
+<BaseLayout title={`${title} · ${siteConfig.name}`} description={description} locale={locale}>
+  <AppPageShell locale={locale} title={title} description={description}>
+    <StatisticsApp locale={locale} />
+  </AppPageShell>
+</BaseLayout>
