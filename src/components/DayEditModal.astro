@@ -406,15 +406,23 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     }
 
     .day-edit-modal__footer {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr) auto;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .day-edit-modal__footer::-webkit-scrollbar {
+      display: none;
     }
 
     .day-edit-modal__actions {
-      justify-content: stretch;
+      justify-content: end;
+      min-width: max-content;
     }
 
     .day-edit-modal__actions .button {
-      width: 100%;
+      width: auto;
+      min-width: 2.65rem;
     }
   }
 </style>
