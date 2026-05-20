@@ -63,8 +63,8 @@ const secondaryPath = pageKey === 'manual' || pageKey === 'mealPlanner'
 
     <section class="public-seo-page__related" aria-labelledby="public-related-title">
       <div>
-        <p class="public-seo-page__eyebrow">{t('nav.main')}</p>
-        <h2 id="public-related-title">{pageKey === 'privacy' ? 'Páginas útiles' : locale === 'es' ? 'Sigue aprendiendo' : 'Keep learning'}</h2>
+        <p class="public-seo-page__eyebrow">{page.relatedEyebrow}</p>
+        <h2 id="public-related-title">{page.relatedTitle}</h2>
       </div>
       <div class="public-seo-page__related-grid">
         {relatedPages.map((related) => (
