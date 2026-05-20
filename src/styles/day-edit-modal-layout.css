@@ -1,0 +1,44 @@
+.day-edit-modal .day-edit-card__content,
+.day-edit-modal .day-meals-block,
+.day-edit-modal .day-skipped-block {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.day-edit-modal .day-edit-block {
+  padding: 1.1rem;
+}
+
+.day-edit-modal .day-edit-block--skip {
+  display: grid;
+  gap: 1.05rem;
+  padding: 1.25rem;
+}
+
+.day-edit-modal .meal-editor {
+  gap: 1rem;
+}
+
+.day-edit-modal .plate-list {
+  gap: 0.85rem;
+}
+
+.day-edit-modal .day-edit-field {
+  gap: 0.72rem;
+  font-size: 0.96rem;
+  font-weight: 900;
+}
+
+.day-edit-modal .day-edit-field select {
+  min-height: 3.35rem;
+}
+
+.day-edit-modal .day-edit-field textarea {
+  min-height: 8rem;
+}
+
+.day-edit-modal .day-edit-toggle-card {
+  gap: 0.9rem;
+  order: -1;
+  padding: 1rem 1.1rem;
+}
