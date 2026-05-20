@@ -325,7 +325,6 @@ if (root) {
           <h3 class="shopping-item__title">${escapeHtml(item.name)}</h3>
           ${item.quantity ? `<span class="shopping-pill">${escapeHtml(item.quantity)}</span>` : ''}
         </div>
-        ${item.forMeals.length ? `<p class="shopping-item__meals">${escapeHtml(item.forMeals.join(' · '))}</p>` : ''}
         <div class="shopping-item__actions">
           <div class="shopping-status" role="group" aria-label="${escapeHtml(labels.itemStatus)}">
             ${renderStatusButton(item, 'to-buy', labels.markToBuy)}

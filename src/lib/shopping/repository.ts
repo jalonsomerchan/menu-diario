@@ -81,8 +81,6 @@ export async function saveShoppingList(services: FirebaseServices, input: SaveSh
         forMeals: item.forMeals,
         source: item.source,
         confidence: item.confidence,
-        createdAt: item.createdAt ?? firestoreModule.serverTimestamp(),
-        updatedAt: firestoreModule.serverTimestamp(),
       })),
       createdAt: snapshot.exists() ? snapshot.data().createdAt ?? firestoreModule.serverTimestamp() : firestoreModule.serverTimestamp(),
       updatedAt: firestoreModule.serverTimestamp(),
