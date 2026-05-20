@@ -124,9 +124,11 @@ const labels = {
           <p class="settings-permission-note" data-group-permission-note hidden>{labels.ownerOnly}</p>
           <fieldset class="meal-preferences" data-group-admin-control>
             <legend>{labels.enabledMeals}</legend>
-            <label><input type="checkbox" value="breakfast" data-meal-preference /> {labels.breakfast}</label>
-            <label><input type="checkbox" value="lunch" data-meal-preference /> {labels.lunch}</label>
-            <label><input type="checkbox" value="dinner" data-meal-preference /> {labels.dinner}</label>
+            <div class="meal-preferences__grid">
+              <label><input type="checkbox" value="breakfast" data-meal-preference /> <span>{labels.breakfast}</span></label>
+              <label><input type="checkbox" value="lunch" data-meal-preference /> <span>{labels.lunch}</span></label>
+              <label><input type="checkbox" value="dinner" data-meal-preference /> <span>{labels.dinner}</span></label>
+            </div>
           </fieldset>
         </article>
 
@@ -246,6 +248,64 @@ const labels = {
     font-weight: 850;
   }
 
+  .meal-preferences {
+    display: grid;
+    gap: 0.85rem;
+    margin: 0;
+    border: 0;
+    padding: 0;
+  }
+
+  .meal-preferences legend {
+    margin: 0;
+    padding: 0;
+    color: var(--color-muted);
+    font-size: 0.92rem;
+    font-weight: 950;
+  }
+
+  .meal-preferences__grid {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .meal-preferences label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    min-height: 3.15rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 4%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
+    color: var(--color-text);
+    padding: 0.72rem 0.85rem;
+    font-weight: 900;
+  }
+
+  .meal-preferences input {
+    flex: 0 0 auto;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin: 0;
+    accent-color: var(--color-primary);
+  }
+
+  .meal-preferences input:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-primary), transparent 55%);
+    outline-offset: 3px;
+  }
+
+  .meal-preferences label:has(input:checked) {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 36%);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 16%);
+  }
+
+  .meal-preferences label:has(input:disabled) {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
   .settings-card--danger {
     border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 55%);
   }
@@ -304,6 +364,16 @@ const labels = {
 
   [data-group-admin-section][data-disabled='true'] {
     opacity: 0.78;
+  }
+
+  @media (min-width: 620px) {
+    .meal-preferences__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .meal-preferences label {
+      flex-direction: row-reverse;
+    }
   }
 
   @media (min-width: 860px) {
