@@ -4,6 +4,7 @@ import Container from './Container.astro';
 import { localeLabels, siteConfig, type Locale } from '../config/site';
 import { useDishRecommenderTranslations } from '../i18n/dish-recommender';
 import { usePlanningTranslations } from '../i18n/planning';
+import { useStatisticsTranslations } from '../i18n/statistics';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getAlternateLocales, getLocalizedEquivalentPath, getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -15,6 +16,7 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 const tp = usePlanningTranslations(locale);
 const td = useDishRecommenderTranslations(locale);
+const ts = useStatisticsTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
@@ -24,6 +26,7 @@ const planningPath = getLocalizedPath('/planificador-ai', locale);
 const dishRecommenderPath = getLocalizedPath('/recomendador-platos', locale);
 const shoppingPath = getLocalizedPath('/compra', locale);
 const summaryPath = getLocalizedPath('/resumen-semanal', locale);
+const statisticsPath = getLocalizedPath('/estadisticas', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
 const dishesPath = getLocalizedPath('/mis-platos', locale);
 const adminDishesPath = getLocalizedPath('/admin/platos', locale);
@@ -49,6 +52,7 @@ const moreItems = [
   { href: planningPath, icon: 'mdi:creation-outline', label: tp('nav') },
   { href: dishRecommenderPath, icon: 'mdi:chef-hat', label: td('nav') },
   { href: summaryPath, icon: 'mdi:chart-box-outline', label: t('appNav.summary') },
+  { href: statisticsPath, icon: 'mdi:chart-line', label: ts('title') },
   { href: historyPath, icon: 'mdi:history', label: t('appNav.history') },
   { href: settingsPath, icon: 'mdi:cog-outline', label: t('appNav.settings') },
 ] as const;
@@ -260,302 +264,192 @@ const moreItems = [
   }
 
   .main-nav > a:hover,
-  .locale-menu summary:hover,
+  .main-nav > a:focus-visible,
   .nav-dropdown summary:hover,
-  .nav-dropdown[open] summary,
-  .locale-menu[open] summary {
-    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 30%);
-    background: color-mix(in srgb, var(--color-primary), transparent 90%);
-    color: var(--color-text);
-    transform: translateY(-1px);
+  .nav-dropdown summary:focus-visible,
+  .locale-menu summary:hover,
+  .locale-menu summary:focus-visible {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    outline: 0;
   }
 
-  .locale-menu,
-  .nav-dropdown {
+  .main-nav svg,
+  .mobile-menu__nav svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: 0 0 auto;
+  }
+
+  .nav-dropdown,
+  .locale-menu {
     position: relative;
   }
 
-  .locale-menu summary::-webkit-details-marker,
   .nav-dropdown summary::-webkit-details-marker,
+  .locale-menu summary::-webkit-details-marker,
   .mobile-menu summary::-webkit-details-marker {
     display: none;
   }
 
-  .locale-menu summary::after,
-  .nav-dropdown summary::after {
-    content: '⌄';
-    margin-left: 0.35rem;
-    font-size: 0.82em;
-  }
-
-  .locale-menu__list,
-  .nav-dropdown__list {
+  .nav-dropdown__list,
+  .locale-menu__list {
     position: absolute;
-    top: calc(100% + 0.4rem);
     right: 0;
-    z-index: 40;
+    top: calc(100% + 0.45rem);
+    z-index: var(--z-dropdown);
     display: grid;
-    gap: 0.2rem;
-    min-width: 10rem;
-    border: 1px solid var(--color-border);
-    border-radius: 1rem;
-    background: var(--color-bg);
-    box-shadow: 0 18px 42px rgb(15 23 42 / 0.16);
-    padding: 0.45rem;
-  }
-
-  .nav-dropdown__list {
-    right: auto;
-    left: 0;
+    gap: 0.45rem;
+    width: max-content;
     min-width: 13rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-md);
+    padding: 0.55rem;
   }
 
-  .nav-dropdown--settings .nav-dropdown__list {
-    right: 0;
-    left: auto;
+  .nav-dropdown__list a,
+  .locale-menu__list a,
+  .settings-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: transparent;
+    color: var(--color-text);
+    padding: 0.65rem 0.75rem;
+    font: inherit;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .nav-dropdown__list a:hover,
+  .nav-dropdown__list a:focus-visible,
+  .locale-menu__list a:hover,
+  .locale-menu__list a:focus-visible,
+  .settings-trigger:hover,
+  .settings-trigger:focus-visible {
+    background: var(--color-surface-soft);
+    outline: 0;
   }
 
   .nav-dropdown__list--settings {
     min-width: 16rem;
   }
 
-  .nav-dropdown__list a,
-  .locale-menu__list a,
-  .nav-dropdown__list button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    width: 100%;
-    border: 0;
-    border-radius: 0.75rem;
-    background: transparent;
-    color: var(--color-text);
-    padding: 0.55rem 0.7rem;
-    font: inherit;
-    font-weight: 800;
-    text-align: left;
-    text-decoration: none;
-  }
-
-  .locale-menu__list a:hover,
-  .nav-dropdown__list a:hover,
-  .nav-dropdown__list button:hover {
-    background: color-mix(in srgb, var(--color-primary), transparent 88%);
-  }
-
-  .nav-dropdown__list--settings label,
-  .mobile-menu__theme {
+  .nav-dropdown__list--settings label {
     display: grid;
     gap: 0.4rem;
+    padding: 0.6rem;
     color: var(--color-muted);
-    font-size: 0.82rem;
-    font-weight: 850;
+    font-size: 0.86rem;
+    font-weight: 800;
   }
 
   .nav-dropdown__list--settings select,
   .mobile-menu__theme select {
-    min-height: 2.7rem;
-    width: 100%;
+    min-height: 2.6rem;
     border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: var(--color-bg);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
     color: var(--color-text);
-    padding: 0 0.8rem;
+    padding: 0.55rem 0.7rem;
     font: inherit;
-    font-weight: 750;
   }
 
   .mobile-menu {
     position: relative;
-    z-index: 45;
-    flex: 0 0 auto;
   }
 
   .mobile-menu > summary {
     display: grid;
     place-items: center;
-    gap: 0.22rem;
-    width: 2.75rem;
-    height: 2.75rem;
+    gap: 0.26rem;
+    width: 2.65rem;
+    height: 2.65rem;
     border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-bg), var(--color-primary) 5%);
-    box-shadow: 0 10px 28px rgb(15 23 42 / 0.08);
+    border-radius: var(--radius-full);
+    background: var(--color-surface);
     cursor: pointer;
     list-style: none;
-    touch-action: manipulation;
   }
 
   .mobile-menu > summary span {
-    display: block;
-    width: 1.12rem;
+    width: 1.15rem;
     height: 2px;
     border-radius: 999px;
     background: var(--color-text);
-    transition: transform 0.18s ease, opacity 0.18s ease;
-  }
-
-  .mobile-menu[open] > summary span:nth-child(1) {
-    transform: translateY(6px) rotate(45deg);
-  }
-
-  .mobile-menu[open] > summary span:nth-child(2) {
-    opacity: 0;
-  }
-
-  .mobile-menu[open] > summary span:nth-child(3) {
-    transform: translateY(-6px) rotate(-45deg);
   }
 
   .mobile-menu__panel {
     position: fixed;
-    top: 4.35rem;
-    right: 0.75rem;
-    left: 0.75rem;
-    z-index: 44;
+    inset: 4.2rem 1rem auto;
+    z-index: var(--z-dropdown);
     display: grid;
-    gap: 0.7rem;
-    max-height: calc(100dvh - 5.25rem);
+    gap: 1rem;
+    max-height: calc(100dvh - 5.4rem);
     overflow: auto;
     border: 1px solid var(--color-border);
-    border-radius: 1.35rem;
-    background: color-mix(in srgb, var(--color-bg), var(--color-primary) 2%);
-    box-shadow: 0 24px 70px rgb(15 23 42 / 0.24);
-    padding: 0.8rem;
+    border-radius: var(--radius-2xl);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-lg);
+    padding: 1rem;
   }
 
-  .mobile-menu__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    border-bottom: 1px solid var(--color-border);
-    padding: 0.25rem 0.3rem 0.55rem;
+  .mobile-menu__head,
+  .mobile-menu__languages,
+  .mobile-menu__theme {
+    display: grid;
+    gap: 0.45rem;
   }
 
-  .mobile-menu__head strong {
-    font-size: 1.05rem;
-  }
-
-  .mobile-menu__head small {
-    color: var(--color-primary);
-    font-weight: 900;
+  .mobile-menu__head small,
+  .mobile-menu__languages strong,
+  .mobile-menu__theme span {
+    color: var(--color-muted);
+    font-size: 0.86rem;
+    font-weight: 800;
   }
 
   .mobile-menu__nav,
-  .mobile-menu__section,
-  .mobile-menu__section > div {
+  .mobile-menu__section div,
+  .mobile-menu__languages div {
     display: grid;
-    gap: 0.35rem;
+    gap: 0.45rem;
   }
 
-  .mobile-menu__panel a,
-  .mobile-menu__panel button,
-  .mobile-menu__section > summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 3rem;
-    width: 100%;
-    border: 0;
-    border-radius: 1rem;
-    background: color-mix(in srgb, var(--color-bg), transparent 0%);
+  .mobile-menu__nav a,
+  .mobile-menu__section summary,
+  .mobile-menu__languages a,
+  .mobile-menu__logout {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface-soft);
     color: var(--color-text);
-    padding: 0.75rem 0.9rem;
-    font: inherit;
-    font-weight: 900;
-    list-style: none;
-    text-align: left;
+    padding: 0.82rem 0.9rem;
+    font-weight: 850;
     text-decoration: none;
   }
 
-  .mobile-menu__panel a span,
-  .mobile-menu__nav a span {
-    display: inline-flex;
+  .mobile-menu__nav a span,
+  .mobile-menu__section a span {
+    display: flex;
     align-items: center;
-    gap: 0.5rem;
-    min-width: 0;
+    gap: 0.6rem;
   }
 
-  .mobile-menu__panel a::after,
-  .mobile-menu__panel button::after,
-  .mobile-menu__section > summary::after {
-    content: '›';
-    color: var(--color-muted);
-    font-size: 1.25rem;
-    line-height: 1;
-  }
-
-  .mobile-menu__panel a:hover,
-  .mobile-menu__panel button:hover,
-  .mobile-menu__section > summary:hover {
-    background: color-mix(in srgb, var(--color-primary), transparent 88%);
-  }
-
-  .mobile-menu__section[open] > summary::after {
-    transform: rotate(90deg);
-  }
-
-  .mobile-menu__section > div {
-    padding-left: 0.7rem;
-  }
-
-  .mobile-menu__section > div a {
-    min-height: 2.7rem;
-    color: var(--color-muted);
-  }
-
-  .mobile-menu__languages {
+  .mobile-menu__section {
     display: grid;
     gap: 0.55rem;
-    margin-top: 0.1rem;
-    border-top: 1px solid var(--color-border);
-    padding-top: 0.7rem;
   }
 
-  .mobile-menu__languages > strong {
-    padding: 0 0.3rem;
-    color: var(--color-muted);
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .mobile-menu__languages > div {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.4rem;
-  }
-
-  .mobile-menu__languages a {
-    justify-content: center;
-    min-height: 2.55rem;
-    padding: 0.55rem 0.5rem;
-    font-size: 0.9rem;
-  }
-
-  .mobile-menu__languages a::after {
-    display: none;
-  }
-
-  .mobile-menu__logout {
-    justify-content: center;
-  }
-
-  .main-nav :global(svg),
-  .mobile-menu__nav :global(svg) {
-    width: 1rem;
-    height: 1rem;
-  }
-
-  @media (min-width: 760px) {
-    .site-brand__text {
-      max-width: none;
-    }
-
-    .header-inner {
-      padding-block: 1rem;
-    }
+  .mobile-menu__section summary {
+    cursor: pointer;
+    list-style: none;
   }
 
   @media (min-width: 980px) {
@@ -567,33 +461,4 @@ const moreItems = [
       display: none;
     }
   }
-
-  @media (max-width: 380px) {
-    .site-brand__text {
-      max-width: 46vw;
-    }
-
-    .site-brand__mark {
-      width: 2.1rem;
-      height: 2.1rem;
-    }
-
-    .mobile-menu__languages > div {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) .mobile-menu__panel {
-      box-shadow: 0 24px 70px rgb(0 0 0 / 0.42);
-    }
-  }
-
-  :root[data-theme='dark'] .mobile-menu__panel {
-    box-shadow: 0 24px 70px rgb(0 0 0 / 0.42);
-  }
 </style>
-
-<script>
-  import '../scripts/app-header.ts';
-</script>
