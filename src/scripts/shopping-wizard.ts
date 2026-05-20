@@ -15,6 +15,7 @@ if (wizard) {
   const back = wizard.querySelector<HTMLButtonElement>('[data-wizard-prev]');
   const next = wizard.querySelector<HTMLButtonElement>('[data-wizard-next]');
   let currentIndex = getCurrentIndex();
+  let lastResultsScrollSignature = '';
 
   function getCurrentIndex() {
     const visibleIndex = panels.findIndex((panel) => !panel.hidden);
@@ -32,8 +33,17 @@ if (wizard) {
     scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  function getResultsSignature() {
+    return [...(draft?.querySelectorAll<HTMLElement>('[data-item-id]') ?? [])]
+      .map((item) => `${item.dataset.itemId ?? ''}:${item.dataset.status ?? ''}`)
+      .join('|');
+  }
+
   function scrollResultsTop() {
     if (!resultsPanel || resultsPanel.hidden) return;
+    const signature = getResultsSignature();
+    if (signature === lastResultsScrollSignature) return;
+    lastResultsScrollSignature = signature;
     const panel = resultsPanel;
     window.requestAnimationFrame(() => {
       draft?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -42,14 +52,16 @@ if (wizard) {
   }
 
   function simplifyResultActions() {
-    draft?.querySelectorAll<HTMLButtonElement>('[data-set-status="owned"]').forEach((button) => {
+    draft?.querySelectorAll<HTMLButtonElement>('[data-set-status="owned"]:not([data-review-hidden="true"])').forEach((button) => {
       button.hidden = true;
       button.setAttribute('aria-hidden', 'true');
       button.tabIndex = -1;
+      button.dataset.reviewHidden = 'true';
     });
 
     draft?.querySelectorAll<HTMLButtonElement>('[data-set-status="dismissed"]').forEach((button) => {
-      button.textContent = ta('doNotBuy');
+      const doNotBuyLabel = ta('doNotBuy');
+      if (button.textContent !== doNotBuyLabel) button.textContent = doNotBuyLabel;
       const item = button.closest<HTMLElement>('[data-item-id]');
       if (item?.dataset.status && item.dataset.status !== 'to-buy') button.dataset.selected = 'true';
     });
