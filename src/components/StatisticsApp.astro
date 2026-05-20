@@ -1,0 +1,111 @@
+---
+import type { Locale } from '../config/site';
+import { useStatisticsTranslations } from '../i18n/statistics';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+import '../styles/statistics.css';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const ts = useStatisticsTranslations(locale);
+const homePath = getLocalizedPath('/', locale);
+
+const labels = {
+  configMissing: t('menu.configMissing'),
+  guestSession: t('menu.guestSession'),
+  permissionsError: t('menu.permissionsError'),
+  loading: ts('loading'),
+  range: ts('range'),
+  range7: ts('range7'),
+  range30: ts('range30'),
+  range90: ts('range90'),
+  rangeCustom: ts('rangeCustom'),
+  from: ts('from'),
+  to: ts('to'),
+  apply: ts('apply'),
+  emptyTitle: ts('emptyTitle'),
+  emptyDescription: ts('emptyDescription'),
+  plannedMeals: ts('plannedMeals'),
+  completionRate: ts('completionRate'),
+  unplannedMeals: ts('unplannedMeals'),
+  eatingOutMeals: ts('eatingOutMeals'),
+  skippedMeals: ts('skippedMeals'),
+  leftoversMeals: ts('leftoversMeals'),
+  customDays: ts('customDays'),
+  totalSlots: ts('totalSlots'),
+  topDishes: ts('topDishes'),
+  favoriteDishes: ts('favoriteDishes'),
+  staleDishes: ts('staleDishes'),
+  varietyTags: ts('varietyTags'),
+  mealsByWeek: ts('mealsByWeek'),
+  mealsByMonth: ts('mealsByMonth'),
+  noItems: ts('noItems'),
+  neverUsed: ts('neverUsed'),
+  lastUsed: ts('lastUsed'),
+  times: ts('times'),
+  chartLabel: ts('chartLabel'),
+  insightPlanning: ts('insightPlanning'),
+  insightVariety: ts('insightVariety'),
+  insightEmpty: ts('insightEmpty'),
+  errorOffline: ts('errorOffline'),
+  homePath,
+};
+---
+
+<section class="statistics-app" data-statistics-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
+  <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
+
+  <div data-content hidden>
+    <section class="statistics-panel statistics-panel--filters" aria-labelledby="statistics-filters-title">
+      <form class="statistics-filters" data-statistics-form>
+        <div>
+          <h2 id="statistics-filters-title">{labels.range}</h2>
+          <p data-range-summary aria-live="polite"></p>
+        </div>
+        <div class="statistics-filters__presets" role="radiogroup" aria-label={labels.range}>
+          <label><input type="radio" name="statistics-range" value="7" /> <span>{labels.range7}</span></label>
+          <label><input type="radio" name="statistics-range" value="30" checked /> <span>{labels.range30}</span></label>
+          <label><input type="radio" name="statistics-range" value="90" /> <span>{labels.range90}</span></label>
+          <label><input type="radio" name="statistics-range" value="custom" /> <span>{labels.rangeCustom}</span></label>
+        </div>
+        <div class="statistics-filters__dates">
+          <label><span>{labels.from}</span><input type="date" data-statistics-from /></label>
+          <label><span>{labels.to}</span><input type="date" data-statistics-to /></label>
+          <button class="button button--primary" type="submit">{labels.apply}</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="statistics-empty" data-empty hidden>
+      <h2>{labels.emptyTitle}</h2>
+      <p>{labels.emptyDescription}</p>
+    </section>
+
+    <section class="statistics-kpis" aria-label={ts('title')}>
+      <article class="statistics-kpi"><span>{labels.plannedMeals}</span><strong data-kpi="plannedMeals">0</strong></article>
+      <article class="statistics-kpi"><span>{labels.completionRate}</span><strong data-kpi="completionRate">0%</strong></article>
+      <article class="statistics-kpi"><span>{labels.unplannedMeals}</span><strong data-kpi="unplannedMeals">0</strong></article>
+      <article class="statistics-kpi"><span>{labels.eatingOutMeals}</span><strong data-kpi="eatingOutMeals">0</strong></article>
+      <article class="statistics-kpi"><span>{labels.skippedMeals}</span><strong data-kpi="skippedMeals">0</strong></article>
+      <article class="statistics-kpi"><span>{labels.leftoversMeals}</span><strong data-kpi="leftoversMeals">0</strong></article>
+      <article class="statistics-kpi"><span>{labels.customDays}</span><strong data-kpi="customDays">0</strong></article>
+      <article class="statistics-kpi"><span>{labels.totalSlots}</span><strong data-kpi="totalMealSlots">0</strong></article>
+    </section>
+
+    <section class="statistics-insights" aria-live="polite" data-insights></section>
+
+    <section class="statistics-grid" aria-label={ts('description')}>
+      <article class="statistics-panel"><h2>{labels.topDishes}</h2><div data-list="topDishes"></div></article>
+      <article class="statistics-panel"><h2>{labels.favoriteDishes}</h2><div data-list="favoriteDishes"></div></article>
+      <article class="statistics-panel"><h2>{labels.staleDishes}</h2><div data-list="staleDishes"></div></article>
+      <article class="statistics-panel"><h2>{labels.varietyTags}</h2><div data-list="varietyTags"></div></article>
+      <article class="statistics-panel"><h2>{labels.mealsByWeek}</h2><div data-bars="mealsByWeek"></div></article>
+      <article class="statistics-panel"><h2>{labels.mealsByMonth}</h2><div data-bars="mealsByMonth"></div></article>
+    </section>
+  </div>
+</section>
+
+<script>
+  import '../scripts/statistics-app.ts';
+</script>
