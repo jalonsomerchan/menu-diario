@@ -17,20 +17,21 @@ describe('shopping wizard review flow', () => {
     assert.match(source, /Record<Locale, Record<string, string>>/);
   });
 
-  it('starts AI shopping results at the first review item', () => {
+  it('starts AI shopping results at the first review item without repeated scrolling', () => {
     const source = readText('src/scripts/shopping-wizard.ts');
     assert.match(source, /function scrollResultsTop/);
     assert.match(source, /draft\?\.scrollTo\(\{ top: 0, left: 0, behavior: 'auto' \}\)/);
     assert.match(source, /scrollIntoView\(\{ behavior: 'auto', block: 'start' \}\)/);
     assert.match(source, /panels\[currentIndex\] === resultsPanel/);
+    assert.match(source, /lastResultsScrollSignature/);
   });
 
-  it('simplifies item review actions to buy or do not buy', () => {
+  it('simplifies item review actions idempotently to buy or do not buy', () => {
     const script = readText('src/scripts/shopping-wizard.ts');
     const component = readText('src/components/ShoppingApp.astro');
-    assert.match(script, /\[data-set-status="owned"\]/);
-    assert.match(script, /button\.hidden = true/);
-    assert.match(script, /ta\('doNotBuy'\)/);
+    assert.match(script, /\[data-set-status="owned"\]:not\(\[data-review-hidden="true"\]\)/);
+    assert.match(script, /button\.dataset\.reviewHidden = 'true'/);
+    assert.match(script, /if \(button\.textContent !== doNotBuyLabel\)/);
     assert.match(script, /MutationObserver/);
     assert.match(component, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
     assert.match(component, /white-space: nowrap/);
