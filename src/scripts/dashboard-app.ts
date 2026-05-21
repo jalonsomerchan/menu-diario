@@ -113,7 +113,7 @@ if (root) {
   function renderMealSummary(meal: MealEntry) {
     if (meal.skipped) {
       const reason = reasonLabel(meal.reason);
-      return reason ? `${labels.skipSummary}: ${reason}` : labels.skipSummary;
+      return reason || labels.skipSummary;
     }
 
     return meal.items.length ? meal.items.join(', ') : labels.todayEmpty;
@@ -122,7 +122,7 @@ if (root) {
   function renderDaySummary(day: DailyMenu, meal: MealSlot) {
     if (day.skipped) {
       const reason = reasonLabel(day.reason ?? '');
-      return reason ? `${labels.skipSummary}: ${reason}` : labels.skipSummary;
+      return reason || labels.skipSummary;
     }
 
     return renderMealSummary(day.meals[meal]);
