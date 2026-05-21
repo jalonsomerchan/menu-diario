@@ -1,7 +1,7 @@
 type DaySummaryCardOptions = {
   isoDate: string;
   dayNumber: string;
-  monthLabel: string;
+  monthLabel?: string;
   weekday: string;
   dateLabel: string;
   summariesHtml: string;
@@ -21,6 +21,14 @@ function escapeHtml(value = '') {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 }
 
+function getMonthLabel(isoDate: string) {
+  return new Intl.DateTimeFormat(document.documentElement.lang === 'en' ? 'en-US' : 'es-ES', { month: 'short' })
+    .format(new Date(`${isoDate}T00:00:00`))
+    .replace('.', '')
+    .slice(0, 3)
+    .toLocaleUpperCase();
+}
+
 function renderActionMenu({ isoDate, actionLabel, actionAttr, actionStateAttr = '', moreActionsLabel }: DaySummaryCardOptions) {
   if (!actionLabel || !actionAttr) return '';
 
@@ -38,7 +46,6 @@ export function renderDaySummaryCard(options: DaySummaryCardOptions) {
   const {
     isoDate,
     dayNumber,
-    monthLabel,
     weekday,
     dateLabel,
     summariesHtml,
@@ -49,6 +56,7 @@ export function renderDaySummaryCard(options: DaySummaryCardOptions) {
     dayStatus = '',
     className = '',
   } = options;
+  const monthLabel = options.monthLabel ?? getMonthLabel(isoDate);
   const menuAttr = menuId ? ` data-menu="${escapeHtml(menuId)}"` : '';
   const statusAttr = dayStatus ? ` data-day-status="${escapeHtml(dayStatus)}"` : '';
   const classes = ['history-card', 'menu-day-card', className].filter(Boolean).join(' ');
