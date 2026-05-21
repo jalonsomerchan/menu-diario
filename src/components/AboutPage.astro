@@ -17,7 +17,7 @@ const dashboardPath = getLocalizedPath('/dashboard', locale);
 const values = [tp('aboutValueSimple'), tp('aboutValueGroup'), tp('aboutValueHistory'), tp('aboutValueMobile')];
 ---
 
-<Container class="py-4 sm:py-6" size="page">
+<Container class="public-about-container" size="page">
   <Breadcrumb locale={locale} rootItem={{ label: t('nav.home'), href: getLocalizedPath('/', locale) }} items={[{ label: tp('aboutTitle') }]} />
   <article class="about-page">
     <header class="about-page__hero">
@@ -60,38 +60,39 @@ const values = [tp('aboutValueSimple'), tp('aboutValueGroup'), tp('aboutValueHis
 </Container>
 
 <style>
+  .public-about-container {
+    padding-block: clamp(2rem, 7vw, 4.5rem);
+  }
+
   .about-page {
     display: grid;
-    gap: 1rem;
+    gap: clamp(1rem, 3vw, 1.5rem);
   }
 
   .about-page__hero,
   .about-page__panel,
   .about-page__cta {
     border: 1px solid var(--panel-border);
-    border-radius: var(--radius-2xl);
+    border-radius: clamp(1.3rem, 4vw, 2.35rem);
     background: var(--panel-background);
     box-shadow: var(--shadow-sm);
-    padding: var(--surface-padding-lg);
   }
 
   .about-page__hero {
     display: grid;
-    gap: 1rem;
-    background: var(--panel-background-strong);
+    justify-items: center;
+    gap: 1.2rem;
+    padding: clamp(2.8rem, 7vw, 5rem) clamp(1.25rem, 4vw, 3rem);
+    text-align: center;
   }
 
   .about-page__eyebrow {
-    width: fit-content;
     margin: 0;
-    border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--color-primary-soft), transparent 16%);
     color: var(--color-primary);
-    padding: 0.25rem 0.7rem;
-    font-size: 0.78rem;
-    font-weight: 900;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-size: clamp(1rem, 2.2vw, 1.45rem);
+    font-weight: 380;
+    letter-spacing: -0.045em;
+    line-height: 1.05;
   }
 
   .about-page h1,
@@ -101,22 +102,38 @@ const values = [tp('aboutValueSimple'), tp('aboutValueGroup'), tp('aboutValueHis
   }
 
   .about-page h1 {
-    max-width: 11ch;
-    font-size: clamp(2.5rem, 11vw, 5rem);
-    line-height: 0.92;
-    letter-spacing: -0.075em;
+    max-width: 12ch;
+    color: var(--color-text);
+    font-size: clamp(2.75rem, 8vw, 5.2rem);
+    font-weight: 620;
+    line-height: 0.95;
+    letter-spacing: -0.085em;
+  }
+
+  .about-page__hero > p {
+    max-width: 46rem;
+    color: var(--color-muted);
+    font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+    font-weight: 420;
+    letter-spacing: -0.035em;
+    line-height: 1.42;
   }
 
   .about-page h2 {
-    font-size: clamp(1.45rem, 5vw, 2.1rem);
-    line-height: 1;
-    letter-spacing: -0.05em;
+    color: var(--color-text);
+    font-size: clamp(1.55rem, 4.5vw, 2.5rem);
+    font-weight: 610;
+    line-height: 0.98;
+    letter-spacing: -0.075em;
   }
 
   .about-page p,
   .about-page li {
     color: var(--color-muted);
-    line-height: var(--surface-copy-line-height);
+    font-size: clamp(0.98rem, 1.7vw, 1.08rem);
+    font-weight: 420;
+    letter-spacing: -0.025em;
+    line-height: 1.55;
   }
 
   .about-page__actions,
@@ -124,6 +141,7 @@ const values = [tp('aboutValueSimple'), tp('aboutValueGroup'), tp('aboutValueHis
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: 0.75rem;
   }
 
@@ -134,7 +152,8 @@ const values = [tp('aboutValueSimple'), tp('aboutValueGroup'), tp('aboutValueHis
 
   .about-page__panel {
     display: grid;
-    gap: 0.85rem;
+    gap: 1rem;
+    padding: clamp(1.35rem, 4vw, 2rem);
   }
 
   .about-page__list {
@@ -146,31 +165,27 @@ const values = [tp('aboutValueSimple'), tp('aboutValueGroup'), tp('aboutValueHis
   }
 
   .about-page__list li {
-    border: 1px solid color-mix(in srgb, var(--color-border), transparent 18%);
+    border: 1px solid var(--panel-border);
     border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
-    padding: 0.85rem;
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 14%);
+    color: var(--color-text);
+    padding: 1rem;
   }
 
   .about-page__cta {
     justify-content: space-between;
-    gap: 1rem;
+    padding: clamp(1.35rem, 4vw, 2rem);
   }
 
   .about-page__cta div {
     display: grid;
-    gap: 0.45rem;
-    min-width: min(100%, 20rem);
+    gap: 0.55rem;
+    min-width: min(100%, 24rem);
   }
 
   @media (min-width: 760px) {
-    .about-page {
-      gap: 1.25rem;
-    }
-
     .about-page__grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1.25rem;
     }
   }
 </style>
