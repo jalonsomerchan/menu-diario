@@ -205,6 +205,10 @@ if (root) {
     return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(new Date(`${isoDate}T00:00:00`));
   }
 
+  function formatDate(isoDate: string) {
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(`${isoDate}T00:00:00`));
+  }
+
   function getDayNumber(isoDate: string) {
     return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(new Date(`${isoDate}T00:00:00`));
   }
@@ -244,35 +248,47 @@ if (root) {
     expiryBanner.hidden = !shouldShowExpiryWarning(tuppers);
   }
 
+  function renderDashboardDayMeals(day: DailyMenu) {
+    const enabledMeals = getEnabledMeals();
+    if (enabledMeals.length === 1) {
+      const meal = enabledMeals[0] ?? 'lunch';
+      return `<p class="history-card__items">${escapeHtml(renderDaySummary(day, meal))} ${renderParticipantSummary(day, meal)}</p>`;
+    }
+
+    return enabledMeals
+      .map(
+        (meal) => `
+          <div class="day-meal-row">
+            <span>${escapeHtml(mealLabel(meal))}</span>
+            <strong>${escapeHtml(renderDaySummary(day, meal))}</strong>
+            ${renderParticipantSummary(day, meal)}
+          </div>
+        `
+      )
+      .join('');
+  }
+
   function renderNextSeven(menu: WeekMenu) {
     if (!nextDays) return;
 
     const disabledAttr = isReadOnlyOffline ? 'disabled aria-disabled="true"' : '';
+    const mealSummary = getEnabledMeals().map(mealLabel).join(' · ');
     nextDays.innerHTML = getNextSevenDates()
       .map((isoDate) => {
         const day = normalizeDay(menu.days[isoDate]);
-        const summaries = getEnabledMeals()
-          .map(
-            (meal) => `
-              <div class="day-meal-row">
-                <span>${escapeHtml(mealLabel(meal))}:</span>
-                <strong>${escapeHtml(renderDaySummary(day, meal))}</strong>
-                ${renderParticipantSummary(day, meal)}
-              </div>
-            `
-          )
-          .join('');
 
         return renderDaySummaryCard({
           isoDate,
           dayNumber: getDayNumber(isoDate),
           weekday: formatWeekday(isoDate),
-          dateLabel: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(`${isoDate}T00:00:00`)),
+          dateLabel: `${formatDate(isoDate)} · ${mealSummary}`,
           actionLabel: labels.editDay,
           actionAttr: 'data-quick-edit',
           actionStateAttr: disabledAttr,
-          summariesHtml: summaries,
+          moreActionsLabel: labels.moreActions,
+          summariesHtml: renderDashboardDayMeals(day),
           notesHtml: renderDayNotesHtml(day),
+          className: 'dashboard-day-card',
         });
       })
       .join('');
@@ -561,12 +577,6 @@ if (root) {
           );
         });
       })
-      .catch((error: Error) => {
-        if (!isOnline) {
-          renderOfflineCache();
-          return;
-        }
-        showStatus(formatError(error), true);
-      });
+      .catch((error: Error) => showStatus(formatError(error), true));
   }
 }
