@@ -1,36 +1,56 @@
-export function bindDetailsMenuDismiss(root: ParentNode, selector = '[data-day-actions]') {
-  const closeMenus = (except?: HTMLDetailsElement | null) => {
-    root.querySelectorAll<HTMLDetailsElement>(selector).forEach((details) => {
-      if (details !== except) details.open = false;
-    });
-  };
+const initializedRoots = new WeakSet<ParentNode>();
+let documentListenersReady = false;
 
-  root.addEventListener(
-    'toggle',
-    (event) => {
-      const details = event.target;
-      if (details instanceof HTMLDetailsElement && details.matches(selector) && details.open) {
-        closeMenus(details);
-      }
-    },
-    true
-  );
+function closeDetails(details: HTMLDetailsElement) {
+  details.open = false;
+}
+
+function closeOtherDetails(current: HTMLDetailsElement) {
+  document.querySelectorAll<HTMLDetailsElement>('details[data-day-actions][open]').forEach((details) => {
+    if (details !== current) closeDetails(details);
+  });
+}
+
+function installDocumentListeners() {
+  if (documentListenersReady) return;
+  documentListenersReady = true;
 
   document.addEventListener('click', (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLElement)) return;
+    if (!(target instanceof Node)) return;
 
-    const selectedMenu = target.closest<HTMLDetailsElement>(selector);
-    if (!selectedMenu || !root.contains(target)) {
-      closeMenus();
-      return;
-    }
-
-    closeMenus(selectedMenu);
-    if (target.closest('[data-action-kind]')) selectedMenu.open = false;
+    document.querySelectorAll<HTMLDetailsElement>('details[data-day-actions][open]').forEach((details) => {
+      if (!details.contains(target)) closeDetails(details);
+    });
   });
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeMenus();
+    if (event.key !== 'Escape') return;
+    document.querySelectorAll<HTMLDetailsElement>('details[data-day-actions][open]').forEach(closeDetails);
+  });
+
+  document.addEventListener(
+    'toggle',
+    (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLDetailsElement) || !target.matches('details[data-day-actions]') || !target.open) return;
+      closeOtherDetails(target);
+    },
+    true
+  );
+}
+
+export function installDetailsMenuAutoClose(root: ParentNode) {
+  if (initializedRoots.has(root)) return;
+  initializedRoots.add(root);
+  installDocumentListeners();
+
+  root.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    const button = target.closest<HTMLButtonElement>('details[data-day-actions] button');
+    const details = button?.closest<HTMLDetailsElement>('details[data-day-actions]');
+    if (details) closeDetails(details);
   });
 }
