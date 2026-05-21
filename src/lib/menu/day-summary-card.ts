@@ -20,14 +20,14 @@ function escapeHtml(value = '') {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 }
 
-function renderActionMenu({ actionLabel, actionAttr, actionStateAttr = '', moreActionsLabel }: DaySummaryCardOptions) {
+function renderActionMenu({ isoDate, actionLabel, actionAttr, actionStateAttr = '', moreActionsLabel }: DaySummaryCardOptions) {
   if (!actionLabel || !actionAttr) return '';
 
   return `
     <details class="day-actions">
       <summary aria-label="${escapeHtml(moreActionsLabel || actionLabel)}">•••</summary>
       <div>
-        <button type="button" ${actionAttr}="${escapeHtml(arguments[0].isoDate)}" ${actionStateAttr}>${escapeHtml(actionLabel)}</button>
+        <button type="button" ${actionAttr}="${escapeHtml(isoDate)}" ${actionStateAttr}>${escapeHtml(actionLabel)}</button>
       </div>
     </details>
   `;
