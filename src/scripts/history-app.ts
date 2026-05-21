@@ -3,6 +3,7 @@ import { formatAppError } from '../lib/errors';
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
+import { renderDaySummaryCard } from '../lib/menu/day-summary-card';
 import { serializeDay } from '../lib/menu/day-state';
 import { getMonday, getWeekStartForDate, normalizeDateRange, toIsoDate } from '../lib/menu/dates';
 import {
@@ -251,30 +252,32 @@ if (root) {
     return badges.length ? `<div class="history-card__badges">${badges.map((badge) => `<span>${escapeHtml(badge)}</span>`).join('')}</div>` : '';
   }
 
+  function renderRowActions(row: HistoryRow) {
+    return `
+      <details class="day-actions">
+        <summary aria-label="${escapeHtml(labels.moreActions)}">•••</summary>
+        <div>
+          <button type="button" data-history-edit="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.editDay)}</button>
+          ${row.menuId ? `<button type="button" data-clear-day="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.deleteDay)}</button>` : ''}
+        </div>
+      </details>
+    `;
+  }
+
   function renderRow(row: HistoryRow) {
     const items = row.daySkipped || row.mealSkipped ? labels.skipSummary : row.items.length ? row.items.join(', ') : labels.todayEmpty;
-    return `
-      <article class="history-card" data-day="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}" data-day-status="${escapeHtml(row.dayStatus)}">
-        <div class="history-card__date" aria-hidden="true">${escapeHtml(getDayNumber(row.isoDate))}</div>
-        <div class="history-card__body">
-          <header class="history-card__header">
-            <div>
-              <p class="history-card__meta">${escapeHtml(formatDate(row.isoDate))} · ${escapeHtml(mealLabel(row.meal))}</p>
-              <h2>${escapeHtml(formatWeekday(row.isoDate))}</h2>
-            </div>
-            <details class="day-actions">
-              <summary aria-label="${escapeHtml(labels.moreActions)}">⋯</summary>
-              <div>
-                <button type="button" data-history-edit="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.editDay)}</button>
-                ${row.menuId ? `<button type="button" data-clear-day="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.deleteDay)}</button>` : ''}
-              </div>
-            </details>
-          </header>
-          <p class="history-card__items">${escapeHtml(items)}</p>
-          ${renderBadges(row)}
-        </div>
-      </article>
-    `;
+
+    return renderDaySummaryCard({
+      isoDate: row.isoDate,
+      dayNumber: getDayNumber(row.isoDate),
+      weekday: formatWeekday(row.isoDate),
+      dateLabel: `${formatDate(row.isoDate)} · ${mealLabel(row.meal)}`,
+      menuId: row.menuId,
+      dayStatus: row.dayStatus,
+      actionHtml: renderRowActions(row),
+      summariesHtml: `<p class="history-card__items">${escapeHtml(items)}</p>`,
+      badgesHtml: renderBadges(row),
+    });
   }
 
   function updateResultSummary(shown: number, total: number) {
