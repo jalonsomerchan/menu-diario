@@ -23,7 +23,7 @@ const secondaryPath = pageKey === 'manual' || pageKey === 'mealPlanner'
     : getLocalizedPath('/manual', locale);
 ---
 
-<Container class="py-4 sm:py-6" size="page">
+<Container class="public-seo-container" size="page">
   <Breadcrumb locale={locale} rootItem={{ label: t('nav.home'), href: getLocalizedPath('/', locale) }} items={[{ label: page.title }]} />
   <article class="public-seo-page">
     <header class="public-seo-page__hero">
@@ -80,27 +80,28 @@ const secondaryPath = pageKey === 'manual' || pageKey === 'mealPlanner'
 </Container>
 
 <style>
+  .public-seo-container {
+    padding-block: clamp(2rem, 7vw, 4.5rem);
+  }
+
   .public-seo-page {
     display: grid;
-    gap: 1rem;
+    gap: clamp(1rem, 3vw, 1.5rem);
   }
 
   .public-seo-page__hero,
   .public-seo-page__panel,
   .public-seo-page__related {
     border: 1px solid var(--panel-border);
-    border-radius: var(--radius-2xl);
+    border-radius: clamp(1.3rem, 4vw, 2.35rem);
     background: var(--panel-background);
     box-shadow: var(--shadow-sm);
-    padding: var(--surface-padding-lg);
   }
 
   .public-seo-page__hero {
     display: grid;
-    gap: 1rem;
-    background:
-      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary-soft), transparent 18%), transparent 16rem),
-      var(--panel-background-strong);
+    gap: clamp(1.25rem, 4vw, 2rem);
+    padding: clamp(2.2rem, 6vw, 4rem) clamp(1.25rem, 4vw, 3rem);
   }
 
   .public-seo-page__hero-copy,
@@ -112,16 +113,12 @@ const secondaryPath = pageKey === 'manual' || pageKey === 'mealPlanner'
   }
 
   .public-seo-page__eyebrow {
-    width: fit-content;
     margin: 0;
-    border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--color-primary-soft), transparent 16%);
     color: var(--color-primary);
-    padding: 0.25rem 0.7rem;
-    font-size: 0.78rem;
-    font-weight: 900;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-size: clamp(1rem, 2vw, 1.35rem);
+    font-weight: 380;
+    letter-spacing: -0.045em;
+    line-height: 1.05;
   }
 
   .public-seo-page h1,
@@ -133,22 +130,29 @@ const secondaryPath = pageKey === 'manual' || pageKey === 'mealPlanner'
 
   .public-seo-page h1 {
     max-width: 13ch;
-    font-size: clamp(2.45rem, 10vw, 5.25rem);
-    line-height: 0.92;
-    letter-spacing: -0.075em;
+    color: var(--color-text);
+    font-size: clamp(2.65rem, 7.5vw, 5rem);
+    font-weight: 620;
+    line-height: 0.95;
+    letter-spacing: -0.085em;
   }
 
   .public-seo-page h2 {
-    font-size: clamp(1.45rem, 5vw, 2.2rem);
-    line-height: 1.02;
-    letter-spacing: -0.05em;
+    color: var(--color-text);
+    font-size: clamp(1.45rem, 4.5vw, 2.5rem);
+    font-weight: 610;
+    line-height: 0.98;
+    letter-spacing: -0.075em;
   }
 
   .public-seo-page p,
   .public-seo-page li,
   .public-seo-page small {
     color: var(--color-muted);
-    line-height: var(--surface-copy-line-height);
+    font-size: clamp(0.98rem, 1.7vw, 1.08rem);
+    font-weight: 420;
+    letter-spacing: -0.025em;
+    line-height: 1.55;
   }
 
   .public-seo-page__actions {
@@ -166,19 +170,18 @@ const secondaryPath = pageKey === 'manual' || pageKey === 'mealPlanner'
   .public-seo-page__highlights p {
     display: grid;
     gap: 0.45rem;
-    border: 1px solid color-mix(in srgb, var(--color-border), transparent 14%);
+    border: 1px solid var(--panel-border);
     border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface), transparent 5%);
-    padding: 0.95rem;
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 14%);
+    padding: 1rem;
     color: var(--color-text);
-    font-weight: 800;
   }
 
   .public-seo-page__highlights span {
     color: var(--color-primary);
-    font-size: 0.78rem;
-    font-weight: 950;
-    letter-spacing: 0.14em;
+    font-size: 0.95rem;
+    font-weight: 420;
+    letter-spacing: -0.055em;
   }
 
   .public-seo-page__sections {
@@ -186,10 +189,18 @@ const secondaryPath = pageKey === 'manual' || pageKey === 'mealPlanner'
     gap: 1rem;
   }
 
+  .public-seo-page__panel {
+    padding: clamp(1.25rem, 3vw, 1.65rem);
+  }
+
   .public-seo-page__panel ul {
     display: grid;
     gap: 0.55rem;
     padding-left: 1.1rem;
+  }
+
+  .public-seo-page__related {
+    padding: clamp(1.35rem, 4vw, 2rem);
   }
 
   .public-seo-page__related-grid {
@@ -200,11 +211,11 @@ const secondaryPath = pageKey === 'manual' || pageKey === 'mealPlanner'
   .public-seo-page__related-grid a {
     display: grid;
     gap: 0.35rem;
-    border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
+    border: 1px solid var(--panel-border);
     border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface-soft), transparent 10%);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 14%);
     color: var(--color-text);
-    padding: 0.9rem;
+    padding: 1rem;
     text-decoration: none;
     transition:
       border-color var(--transition-base),
@@ -222,20 +233,20 @@ const secondaryPath = pageKey === 'manual' || pageKey === 'mealPlanner'
 
   .public-seo-page__related-grid span {
     color: var(--color-primary);
-    font-size: 0.82rem;
-    font-weight: 900;
+    font-size: 0.95rem;
+    font-weight: 420;
+    letter-spacing: -0.055em;
   }
 
   .public-seo-page__related-grid strong {
+    color: var(--color-text);
     font-size: 1.08rem;
+    font-weight: 650;
     line-height: 1.18;
+    letter-spacing: -0.05em;
   }
 
   @media (min-width: 760px) {
-    .public-seo-page {
-      gap: 1.25rem;
-    }
-
     .public-seo-page__hero {
       grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.52fr);
       align-items: center;
