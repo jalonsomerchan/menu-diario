@@ -4,16 +4,19 @@ import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
+  showGuest?: boolean;
 }
 
-const { locale } = Astro.props;
+const { locale, showGuest = true } = Astro.props;
 const t = useTranslations(locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
+const checkingSessionLabel = locale === 'es' ? 'Iniciando sesión...' : 'Checking session...';
 
 const labels = {
   configMissing: t('menu.configMissing'),
   signInGoogle: t('menu.signInGoogle'),
   signInGuest: t('menu.signInGuest'),
+  checkingSession: checkingSessionLabel,
   dashboardPath,
 };
 ---
@@ -21,7 +24,11 @@ const labels = {
 <section class="auth-card auth-card--compact" data-auth-gate data-labels={JSON.stringify(labels)}>
   <div class="menu-app__status" data-auth-status hidden></div>
   <div class="menu-app__auth-actions menu-app__auth-actions--home">
-    <button class="google-signin-button" type="button" data-google-login>
+    <div class="auth-session-loading" data-auth-session-loading role="status" aria-live="polite" aria-busy="true">
+      <span aria-hidden="true"></span>
+      <span>{labels.checkingSession}</span>
+    </div>
+    <button class="google-signin-button" type="button" data-google-login hidden>
       <svg aria-hidden="true" viewBox="0 0 48 48" focusable="false">
         <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.7 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.8 9.5 24 9.5z"></path>
         <path fill="#4285F4" d="M46.6 24.5c0-1.6-.1-2.8-.4-4.1H24v8.3h13c-.3 2.1-1.7 5.2-4.9 7.4l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.5z"></path>
@@ -30,7 +37,7 @@ const labels = {
       </svg>
       <span>{labels.signInGoogle}</span>
     </button>
-    <button class="button button--ghost button--small" type="button" data-guest-login>{labels.signInGuest}</button>
+    {showGuest && <button class="button button--ghost button--small" type="button" data-guest-login hidden>{labels.signInGuest}</button>}
   </div>
 </section>
 
@@ -45,30 +52,49 @@ const labels = {
   }
 
   .menu-app__auth-actions--home {
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 0.65rem;
   }
 
+  .auth-session-loading,
   .google-signin-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    min-height: 3.25rem;
-    width: 100%;
+    min-height: 3rem;
+    width: auto;
     border: 1px solid #dadce0;
     border-radius: 999px;
     background: #fff;
     color: #3c4043;
-    padding: 0.75rem 1.1rem;
+    padding: 0.7rem 1.15rem;
     box-shadow: 0 1px 2px rgb(60 64 67 / 0.12), 0 1px 3px rgb(60 64 67 / 0.08);
-    font-weight: 700;
-    letter-spacing: 0;
+    font-size: 0.95rem;
+    font-weight: 750;
+    letter-spacing: -0.02em;
     transition:
       background var(--transition-base),
       border-color var(--transition-base),
       box-shadow var(--transition-base),
       transform var(--transition-base);
+  }
+
+  .auth-session-loading[hidden],
+  .google-signin-button[hidden],
+  [data-guest-login][hidden] {
+    display: none;
+  }
+
+  .auth-session-loading span:first-child {
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 2px solid #dadce0;
+    border-top-color: var(--color-primary);
+    border-radius: 999px;
+    animation: auth-spin 0.75s linear infinite;
   }
 
   .google-signin-button:hover {
@@ -87,7 +113,14 @@ const labels = {
     height: 1.25rem;
   }
 
+  @keyframes auth-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .auth-session-loading,
     :global(:root:not([data-theme='light'])) .google-signin-button {
       border-color: #dadce0;
       background: #fff;
@@ -95,6 +128,7 @@ const labels = {
     }
   }
 
+  :global(:root[data-theme='dark']) .auth-session-loading,
   :global(:root[data-theme='dark']) .google-signin-button {
     border-color: #dadce0;
     background: #fff;

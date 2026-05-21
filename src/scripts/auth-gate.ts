@@ -6,6 +6,26 @@ const root = document.querySelector<HTMLElement>('[data-auth-gate]');
 if (root) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
   const status = root.querySelector<HTMLElement>('[data-auth-status]');
+  const sessionLoading = root.querySelector<HTMLElement>('[data-auth-session-loading]');
+  const googleButton = root.querySelector<HTMLButtonElement>('[data-google-login]');
+  const guestButton = root.querySelector<HTMLButtonElement>('[data-guest-login]');
+
+  function setSessionLoading(isLoading: boolean) {
+    if (sessionLoading) {
+      sessionLoading.hidden = !isLoading;
+      sessionLoading.setAttribute('aria-busy', String(isLoading));
+    }
+
+    [googleButton, guestButton].forEach((button) => {
+      if (!button) return;
+      button.hidden = isLoading;
+      button.disabled = isLoading;
+    });
+  }
+
+  function revealLogin() {
+    setSessionLoading(false);
+  }
 
   function showStatus(message: string, isError = false) {
     if (!status) return;
@@ -18,23 +38,37 @@ if (root) {
     window.location.assign(labels.dashboardPath || '/dashboard');
   }
 
+  setSessionLoading(true);
+
   if (!hasFirebaseConfig()) {
+    revealLogin();
     showStatus(labels.configMissing, true);
+    [googleButton, guestButton].forEach((button) => {
+      if (button) button.disabled = true;
+    });
   } else {
     getFirebaseServices()
       .then((services) => {
         services.authModule.onAuthStateChanged(services.auth, (user: unknown) => {
-          if (user) goToDashboard();
+          if (user) {
+            goToDashboard();
+            return;
+          }
+
+          revealLogin();
         });
 
-        root.querySelector('[data-google-login]')?.addEventListener('click', () =>
+        googleButton?.addEventListener('click', () =>
           signInWithGoogle().then(goToDashboard).catch((error: Error) => showStatus(error.message, true))
         );
 
-        root.querySelector('[data-guest-login]')?.addEventListener('click', () =>
+        guestButton?.addEventListener('click', () =>
           signInAsGuest().then(goToDashboard).catch((error: Error) => showStatus(error.message, true))
         );
       })
-      .catch((error: Error) => showStatus(error.message, true));
+      .catch((error: Error) => {
+        revealLogin();
+        showStatus(error.message, true);
+      });
   }
 }
