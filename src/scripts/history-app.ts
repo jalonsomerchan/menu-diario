@@ -4,7 +4,7 @@ import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { renderDaySummaryCard } from '../lib/menu/day-summary-card';
-import { getDayCardMealLabel, getDayCardSkippedSummary } from '../lib/menu/day-card-data';
+import { getDayCardMealLabel, getDayCardSkippedSummary, prepareHistoryDayCardMeal, renderDayCardMealsHtml } from '../lib/menu/day-card-data';
 import { serializeDay } from '../lib/menu/day-state';
 import { getMonday, getWeekStartForDate, normalizeDateRange, toIsoDate } from '../lib/menu/dates';
 import {
@@ -196,7 +196,7 @@ if (root) {
 
   function specialLabel(value: string) {
     if (value === 'favorite') return labels.specialFavorite;
-    if (value === 'leftovers') return labels.specialLeftovers;
+    if (value === 'leftovers') return labels.leftoversBadge;
     if (value === 'eating-out') return labels.specialEatingOut;
     if (value === 'unplanned') return labels.specialUnplanned;
     if (value === 'custom') return labels.specialCustom;
@@ -272,7 +272,7 @@ if (root) {
   }
 
   function renderRow(row: HistoryRow) {
-    const items = row.daySkipped || row.mealSkipped ? skippedReason(row) : row.items.length ? row.items.join(', ') : labels.todayEmpty;
+    const summary = row.daySkipped || row.mealSkipped ? skippedReason(row) : row.items.length ? row.items.join(', ') : labels.todayEmpty;
 
     return renderDaySummaryCard({
       isoDate: row.isoDate,
@@ -282,7 +282,7 @@ if (root) {
       menuId: row.menuId,
       dayStatus: row.dayStatus,
       actionHtml: renderRowActions(row),
-      summariesHtml: `<p class="history-card__items">${escapeHtml(items)}</p>`,
+      summariesHtml: renderDayCardMealsHtml([prepareHistoryDayCardMeal(labels, row.meal as MealSlot, summary)]),
       badgesHtml: renderBadges(row),
     });
   }
