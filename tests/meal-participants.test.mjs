@@ -18,7 +18,8 @@ describe('meal participants wiring', () => {
     const modal = readText('src/components/DayEditModal.astro');
 
     assert.match(helper, /export function getMenuParticipants/);
-    assert.match(helper, /export function normalizeParticipantIds/);
+    assert.match(helper, /export function getSelectedParticipantIds/);
+    assert.match(helper, /export function getStoredParticipantIds/);
     assert.match(helper, /export function formatParticipantSummary/);
     assert.match(styles, /\.meal-participants/);
     assert.match(styles, /\.meal-participants-summary/);
@@ -42,7 +43,8 @@ describe('meal participants wiring', () => {
     const styles = readText('src/styles/meal-participants.css');
 
     assert.match(controller, /getParticipants/);
-    assert.match(controller, /participantIds/);
+    assert.match(controller, /readDayDraft\(card, options\.getEnabledMeals\(\), draftDay, getParticipants\(\)\)/);
+    assert.match(controller, /participants: getParticipants\(\)/);
     assert.match(editor, /renderParticipantSelector/);
     assert.match(editor, /data-participant-list/);
     assert.match(editor, /data-participant-input/);
