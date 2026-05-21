@@ -9,7 +9,7 @@ import { serializeDay } from '../lib/menu/day-state';
 import { renderPlateRow } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
-import { getDayCardMealLabel, getDayCardMealSummary, getDayCardParticipantSummary, prepareDayCardMeals } from '../lib/menu/day-card-data';
+import { getDayCardMealLabel, getDayCardMealSummary, getDayCardParticipantSummary, prepareDayCardMeals, renderDayCardMealsHtml } from '../lib/menu/day-card-data';
 import { getMenuParticipants } from '../lib/menu/participants';
 import {
   clearMenuDay,
@@ -226,24 +226,7 @@ if (root) {
   }
 
   function renderDashboardDayMeals(day: DailyMenu) {
-    const preparedMeals = prepareDayCardMeals(labels, day, getEnabledMeals(), getParticipants());
-    if (preparedMeals.length === 1) {
-      const meal = preparedMeals[0];
-      const participants = meal.participantSummary ? `<span class="meal-participants-summary">${escapeHtml(meal.participantSummary)}</span>` : '';
-      return `<p class="history-card__items">${escapeHtml(meal.summary)} ${participants}</p>`;
-    }
-
-    return preparedMeals
-      .map(
-        (meal) => `
-          <div class="day-meal-row">
-            <span>${escapeHtml(meal.label)}</span>
-            <strong>${escapeHtml(meal.summary)}</strong>
-            ${meal.participantSummary ? `<span class="meal-participants-summary">${escapeHtml(meal.participantSummary)}</span>` : ''}
-          </div>
-        `
-      )
-      .join('');
+    return renderDayCardMealsHtml(prepareDayCardMeals(labels, day, getEnabledMeals(), getParticipants()));
   }
 
   function renderNextSeven(menu: WeekMenu) {
