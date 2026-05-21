@@ -66,12 +66,14 @@ describe('meal participants wiring', () => {
       assert.match(source, /watchGroup/);
       assert.match(source, /getMenuParticipants/);
       assert.match(source, /prepareDayCardMeals/);
-      assert.match(source, /meal-participants-summary/);
+      assert.match(source, /renderDayCardMealsHtml/);
       assert.match(source, /getParticipants/);
     });
 
     assert.match(sharedCardData, /formatParticipantSummary/);
     assert.match(sharedCardData, /getDayCardParticipantSummary/);
+    assert.match(sharedCardData, /renderDayCardMealsHtml/);
+    assert.match(sharedCardData, /meal-participants-summary/);
 
     [dashboardComponent, configuratorComponent].forEach((source) => {
       assert.match(source, /participants: t\('group\.members'\)/);
