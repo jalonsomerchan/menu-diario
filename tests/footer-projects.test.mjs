@@ -9,33 +9,25 @@ function readText(path) {
   return readFileSync(join(root, path), 'utf8');
 }
 
-describe('projects footer', () => {
-  it('matches the AlonSoftware projects footer links', () => {
+describe('public footer', () => {
+  it('shows only public pages in the footer', () => {
     const footer = readText('src/components/Footer.astro');
-    const footerProjects = readText('src/i18n/footer-projects.ts');
 
     assert.match(footer, /site-footer__brand/);
-    assert.match(footer, /site-footer__projects/);
-    assert.match(footer, /footerTools/);
-    assert.match(footer, /footerGames/);
-    assert.match(footer, /new URL\(project\.href\)\.hostname/);
-    assert.match(footer, /target=\"_blank\"/);
-    assert.match(footer, /rel=\"noopener noreferrer\"/);
+    assert.match(footer, /site-footer__public-pages/);
+    assert.match(footer, /getPublicSeoPages/);
+    assert.match(footer, /getLocalizedPath\('\/'/);
+    assert.match(footer, /getLocalizedPath\('\/como-funciona'/);
+    assert.match(footer, /getLocalizedPath\('\/acerca-de'/);
+    assert.match(footer, /getLocalizedPath\('\/faq'/);
+    assert.match(footer, /page\.navLabel/);
 
-    assert.match(footerProjects, /Más herramientas y juegos de AlonSoftware/);
-    assert.match(footerProjects, /FácilPDF/);
-    assert.match(footerProjects, /https:\/\/facilpdf\.alon\.one/);
-    assert.match(footerProjects, /FacilIMG/);
-    assert.match(footerProjects, /https:\/\/facilimg\.alon\.one/);
-    assert.match(footerProjects, /Print a Calendar/);
-    assert.match(footerProjects, /https:\/\/printacalendar\.alon\.one/);
-    assert.match(footerProjects, /HitYear/);
-    assert.match(footerProjects, /https:\/\/hityear\.alon\.one/);
-    assert.match(footerProjects, /Democrazy/);
-    assert.match(footerProjects, /https:\/\/democrazy\.alon\.one/);
-    assert.match(footerProjects, /Hamster Run/);
-    assert.match(footerProjects, /https:\/\/hamsterrun\.alon\.one/);
-    assert.match(footerProjects, /Mundial de fútbol 2026/);
-    assert.match(footerProjects, /https:\/\/mundial2026\.alon\.one/);
+    assert.doesNotMatch(footer, /getLocalizedPath\('\/dashboard'/);
+    assert.doesNotMatch(footer, /getLocalizedPath\('\/planificador'/);
+    assert.doesNotMatch(footer, /siteConfig\.repositoryUrl/);
+    assert.doesNotMatch(footer, /footerTools/);
+    assert.doesNotMatch(footer, /footerGames/);
+    assert.doesNotMatch(footer, /target=\"_blank\"/);
+    assert.doesNotMatch(footer, /new URL\(project\.href\)/);
   });
 });
