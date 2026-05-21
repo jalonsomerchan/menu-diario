@@ -41,7 +41,6 @@ describe('statistics feature smoke checks', () => {
   it('wires statistics into localized routing, navigation and app shell', () => {
     const localizedPage = readText('src/pages/[locale]/estadisticas.astro');
     const header = readText('src/components/Header.astro');
-    const dashboard = readText('src/components/DashboardApp.astro');
     const serviceWorker = readText('src/pages/sw.js.ts');
 
     assert.match(localizedPage, /getStaticPaths/);
@@ -50,9 +49,15 @@ describe('statistics feature smoke checks', () => {
     assert.match(localizedPage, /<StatisticsApp/);
     assert.match(header, /getLocalizedPath\('\/estadisticas'/);
     assert.match(header, /useStatisticsTranslations/);
-    assert.match(dashboard, /statisticsPath/);
-    assert.match(dashboard, /useStatisticsTranslations/);
     assert.match(serviceWorker, /estadisticas/);
+  });
+
+  it('keeps the dashboard hero independent from statistics shortcuts', () => {
+    const dashboard = readText('src/components/DashboardApp.astro');
+
+    assert.doesNotMatch(dashboard, /statisticsPath/);
+    assert.doesNotMatch(dashboard, /useStatisticsTranslations/);
+    assert.doesNotMatch(dashboard, /labels\.statistics/);
   });
 
   it('keeps statistics UI dependency-free and route-safe', () => {
