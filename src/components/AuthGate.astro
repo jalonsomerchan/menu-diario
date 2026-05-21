@@ -10,12 +10,13 @@ interface Props {
 const { locale, showGuest = true } = Astro.props;
 const t = useTranslations(locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
+const checkingSessionLabel = locale === 'es' ? 'Iniciando sesión...' : 'Checking session...';
 
 const labels = {
   configMissing: t('menu.configMissing'),
   signInGoogle: t('menu.signInGoogle'),
   signInGuest: t('menu.signInGuest'),
-  checkingSession: t('menu.checkingSession'),
+  checkingSession: checkingSessionLabel,
   dashboardPath,
 };
 ---
