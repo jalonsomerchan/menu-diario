@@ -15,15 +15,18 @@ describe('public home page', () => {
     const authGate = readText('src/components/AuthGate.astro');
 
     assert.match(home, /Menu Diario/);
-    assert.match(home, /Organiza tus comidas de una manera fácil y con inteligecia artificial/);
+    assert.match(home, /Planifica comidas sin ruido/);
+    assert.match(home, /coordina tu menú con ayuda de IA/);
     assert.match(home, /home-hero/);
     assert.match(home, /home-hero__auth/);
     assert.match(home, /<AuthGate locale=\{locale\} \/>/);
     assert.match(home, /home-feature-grid/);
-    assert.match(home, /Planifica desayunos, comidas y cenas/);
-    assert.match(home, /Recomendaciones con inteligencia artificial/);
-    assert.match(home, /Platos guardados y menús reutilizables/);
-    assert.match(home, /Pensado para familias y grupos/);
+    assert.match(home, /Planifica cada momento/);
+    assert.match(home, /Ideas con inteligencia artificial/);
+    assert.match(home, /Reutiliza tus platos/);
+    assert.match(home, /Coordina el grupo/);
+    assert.match(home, /font-weight: 380/);
+    assert.match(home, /letter-spacing: -0\.1em/);
     assert.doesNotMatch(home, /siteConfig\.repositoryUrl/);
 
     assert.match(authGate, /google-signin-button/);

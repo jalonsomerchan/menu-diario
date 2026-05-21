@@ -12,51 +12,51 @@ const homeCopy =
   locale === 'es'
     ? {
         title: 'Menu Diario',
-        subtitle: 'Organiza tus comidas de una manera fácil y con inteligecia artificial',
+        subtitle: 'Planifica comidas sin ruido: decide, guarda ideas y coordina tu menú con ayuda de IA.',
         eyebrow: 'Webapp de menús con IA',
-        sectionsTitle: 'Todo lo que necesitas para decidir qué comer',
-        sectionsSubtitle: 'Una herramienta sencilla para planificar, guardar ideas y coordinar comidas sin conversaciones eternas.',
+        sectionsTitle: 'Todo lo importante, sin complicar la comida',
+        sectionsSubtitle: 'Una base sencilla para organizar el día a día, reutilizar platos y evitar conversaciones eternas sobre qué comer.',
         features: [
           {
-            title: 'Planifica desayunos, comidas y cenas',
-            description: 'Organiza los próximos días de forma visual, completa huecos y deja claro qué se come en cada momento.',
+            title: 'Planifica cada momento',
+            description: 'Organiza desayunos, comidas y cenas en una vista clara para los próximos días.',
           },
           {
-            title: 'Recomendaciones con inteligencia artificial',
-            description: 'Recibe ideas de platos nuevos, menús equilibrados y propuestas adaptadas a tus intolerancias y preferencias.',
+            title: 'Ideas con inteligencia artificial',
+            description: 'Recibe propuestas adaptadas a tus preferencias, tiempo disponible e intolerancias.',
           },
           {
-            title: 'Platos guardados y menús reutilizables',
-            description: 'Crea tu catálogo de platos, reutiliza favoritos y evita repetir siempre las mismas comidas.',
+            title: 'Reutiliza tus platos',
+            description: 'Guarda favoritos y tira de tu propio catálogo cuando no quieras pensar demasiado.',
           },
           {
-            title: 'Pensado para familias y grupos',
-            description: 'Comparte la planificación con tu grupo, revisa cambios en tiempo real y decide juntos sin perder información.',
+            title: 'Coordina el grupo',
+            description: 'Comparte decisiones, participantes y cambios para que todo el mundo sepa qué toca.',
           },
         ],
       }
     : {
         title: 'Menu Diario',
-        subtitle: 'Organize your meals easily with artificial intelligence',
+        subtitle: 'Plan meals without noise: decide, save ideas and coordinate your menu with AI assistance.',
         eyebrow: 'AI meal planning web app',
-        sectionsTitle: 'Everything you need to decide what to eat',
-        sectionsSubtitle: 'A simple tool to plan, save ideas and coordinate meals without endless conversations.',
+        sectionsTitle: 'Everything that matters, without overcomplicating meals',
+        sectionsSubtitle: 'A simple base to organize everyday meals, reuse dishes and avoid endless conversations about what to eat.',
         features: [
           {
-            title: 'Plan breakfasts, lunches and dinners',
-            description: 'Organize the upcoming days visually, fill empty slots and make it clear what everyone is eating.',
+            title: 'Plan every moment',
+            description: 'Organize breakfasts, lunches and dinners in a clear view for the next few days.',
           },
           {
-            title: 'Artificial intelligence recommendations',
-            description: 'Get ideas for new dishes, balanced menus and suggestions adapted to your intolerances and preferences.',
+            title: 'Ideas with artificial intelligence',
+            description: 'Get suggestions adapted to your preferences, available time and intolerances.',
           },
           {
-            title: 'Saved dishes and reusable menus',
-            description: 'Build your dish catalog, reuse favorites and avoid repeating the same meals all the time.',
+            title: 'Reuse your dishes',
+            description: 'Save favorites and rely on your own catalog when you do not want to think too much.',
           },
           {
-            title: 'Designed for families and groups',
-            description: 'Share planning with your group, review real-time changes and decide together without losing information.',
+            title: 'Coordinate the group',
+            description: 'Share decisions, participants and changes so everyone knows what is coming.',
           },
         ],
       };
@@ -123,49 +123,50 @@ const homeCopy =
 
   .home-hero {
     align-items: center;
-    min-height: min(720px, calc(100vh - 8rem));
-    padding: clamp(1.1rem, 4vw, 2.2rem);
-    border: 1px solid var(--panel-border);
-    border-radius: clamp(1.5rem, 4vw, 2.5rem);
+    min-height: auto;
+    padding: clamp(1.35rem, 5vw, 4rem);
+    border: 1px solid color-mix(in srgb, var(--panel-border), var(--color-primary) 8%);
+    border-radius: clamp(1.5rem, 4vw, 2.35rem);
     background:
-      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary-soft), transparent 16%), transparent 16rem),
-      radial-gradient(circle at bottom left, color-mix(in srgb, var(--color-accent-soft), transparent 20%), transparent 14rem),
-      var(--panel-background-strong);
-    box-shadow: var(--shadow-md);
+      radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary), transparent 90%), transparent 18rem),
+      linear-gradient(135deg, color-mix(in srgb, var(--color-surface), transparent 0%), color-mix(in srgb, var(--color-surface-soft), transparent 62%));
+    box-shadow: var(--shadow-sm);
   }
 
   .home-hero__content {
     display: grid;
-    gap: 1rem;
+    gap: clamp(0.8rem, 2vw, 1.2rem);
     justify-items: start;
   }
 
   .home-hero__eyebrow {
     margin: 0;
     color: var(--color-primary);
-    font-size: 0.78rem;
-    font-weight: 950;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    font-size: clamp(1rem, 2.4vw, 1.65rem);
+    font-weight: 380;
+    letter-spacing: -0.045em;
+    line-height: 1.05;
+    text-transform: none;
   }
 
   .home-hero h1 {
-    max-width: 11ch;
+    max-width: 10ch;
     margin: 0;
-    font-size: clamp(3.2rem, 16vw, 7rem);
-    font-weight: 1000;
-    letter-spacing: -0.09em;
-    line-height: 0.9;
+    color: var(--color-text);
+    font-size: clamp(3.4rem, 14vw, 8.4rem);
+    font-weight: 650;
+    letter-spacing: -0.1em;
+    line-height: 0.82;
   }
 
   .home-hero__subtitle {
-    max-width: 42rem;
+    max-width: 44rem;
     margin: 0;
     color: var(--color-muted);
-    font-size: clamp(1.15rem, 3vw, 1.55rem);
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1.35;
+    font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+    font-weight: 420;
+    letter-spacing: -0.035em;
+    line-height: 1.42;
   }
 
   .home-hero__auth {
@@ -176,37 +177,49 @@ const homeCopy =
 
   .home-hero__preview {
     display: grid;
-    gap: 0.85rem;
+    gap: 0.75rem;
     align-self: stretch;
     align-content: center;
   }
 
   .home-preview-card {
     display: grid;
-    gap: 0.3rem;
-    padding: 1rem;
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
-    border-radius: var(--radius-2xl);
+    gap: 0.28rem;
+    padding: 0.95rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 5%);
+    border-radius: var(--radius-xl);
     background: color-mix(in srgb, var(--color-surface), transparent 4%);
-    box-shadow: var(--shadow-xs);
+    box-shadow: none;
   }
 
   .home-preview-card--active {
-    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 38%);
-    background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary-soft), transparent 8%), var(--color-surface-raised));
-    box-shadow: var(--shadow-sm);
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 36%);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary-soft), transparent 20%), var(--color-surface-raised));
+    box-shadow: var(--shadow-xs);
   }
 
   .home-preview-card span,
   .home-preview-card small {
     color: var(--color-muted);
-    font-size: 0.78rem;
-    font-weight: 850;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .home-preview-card small {
+    font-size: 0.74rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    text-transform: none;
   }
 
   .home-preview-card strong {
-    font-size: 1rem;
-    line-height: 1.2;
+    color: var(--color-text);
+    font-size: clamp(1rem, 2.3vw, 1.35rem);
+    font-weight: 720;
+    letter-spacing: -0.055em;
+    line-height: 1.1;
   }
 
   .home-sections {
@@ -215,34 +228,37 @@ const homeCopy =
 
   .home-sections__heading {
     display: grid;
-    gap: 0.5rem;
-    max-width: 48rem;
+    gap: 0.55rem;
+    max-width: 54rem;
   }
 
   .home-sections__heading h2 {
     margin: 0;
-    font-size: clamp(2rem, 8vw, 4rem);
-    line-height: 0.98;
-    letter-spacing: -0.07em;
+    color: var(--color-text);
+    font-size: clamp(2.2rem, 8vw, 5.6rem);
+    font-weight: 600;
+    line-height: 0.88;
+    letter-spacing: -0.095em;
   }
 
   .home-sections__heading p:not(.home-hero__eyebrow) {
     margin: 0;
     color: var(--color-muted);
-    font-size: 1.05rem;
-    font-weight: 650;
-    line-height: 1.55;
+    font-size: clamp(1rem, 2vw, 1.18rem);
+    font-weight: 420;
+    line-height: 1.58;
+    letter-spacing: -0.025em;
   }
 
   .home-feature-grid {
     display: grid;
-    gap: 1rem;
+    gap: 0.9rem;
   }
 
   .home-feature-card {
     display: grid;
-    gap: 0.65rem;
-    min-height: 13rem;
+    gap: 0.85rem;
+    min-height: 12rem;
     padding: clamp(1rem, 3vw, 1.25rem);
     border: 1px solid var(--panel-border);
     border-radius: var(--radius-2xl);
@@ -251,34 +267,37 @@ const homeCopy =
   }
 
   .home-feature-card span {
-    display: inline-grid;
-    place-items: center;
-    width: 2.4rem;
-    height: 2.4rem;
-    border-radius: var(--radius-full);
-    background: var(--color-primary-soft);
+    display: inline-flex;
+    width: fit-content;
     color: var(--color-primary);
-    font-size: 0.82rem;
-    font-weight: 950;
+    font-size: 0.95rem;
+    font-weight: 420;
+    letter-spacing: -0.055em;
+    line-height: 1;
   }
 
   .home-feature-card h3 {
     margin: auto 0 0;
-    font-size: 1.2rem;
-    line-height: 1.15;
-    letter-spacing: -0.04em;
+    color: var(--color-text);
+    font-size: clamp(1.35rem, 3vw, 1.75rem);
+    font-weight: 620;
+    line-height: 1;
+    letter-spacing: -0.07em;
   }
 
   .home-feature-card p {
     margin: 0;
     color: var(--color-muted);
-    font-weight: 650;
+    font-size: 0.95rem;
+    font-weight: 420;
     line-height: 1.55;
+    letter-spacing: -0.02em;
   }
 
   @media (min-width: 760px) {
     .home-hero {
       grid-template-columns: minmax(0, 1.05fr) minmax(17rem, 0.65fr);
+      min-height: min(640px, calc(100vh - 9rem));
     }
 
     .home-feature-grid {
