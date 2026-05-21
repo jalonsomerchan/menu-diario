@@ -1,7 +1,6 @@
 ---
 import type { Locale } from '../config/site';
 import DayEditModal from './DayEditModal.astro';
-import { useStatisticsTranslations } from '../i18n/statistics';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 import '../styles/history.css';
@@ -12,11 +11,8 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-const ts = useStatisticsTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
-const configurePath = getLocalizedPath('/planificador', locale);
-const statisticsPath = getLocalizedPath('/estadisticas', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
 
 const labels = {
@@ -71,11 +67,9 @@ const labels = {
   offlineReadOnly: t('pwa.offlineReadOnly'),
   offlineNoCache: t('pwa.offlineNoCache'),
   backOnline: t('pwa.backOnline'),
-  statistics: ts('title'),
   tuppers: tt('nav'),
   tuppersExpiryAlert: tt('expiryAlert'),
   homePath,
-  configurePath,
 };
 ---
 
@@ -89,14 +83,14 @@ const labels = {
 
   <div class="dashboard-app__content" data-content hidden>
     <section class="today-hero app-panel" aria-live="polite">
-      <p class="today-hero__hello" data-user-label>{labels.hello}</p>
-      <h2>{labels.todayForLunch}</h2>
-      <ul data-today-summary></ul>
-      <div class="today-hero__notes" data-today-notes hidden></div>
-      <div class="dashboard-hero-actions">
-        <button class="button button--ghost button--small" type="button" data-today-edit>{labels.editDay}</button>
-        <a class="button button--primary button--small" href={configurePath}>{labels.configure}</a>
-        <a class="button button--secondary button--small" href={statisticsPath}>{labels.statistics}</a>
+      <div class="today-hero__topline">
+        <p class="today-hero__hello" data-user-label>{labels.hello}</p>
+        <button class="button button--ghost button--small today-hero__edit" type="button" data-today-edit>{labels.editDay}</button>
+      </div>
+      <div class="today-hero__content">
+        <h2>{labels.todayForLunch}</h2>
+        <ul data-today-summary></ul>
+        <div class="today-hero__notes" data-today-notes hidden></div>
       </div>
     </section>
 
@@ -126,14 +120,89 @@ const labels = {
 </section>
 
 <style is:global>
-  .dashboard-hero-actions {
+  .today-hero.app-panel {
+    position: relative;
+    display: grid;
+    gap: clamp(1.3rem, 3vw, 2rem);
+    overflow: hidden;
+    border-color: color-mix(in srgb, var(--color-border), var(--color-primary) 12%);
+    background:
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-primary), transparent 90%), transparent 18rem),
+      linear-gradient(135deg, color-mix(in srgb, var(--color-surface), transparent 0%), color-mix(in srgb, var(--color-surface-soft), transparent 58%));
+    padding: clamp(1.35rem, 4.5vw, 2.6rem);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .today-hero__topline {
     display: flex;
-    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .today-hero__hello {
+    margin: 0;
+    max-width: min(100%, 58rem);
+    color: var(--color-text);
+    font-size: clamp(1.45rem, 3.8vw, 3rem);
+    font-weight: 520;
+    letter-spacing: -0.06em;
+    line-height: 0.98;
+    text-transform: none;
+  }
+
+  .today-hero__edit {
+    flex: 0 0 auto;
+    min-height: 2.4rem;
+    border-color: color-mix(in srgb, var(--color-border), transparent 8%);
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 6%);
+    box-shadow: none;
+  }
+
+  .today-hero__content {
+    display: grid;
     gap: 0.65rem;
   }
 
+  .today-hero h2 {
+    margin: 0;
+    max-width: 16ch;
+    color: var(--color-text);
+    font-size: clamp(2.45rem, 8vw, 5.8rem);
+    font-weight: 520;
+    letter-spacing: -0.085em;
+    line-height: 0.9;
+  }
+
+  .today-hero ul[data-today-summary] {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .today-hero ul[data-today-summary] li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    color: var(--color-text);
+    font-size: clamp(1.65rem, 5vw, 3.6rem);
+    font-weight: 760;
+    letter-spacing: -0.06em;
+    line-height: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .today-hero ul[data-today-summary] .meal-participants-summary {
+    font-size: clamp(0.9rem, 1.8vw, 1.05rem);
+    letter-spacing: 0;
+  }
+
   .today-hero__notes {
-    margin-top: 0.9rem;
+    margin-top: 0.45rem;
   }
 
   .planner-day-card__notes {
@@ -171,10 +240,28 @@ const labels = {
     overflow-wrap: anywhere;
   }
 
+  @media (min-width: 768px) {
+    .today-hero.app-panel {
+      min-height: clamp(18rem, 30vw, 26rem);
+      align-content: center;
+      padding-inline: clamp(2rem, 5vw, 4rem);
+    }
+  }
+
   @media (min-width: 1024px) {
     .dashboard-app.dashboard-app--compact {
       width: 100%;
       max-width: none;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .today-hero__topline {
+      display: grid;
+    }
+
+    .today-hero__edit {
+      width: fit-content;
     }
   }
 </style>
