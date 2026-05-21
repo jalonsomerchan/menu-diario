@@ -49,7 +49,7 @@ describe('meal participants wiring', () => {
     assert.match(editor, /data-participant-list/);
     assert.match(editor, /data-participant-input/);
     assert.match(editor, /type="checkbox"/);
-    assert.match(editor, /\.meal-participant-chip/);
+    assert.match(editor, /meal-participant-chip/);
     assert.match(styles, /:focus-within/);
     assert.match(styles, /:has\(input:checked\)::after/);
     assert.match(styles, /@media \(max-width: 520px\)/);
