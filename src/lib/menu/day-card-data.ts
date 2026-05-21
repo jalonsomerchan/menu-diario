@@ -10,6 +10,10 @@ export type PreparedDayMeal = {
   participantSummary: string;
 };
 
+function escapeHtml(value = '') {
+  return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+}
+
 function reasonKey(reason: NoMealReason | '' | string) {
   if (reason === 'away') return 'reasonAway';
   if (reason === 'eating-out') return 'reasonEatingOut';
@@ -71,4 +75,31 @@ export function prepareDayCardMeals(
     summary: getDayCardMealSummary(labels, day, meal),
     participantSummary: getDayCardParticipantSummary(labels, day, meal, participants),
   }));
+}
+
+export function prepareHistoryDayCardMeal(labels: DayCardLabels, meal: MealSlot, summary: string, participantSummary = ''): PreparedDayMeal {
+  return {
+    meal,
+    label: getDayCardMealLabel(labels, meal),
+    summary,
+    participantSummary,
+  };
+}
+
+export function renderDayCardMealsHtml(meals: PreparedDayMeal[]) {
+  return meals
+    .map((meal) => {
+      const participantHtml = meal.participantSummary
+        ? `<span class="meal-participants-summary">${escapeHtml(meal.participantSummary)}</span>`
+        : '';
+
+      return `
+        <div class="day-meal-row">
+          <span>${escapeHtml(meal.label)}</span>
+          <strong>${escapeHtml(meal.summary)}</strong>
+          ${participantHtml}
+        </div>
+      `;
+    })
+    .join('');
 }
