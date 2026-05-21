@@ -1,8 +1,18 @@
 const dayActionSelector = '[data-day-actions]';
+const skippedPrefixes = ['No se apunta', 'No configurado', 'Not joining', 'Skipped'];
 
 function closeDayActionMenus(except?: HTMLDetailsElement | null) {
   document.querySelectorAll<HTMLDetailsElement>(dayActionSelector).forEach((details) => {
     if (details !== except) details.open = false;
+  });
+}
+
+function cleanSkippedPrefixes(root: ParentNode = document) {
+  root.querySelectorAll<HTMLElement>('.history-card__items, .day-meal-row strong').forEach((element) => {
+    const text = element.textContent?.trim() ?? '';
+    const prefix = skippedPrefixes.find((item) => text.startsWith(`${item}:`));
+    if (!prefix) return;
+    element.textContent = text.slice(prefix.length + 1).trim();
   });
 }
 
@@ -34,3 +44,12 @@ document.addEventListener('click', (event) => {
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') closeDayActionMenus();
 });
+
+cleanSkippedPrefixes();
+new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (node instanceof Element) cleanSkippedPrefixes(node);
+    });
+  });
+}).observe(document.body, { childList: true, subtree: true });
