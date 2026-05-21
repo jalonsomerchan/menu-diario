@@ -15,11 +15,12 @@
 .history-results-summary { margin: 0 0 0.8rem; color: var(--color-muted); font-weight: 850; }
 .history-results { display: grid; gap: 0.75rem; margin-bottom: 1rem; }
 .history-card { display: grid; grid-template-columns: clamp(3.9rem, 18vw, 5.4rem) minmax(0, 1fr); overflow: visible; border: 1px solid var(--color-border); border-radius: var(--radius-2xl); background: color-mix(in srgb, var(--color-surface), transparent 3%); box-shadow: var(--shadow-sm); }
-.history-card__date { display: grid; place-items: center; border-right: 1px solid var(--color-border); background: var(--color-surface-soft); color: var(--color-primary); font-size: clamp(2.35rem, 11vw, 3.6rem); font-weight: 100; letter-spacing: -0.12em; line-height: 0.9; padding-right: 0.12em; }
+.history-card__date { display: grid; place-items: center; align-content: center; gap: 0.18rem; border-right: 1px solid var(--color-border); background: var(--color-surface-soft); color: var(--color-primary); font-weight: 100; letter-spacing: -0.08em; line-height: 0.9; }
+.history-card__day-number { display: block; padding-right: 0.08em; font-size: clamp(2.35rem, 11vw, 3.6rem); letter-spacing: -0.08em; }
+.history-card__month { display: block; color: var(--color-muted); font-size: 0.78rem; font-weight: 950; letter-spacing: 0.12em; line-height: 1; }
 .history-card__body { display: grid; gap: 0.75rem; min-width: 0; padding: var(--surface-padding-tight); padding-bottom: max(var(--surface-padding-tight), 1rem); min-height: auto; }
 .history-card__header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 0.75rem; min-width: 0; }
 .history-card__heading { min-width: 0; }
-.history-card__meta { margin: 0 0 0.2rem; color: var(--color-muted); font-size: 0.78rem; font-weight: 900; text-transform: uppercase; }
 .history-card h2 { margin: 0; font-size: clamp(1.25rem, 6vw, 1.9rem); line-height: 1; letter-spacing: -0.04em; text-transform: capitalize; }
 .history-card__items { margin: 0; color: var(--color-text); font-size: 1rem; font-weight: 850; overflow-wrap: anywhere; line-height: var(--surface-copy-line-height); letter-spacing: var(--surface-copy-letter-spacing); }
 .history-card__badges { display: flex; flex-wrap: wrap; gap: 0.35rem; }
@@ -29,6 +30,12 @@
 .menu-day-card__content { display: grid; gap: 0.65rem; min-width: 0; }
 .next-days--timeline { grid-template-columns: 1fr; }
 .next-days--timeline .history-card { min-height: 8.8rem; }
+.day-actions[data-day-actions] summary { width: 2.65rem; height: 2.65rem; border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 48%); background: var(--color-primary-soft); color: var(--color-primary); }
+.day-actions[data-day-actions] div { min-width: 10rem; }
+.day-actions[data-day-actions] div button[data-action-kind='edit'] { color: var(--color-text); }
+.day-actions[data-day-actions] div button[data-action-kind='edit']::before { content: '✎'; width: 1rem; color: var(--color-primary); font-size: 1rem; line-height: 1; }
+.day-actions[data-day-actions] div button[data-action-kind='delete'] { color: var(--color-danger); }
+.day-actions[data-day-actions] div button[data-action-kind='delete']::before { content: '×'; width: 1rem; color: var(--color-danger); font-size: 1.15rem; line-height: 1; }
 
 @media (max-width: 639px) {
   .history-filter-panel[open] .history-filter-panel__body { position: fixed; inset: auto 0 0; z-index: 70; max-height: min(78vh, 34rem); overflow: auto; border-radius: var(--radius-2xl) var(--radius-2xl) 0 0; padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)); box-shadow: 0 -18px 44px rgb(15 23 42 / 0.26); }

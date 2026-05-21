@@ -27,6 +27,7 @@ import {
 } from '../lib/menu/repository';
 import type { Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
+import { installDetailsMenuAutoClose } from '../lib/ui/details-menu';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-history-app]');
@@ -72,6 +73,7 @@ if (root) {
   });
 
   attachDishSuggestions(root, () => dishes);
+  installDetailsMenuAutoClose(root);
 
   function escapeHtml(value = '') {
     return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -227,6 +229,11 @@ if (root) {
     return labelsByWeekday[value] ?? labels.weekdayAll;
   }
 
+  function skippedReason(row: HistoryRow) {
+    const reason = row.mealReason || row.dayReason;
+    return reason ? labels[`reason${reason.charAt(0).toUpperCase()}${reason.slice(1).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())}`] ?? labels.skipSummary : labels.skipSummary;
+  }
+
   function renderChips(filters: HistoryFilters) {
     if (!chips) return;
     const active = [
@@ -254,18 +261,18 @@ if (root) {
 
   function renderRowActions(row: HistoryRow) {
     return `
-      <details class="day-actions">
+      <details class="day-actions" data-day-actions>
         <summary aria-label="${escapeHtml(labels.moreActions)}">•••</summary>
         <div>
-          <button type="button" data-history-edit="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.editDay)}</button>
-          ${row.menuId ? `<button type="button" data-clear-day="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.deleteDay)}</button>` : ''}
+          <button type="button" data-action-kind="edit" data-history-edit="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.editDay)}</button>
+          ${row.menuId ? `<button type="button" data-action-kind="delete" data-clear-day="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.deleteDay)}</button>` : ''}
         </div>
       </details>
     `;
   }
 
   function renderRow(row: HistoryRow) {
-    const items = row.daySkipped || row.mealSkipped ? labels.skipSummary : row.items.length ? row.items.join(', ') : labels.todayEmpty;
+    const items = row.daySkipped || row.mealSkipped ? skippedReason(row) : row.items.length ? row.items.join(', ') : labels.todayEmpty;
 
     return renderDaySummaryCard({
       isoDate: row.isoDate,
