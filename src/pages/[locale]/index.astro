@@ -1,11 +1,7 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Button from '../../components/Button.astro';
-import Breadcrumb from '../../components/Breadcrumb.astro';
-import Container from '../../components/Container.astro';
-import AuthGate from '../../components/AuthGate.astro';
-import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
-import { isLocale, useTranslations } from '../../i18n/ui';
+import HomeLanding from '../../components/HomeLanding.astro';
+import { defaultLocale, locales, type Locale } from '../../config/site';
+import { isLocale } from '../../i18n/ui';
 
 export function getStaticPaths() {
   return locales
@@ -17,36 +13,6 @@ export function getStaticPaths() {
 
 const localeParam = Astro.params.locale;
 const locale: Locale = isLocale(localeParam) ? localeParam : defaultLocale;
-const t = useTranslations(locale);
 ---
 
-<BaseLayout title={siteConfig.name} description={t('site.description')} locale={locale}>
-  <Container class="py-4 sm:py-6" size="page">
-    <Breadcrumb locale={locale} rootItem={{ label: t('nav.home') }} items={[]} />
-    <section class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-      <div>
-        <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">{t('home.eyebrow')}</p>
-        <h1 class="text-4xl font-black tracking-tight sm:text-6xl">{t('home.title')}</h1>
-        <p class="mt-6 max-w-2xl text-lg text-[var(--color-muted)]">
-          {t('home.description')}
-        </p>
-        <div class="mt-8 flex flex-wrap gap-3">
-          <Button href="#login">{t('home.loginTitle')}</Button>
-          <Button href={siteConfig.repositoryUrl} variant="secondary">{t('home.repository')}</Button>
-        </div>
-      </div>
-
-      <div class="grid gap-3">
-        {[t('home.featureHistory'), t('home.featureShare'), t('home.featureNotifications')].map((feature) => (
-          <div class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 font-bold shadow-sm">
-            {feature}
-          </div>
-        ))}
-      </div>
-    </section>
-
-    <div id="login">
-      <AuthGate locale={locale} />
-    </div>
-  </Container>
-</BaseLayout>
+<HomeLanding locale={locale} />
