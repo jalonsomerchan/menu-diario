@@ -14,11 +14,15 @@ const { locale } = Astro.props;
 const labels = getFooterLabels(locale);
 const t = useTranslations(locale);
 const tp = usePublicPageCopy(locale);
+const currentYear = new Date().getFullYear();
 const seoLinks = getPublicSeoPages(locale).map((page) => ({
   href: getLocalizedPath(`/${page.slug}`, locale),
   label: page.navLabel,
 }));
 const appLinks = [
+  { href: getLocalizedPath('/', locale), label: t('nav.home') },
+  { href: getLocalizedPath('/dashboard', locale), label: t('appNav.dashboard') },
+  { href: getLocalizedPath('/planificador', locale), label: t('appNav.planning') },
   { href: getLocalizedPath('/como-funciona', locale), label: t('public.howItWorks.nav') },
   { href: getLocalizedPath('/acerca-de', locale), label: tp('footerAbout') },
   { href: getLocalizedPath('/faq', locale), label: tp('footerFaq') },
@@ -31,229 +35,220 @@ const projectGroups = [
 ---
 
 <footer class="site-footer">
-  <Container class="site-footer__inner">
-    <section class="site-footer__brand" aria-labelledby="site-footer-title">
-      <p class="site-footer__eyebrow">{labels.eyebrow}</p>
-      <h2 id="site-footer-title">{labels.title}</h2>
-      <p>{labels.copy}</p>
-      <strong>{siteConfig.name}</strong>
-      <nav class="site-footer__links" aria-label={siteConfig.name}>
-        {appLinks.map((link) => (
-          <a href={link.href}>{link.label}</a>
-        ))}
-      </nav>
-    </section>
+  <Container>
+    <div class="site-footer__grid">
+      <div class="site-footer__brand">
+        <a href={getLocalizedPath('/', locale)} class="site-footer__logo">
+          {siteConfig.name}
+        </a>
+        <p>{labels.copy}</p>
+        <p class="site-footer__copyright">
+          &copy; {currentYear} {siteConfig.name}.
+        </p>
+      </div>
 
-    <nav class="site-footer__projects" aria-label={labels.title}>
+      <nav class="site-footer__section" aria-label={siteConfig.name}>
+        <span class="site-footer__title">{siteConfig.name}</span>
+        <ul>
+          {appLinks.map((link) => (
+            <li><a href={link.href}>{link.label}</a></li>
+          ))}
+          <li>
+            <a href={siteConfig.repositoryUrl} target="_blank" rel="noopener noreferrer" class="site-footer__external">
+              {labels.repository}
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
       {projectGroups.map((group) => (
-        <section class="site-footer__group" aria-labelledby={`footer-${group.title.toLowerCase().replaceAll(' ', '-')}`}>
-          <h3 id={`footer-${group.title.toLowerCase().replaceAll(' ', '-')}`}>{group.title}</h3>
+        <nav class="site-footer__section" aria-label={group.title}>
+          <span class="site-footer__title">{group.title}</span>
           <ul>
             {group.projects.map((project) => (
               <li>
-                <a href={project.href} target="_blank" rel="noopener noreferrer" aria-label={formatProjectLabel(labels.openProject, project.name)}>
+                <a href={project.href} target="_blank" rel="noopener noreferrer" class="site-footer__project" aria-label={formatProjectLabel(labels.openProject, project.name)}>
                   <span>{project.name}</span>
                   <small>{new URL(project.href).hostname}</small>
                 </a>
               </li>
             ))}
           </ul>
-        </section>
+        </nav>
       ))}
-    </nav>
+
+      <div class="site-footer__section">
+        <span class="site-footer__title">{labels.portfolio}</span>
+        <ul>
+          <li>
+            <a href="https://alon.one" target="_blank" rel="noopener noreferrer" class="site-footer__project site-footer__external">
+              <span>
+                alon.one
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </span>
+              <small>{siteConfig.author}</small>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
   </Container>
 </footer>
 
 <style>
   .site-footer {
-    position: relative;
-    margin-top: clamp(2rem, 6vw, 4rem);
-    border-top: 1px solid color-mix(in srgb, var(--color-border), transparent 8%);
-    background:
-      radial-gradient(circle at 98% 92%, color-mix(in srgb, var(--color-primary), transparent 72%), transparent 11rem),
-      linear-gradient(135deg, color-mix(in srgb, var(--color-primary), transparent 90%), transparent 42%),
-      color-mix(in srgb, var(--color-bg), var(--color-primary) 3%);
-    overflow: hidden;
-    padding: clamp(2.1rem, 6vw, 3.8rem) 0 calc(5.5rem + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-border);
+    background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--color-surface-soft), transparent 50%));
+    color: var(--color-text-soft, var(--color-muted));
+    font-size: 0.875rem;
+    margin-top: 0;
+    padding: 3rem 0 calc(3rem + env(safe-area-inset-bottom));
   }
 
-  .site-footer::before {
-    content: '';
-    position: absolute;
-    inset: auto -5rem -6rem auto;
-    width: 15rem;
-    height: 15rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-primary), transparent 82%);
-    pointer-events: none;
-  }
-
-  .site-footer__inner {
-    position: relative;
+  .site-footer__grid {
     display: grid;
-    gap: 1.35rem;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .site-footer__brand,
+  .site-footer__section,
+  .site-footer__project {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .site-footer__brand,
+  .site-footer__section {
+    gap: 0.75rem;
   }
 
   .site-footer__brand {
-    display: grid;
-    gap: 0.55rem;
-    max-width: 36rem;
+    max-width: 15rem;
   }
 
-  .site-footer__eyebrow {
-    margin: 0;
-    color: var(--color-primary);
-    font-size: 0.78rem;
-    font-weight: 900;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+  .site-footer__logo {
+    color: var(--color-text);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    text-decoration: none;
+    transition: opacity var(--transition-base);
   }
 
-  .site-footer h2,
-  .site-footer h3,
+  .site-footer__logo:hover,
+  .site-footer__logo:focus-visible {
+    opacity: 0.8;
+  }
+
   .site-footer p {
     margin: 0;
   }
 
-  .site-footer h2 {
-    font-size: clamp(2rem, 8vw, 3.45rem);
-    line-height: 0.96;
-    letter-spacing: -0.08em;
+  .site-footer__brand p {
+    color: var(--color-text-soft, var(--color-muted));
+    font-size: 0.75rem;
+    line-height: 1.65;
   }
 
-  .site-footer__brand p:not(.site-footer__eyebrow) {
-    max-width: 38rem;
-    color: var(--color-muted);
-    font-size: clamp(1rem, 2.4vw, 1.18rem);
-    font-weight: 800;
-    line-height: 1.45;
+  .site-footer__copyright {
+    width: fit-content;
+    margin-top: 0.75rem !important;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.75rem;
+    font-size: 0.625rem !important;
+    opacity: 0.7;
   }
 
-  .site-footer__brand strong {
-    margin-top: 0.35rem;
-    color: var(--color-primary);
-    font-size: 1.02rem;
-    font-weight: 950;
-  }
-
-  .site-footer__links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.7rem 0.95rem;
-    margin-top: 0.15rem;
-  }
-
-  .site-footer__links a {
-    color: var(--color-primary);
-    font-weight: 900;
-    text-decoration: none;
-  }
-
-  .site-footer__links a:hover,
-  .site-footer__links a:focus-visible {
+  .site-footer__title {
     color: var(--color-text);
-    text-decoration: underline;
-    text-underline-offset: 0.22em;
-  }
-
-  .site-footer small {
-    color: var(--color-muted);
-    font-size: 0.88rem;
-    font-weight: 750;
-  }
-
-  .site-footer__projects {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .site-footer__group {
-    border: 1px solid color-mix(in srgb, var(--color-border), transparent 8%);
-    border-radius: 1.35rem;
-    background: color-mix(in srgb, var(--color-bg), transparent 4%);
-    box-shadow: 0 18px 45px rgb(15 23 42 / 0.08);
-    padding: 1rem;
-  }
-
-  .site-footer__group h3 {
-    margin: 0 0 0.75rem;
-    color: var(--color-muted);
-    font-size: 1rem;
-    font-weight: 850;
+    font-size: 0.75rem;
+    font-weight: 800;
     letter-spacing: 0.08em;
+    opacity: 0.85;
     text-transform: uppercase;
   }
 
-  .site-footer__group ul {
-    display: grid;
-    gap: 0.45rem;
+  .site-footer ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
     margin: 0;
     padding: 0;
     list-style: none;
+    font-size: 0.75rem;
   }
 
-  .site-footer__group a {
-    display: grid;
-    gap: 0.12rem;
-    border-radius: 1rem;
-    background: color-mix(in srgb, var(--color-bg), var(--color-primary) 4%);
-    padding: 0.75rem 0.85rem;
-    color: var(--color-text);
+  .site-footer a {
+    color: inherit;
     text-decoration: none;
-    transition:
-      background var(--transition-base),
-      box-shadow var(--transition-base),
-      color var(--transition-base),
-      transform var(--transition-base);
+    transition: color 0.15s ease, opacity 0.15s ease;
   }
 
-  .site-footer__group a:hover,
-  .site-footer__group a:focus-visible {
-    background: color-mix(in srgb, var(--color-primary), transparent 88%);
+  .site-footer a:hover,
+  .site-footer a:focus-visible {
     color: var(--color-text);
-    transform: translateY(-1px);
-    outline: 0;
-    box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary), transparent 88%);
   }
 
-  .site-footer__group span {
-    font-size: 1.02rem;
-    font-weight: 950;
-    line-height: 1.2;
+  .site-footer__external,
+  .site-footer__project span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
   }
 
-  .site-footer__group small {
-    overflow: hidden;
-    color: var(--color-muted);
-    font-weight: 800;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .site-footer svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    opacity: 0.6;
   }
 
-  @media (min-width: 720px) {
-    .site-footer {
-      padding-bottom: clamp(2.6rem, 6vw, 4rem);
-    }
+  .site-footer__project {
+    gap: 0.125rem;
+  }
 
-    .site-footer__inner {
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-      align-items: start;
-      gap: clamp(1.5rem, 4vw, 3rem);
-    }
+  .site-footer__project span {
+    color: inherit;
+    font-weight: 700;
+  }
 
-    .site-footer__projects {
+  .site-footer__project:hover span,
+  .site-footer__project:focus-visible span {
+    color: var(--color-text);
+  }
+
+  .site-footer__project small {
+    color: var(--color-text-soft, var(--color-muted));
+    font-size: 0.625rem;
+    line-height: 1.35;
+    opacity: 0.8;
+    transition: opacity 0.15s ease;
+  }
+
+  .site-footer__project:hover small,
+  .site-footer__project:focus-visible small {
+    opacity: 1;
+  }
+
+  @media (min-width: 640px) {
+    .site-footer__grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      align-items: start;
     }
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) .site-footer__group {
-      box-shadow: 0 18px 45px rgb(0 0 0 / 0.28);
+  @media (min-width: 768px) {
+    .site-footer {
+      padding: 4rem 0;
     }
-  }
 
-  :root[data-theme='dark'] .site-footer__group {
-    box-shadow: 0 18px 45px rgb(0 0 0 / 0.28);
+    .site-footer__grid {
+      grid-template-columns: minmax(0, 1.2fr) repeat(4, minmax(0, 1fr));
+      gap: 2rem;
+    }
   }
 </style>
