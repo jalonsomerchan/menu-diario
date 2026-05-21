@@ -8,7 +8,8 @@ import { serializeDay } from '../lib/menu/day-state';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
-import { formatParticipantSummary, getMenuParticipants } from '../lib/menu/participants';
+import { getDayCardMealLabel, prepareDayCardMeals } from '../lib/menu/day-card-data';
+import { getMenuParticipants } from '../lib/menu/participants';
 import {
   clearMenuDay,
   ensureUserProfile,
@@ -131,35 +132,7 @@ if (root) {
   }
 
   function mealLabel(meal: MealSlot) {
-    return labels[meal] ?? meal;
-  }
-
-  function reasonLabel(reason = '') {
-    if (reason === 'away') return labels.reasonAway;
-    if (reason === 'eating-out') return labels.reasonEatingOut;
-    if (reason === 'not-hungry') return labels.reasonNotHungry;
-    if (reason === 'other') return labels.reasonOther;
-    return '';
-  }
-
-  function renderMealSummary(day: WeekMenu['days'][string], meal: MealSlot) {
-    if (day.skipped) {
-      return reasonLabel(day.reason) || labels.noDay;
-    }
-
-    const mealState = day.meals[meal];
-    if (mealState.skipped) {
-      return reasonLabel(mealState.reason) || labels.noMeal;
-    }
-
-    return mealState.items.length ? mealState.items.join(', ') : labels.todayEmpty;
-  }
-
-  function renderParticipantSummary(day: WeekMenu['days'][string], meal: MealSlot) {
-    const participants = getParticipants();
-    if (!participants.length || day.skipped) return '';
-
-    return `<span class="meal-participants-summary">${escapeHtml(formatParticipantSummary(day.meals[meal], participants, labels))}</span>`;
+    return getDayCardMealLabel(labels, meal);
   }
 
   function renderConfig(menu: WeekMenu) {
@@ -168,13 +141,13 @@ if (root) {
     configDays.innerHTML = getConfigDates()
       .map((isoDate) => {
         const day = normalizeDay(menu.days[isoDate]);
-        const summaries = getEnabledMeals()
+        const summaries = prepareDayCardMeals(labels, day, getEnabledMeals(), getParticipants())
           .map(
             (meal) => `
               <div class="day-meal-row">
-                <span>${escapeHtml(mealLabel(meal))}:</span>
-                <strong>${escapeHtml(renderMealSummary(day, meal))}</strong>
-                ${renderParticipantSummary(day, meal)}
+                <span>${escapeHtml(meal.label)}:</span>
+                <strong>${escapeHtml(meal.summary)}</strong>
+                ${meal.participantSummary ? `<span class="meal-participants-summary">${escapeHtml(meal.participantSummary)}</span>` : ''}
               </div>
             `
           )

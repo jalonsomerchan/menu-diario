@@ -9,7 +9,8 @@ import { serializeDay } from '../lib/menu/day-state';
 import { renderPlateRow } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
-import { formatParticipantSummary, getMenuParticipants } from '../lib/menu/participants';
+import { getDayCardMealLabel, getDayCardMealSummary, getDayCardParticipantSummary, prepareDayCardMeals } from '../lib/menu/day-card-data';
+import { getMenuParticipants } from '../lib/menu/participants';
 import {
   clearMenuDay,
   ensureUserProfile,
@@ -19,7 +20,7 @@ import {
   watchUserProfile,
   watchWeekMenusByIds,
 } from '../lib/menu/repository';
-import type { DailyMenu, Dish, FirebaseUser, MealEntry, MealSlot, MenuGroup, MenuParticipant, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, Dish, FirebaseUser, MealSlot, MenuGroup, MenuParticipant, UserProfile, WeekMenu } from '../lib/menu/types';
 import { notifyMenuChanged, requestChangeNotifications } from '../lib/notifications/browser';
 import { getNetworkStatus, watchNetworkStatus } from '../lib/pwa/network-status';
 import { readLastOfflineMenuCache, saveOfflineMenuCache } from '../lib/pwa/offline-cache';
@@ -99,40 +100,16 @@ if (root) {
   }
 
   function mealLabel(meal: MealSlot) {
-    return labels[meal] ?? meal;
-  }
-
-  function reasonLabel(reason: string) {
-    if (reason === 'away') return labels.reasonAway;
-    if (reason === 'eating-out') return labels.reasonEatingOut;
-    if (reason === 'not-hungry') return labels.reasonNotHungry;
-    if (reason === 'other') return labels.reasonOther;
-    return '';
-  }
-
-  function renderMealSummary(meal: MealEntry) {
-    if (meal.skipped) {
-      const reason = reasonLabel(meal.reason);
-      return reason || labels.skipSummary;
-    }
-
-    return meal.items.length ? meal.items.join(', ') : labels.todayEmpty;
+    return getDayCardMealLabel(labels, meal);
   }
 
   function renderDaySummary(day: DailyMenu, meal: MealSlot) {
-    if (day.skipped) {
-      const reason = reasonLabel(day.reason ?? '');
-      return reason || labels.skipSummary;
-    }
-
-    return renderMealSummary(day.meals[meal]);
+    return getDayCardMealSummary(labels, day, meal);
   }
 
   function renderParticipantSummary(day: DailyMenu, meal: MealSlot) {
-    const participants = getParticipants();
-    if (!participants.length || day.skipped) return '';
-
-    return `<span class="meal-participants-summary">${escapeHtml(formatParticipantSummary(day.meals[meal], participants, labels))}</span>`;
+    const summary = getDayCardParticipantSummary(labels, day, meal, getParticipants());
+    return summary ? `<span class="meal-participants-summary">${escapeHtml(summary)}</span>` : '';
   }
 
   function collectDayNotes(day: DailyMenu) {
@@ -249,19 +226,20 @@ if (root) {
   }
 
   function renderDashboardDayMeals(day: DailyMenu) {
-    const enabledMeals = getEnabledMeals();
-    if (enabledMeals.length === 1) {
-      const meal = enabledMeals[0] ?? 'lunch';
-      return `<p class="history-card__items">${escapeHtml(renderDaySummary(day, meal))} ${renderParticipantSummary(day, meal)}</p>`;
+    const preparedMeals = prepareDayCardMeals(labels, day, getEnabledMeals(), getParticipants());
+    if (preparedMeals.length === 1) {
+      const meal = preparedMeals[0];
+      const participants = meal.participantSummary ? `<span class="meal-participants-summary">${escapeHtml(meal.participantSummary)}</span>` : '';
+      return `<p class="history-card__items">${escapeHtml(meal.summary)} ${participants}</p>`;
     }
 
-    return enabledMeals
+    return preparedMeals
       .map(
         (meal) => `
           <div class="day-meal-row">
-            <span>${escapeHtml(mealLabel(meal))}</span>
-            <strong>${escapeHtml(renderDaySummary(day, meal))}</strong>
-            ${renderParticipantSummary(day, meal)}
+            <span>${escapeHtml(meal.label)}</span>
+            <strong>${escapeHtml(meal.summary)}</strong>
+            ${meal.participantSummary ? `<span class="meal-participants-summary">${escapeHtml(meal.participantSummary)}</span>` : ''}
           </div>
         `
       )
