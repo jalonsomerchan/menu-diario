@@ -4,6 +4,7 @@ import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { renderDaySummaryCard } from '../lib/menu/day-summary-card';
+import { getDayCardMealLabel, getDayCardSkippedSummary } from '../lib/menu/day-card-data';
 import { serializeDay } from '../lib/menu/day-state';
 import { getMonday, getWeekStartForDate, normalizeDateRange, toIsoDate } from '../lib/menu/dates';
 import {
@@ -96,7 +97,7 @@ if (root) {
   }
 
   function mealLabel(meal: string) {
-    return labels[meal] ?? meal;
+    return getDayCardMealLabel(labels, meal as MealSlot);
   }
 
   function getDateOffset(daysFromToday: number) {
@@ -230,8 +231,7 @@ if (root) {
   }
 
   function skippedReason(row: HistoryRow) {
-    const reason = row.mealReason || row.dayReason;
-    return reason ? labels[`reason${reason.charAt(0).toUpperCase()}${reason.slice(1).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())}`] ?? labels.skipSummary : labels.skipSummary;
+    return getDayCardSkippedSummary(labels, row.dayReason, row.mealReason, labels.skipSummary);
   }
 
   function renderChips(filters: HistoryFilters) {
