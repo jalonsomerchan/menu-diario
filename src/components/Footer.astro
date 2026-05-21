@@ -2,7 +2,7 @@
 import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
 import { getPublicSeoPages } from '../data/public-seo-pages';
-import { footerGames, footerTools, formatProjectLabel, getFooterLabels } from '../i18n/footer-projects';
+import { getFooterLabels } from '../i18n/footer-projects';
 import { usePublicPageCopy } from '../i18n/public-pages';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -15,28 +15,21 @@ const labels = getFooterLabels(locale);
 const t = useTranslations(locale);
 const tp = usePublicPageCopy(locale);
 const currentYear = new Date().getFullYear();
-const seoLinks = getPublicSeoPages(locale).map((page) => ({
-  href: getLocalizedPath(`/${page.slug}`, locale),
-  label: page.navLabel,
-}));
-const appLinks = [
+const publicLinks = [
   { href: getLocalizedPath('/', locale), label: t('nav.home') },
-  { href: getLocalizedPath('/dashboard', locale), label: t('appNav.dashboard') },
-  { href: getLocalizedPath('/planificador', locale), label: t('appNav.planning') },
   { href: getLocalizedPath('/como-funciona', locale), label: t('public.howItWorks.nav') },
   { href: getLocalizedPath('/acerca-de', locale), label: tp('footerAbout') },
   { href: getLocalizedPath('/faq', locale), label: tp('footerFaq') },
-  ...seoLinks,
-];
-const projectGroups = [
-  { title: labels.tools, projects: footerTools },
-  { title: labels.games, projects: footerGames },
+  ...getPublicSeoPages(locale).map((page) => ({
+    href: getLocalizedPath(`/${page.slug}`, locale),
+    label: page.navLabel,
+  })),
 ];
 ---
 
 <footer class="site-footer">
   <Container>
-    <div class="site-footer__grid site-footer__projects">
+    <div class="site-footer__grid site-footer__public-pages">
       <div class="site-footer__brand">
         <a href={getLocalizedPath('/', locale)} class="site-footer__logo">
           {siteConfig.name}
@@ -50,52 +43,11 @@ const projectGroups = [
       <nav class="site-footer__section" aria-label={siteConfig.name}>
         <span class="site-footer__title">{siteConfig.name}</span>
         <ul>
-          {appLinks.map((link) => (
+          {publicLinks.map((link) => (
             <li><a href={link.href}>{link.label}</a></li>
           ))}
-          <li>
-            <a href={siteConfig.repositoryUrl} target="_blank" rel="noopener noreferrer" class="site-footer__external">
-              {labels.repository}
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
-          </li>
         </ul>
       </nav>
-
-      {projectGroups.map((group) => (
-        <nav class="site-footer__section" aria-label={group.title}>
-          <span class="site-footer__title">{group.title}</span>
-          <ul>
-            {group.projects.map((project) => (
-              <li>
-                <a href={project.href} target="_blank" rel="noopener noreferrer" class="site-footer__project" aria-label={formatProjectLabel(labels.openProject, project.name)}>
-                  <span>{project.name}</span>
-                  <small>{new URL(project.href).hostname}</small>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      ))}
-
-      <div class="site-footer__section">
-        <span class="site-footer__title">{labels.portfolio}</span>
-        <ul>
-          <li>
-            <a href="https://alon.one" target="_blank" rel="noopener noreferrer" class="site-footer__project site-footer__external">
-              <span>
-                alon.one
-                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </span>
-              <small>{siteConfig.author}</small>
-            </a>
-          </li>
-        </ul>
-      </div>
     </div>
   </Container>
 </footer>
@@ -117,14 +69,9 @@ const projectGroups = [
   }
 
   .site-footer__brand,
-  .site-footer__section,
-  .site-footer__project {
+  .site-footer__section {
     display: flex;
     flex-direction: column;
-  }
-
-  .site-footer__brand,
-  .site-footer__section {
     gap: 0.75rem;
   }
 
@@ -176,8 +123,8 @@ const projectGroups = [
 
   .site-footer ul {
     display: flex;
-    flex-direction: column;
-    gap: 0.625rem;
+    flex-wrap: wrap;
+    gap: 0.625rem 1rem;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -195,60 +142,17 @@ const projectGroups = [
     color: var(--color-text);
   }
 
-  .site-footer__external,
-  .site-footer__project span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .site-footer svg {
-    width: 0.75rem;
-    height: 0.75rem;
-    opacity: 0.6;
-  }
-
-  .site-footer__project {
-    gap: 0.125rem;
-  }
-
-  .site-footer__project span {
-    color: inherit;
-    font-weight: 700;
-  }
-
-  .site-footer__project:hover span,
-  .site-footer__project:focus-visible span {
-    color: var(--color-text);
-  }
-
-  .site-footer__project small {
-    color: var(--color-text-soft, var(--color-muted));
-    font-size: 0.625rem;
-    line-height: 1.35;
-    opacity: 0.8;
-    transition: opacity 0.15s ease;
-  }
-
-  .site-footer__project:hover small,
-  .site-footer__project:focus-visible small {
-    opacity: 1;
-  }
-
   @media (min-width: 640px) {
     .site-footer__grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+      align-items: start;
+      gap: 2rem;
     }
   }
 
   @media (min-width: 768px) {
     .site-footer {
       padding: 4rem 0;
-    }
-
-    .site-footer__grid {
-      grid-template-columns: minmax(0, 1.2fr) repeat(4, minmax(0, 1fr));
-      gap: 2rem;
     }
   }
 </style>
