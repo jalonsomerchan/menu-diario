@@ -11,28 +11,33 @@ function readText(path) {
 
 describe('public home page', () => {
   it('shows the product pitch, Google sign-in and explanatory sections', () => {
-    const home = readText('src/pages/index.astro');
+    const rootHome = readText('src/pages/index.astro');
+    const localizedHome = readText('src/pages/[locale]/index.astro');
+    const landing = readText('src/components/HomeLanding.astro');
     const authGate = readText('src/components/AuthGate.astro');
+    const authScript = readText('src/scripts/auth-gate.ts');
 
-    assert.match(home, /Menu Diario/);
-    assert.match(home, /Planifica comidas sin ruido/);
-    assert.match(home, /coordina tu menú con ayuda de IA/);
-    assert.match(home, /home-hero/);
-    assert.match(home, /home-hero__auth/);
-    assert.match(home, /<AuthGate locale=\{locale\} \/>/);
-    assert.match(home, /home-feature-grid/);
-    assert.match(home, /Planifica cada momento/);
-    assert.match(home, /Ideas con inteligencia artificial/);
-    assert.match(home, /Reutiliza tus platos/);
-    assert.match(home, /Coordina el grupo/);
-    assert.match(home, /font-weight: 380/);
-    assert.match(home, /letter-spacing: -0\.1em/);
-    assert.doesNotMatch(home, /siteConfig\.repositoryUrl/);
+    assert.match(rootHome, /<HomeLanding locale=\{locale\} \/>/);
+    assert.match(localizedHome, /<HomeLanding locale=\{locale\} \/>/);
+    assert.match(landing, /Bienvenido a Menu Diario/);
+    assert.match(landing, /Tu app para planificar comidas con tu familia o grupo/);
+    assert.match(landing, /home-landing-hero/);
+    assert.match(landing, /home-landing-grid/);
+    assert.match(landing, /Toda la semana en una sola vista/);
+    assert.match(landing, /Pensado para decidir en grupo/);
+    assert.match(landing, /IA y platos guardados cuando hagan falta/);
+    assert.match(landing, /showGuest=\{false\}/);
+    assert.doesNotMatch(landing, /siteConfig\.repositoryUrl/);
 
+    assert.match(authGate, /auth-session-loading/);
+    assert.match(authGate, /data-auth-session-loading/);
+    assert.match(authGate, /Iniciando sesión/);
     assert.match(authGate, /google-signin-button/);
-    assert.match(authGate, /data-google-login/);
+    assert.match(authGate, /data-google-login hidden/);
     assert.match(authGate, /viewBox=\"0 0 48 48\"/);
-    assert.match(authGate, /data-guest-login/);
+    assert.match(authGate, /showGuest/);
+    assert.match(authScript, /setSessionLoading\(true\)/);
+    assert.match(authScript, /revealLogin\(\)/);
     assert.doesNotMatch(authGate, /<h2>\{t\('home.loginTitle'\)\}<\/h2>/);
   });
 });
