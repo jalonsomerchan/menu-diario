@@ -34,54 +34,210 @@ const benefits = [
 ];
 ---
 
-<Container class="py-4 sm:py-6" size="page">
+<Container class="public-landing-container" size="page">
   <Breadcrumb locale={locale} rootItem={{ label: t('nav.home'), href: getLocalizedPath('/', locale) }} items={[{ label: t('public.howItWorks.title') }]} />
-  <section class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-    <div>
-      <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-        {t('public.howItWorks.eyebrow')}
-      </p>
-      <h1 class="text-4xl font-black tracking-tight sm:text-6xl">{t('public.howItWorks.heroTitle')}</h1>
-      <p class="mt-6 max-w-2xl text-lg text-[var(--color-muted)]">{t('public.howItWorks.heroDescription')}</p>
-      <div class="mt-8 flex flex-wrap gap-3">
+  <article class="public-landing-page public-how-page">
+    <header class="public-landing-hero">
+      <p class="public-landing-eyebrow">{t('public.howItWorks.eyebrow')}</p>
+      <h1>{t('public.howItWorks.heroTitle')}</h1>
+      <p>{t('public.howItWorks.heroDescription')}</p>
+      <div class="public-landing-actions">
         <Button href={getLocalizedPath('/', locale)}>{t('public.howItWorks.primaryCta')}</Button>
         <Button href={getLocalizedPath('/dashboard', locale)} variant="secondary">
           {t('public.howItWorks.secondaryCta')}
         </Button>
       </div>
-    </div>
+    </header>
 
-    <ol class="grid gap-3" aria-label={t('public.howItWorks.stepsTitle')}>
+    <section class="public-landing-grid" aria-label={t('public.howItWorks.stepsTitle')}>
       {steps.map((step, index) => (
-        <li class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm">
-          <span class="text-sm font-black uppercase tracking-[0.16em] text-[var(--color-primary)]">0{index + 1}</span>
-          <h2 class="mt-2 text-2xl font-black tracking-tight">{step.title}</h2>
-          <p class="mt-2 text-[var(--color-muted)]">{step.description}</p>
-        </li>
+        <article class="public-landing-card public-step-card">
+          <span>0{index + 1}</span>
+          <h2>{step.title}</h2>
+          <p>{step.description}</p>
+        </article>
       ))}
-    </ol>
-  </section>
+    </section>
 
-  <section class="mt-12 grid gap-5 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm sm:p-7">
-    <div>
-      <h2 class="text-3xl font-black tracking-tight">{t('public.howItWorks.benefitsTitle')}</h2>
-      <p class="mt-3 max-w-2xl text-[var(--color-muted)]">{t('public.howItWorks.description')}</p>
-    </div>
+    <section class="public-landing-panel" aria-labelledby="how-benefits-title">
+      <div class="public-landing-panel__copy">
+        <p class="public-landing-eyebrow">{t('home.eyebrow')}</p>
+        <h2 id="how-benefits-title">{t('public.howItWorks.benefitsTitle')}</h2>
+        <p>{t('public.howItWorks.description')}</p>
+      </div>
+      <div class="public-landing-mini-grid">
+        {benefits.map((benefit) => (
+          <p>{benefit}</p>
+        ))}
+      </div>
+    </section>
 
-    <div class="grid gap-3 md:grid-cols-3">
-      {benefits.map((benefit) => (
-        <p class="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-4 font-bold text-[var(--color-text)]">
-          {benefit}
-        </p>
-      ))}
-    </div>
-  </section>
-
-  <section class="mt-8 rounded-3xl border border-[var(--color-border)] bg-[var(--color-primary-soft)] p-5 sm:p-7">
-    <h2 class="text-3xl font-black tracking-tight">{t('public.howItWorks.finalTitle')}</h2>
-    <p class="mt-3 max-w-2xl text-[var(--color-muted)]">{t('public.howItWorks.finalDescription')}</p>
-    <div class="mt-6">
+    <section class="public-landing-cta" aria-labelledby="how-final-title">
+      <div>
+        <h2 id="how-final-title">{t('public.howItWorks.finalTitle')}</h2>
+        <p>{t('public.howItWorks.finalDescription')}</p>
+      </div>
       <Button href={getLocalizedPath('/', locale)}>{t('public.howItWorks.primaryCta')}</Button>
-    </div>
-  </section>
+    </section>
+  </article>
 </Container>
+
+<style>
+  .public-landing-container {
+    padding-block: clamp(2rem, 7vw, 4.5rem);
+  }
+
+  .public-landing-page {
+    display: grid;
+    gap: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .public-landing-hero,
+  .public-landing-card,
+  .public-landing-panel,
+  .public-landing-cta {
+    border: 1px solid var(--panel-border);
+    border-radius: clamp(1.3rem, 4vw, 2.35rem);
+    background: var(--panel-background);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .public-landing-hero {
+    display: grid;
+    justify-items: center;
+    gap: 1.2rem;
+    padding: clamp(2.8rem, 7vw, 5rem) clamp(1.25rem, 4vw, 3rem);
+    text-align: center;
+  }
+
+  .public-landing-eyebrow {
+    margin: 0;
+    color: var(--color-primary);
+    font-size: clamp(1rem, 2.2vw, 1.45rem);
+    font-weight: 380;
+    letter-spacing: -0.045em;
+    line-height: 1.05;
+  }
+
+  .public-landing-hero h1,
+  .public-landing-panel h2,
+  .public-landing-cta h2,
+  .public-landing-card h2,
+  .public-landing-hero p,
+  .public-landing-panel p,
+  .public-landing-cta p,
+  .public-landing-card p {
+    margin: 0;
+  }
+
+  .public-landing-hero h1 {
+    max-width: 13ch;
+    color: var(--color-text);
+    font-size: clamp(2.75rem, 8vw, 5.2rem);
+    font-weight: 620;
+    letter-spacing: -0.085em;
+    line-height: 0.95;
+  }
+
+  .public-landing-hero > p {
+    max-width: 46rem;
+    color: var(--color-muted);
+    font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+    font-weight: 420;
+    letter-spacing: -0.035em;
+    line-height: 1.42;
+  }
+
+  .public-landing-actions,
+  .public-landing-cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .public-landing-grid,
+  .public-landing-mini-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .public-landing-card {
+    display: grid;
+    gap: 1rem;
+    padding: clamp(1.25rem, 3vw, 1.65rem);
+  }
+
+  .public-step-card span {
+    color: var(--color-primary);
+    font-size: 0.95rem;
+    font-weight: 420;
+    letter-spacing: -0.055em;
+  }
+
+  .public-landing-card h2 {
+    margin-top: auto;
+    color: var(--color-text);
+    font-size: clamp(1.25rem, 2.8vw, 1.7rem);
+    font-weight: 650;
+    letter-spacing: -0.065em;
+    line-height: 1.03;
+  }
+
+  .public-landing-card p,
+  .public-landing-panel p,
+  .public-landing-cta p {
+    color: var(--color-muted);
+    font-size: clamp(0.98rem, 1.7vw, 1.08rem);
+    font-weight: 420;
+    letter-spacing: -0.025em;
+    line-height: 1.55;
+  }
+
+  .public-landing-panel {
+    display: grid;
+    gap: 1.25rem;
+    padding: clamp(1.35rem, 4vw, 2rem);
+  }
+
+  .public-landing-panel__copy {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .public-landing-panel h2,
+  .public-landing-cta h2 {
+    color: var(--color-text);
+    font-size: clamp(1.9rem, 5vw, 3.4rem);
+    font-weight: 610;
+    letter-spacing: -0.08em;
+    line-height: 0.95;
+  }
+
+  .public-landing-mini-grid p {
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 14%);
+    color: var(--color-text);
+    padding: 1rem;
+  }
+
+  .public-landing-cta {
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(1.35rem, 4vw, 2rem);
+  }
+
+  .public-landing-cta > div {
+    display: grid;
+    gap: 0.55rem;
+    min-width: min(100%, 24rem);
+  }
+
+  @media (min-width: 768px) {
+    .public-landing-grid,
+    .public-landing-mini-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>
