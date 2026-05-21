@@ -1,6 +1,7 @@
 type DaySummaryCardOptions = {
   isoDate: string;
   dayNumber: string;
+  monthLabel: string;
   weekday: string;
   dateLabel: string;
   summariesHtml: string;
@@ -24,10 +25,10 @@ function renderActionMenu({ isoDate, actionLabel, actionAttr, actionStateAttr = 
   if (!actionLabel || !actionAttr) return '';
 
   return `
-    <details class="day-actions">
+    <details class="day-actions" data-day-actions>
       <summary aria-label="${escapeHtml(moreActionsLabel || actionLabel)}">•••</summary>
       <div>
-        <button type="button" ${actionAttr}="${escapeHtml(isoDate)}" ${actionStateAttr}>${escapeHtml(actionLabel)}</button>
+        <button type="button" data-action-kind="edit" ${actionAttr}="${escapeHtml(isoDate)}" ${actionStateAttr}>${escapeHtml(actionLabel)}</button>
       </div>
     </details>
   `;
@@ -37,6 +38,7 @@ export function renderDaySummaryCard(options: DaySummaryCardOptions) {
   const {
     isoDate,
     dayNumber,
+    monthLabel,
     weekday,
     dateLabel,
     summariesHtml,
@@ -53,11 +55,13 @@ export function renderDaySummaryCard(options: DaySummaryCardOptions) {
 
   return `
     <article class="${escapeHtml(classes)}" data-day="${escapeHtml(isoDate)}"${menuAttr}${statusAttr}>
-      <div class="history-card__date" aria-hidden="true">${escapeHtml(dayNumber)}</div>
+      <div class="history-card__date" aria-label="${escapeHtml(dateLabel)}">
+        <span class="history-card__day-number">${escapeHtml(dayNumber)}</span>
+        <span class="history-card__month">${escapeHtml(monthLabel)}</span>
+      </div>
       <div class="history-card__body">
         <header class="history-card__header">
           <div class="history-card__heading">
-            <p class="history-card__meta">${escapeHtml(dateLabel)}</p>
             <h2>${escapeHtml(weekday)}</h2>
           </div>
           ${actionHtml ?? renderActionMenu(options)}
