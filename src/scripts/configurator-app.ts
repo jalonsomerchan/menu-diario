@@ -8,7 +8,7 @@ import { serializeDay } from '../lib/menu/day-state';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
-import { getDayCardMealLabel, prepareDayCardMeals } from '../lib/menu/day-card-data';
+import { prepareDayCardMeals, renderDayCardMealsHtml } from '../lib/menu/day-card-data';
 import { getMenuParticipants } from '../lib/menu/participants';
 import {
   clearMenuDay,
@@ -53,10 +53,6 @@ if (root) {
   });
 
   attachDishSuggestions(root, () => dishes);
-
-  function escapeHtml(value = '') {
-    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-  }
 
   function showStatus(message: string, isError = false) {
     if (isError) {
@@ -131,27 +127,13 @@ if (root) {
     if (content) content.hidden = !isReady;
   }
 
-  function mealLabel(meal: MealSlot) {
-    return getDayCardMealLabel(labels, meal);
-  }
-
   function renderConfig(menu: WeekMenu) {
     if (!configDays) return;
 
     configDays.innerHTML = getConfigDates()
       .map((isoDate) => {
         const day = normalizeDay(menu.days[isoDate]);
-        const summaries = prepareDayCardMeals(labels, day, getEnabledMeals(), getParticipants())
-          .map(
-            (meal) => `
-              <div class="day-meal-row">
-                <span>${escapeHtml(meal.label)}:</span>
-                <strong>${escapeHtml(meal.summary)}</strong>
-                ${meal.participantSummary ? `<span class="meal-participants-summary">${escapeHtml(meal.participantSummary)}</span>` : ''}
-              </div>
-            `
-          )
-          .join('');
+        const summaries = renderDayCardMealsHtml(prepareDayCardMeals(labels, day, getEnabledMeals(), getParticipants()));
 
         return renderDaySummaryCard({
           isoDate,
