@@ -1,0 +1,78 @@
+.menu-app__status {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  left: max(1rem, env(safe-area-inset-left));
+  z-index: 90;
+  display: flex;
+  width: auto;
+  max-width: min(30rem, calc(100vw - 2rem));
+  min-height: 3rem;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 auto;
+  border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 48%);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface-raised), #fff 4%), var(--color-surface-raised));
+  color: var(--color-text);
+  padding: 0.85rem 1rem;
+  box-shadow: var(--shadow-md);
+  font-size: 0.95rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
+  transform: translateY(0);
+  animation: menu-toast-in 180ms ease-out;
+}
+
+.menu-app__status[hidden] {
+  display: none;
+}
+
+.menu-app__status::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--color-primary-soft), transparent 18%);
+}
+
+.menu-app__status[data-variant='error'] {
+  border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 38%);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-danger-soft), var(--color-surface-raised) 64%), var(--color-surface-raised));
+}
+
+.menu-app__status[data-variant='error']::before {
+  background: var(--color-danger);
+  box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--color-danger-soft), transparent 12%);
+}
+
+@keyframes menu-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (min-width: 640px) {
+  .menu-app__status {
+    right: max(1.25rem, env(safe-area-inset-right));
+    bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    left: auto;
+    margin: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .menu-app__status {
+    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+}
