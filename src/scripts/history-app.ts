@@ -27,7 +27,7 @@ import {
 } from '../lib/menu/repository';
 import type { Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
-import { bindDetailsMenuDismiss } from '../lib/ui/details-menu';
+import { installDetailsMenuAutoClose } from '../lib/ui/details-menu';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-history-app]');
@@ -73,7 +73,7 @@ if (root) {
   });
 
   attachDishSuggestions(root, () => dishes);
-  bindDetailsMenuDismiss(root);
+  installDetailsMenuAutoClose(root);
 
   function escapeHtml(value = '') {
     return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
