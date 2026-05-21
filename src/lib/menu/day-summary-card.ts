@@ -3,43 +3,68 @@ type DaySummaryCardOptions = {
   dayNumber: string;
   weekday: string;
   dateLabel: string;
-  actionLabel: string;
-  actionAttr: string;
-  actionStateAttr?: string;
   summariesHtml: string;
+  actionLabel?: string;
+  actionAttr?: string;
+  actionStateAttr?: string;
+  moreActionsLabel?: string;
+  actionHtml?: string;
   notesHtml?: string;
+  badgesHtml?: string;
+  menuId?: string;
+  dayStatus?: string;
+  className?: string;
 };
 
 function escapeHtml(value = '') {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 }
 
-export function renderDaySummaryCard({
-  isoDate,
-  dayNumber,
-  weekday,
-  dateLabel,
-  actionLabel,
-  actionAttr,
-  actionStateAttr = '',
-  summariesHtml,
-  notesHtml = '',
-}: DaySummaryCardOptions) {
+function renderActionMenu({ actionLabel, actionAttr, actionStateAttr = '', moreActionsLabel }: DaySummaryCardOptions) {
+  if (!actionLabel || !actionAttr) return '';
+
   return `
-    <article class="next-day-card next-day-card--mockup planner-day-card" data-day="${escapeHtml(isoDate)}">
-      <div class="next-day-card__number">${escapeHtml(dayNumber)}</div>
-      <div class="next-day-card__body">
-        <header class="planner-day-card__header">
-          <div class="planner-day-card__title">
-            <h3>${escapeHtml(weekday)}</h3>
-            <p>${escapeHtml(dateLabel)}</p>
+    <details class="day-actions">
+      <summary aria-label="${escapeHtml(moreActionsLabel || actionLabel)}">•••</summary>
+      <div>
+        <button type="button" ${actionAttr}="${escapeHtml(arguments[0].isoDate)}" ${actionStateAttr}>${escapeHtml(actionLabel)}</button>
+      </div>
+    </details>
+  `;
+}
+
+export function renderDaySummaryCard(options: DaySummaryCardOptions) {
+  const {
+    isoDate,
+    dayNumber,
+    weekday,
+    dateLabel,
+    summariesHtml,
+    actionHtml,
+    notesHtml = '',
+    badgesHtml = '',
+    menuId = '',
+    dayStatus = '',
+    className = '',
+  } = options;
+  const menuAttr = menuId ? ` data-menu="${escapeHtml(menuId)}"` : '';
+  const statusAttr = dayStatus ? ` data-day-status="${escapeHtml(dayStatus)}"` : '';
+  const classes = ['history-card', 'menu-day-card', className].filter(Boolean).join(' ');
+
+  return `
+    <article class="${escapeHtml(classes)}" data-day="${escapeHtml(isoDate)}"${menuAttr}${statusAttr}>
+      <div class="history-card__date" aria-hidden="true">${escapeHtml(dayNumber)}</div>
+      <div class="history-card__body">
+        <header class="history-card__header">
+          <div class="history-card__heading">
+            <p class="history-card__meta">${escapeHtml(dateLabel)}</p>
+            <h2>${escapeHtml(weekday)}</h2>
           </div>
-          <button class="button button--ghost button--small planner-day-card__edit" type="button" ${actionAttr}="${escapeHtml(isoDate)}" ${actionStateAttr}>
-            ${escapeHtml(actionLabel)}
-          </button>
+          ${actionHtml ?? renderActionMenu(options)}
         </header>
-        <div class="planner-day-card__meals">${summariesHtml}</div>
+        <div class="menu-day-card__content">${summariesHtml}</div>
         ${notesHtml}
+        ${badgesHtml}
       </div>
     </article>
   `;
