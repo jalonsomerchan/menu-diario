@@ -18,7 +18,7 @@
 .history-card__date { display: grid; place-items: center; align-content: center; gap: 0.18rem; border-right: 1px solid var(--color-border); background: var(--color-surface-soft); color: var(--color-primary); font-weight: 100; letter-spacing: -0.08em; line-height: 0.9; }
 .history-card__day-number { display: block; padding-right: 0.08em; font-size: clamp(2.35rem, 11vw, 3.6rem); letter-spacing: -0.08em; }
 .history-card__month { display: block; color: var(--color-muted); font-size: 0.78rem; font-weight: 950; letter-spacing: 0.12em; line-height: 1; }
-.history-card__body { display: grid; gap: 0.75rem; min-width: 0; padding: var(--surface-padding-tight); padding-bottom: max(var(--surface-padding-tight), 1rem); min-height: auto; }
+.history-card__body { display: grid; align-content: start; gap: 0.75rem; min-width: 0; padding: var(--surface-padding-tight); padding-bottom: max(var(--surface-padding-tight), 1rem); min-height: auto; }
 .history-card__header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 0.75rem; min-width: 0; }
 .history-card__heading { min-width: 0; }
 .history-card h2 { margin: 0; font-size: clamp(1.25rem, 6vw, 1.9rem); line-height: 1; letter-spacing: -0.04em; text-transform: capitalize; }
@@ -27,7 +27,7 @@
 .history-card__badges span { border-radius: 999px; background: var(--color-surface-soft); color: var(--color-muted); padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 850; }
 .history-empty { margin: 0; border: 1px dashed var(--color-border); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-surface), transparent 10%); padding: 1rem; color: var(--color-muted); font-weight: 850; text-align: center; }
 .history-load-more { width: 100%; }
-.menu-day-card__content { display: grid; gap: 0.65rem; min-width: 0; }
+.menu-day-card__content { display: grid; align-content: start; gap: 0.65rem; min-width: 0; }
 .next-days--timeline { grid-template-columns: 1fr; }
 .next-days--timeline .history-card { min-height: 8.8rem; }
 .day-actions[data-day-actions] summary { width: 2.65rem; height: 2.65rem; border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 48%); background: var(--color-primary-soft); color: var(--color-primary); }
