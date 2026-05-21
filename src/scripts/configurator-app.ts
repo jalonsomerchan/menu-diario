@@ -105,7 +105,7 @@ if (root) {
       title: primaryMenu?.title ?? '',
       ownerId: primaryMenu?.ownerId ?? currentUser?.uid ?? '',
       members: primaryMenu?.members ?? (currentUser ? [currentUser.uid] : []),
-      inviteCode: primaryMenu?.inviteCode ?? '',
+      inviteCode: '',
       weekStart: firstWeekStart,
       days,
       updatedAt: primaryMenu?.updatedAt,
@@ -144,14 +144,12 @@ if (root) {
 
   function renderMealSummary(day: WeekMenu['days'][string], meal: MealSlot) {
     if (day.skipped) {
-      const reason = reasonLabel(day.reason);
-      return reason ? `${labels.noDay}: ${reason}` : labels.noDay;
+      return reasonLabel(day.reason) || labels.noDay;
     }
 
     const mealState = day.meals[meal];
     if (mealState.skipped) {
-      const reason = reasonLabel(mealState.reason);
-      return reason ? `${labels.noMeal}: ${reason}` : labels.noMeal;
+      return reasonLabel(mealState.reason) || labels.noMeal;
     }
 
     return mealState.items.length ? mealState.items.join(', ') : labels.todayEmpty;
