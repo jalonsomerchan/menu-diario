@@ -12,6 +12,7 @@ const title = 'Compras con IA';
 
 <BaseLayout title={`${title} · ${siteConfig.name}`} description={t('shopping.description')} locale={locale}>
   <AppPageShell locale={locale} title={title} description={t('shopping.description')}>
+    <!-- ShoppingAiApp wraps <ShoppingApp /> to keep the AI wizard separated from /compras. -->
     <ShoppingAiApp locale={locale} />
   </AppPageShell>
 </BaseLayout>
