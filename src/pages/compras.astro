@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AppPageShell from '../components/AppPageShell.astro';
-import ShoppingApp from '../components/ShoppingApp.astro';
+import ShoppingListsApp from '../components/ShoppingListsApp.astro';
 import { defaultLocale, siteConfig } from '../config/site';
 
 const locale = defaultLocale;
@@ -11,6 +11,6 @@ const description = 'Consulta tus listas de la compra guardadas y abre la que ne
 
 <BaseLayout title={`${title} · ${siteConfig.name}`} description={description} locale={locale}>
   <AppPageShell locale={locale} title={title} description={description}>
-    <ShoppingApp locale={locale} />
+    <ShoppingListsApp locale={locale} />
   </AppPageShell>
 </BaseLayout>

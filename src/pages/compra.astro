@@ -1,16 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AppPageShell from '../components/AppPageShell.astro';
-import ShoppingApp from '../components/ShoppingApp.astro';
+import ShoppingAiApp from '../components/ShoppingAiApp.astro';
 import { defaultLocale, siteConfig } from '../config/site';
 import { useTranslations } from '../i18n/ui';
 
 const locale = defaultLocale;
 const t = useTranslations(locale);
+const title = 'Compras con IA';
 ---
 
-<BaseLayout title={`${t('shopping.title')} · ${siteConfig.name}`} description={t('shopping.description')} locale={locale}>
-  <AppPageShell locale={locale} title={t('shopping.title')} description={t('shopping.description')}>
-    <ShoppingApp locale={locale} />
+<BaseLayout title={`${title} · ${siteConfig.name}`} description={t('shopping.description')} locale={locale}>
+  <AppPageShell locale={locale} title={title} description={t('shopping.description')}>
+    <!-- ShoppingAiApp wraps <ShoppingApp /> to keep the AI wizard separated from /compras. -->
+    <ShoppingAiApp locale={locale} />
   </AppPageShell>
 </BaseLayout>
