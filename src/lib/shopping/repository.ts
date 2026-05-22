@@ -12,7 +12,7 @@ type SaveShoppingListInput = {
   userId: string;
   groupId?: string;
   scope: ShoppingScope;
-  title: string;
+  title?: string;
   rangeStart: string;
   rangeEnd: string;
   items: ShoppingItem[];
@@ -103,7 +103,7 @@ export async function saveShoppingList(services: FirebaseServices, input: SaveSh
   await firestoreModule.setDoc(
     documentRef,
     {
-      title: input.title.trim(),
+      title: input.title?.trim() || existing?.title || input.rangeStart || 'Shopping list',
       ownerId: existing?.ownerId ?? input.userId,
       groupId: input.groupId ?? null,
       scope: input.scope,
@@ -161,7 +161,7 @@ export async function duplicateShoppingList(
     title: input.title,
     rangeStart: input.list.rangeStart,
     rangeEnd: input.list.rangeEnd,
-    items: input.list.items.map((item, index) => ({ ...item, id: `${item.id}-copy-${index}`, checked: false, status: 'to-buy' })),
+    items: input.list.items.map((item, index) => ({ ...item, id: `${item.id}-copy-${index}`, checked: false, status: 'to-buy' as const })),
     status: 'active',
   });
 }
