@@ -106,6 +106,7 @@ export function normalizeShoppingItem(
   const category = normalizeShoppingCategory(item.category ?? item.name);
   const checked = Boolean(item.checked ?? item.status === 'owned');
   const status = item.status ?? (checked ? 'owned' : 'to-buy');
+  const order = Number(item.order);
 
   return {
     id: item.id?.trim() || createShoppingItemId(cleanName, category),
@@ -115,7 +116,7 @@ export function normalizeShoppingItem(
     quantity: normalizeShoppingQuantity(item.quantity ?? ''),
     note: normalizeShoppingQuantity(item.note ?? ''),
     checked,
-    order: Number.isFinite(item.order) ? Number(item.order) : index,
+    order: Number.isFinite(order) ? order : index,
     status,
     forMeals: normalizeMealRefs(item.forMeals ?? []),
     source: item.source ?? 'manual',
