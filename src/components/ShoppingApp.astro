@@ -11,6 +11,30 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
+const savedShoppingListLabels =
+  locale === 'en'
+    ? {
+        savedListsTitle: 'Saved shopping lists',
+        savedListsDescription: 'Open a saved list or start a new one from your upcoming menu.',
+        savedListsEmpty: 'You do not have saved shopping lists yet.',
+        newList: 'New list',
+        openList: 'Open list',
+        activeList: 'Current list',
+        listItemsCountSingle: '1 item pending',
+        listItemsCountPlural: '{count} items pending',
+        listDateRange: '{start} - {end}',
+      }
+    : {
+        savedListsTitle: 'Listas de la compra guardadas',
+        savedListsDescription: 'Abre una lista guardada o empieza una nueva desde tu próximo menú.',
+        savedListsEmpty: 'Todavía no tienes listas de la compra guardadas.',
+        newList: 'Nueva lista',
+        openList: 'Abrir lista',
+        activeList: 'Lista actual',
+        listItemsCountSingle: '1 pendiente',
+        listItemsCountPlural: '{count} pendientes',
+        listDateRange: '{start} - {end}',
+      };
 
 const labels = {
   title: t('shopping.title'),
@@ -107,15 +131,7 @@ const labels = {
   exportEmpty: t('shopping.exportEmpty'),
   groupScope: t('shopping.groupScope'),
   userScope: t('shopping.userScope'),
-  savedListsTitle: t('shopping.savedListsTitle'),
-  savedListsDescription: t('shopping.savedListsDescription'),
-  savedListsEmpty: t('shopping.savedListsEmpty'),
-  newList: t('shopping.newList'),
-  openList: t('shopping.openList'),
-  activeList: t('shopping.activeList'),
-  listItemsCountSingle: t('shopping.listItemsCountSingle'),
-  listItemsCountPlural: t('shopping.listItemsCountPlural'),
-  listDateRange: t('shopping.listDateRange'),
+  ...savedShoppingListLabels,
   aiDisabled: t('ai.disabled'),
   aiMissingConfig: t('ai.missingConfig'),
   aiLoading: t('ai.loading'),
