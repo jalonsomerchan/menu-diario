@@ -16,8 +16,8 @@ import { ensureUserProfile, getOrCreateWeekMenus, watchUserProfile, watchWeekMen
 import type { Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { buildShoppingListText } from '../lib/shopping/export';
 import { fromAiResponseItems, getToBuyItems, groupShoppingItems, mergeShoppingDraftItems, normalizeShoppingItem } from '../lib/shopping/normalize';
-import { saveShoppingList, watchShoppingList } from '../lib/shopping/repository';
-import type { ShoppingItem, ShoppingScope } from '../lib/shopping/types';
+import { saveShoppingList, watchShoppingLists } from '../lib/shopping/repository';
+import type { ShoppingItem, ShoppingListDocument, ShoppingScope } from '../lib/shopping/types';
 import { watchTuppers } from '../lib/tuppers/repository';
 import type { TupperItem } from '../lib/tuppers/types';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
@@ -33,6 +33,8 @@ if (root) {
   const authPanel = root.querySelector<HTMLElement>('[data-auth-panel]');
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const workspace = root.querySelector<HTMLElement>('[data-workspace]');
+  const savedLists = root.querySelector<HTMLElement>('[data-saved-lists]');
+  const newListButton = root.querySelector<HTMLButtonElement>('[data-new-list]');
   const rangePicker = root.querySelector<HTMLElement>('[data-range-picker]');
   const selectionSummary = root.querySelector<HTMLElement>('[data-selection-summary]');
   const meals = root.querySelector<HTMLElement>('[data-meals]');
@@ -58,7 +60,8 @@ if (root) {
   let currentMenu: WeekMenu | null = null;
   let currentDishes: Dish[] = [];
   let currentTuppers: TupperItem[] = [];
-  let currentSavedItems: ShoppingItem[] = [];
+  let currentLists: ShoppingListDocument[] = [];
+  let activeListId = '';
   let currentDraftItems: ShoppingItem[] = [];
   let selectedDayKeys = getAvailableRange().dates;
   let currentWizardStep: WizardStep = 'range';
@@ -68,7 +71,7 @@ if (root) {
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeTuppers: (() => void) | undefined;
-  let unsubscribeShoppingList: (() => void) | undefined;
+  let unsubscribeShoppingLists: (() => void) | undefined;
 
   function showStatus(message: string, isError = false) {
     if (isError) {
@@ -156,6 +159,86 @@ if (root) {
       new Date(`${dayKey}T00:00:00`)
     );
     return `${date} · ${labels[meal] ?? meal}`;
+  }
+
+  function formatListRange(list: ShoppingListDocument) {
+    return (labels.listDateRange ?? '{start} - {end}')
+      .replace('{start}', list.rangeStart ? formatDateLabel(list.rangeStart) : '')
+      .replace('{end}', list.rangeEnd ? formatDateLabel(list.rangeEnd) : '');
+  }
+
+  function getDatesBetween(start: string, end: string) {
+    if (!start || !end) return getAvailableRange().dates;
+    const dates: string[] = [];
+    const startDate = new Date(`${start}T00:00:00`);
+    const endDate = new Date(`${end}T00:00:00`);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return getAvailableRange().dates;
+    const cursor = new Date(startDate);
+    while (cursor <= endDate && dates.length < 31) {
+      dates.push(cursor.toISOString().slice(0, 10));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return dates;
+  }
+
+  function getDefaultListTitle() {
+    const { rangeStart, rangeEnd } = getRange();
+    if (rangeStart === rangeEnd) return `${labels.exportTitle} · ${formatDateLabel(rangeStart)}`;
+    return `${labels.exportTitle} · ${formatDateLabel(rangeStart)} - ${formatDateLabel(rangeEnd)}`;
+  }
+
+  function renderSavedLists() {
+    if (!savedLists) return;
+    const visibleLists = currentLists.filter((list) => list.status !== 'archived');
+    if (visibleLists.length === 0) {
+      savedLists.innerHTML = `<p class="shopping-empty">${escapeHtml(labels.savedListsEmpty)}</p>`;
+      return;
+    }
+
+    savedLists.innerHTML = visibleLists
+      .map((list) => {
+        const pendingCount = getToBuyItems(list.items).length;
+        const countLabel = formatCountLabel('listItemsCountSingle', 'listItemsCountPlural', pendingCount);
+        return `
+          <article class="shopping-saved-card" data-list-id="${escapeHtml(list.id)}" data-active="${list.id === activeListId}" role="listitem">
+            <div class="shopping-saved-card__head">
+              <div>
+                <h3 class="shopping-saved-card__title">${escapeHtml(list.title || labels.exportTitle)}</h3>
+                <p class="shopping-saved-card__meta">
+                  <span class="shopping-pill">${escapeHtml(countLabel)}</span>
+                  <span class="shopping-pill">${escapeHtml(formatListRange(list))}</span>
+                  ${list.id === activeListId ? `<span class="shopping-pill">${escapeHtml(labels.activeList)}</span>` : ''}
+                </p>
+              </div>
+              <button class="button button--secondary button--small" type="button" data-open-list="${escapeHtml(list.id)}">${escapeHtml(labels.openList)}</button>
+            </div>
+          </article>
+        `;
+      })
+      .join('');
+  }
+
+  function openShoppingList(list: ShoppingListDocument) {
+    activeListId = list.id;
+    selectedDayKeys = getDatesBetween(list.rangeStart, list.rangeEnd);
+    hydrateDraft(list.items);
+    draftDirty = false;
+    renderRangePicker();
+    renderMeals();
+    renderSavedLists();
+    goToWizardStep('results');
+  }
+
+  function startNewList() {
+    activeListId = '';
+    selectedDayKeys = getAvailableRange().dates;
+    hydrateDraft([]);
+    draftDirty = false;
+    showAiStatus('');
+    renderRangePicker();
+    renderMeals();
+    renderSavedLists();
+    goToWizardStep('range');
   }
 
   function validateWizardStep(step: WizardStep) {
@@ -464,16 +547,19 @@ if (root) {
     try {
       saveFeedback.pending();
       const { rangeStart, rangeEnd } = getRange();
-      await saveShoppingList(await getFirebaseServices(), {
+      const listId = await saveShoppingList(await getFirebaseServices(), {
         userId: currentUser.uid,
         groupId: currentProfile?.groupId,
         scope: getScope(),
+        title: currentLists.find((list) => list.id === activeListId)?.title || getDefaultListTitle(),
         rangeStart,
         rangeEnd,
         items: currentDraftItems,
+        listId: activeListId || undefined,
       });
-      currentSavedItems = currentDraftItems;
+      activeListId = listId;
       draftDirty = false;
+      renderSavedLists();
       showStatus(labels.saved);
     } catch (error) {
       showStatus(formatError(error), true);
@@ -504,11 +590,12 @@ if (root) {
     currentDraftItems = groupShoppingItems(
       currentDraftItems.map((item) => {
         if (item.id !== itemId) return item;
-        return normalizeShoppingItem({ ...item, status: nextStatus });
+        return normalizeShoppingItem({ ...item, status: nextStatus, checked: nextStatus === 'owned' });
       })
     );
     draftDirty = true;
     renderDraft();
+    renderSavedLists();
     updateToolbarState();
   }
 
@@ -533,25 +620,25 @@ if (root) {
     } as WeekMenu;
   }
 
-  function resubscribeShoppingList(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
-    unsubscribeShoppingList?.();
+  function resubscribeShoppingLists(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
+    unsubscribeShoppingLists?.();
     if (!currentUser) return;
 
-    const { rangeStart, rangeEnd } = getRange();
-    unsubscribeShoppingList = watchShoppingList(
+    unsubscribeShoppingLists = watchShoppingLists(
       services,
       {
         scope: getScope(),
         ownerId: currentUser.uid,
         groupId: currentProfile?.groupId,
-        rangeStart,
-        rangeEnd,
       },
-      (list) => {
-        currentSavedItems = list?.items ?? [];
-        if (!draftDirty || currentDraftItems.length === 0) {
-          hydrateDraft(currentSavedItems);
+      (lists) => {
+        currentLists = lists;
+        const activeList = lists.find((list) => list.id === activeListId);
+        if (activeList && !draftDirty) {
+          currentDraftItems = activeList.items;
+          renderDraft();
         }
+        renderSavedLists();
       },
       (error) => showStatus(formatError(error), true)
     );
@@ -572,6 +659,14 @@ if (root) {
     root.querySelector('[data-guest-login]')?.addEventListener('click', () =>
       signInAsGuest().catch((error: Error) => showStatus(error.message, true))
     );
+    newListButton?.addEventListener('click', startNewList);
+    savedLists?.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-open-list]');
+      const listId = button?.dataset.openList;
+      const list = currentLists.find((entry) => entry.id === listId);
+      if (!button || !list) return;
+      openShoppingList(list);
+    });
     generateButton?.addEventListener('click', () => {
       generateWithAi().catch((error) => showAiStatus(formatError(error), true));
     });
@@ -606,10 +701,6 @@ if (root) {
       renderRangePicker();
       renderMeals();
       updateToolbarState();
-
-      if (currentServices && currentUser) {
-        resubscribeShoppingList(currentServices);
-      }
     });
 
     draft?.addEventListener('click', (event) => {
@@ -649,7 +740,7 @@ if (root) {
             labels.guestSession,
             async (profile) => {
               currentProfile = profile;
-              resubscribeShoppingList(services);
+              resubscribeShoppingLists(services);
               const menuIdsByWeekStart = await getOrCreateWeekMenus(services, user.uid, getRelevantWeekStarts(), locale);
 
               unsubscribeMenus?.();
@@ -696,6 +787,7 @@ if (root) {
 
   renderRangePicker();
   renderSelectionSummary();
+  renderSavedLists();
   renderDraft();
   renderWizard();
   updateToolbarState();
