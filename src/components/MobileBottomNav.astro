@@ -20,6 +20,7 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 const tt = useTupperTranslations(locale);
 const currentPath = stripBasePath(Astro.url.pathname).replace(/\/$/, '') || '/';
+const shoppingLabel = locale === 'en' ? 'Shopping' : 'Compras';
 
 const items: NavItem[] = [
   {
@@ -35,10 +36,10 @@ const items: NavItem[] = [
     match: ['/planificador', '/planificador-ai', '/configurar', '/planificacion'],
   },
   {
-    href: getLocalizedPath('/compra', locale),
+    href: getLocalizedPath('/compras', locale),
     icon: 'mdi:cart-outline',
-    label: t('appNav.shopping'),
-    match: ['/compra'],
+    label: shoppingLabel,
+    match: ['/compras'],
   },
   {
     href: getLocalizedPath('/tuppers', locale),
