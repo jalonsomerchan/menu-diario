@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AppPageShell from '../../components/AppPageShell.astro';
-import ShoppingApp from '../../components/ShoppingApp.astro';
+import ShoppingAiApp from '../../components/ShoppingAiApp.astro';
 import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
 import { isLocale, useTranslations } from '../../i18n/ui';
 
@@ -14,10 +14,11 @@ export function getStaticPaths() {
 const localeParam = Astro.params.locale;
 const locale: Locale = isLocale(localeParam) ? localeParam : defaultLocale;
 const t = useTranslations(locale);
+const title = locale === 'en' ? 'AI shopping' : 'Compras con IA';
 ---
 
-<BaseLayout title={`${t('shopping.title')} · ${siteConfig.name}`} description={t('shopping.description')} locale={locale}>
-  <AppPageShell locale={locale} title={t('shopping.title')} description={t('shopping.description')}>
-    <ShoppingApp locale={locale} />
+<BaseLayout title={`${title} · ${siteConfig.name}`} description={t('shopping.description')} locale={locale}>
+  <AppPageShell locale={locale} title={title} description={t('shopping.description')}>
+    <ShoppingAiApp locale={locale} />
   </AppPageShell>
 </BaseLayout>
