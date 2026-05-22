@@ -323,4 +323,357 @@ const moreItems = [
     font-size: 0.75rem;
     font-weight: 700;
   }
+
+  .nav-dropdown--settings > summary {
+    width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-xs, none);
+    padding: 0;
+    color: var(--color-text);
+  }
+
+  .nav-dropdown--settings > summary :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .locale-menu,
+  .nav-dropdown,
+  .mobile-menu {
+    position: relative;
+  }
+
+  .locale-menu summary::-webkit-details-marker,
+  .nav-dropdown summary::-webkit-details-marker,
+  .mobile-menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .locale-menu summary::after,
+  .nav-dropdown summary::after {
+    content: none;
+  }
+
+  .locale-menu__list,
+  .nav-dropdown__list {
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    right: 0;
+    z-index: 40;
+    display: grid;
+    gap: 0.25rem;
+    min-width: 10rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-md);
+    padding: 0.75rem;
+  }
+
+  .nav-dropdown__list {
+    right: auto;
+    left: 0;
+    min-width: 14rem;
+  }
+
+  .nav-dropdown--settings .nav-dropdown__list {
+    right: 0;
+    left: auto;
+  }
+
+  .nav-dropdown__list--settings {
+    min-width: 16rem;
+  }
+
+  .nav-dropdown__list a,
+  .locale-menu__list a,
+  .nav-dropdown__list button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted, var(--color-muted));
+    padding: 0.625rem 0.75rem;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 650;
+    text-align: left;
+    text-decoration: none;
+    transition: background var(--transition-base), color var(--transition-base);
+  }
+
+  .locale-menu__list a:hover,
+  .nav-dropdown__list a:hover,
+  .nav-dropdown__list button:hover {
+    background: var(--color-surface-soft);
+    color: var(--color-text);
+  }
+
+  .nav-dropdown__list--settings label,
+  .mobile-menu__theme {
+    display: grid;
+    gap: 0.45rem;
+    color: var(--color-text-muted, var(--color-muted));
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .nav-dropdown__list--settings select,
+  .mobile-menu__theme select {
+    min-height: 2.7rem;
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    padding: 0 0.8rem;
+    font: inherit;
+    font-weight: 700;
+  }
+
+  .mobile-menu {
+    z-index: 45;
+    flex: 0 0 auto;
+  }
+
+  .mobile-menu > summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-xs, none);
+    color: var(--color-text);
+    cursor: pointer;
+    list-style: none;
+    touch-action: manipulation;
+    transition: background var(--transition-base), border-color var(--transition-base);
+  }
+
+  .mobile-menu > summary:hover {
+    border-color: var(--color-border-strong, var(--color-border));
+    background: var(--color-surface-soft);
+  }
+
+  .mobile-menu > summary span {
+    display: block;
+    width: 1.25rem;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+
+  .mobile-menu > summary {
+    display: grid;
+    gap: 0.28rem;
+  }
+
+  .mobile-menu[open] > summary span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .mobile-menu[open] > summary span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu[open] > summary span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .mobile-menu__panel {
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    right: 0;
+    z-index: 44;
+    display: grid;
+    gap: 0.75rem;
+    width: min(20rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 5.75rem);
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-md);
+    padding: 0.75rem;
+  }
+
+  .mobile-menu__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 0 0.75rem;
+  }
+
+  .mobile-menu__head strong {
+    font-size: 1rem;
+  }
+
+  .mobile-menu__head small {
+    color: var(--color-text-soft, var(--color-muted));
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .mobile-menu__nav,
+  .mobile-menu__section,
+  .mobile-menu__section > div {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .mobile-menu__panel a,
+  .mobile-menu__panel button,
+  .mobile-menu__section > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 2.75rem;
+    width: 100%;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted, var(--color-muted));
+    padding: 0.625rem 0.75rem;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 650;
+    list-style: none;
+    text-align: left;
+    text-decoration: none;
+    transition: background var(--transition-base), color var(--transition-base);
+  }
+
+  .mobile-menu__panel a span,
+  .mobile-menu__nav a span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .mobile-menu__panel a::after,
+  .mobile-menu__panel button::after,
+  .mobile-menu__section > summary::after {
+    content: '›';
+    color: var(--color-text-soft, var(--color-muted));
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .mobile-menu__panel a:hover,
+  .mobile-menu__panel button:hover,
+  .mobile-menu__section > summary:hover {
+    background: var(--color-surface-soft);
+    color: var(--color-text);
+  }
+
+  .mobile-menu__section[open] > summary::after {
+    transform: rotate(90deg);
+  }
+
+  .mobile-menu__section > div {
+    padding-left: 0.4rem;
+  }
+
+  .mobile-menu__section > div a {
+    min-height: 2.5rem;
+  }
+
+  .mobile-menu__languages {
+    display: grid;
+    gap: 0.55rem;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.75rem;
+  }
+
+  .mobile-menu__languages > strong {
+    color: var(--color-text-soft, var(--color-muted));
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .mobile-menu__languages > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .mobile-menu__languages a {
+    justify-content: center;
+    min-height: 2.4rem;
+    width: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .mobile-menu__languages a::after {
+    display: none;
+  }
+
+  .mobile-menu__logout {
+    justify-content: center;
+  }
+
+  .mobile-menu__nav :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .header-inner {
+      min-height: 4.75rem;
+      padding-block: 1rem;
+    }
+
+    .site-brand__text,
+    .site-brand__subtitle {
+      max-width: none;
+    }
+
+    .main-nav--desktop {
+      display: flex;
+    }
+
+    .mobile-menu {
+      display: none;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .site-brand__text,
+    .site-brand__subtitle {
+      max-width: 50vw;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .app-header {
+      background: color-mix(in srgb, var(--color-surface) 84%, transparent);
+    }
+  }
+
+  :root[data-theme='dark'] .app-header {
+    background: color-mix(in srgb, var(--color-surface) 84%, transparent);
+  }
 </style>
+
+<script>
+  import '../scripts/app-header.ts';
+</script>
