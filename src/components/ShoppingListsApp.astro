@@ -1,0 +1,248 @@
+---
+import type { Locale } from '../config/site';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const aiPath = getLocalizedPath('/compra', locale);
+const labels = {
+  loginTitle: t('shopping.loginTitle'),
+  loginDescription: t('shopping.loginDescription'),
+  signInGoogle: t('menu.signInGoogle'),
+  signInGuest: t('menu.signInGuest'),
+  configMissing: t('menu.configMissing'),
+  loading: t('dashboard.loading'),
+  guestSession: t('menu.guestSession'),
+  permissionsError: t('menu.permissionsError'),
+  savePending: t('menu.savePending'),
+  saveSaving: t('menu.saveSaving'),
+  saveSaved: t('menu.saveSaved'),
+  exportTitle: t('shopping.exportTitle'),
+  noToBuyItems: t('shopping.noToBuyItems'),
+  statusToBuy: t('shopping.statusToBuy'),
+  doneTitle: t('shopping.doneTitle'),
+  markToBuy: t('shopping.markToBuy'),
+  markOwned: t('shopping.markOwned'),
+  markDismissed: t('shopping.markDismissed'),
+  itemStatus: t('shopping.itemStatus'),
+  saved: t('shopping.saved'),
+  shared: t('shopping.shared'),
+  share: t('shopping.share'),
+  saveList: t('shopping.saveList'),
+  pendingCountSingle: t('shopping.pendingCountSingle'),
+  pendingCountPlural: t('shopping.pendingCountPlural'),
+  savedListsTitle: locale === 'en' ? 'Saved shopping lists' : 'Listas de la compra guardadas',
+  savedListsDescription:
+    locale === 'en'
+      ? 'Review your saved lists, mark items as bought and open only the list you need.'
+      : 'Revisa tus listas guardadas, marca productos como comprados y abre solo la lista que necesites.',
+  savedListsEmpty:
+    locale === 'en'
+      ? 'You do not have saved shopping lists yet. Generate one from AI shopping first.'
+      : 'Todavía no tienes listas de la compra guardadas. Genera una desde Compras con IA primero.',
+  createWithAi: locale === 'en' ? 'Create with AI' : 'Crear con IA',
+  openList: locale === 'en' ? 'Open list' : 'Abrir lista',
+  activeList: locale === 'en' ? 'Open list' : 'Lista abierta',
+  listItemsCountSingle: locale === 'en' ? '1 item pending' : '1 pendiente',
+  listItemsCountPlural: locale === 'en' ? '{count} items pending' : '{count} pendientes',
+  listDateRange: '{start} - {end}',
+  selectList: locale === 'en' ? 'Select a saved list to review it.' : 'Selecciona una lista guardada para revisarla.',
+  aiPath,
+};
+---
+
+<section class="shopping-app shopping-lists-app" data-shopping-lists-app data-labels={JSON.stringify(labels)}>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
+
+  <div class="menu-app__auth" data-auth-panel>
+    <div>
+      <p class="menu-app__eyebrow">{labels.savedListsTitle}</p>
+      <h2>{labels.loginTitle}</h2>
+      <p>{labels.loginDescription}</p>
+    </div>
+    <div class="menu-app__auth-actions">
+      <button class="button button--primary" type="button" data-google-login>{labels.signInGoogle}</button>
+      <button class="button button--secondary" type="button" data-guest-login>{labels.signInGuest}</button>
+    </div>
+  </div>
+
+  <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
+
+  <div class="shopping-lists-layout" data-workspace hidden>
+    <section class="planning-ai-panel app-panel shopping-saved-panel" aria-labelledby="shopping-saved-title">
+      <div class="planning-ai-section-heading shopping-saved-panel__heading">
+        <div>
+          <p class="menu-app__eyebrow">{labels.exportTitle}</p>
+          <h2 id="shopping-saved-title">{labels.savedListsTitle}</h2>
+          <p>{labels.savedListsDescription}</p>
+        </div>
+        <a class="button button--primary button--small" href={aiPath}>{labels.createWithAi}</a>
+      </div>
+      <div class="shopping-saved-list" data-saved-lists role="list"></div>
+    </section>
+
+    <section class="planning-ai-panel app-panel" aria-labelledby="shopping-list-detail-title">
+      <div class="planning-ai-section-heading">
+        <div>
+          <p class="menu-app__eyebrow">{labels.activeList}</p>
+          <h2 id="shopping-list-detail-title" data-detail-title>{labels.savedListsTitle}</h2>
+          <p data-detail-description>{labels.selectList}</p>
+        </div>
+      </div>
+      <div class="shopping-toolbar">
+        <button class="button button--ghost button--small" type="button" data-share disabled>{labels.share}</button>
+        <button class="button button--primary button--small" type="button" data-save disabled>{labels.saveList}</button>
+      </div>
+      <div class="planning-ai-results shopping-draft" data-detail></div>
+    </section>
+  </div>
+</section>
+
+<style is:global>
+  .shopping-lists-app {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .shopping-lists-app [data-workspace][hidden],
+  .shopping-lists-app [data-auth-panel][hidden] {
+    display: none;
+  }
+
+  .shopping-lists-layout {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .shopping-saved-panel__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .shopping-saved-list,
+  .shopping-draft,
+  .shopping-review-group {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .shopping-saved-card,
+  .shopping-item {
+    display: grid;
+    gap: 0.75rem;
+    padding: var(--surface-padding);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+  }
+
+  .shopping-saved-card[data-active='true'] {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 24%);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 20%);
+  }
+
+  .shopping-saved-card__head,
+  .shopping-item__head,
+  .shopping-review-group__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .shopping-saved-card__title,
+  .shopping-item__title,
+  .shopping-review-group__header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 950;
+  }
+
+  .shopping-saved-card__meta,
+  .shopping-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin: 0;
+  }
+
+  .shopping-pill {
+    display: inline-flex;
+    min-height: 2rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-surface), transparent 3%);
+    color: var(--color-text);
+    font-size: 0.84rem;
+    font-weight: 850;
+  }
+
+  .shopping-empty,
+  .shopping-review-group__count {
+    margin: 0;
+    color: var(--color-muted);
+    font-weight: 700;
+  }
+
+  .shopping-status {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .shopping-status__button {
+    display: inline-flex;
+    min-width: 0;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.62rem 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-surface), transparent 3%);
+    color: var(--color-text);
+    font-size: 0.92rem;
+    font-weight: 850;
+    white-space: nowrap;
+  }
+
+  .shopping-status__button[data-selected='true'][data-status='to-buy'] {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 28%);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+
+  .shopping-status__button[data-selected='true'][data-status='owned'] {
+    border-color: color-mix(in srgb, var(--color-success), var(--color-border) 30%);
+    background: color-mix(in srgb, var(--color-success-soft), transparent 12%);
+    color: var(--color-success);
+  }
+
+  .shopping-status__button[data-selected='true'][data-status='dismissed'] {
+    border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 30%);
+    background: color-mix(in srgb, var(--color-danger-soft), transparent 14%);
+    color: var(--color-danger);
+  }
+
+  @media (max-width: 539px) {
+    .shopping-lists-app .button,
+    .shopping-saved-card__head .button {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  import '../scripts/shopping-lists-app.ts';
+</script>
