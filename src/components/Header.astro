@@ -24,7 +24,8 @@ const configurePath = getLocalizedPath('/planificador', locale);
 const planningPath = getLocalizedPath('/planificador-ai', locale);
 // Legacy aliases remain available through redirects: getLocalizedPath('/configurar', locale) and getLocalizedPath('/planificacion', locale).
 const dishRecommenderPath = getLocalizedPath('/recomendador-platos', locale);
-const shoppingPath = getLocalizedPath('/compra', locale);
+const shoppingListsPath = getLocalizedPath('/compras', locale);
+const shoppingAiPath = getLocalizedPath('/compra', locale);
 const summaryPath = getLocalizedPath('/resumen-semanal', locale);
 const statisticsPath = getLocalizedPath('/estadisticas', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
@@ -34,6 +35,9 @@ const historyPath = getLocalizedPath('/historico', locale);
 const settingsPath = getLocalizedPath('/ajustes', locale);
 const alternateLocales = getAlternateLocales(locale);
 const panelId = 'site-navigation-panel';
+const shoppingLabels = locale === 'en'
+  ? { shopping: 'Shopping', shoppingAi: 'AI shopping' }
+  : { shopping: 'Compras', shoppingAi: 'Compras con IA' };
 const labels = {
   guestSession: t('menu.guestSession'),
   openMenu: t('appNav.openMenu'),
@@ -47,7 +51,8 @@ const primaryItems = [
 ] as const;
 
 const moreItems = [
-  { href: shoppingPath, icon: 'mdi:cart-outline', label: t('appNav.shopping') },
+  { href: shoppingListsPath, icon: 'mdi:cart-outline', label: shoppingLabels.shopping },
+  { href: shoppingAiPath, icon: 'mdi:creation-outline', label: shoppingLabels.shoppingAi },
   { href: tuppersPath, icon: 'mdi:food-takeout-box-outline', label: tt('nav') },
   { href: dishesPath, icon: 'mdi:silverware-fork-knife', label: t('appNav.dishes') },
   { href: planningPath, icon: 'mdi:creation-outline', label: tp('nav') },

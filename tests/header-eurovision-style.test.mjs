@@ -35,7 +35,10 @@ describe('Eurovision-style header', () => {
     assert.match(header, /data-admin-link/);
     assert.match(header, /dashboardPath/);
     assert.match(header, /configurePath/);
-    assert.match(header, /shoppingPath/);
+    assert.match(header, /shoppingListsPath/);
+    assert.match(header, /shoppingAiPath/);
+    assert.match(header, /getLocalizedPath\('\/compras'/);
+    assert.match(header, /getLocalizedPath\('\/compra'/);
     assert.match(header, /planningPath/);
     assert.match(header, /dishRecommenderPath/);
     assert.doesNotMatch(header, /site-header__bar/);

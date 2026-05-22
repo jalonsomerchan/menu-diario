@@ -11,6 +11,30 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
+const savedShoppingListLabels =
+  locale === 'en'
+    ? {
+        savedListsTitle: 'Saved shopping lists',
+        savedListsDescription: 'Open a saved list or start a new one from your upcoming menu.',
+        savedListsEmpty: 'You do not have saved shopping lists yet.',
+        newList: 'New list',
+        openList: 'Open list',
+        activeList: 'Current list',
+        listItemsCountSingle: '1 item pending',
+        listItemsCountPlural: '{count} items pending',
+        listDateRange: '{start} - {end}',
+      }
+    : {
+        savedListsTitle: 'Listas de la compra guardadas',
+        savedListsDescription: 'Abre una lista guardada o empieza una nueva desde tu próximo menú.',
+        savedListsEmpty: 'Todavía no tienes listas de la compra guardadas.',
+        newList: 'Nueva lista',
+        openList: 'Abrir lista',
+        activeList: 'Lista actual',
+        listItemsCountSingle: '1 pendiente',
+        listItemsCountPlural: '{count} pendientes',
+        listDateRange: '{start} - {end}',
+      };
 
 const labels = {
   title: t('shopping.title'),
@@ -107,6 +131,7 @@ const labels = {
   exportEmpty: t('shopping.exportEmpty'),
   groupScope: t('shopping.groupScope'),
   userScope: t('shopping.userScope'),
+  ...savedShoppingListLabels,
   aiDisabled: t('ai.disabled'),
   aiMissingConfig: t('ai.missingConfig'),
   aiLoading: t('ai.loading'),
@@ -156,6 +181,18 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-workspace hidden>
+    <section class="planning-ai-panel app-panel shopping-saved-panel" aria-labelledby="shopping-saved-title">
+      <div class="planning-ai-section-heading shopping-saved-panel__heading">
+        <div>
+          <p class="menu-app__eyebrow">{labels.helper}</p>
+          <h2 id="shopping-saved-title">{labels.savedListsTitle}</h2>
+          <p>{labels.savedListsDescription}</p>
+        </div>
+        <button class="button button--secondary button--small" type="button" data-new-list>{labels.newList}</button>
+      </div>
+      <div class="shopping-saved-list" data-saved-lists role="list"></div>
+    </section>
+
     <section class="planning-ai-panel app-panel" aria-labelledby="shopping-wizard-title" data-shopping-scroll-target>
       <h2 id="shopping-wizard-title" class="sr-only">{labels.title}</h2>
 
@@ -245,6 +282,54 @@ const labels = {
   .shopping-app [data-auth-panel][hidden],
   .shopping-app [data-wizard-step][hidden] {
     display: none;
+  }
+
+  .shopping-saved-panel__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .shopping-saved-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .shopping-saved-card {
+    display: grid;
+    gap: 0.75rem;
+    padding: var(--surface-padding);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+  }
+
+  .shopping-saved-card[data-active='true'] {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 24%);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 20%);
+  }
+
+  .shopping-saved-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .shopping-saved-card__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 950;
+  }
+
+  .shopping-saved-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 0;
   }
 
   .shopping-toolbar {
@@ -446,7 +531,9 @@ const labels = {
 
   @media (max-width: 539px) {
     .shopping-app .planning-ai-wizard-actions .button,
-    .shopping-app .planning-ai-submit {
+    .shopping-app .planning-ai-submit,
+    .shopping-saved-panel__heading .button,
+    .shopping-saved-card__head .button {
       width: 100%;
     }
   }
