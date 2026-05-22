@@ -223,8 +223,8 @@ if (root) {
       saveFeedback.pending();
       const listId = await saveShoppingList(await getFirebaseServices(), {
         userId: currentUser.uid,
-        groupId: currentProfile?.groupId,
-        scope: getScope(),
+        groupId: activeList.groupId,
+        scope: activeList.scope,
         title: activeList.title || labels.exportTitle,
         rangeStart: activeList.rangeStart,
         rangeEnd: activeList.rangeEnd,
