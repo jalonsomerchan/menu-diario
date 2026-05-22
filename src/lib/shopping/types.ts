@@ -7,6 +7,9 @@ export type ShoppingItemSource = (typeof shoppingItemSources)[number];
 export const shoppingConfidenceLevels = ['low', 'medium', 'high'] as const;
 export type ShoppingConfidence = (typeof shoppingConfidenceLevels)[number];
 
+export const shoppingListStatuses = ['active', 'archived'] as const;
+export type ShoppingListStatus = (typeof shoppingListStatuses)[number];
+
 export const shoppingCategories = [
   'vegetables',
   'fruit',
@@ -32,6 +35,9 @@ export type ShoppingItem = {
   normalizedName: string;
   category: ShoppingCategory;
   quantity: string;
+  note: string;
+  checked: boolean;
+  order: number;
   status: ShoppingItemStatus;
   forMeals: string[];
   source: ShoppingItemSource;
@@ -42,9 +48,11 @@ export type ShoppingItem = {
 
 export type ShoppingListDocument = {
   id: string;
+  title: string;
   ownerId: string;
   groupId?: string;
   scope: ShoppingScope;
+  status: ShoppingListStatus;
   source: 'ai' | 'mixed' | 'manual';
   rangeStart: string;
   rangeEnd: string;
@@ -52,6 +60,7 @@ export type ShoppingListDocument = {
   createdAt?: Date;
   updatedAt?: Date;
   updatedBy?: string;
+  archivedAt?: Date;
 };
 
 export type ShoppingRecipeIngredient = {

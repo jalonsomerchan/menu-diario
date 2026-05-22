@@ -83,6 +83,10 @@ export function createShoppingItemId(name: string, category: string) {
   return `${normalizedCategory}:${normalizedName}`.replace(/\s+/g, '-');
 }
 
+export function createManualShoppingItemId() {
+  return `manual:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function normalizeMealRefs(values: string[]) {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))].sort();
 }
@@ -94,11 +98,15 @@ export function normalizeShoppingItem(
       source?: ShoppingItemSource;
       status?: ShoppingItemStatus;
       confidence?: ShoppingConfidence;
-    }
+    },
+  index = 0
 ): ShoppingItem {
   const cleanName = item.name.trim();
   const normalizedName = normalizeShoppingName(cleanName);
   const category = normalizeShoppingCategory(item.category ?? item.name);
+  const checked = Boolean(item.checked ?? item.status === 'owned');
+  const status = item.status ?? (checked ? 'owned' : 'to-buy');
+  const order = Number(item.order);
 
   return {
     id: item.id?.trim() || createShoppingItemId(cleanName, category),
@@ -106,7 +114,10 @@ export function normalizeShoppingItem(
     normalizedName,
     category,
     quantity: normalizeShoppingQuantity(item.quantity ?? ''),
-    status: item.status ?? 'to-buy',
+    note: normalizeShoppingQuantity(item.note ?? ''),
+    checked,
+    order: Number.isFinite(order) ? order : index,
+    status,
     forMeals: normalizeMealRefs(item.forMeals ?? []),
     source: item.source ?? 'manual',
     confidence: item.confidence ?? 'medium',
@@ -118,13 +129,14 @@ export function normalizeShoppingItem(
 export function groupShoppingItems(items: ShoppingItem[]) {
   const grouped = new Map<string, ShoppingItem>();
 
-  items.forEach((item) => {
+  items.forEach((item, index) => {
     if (!item.name.trim()) {
       return;
     }
 
-    const normalized = normalizeShoppingItem(item);
-    const key = `${normalized.category}:${normalized.normalizedName}`;
+    const normalized = normalizeShoppingItem(item, index);
+    const shouldKeepUnique = normalized.id.startsWith('manual:') || normalized.note.trim();
+    const key = shouldKeepUnique ? normalized.id : `${normalized.category}:${normalized.normalizedName}`;
     const existing = grouped.get(key);
     if (!existing) {
       grouped.set(key, normalized);
@@ -134,6 +146,9 @@ export function groupShoppingItems(items: ShoppingItem[]) {
     grouped.set(key, {
       ...existing,
       quantity: mergeQuantities(existing.quantity, normalized.quantity),
+      note: existing.note || normalized.note,
+      checked: existing.checked && normalized.checked,
+      order: Math.min(existing.order, normalized.order),
       forMeals: normalizeMealRefs([...existing.forMeals, ...normalized.forMeals]),
       status: existing.status === 'to-buy' || normalized.status === 'to-buy' ? 'to-buy' : existing.status,
       source: existing.source === 'manual' || normalized.source === 'manual' ? 'manual' : 'ai',
@@ -142,26 +157,30 @@ export function groupShoppingItems(items: ShoppingItem[]) {
   });
 
   return [...grouped.values()].sort((left, right) => {
-    if (left.category !== right.category) {
-      return left.category.localeCompare(right.category);
-    }
-
+    if (left.checked !== right.checked) return left.checked ? 1 : -1;
+    if (left.order !== right.order) return left.order - right.order;
+    if (left.category !== right.category) return left.category.localeCompare(right.category);
     return left.name.localeCompare(right.name, undefined, { sensitivity: 'base' });
   });
 }
 
 export function fromAiResponseItems(items: ShoppingAiResponseItem[]) {
   return groupShoppingItems(
-    items.map((item) =>
-      normalizeShoppingItem({
-        name: item.name,
-        category: item.category,
-        quantity: item.quantity,
-        forMeals: item.forMeals,
-        source: 'ai',
-        confidence: normalizeShoppingConfidence(item.confidence),
-        status: 'to-buy',
-      })
+    items.map((item, index) =>
+      normalizeShoppingItem(
+        {
+          name: item.name,
+          category: item.category,
+          quantity: item.quantity,
+          forMeals: item.forMeals,
+          source: 'ai',
+          confidence: normalizeShoppingConfidence(item.confidence),
+          status: 'to-buy',
+          checked: false,
+          order: index,
+        },
+        index
+      )
     )
   );
 }
@@ -172,7 +191,7 @@ export function mergeShoppingDraftItems(currentItems: ShoppingItem[], nextAiItem
 }
 
 export function getToBuyItems(items: ShoppingItem[]) {
-  return items.filter((item) => item.status === 'to-buy' && item.name.trim());
+  return items.filter((item) => !item.checked && item.status === 'to-buy' && item.name.trim());
 }
 
 function mergeQuantities(left: string, right: string) {

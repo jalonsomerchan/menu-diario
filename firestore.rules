@@ -163,15 +163,13 @@ service cloud.firestore {
     }
 
     match /shoppingLists/{listId} {
-      allow get: if signedIn();
-      allow list: if false;
+      allow get, list: if canAccessShoppingList(resource.data);
       allow create: if signedIn()
         && request.resource.data.ownerId == request.auth.uid
         && isShoppingListScope(request.resource.data);
       allow update: if canAccessShoppingList(resource.data)
         && request.resource.data.ownerId == resource.data.ownerId
-        && request.resource.data.rangeStart == resource.data.rangeStart
-        && request.resource.data.rangeEnd == resource.data.rangeEnd
+        && request.resource.data.groupId == resource.data.groupId
         && isShoppingListScope(request.resource.data);
       allow delete: if canAccessShoppingList(resource.data);
     }

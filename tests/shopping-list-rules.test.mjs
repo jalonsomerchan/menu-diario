@@ -10,15 +10,16 @@ function readText(path) {
 }
 
 describe('shopping list Firestore rules', () => {
-  it('allows single document subscriptions while keeping writes restricted', () => {
+  it('allows scoped list reads while keeping writes restricted', () => {
     const rules = readText('firestore.rules');
     const shoppingRules = rules.match(/match \/shoppingLists\/\{listId\} \{([\s\S]*?)\n    \}/)?.[1] ?? '';
 
-    assert.match(shoppingRules, /allow get: if signedIn\(\)/);
-    assert.match(shoppingRules, /allow list: if false/);
+    assert.match(shoppingRules, /allow get, list: if canAccessShoppingList\(resource\.data\)/);
     assert.match(shoppingRules, /allow create: if signedIn\(\)/);
     assert.match(shoppingRules, /request\.resource\.data\.ownerId == request\.auth\.uid/);
     assert.match(shoppingRules, /isShoppingListScope\(request\.resource\.data\)/);
     assert.match(shoppingRules, /allow update: if canAccessShoppingList\(resource\.data\)/);
+    assert.match(shoppingRules, /request\.resource\.data\.groupId == resource\.data\.groupId/);
+    assert.match(shoppingRules, /allow delete: if canAccessShoppingList\(resource\.data\)/);
   });
 });

@@ -1,5 +1,5 @@
 import { groupShoppingItems, normalizeShoppingItem } from './normalize.ts';
-import type { ShoppingItem, ShoppingListDocument, ShoppingScope } from './types.ts';
+import type { ShoppingItem, ShoppingListDocument, ShoppingListStatus, ShoppingScope } from './types.ts';
 
 type FirebaseServices = {
   db: any;
@@ -12,9 +12,18 @@ type SaveShoppingListInput = {
   userId: string;
   groupId?: string;
   scope: ShoppingScope;
+  title?: string;
   rangeStart: string;
   rangeEnd: string;
   items: ShoppingItem[];
+  listId?: string;
+  status?: ShoppingListStatus;
+};
+
+type ShoppingListQueryInput = {
+  scope: ShoppingScope;
+  ownerId: string;
+  groupId?: string;
 };
 
 export function getShoppingListDocumentId(input: {
@@ -26,6 +35,41 @@ export function getShoppingListDocumentId(input: {
 }) {
   const ownerKey = input.scope === 'group' ? input.groupId ?? input.ownerId : input.ownerId;
   return [input.scope, ownerKey, input.rangeStart, input.rangeEnd].filter(Boolean).join('__');
+}
+
+export function getShoppingListCollectionOwnerId(input: ShoppingListQueryInput) {
+  return input.scope === 'group' ? input.groupId ?? input.ownerId : input.ownerId;
+}
+
+export function watchShoppingLists(
+  services: FirebaseServices,
+  input: ShoppingListQueryInput,
+  callback: (value: ShoppingListDocument[]) => void,
+  onError: (error: Error) => void
+) {
+  const { db, firestoreModule } = services;
+  const ownerId = getShoppingListCollectionOwnerId(input);
+  const filters = [
+    firestoreModule.where('scope', '==', input.scope),
+    firestoreModule.where(input.scope === 'group' ? 'groupId' : 'ownerId', '==', ownerId),
+    firestoreModule.limit(100),
+  ];
+  const query = firestoreModule.query(firestoreModule.collection(db, shoppingListsCollection), ...filters);
+
+  return firestoreModule.onSnapshot(
+    query,
+    (snapshot: any) => {
+      const lists = snapshot.docs
+        .map((item: any) => mapShoppingList(item.id, item.data()))
+        .sort((left: ShoppingListDocument, right: ShoppingListDocument) => {
+          const leftDate = left.updatedAt?.getTime() ?? left.createdAt?.getTime() ?? 0;
+          const rightDate = right.updatedAt?.getTime() ?? right.createdAt?.getTime() ?? 0;
+          return rightDate - leftDate;
+        });
+      callback(lists);
+    },
+    onError
+  );
 }
 
 export function watchShoppingList(
@@ -45,13 +89,7 @@ export function watchShoppingList(
 
 export async function saveShoppingList(services: FirebaseServices, input: SaveShoppingListInput) {
   const { db, firestoreModule } = services;
-  const documentId = getShoppingListDocumentId({
-    scope: input.scope,
-    ownerId: input.userId,
-    groupId: input.groupId,
-    rangeStart: input.rangeStart,
-    rangeEnd: input.rangeEnd,
-  });
+  const documentId = input.listId || firestoreModule.doc(firestoreModule.collection(db, shoppingListsCollection)).id;
   const documentRef = firestoreModule.doc(db, shoppingListsCollection, documentId);
   const snapshot = await firestoreModule.getDoc(documentRef);
   const existing = snapshot.exists() ? mapShoppingList(snapshot.id, snapshot.data()) : null;
@@ -65,26 +103,19 @@ export async function saveShoppingList(services: FirebaseServices, input: SaveSh
   await firestoreModule.setDoc(
     documentRef,
     {
-      ownerId: input.userId,
+      title: input.title?.trim() || existing?.title || input.rangeStart || 'Shopping list',
+      ownerId: existing?.ownerId ?? input.userId,
       groupId: input.groupId ?? null,
       scope: input.scope,
+      status: input.status ?? existing?.status ?? 'active',
       source,
       rangeStart: input.rangeStart,
       rangeEnd: input.rangeEnd,
-      items: nextItems.map((item) => ({
-        id: item.id,
-        name: item.name,
-        normalizedName: item.normalizedName,
-        category: item.category,
-        quantity: item.quantity,
-        status: item.status,
-        forMeals: item.forMeals,
-        source: item.source,
-        confidence: item.confidence,
-      })),
+      items: serializeShoppingItems(nextItems),
       createdAt: snapshot.exists() ? snapshot.data().createdAt ?? firestoreModule.serverTimestamp() : firestoreModule.serverTimestamp(),
       updatedAt: firestoreModule.serverTimestamp(),
       updatedBy: input.userId,
+      archivedAt: input.status === 'archived' ? firestoreModule.serverTimestamp() : null,
     },
     { merge: true }
   );
@@ -92,30 +123,96 @@ export async function saveShoppingList(services: FirebaseServices, input: SaveSh
   return documentId;
 }
 
+export async function updateShoppingListTitle(
+  services: FirebaseServices,
+  input: { listId: string; userId: string; title: string }
+) {
+  const { db, firestoreModule } = services;
+  await firestoreModule.updateDoc(firestoreModule.doc(db, shoppingListsCollection, input.listId), {
+    title: input.title.trim(),
+    updatedAt: firestoreModule.serverTimestamp(),
+    updatedBy: input.userId,
+  });
+}
+
+export async function archiveShoppingList(services: FirebaseServices, input: { listId: string; userId: string }) {
+  const { db, firestoreModule } = services;
+  await firestoreModule.updateDoc(firestoreModule.doc(db, shoppingListsCollection, input.listId), {
+    status: 'archived',
+    archivedAt: firestoreModule.serverTimestamp(),
+    updatedAt: firestoreModule.serverTimestamp(),
+    updatedBy: input.userId,
+  });
+}
+
+export async function deleteShoppingList(services: FirebaseServices, listId: string) {
+  const { db, firestoreModule } = services;
+  await firestoreModule.deleteDoc(firestoreModule.doc(db, shoppingListsCollection, listId));
+}
+
+export async function duplicateShoppingList(
+  services: FirebaseServices,
+  input: { list: ShoppingListDocument; userId: string; title: string }
+) {
+  return saveShoppingList(services, {
+    userId: input.userId,
+    groupId: input.list.groupId,
+    scope: input.list.scope,
+    title: input.title,
+    rangeStart: input.list.rangeStart,
+    rangeEnd: input.list.rangeEnd,
+    items: input.list.items.map((item, index) => ({ ...item, id: `${item.id}-copy-${index}`, checked: false, status: 'to-buy' as const })),
+    status: 'active',
+  });
+}
+
 function mapShoppingList(id: string, data: Record<string, any>): ShoppingListDocument {
   return {
     id,
+    title: data.title ?? data.name ?? '',
     ownerId: data.ownerId ?? '',
     groupId: data.groupId ?? undefined,
     scope: data.scope === 'group' ? 'group' : 'user',
+    status: data.status === 'archived' ? 'archived' : 'active',
     source: data.source === 'manual' || data.source === 'mixed' ? data.source : 'ai',
     rangeStart: data.rangeStart ?? '',
     rangeEnd: data.rangeEnd ?? '',
     items: Array.isArray(data.items)
       ? groupShoppingItems(
-          data.items.map((item: Record<string, any>) =>
-            normalizeShoppingItem({
-              ...item,
-              createdAt: item.createdAt?.toDate?.(),
-              updatedAt: item.updatedAt?.toDate?.(),
-            })
+          data.items.map((item: Record<string, any>, index: number) =>
+            normalizeShoppingItem(
+              {
+                ...item,
+                createdAt: item.createdAt?.toDate?.(),
+                updatedAt: item.updatedAt?.toDate?.(),
+              },
+              index
+            )
           )
         )
       : [],
     createdAt: data.createdAt?.toDate?.(),
     updatedAt: data.updatedAt?.toDate?.(),
     updatedBy: data.updatedBy ?? '',
+    archivedAt: data.archivedAt?.toDate?.(),
   };
+}
+
+function serializeShoppingItems(items: ShoppingItem[]) {
+  return groupShoppingItems(items).map((item, index) => ({
+    id: item.id,
+    name: item.name,
+    normalizedName: item.normalizedName,
+    category: item.category,
+    quantity: item.quantity,
+    note: item.note,
+    checked: Boolean(item.checked),
+    order: Number.isFinite(item.order) ? item.order : index,
+    status: item.checked ? 'owned' : item.status,
+    forMeals: item.forMeals,
+    source: item.source,
+    confidence: item.confidence,
+  }));
 }
 
 function mergePersistedItems(existingItems: ShoppingItem[], incomingItems: ShoppingItem[]) {
