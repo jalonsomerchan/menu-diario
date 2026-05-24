@@ -1,6 +1,7 @@
 import { getWeekDays, getWeekTitle } from './dates';
 import { getAddedDishNames, isSameDayMenu } from './day-state';
 import { getAddedDishNamesFromItems } from './dish-usage.mjs';
+import { getUserGroupId, leaveGroupMembership } from './group-membership';
 import { createUniqueInviteCode } from './invite-codes';
 import { emptyDay, normalizeDay } from './normalizers';
 import { recordMenuDishUsage } from '../dishes/repository';
@@ -154,6 +155,20 @@ export async function joinGroupByInviteCode(services: FirebaseServices, user: Fi
   const group = snapshot.docs[0];
   if (!group) throw new Error('group-not-found');
   const data = group.data();
+  const userSnapshot = await firestoreModule.getDoc(firestoreModule.doc(db, 'users', user.uid));
+  const previousGroupId = userSnapshot.exists() ? getUserGroupId(userSnapshot.data()) : null;
+  if (previousGroupId === group.id) {
+    await updateUserPreferences(services, user.uid, { groupId: group.id, enabledMeals: normalizeEnabledMeals(data.enabledMeals) });
+    return group.id;
+  }
+
+  await leaveGroupMembership(services, {
+    groupId: previousGroupId ?? '',
+    nextGroupId: group.id,
+    userId: user.uid,
+    email: user.email ?? '',
+  });
+
   const email = normalizeEmail(user.email ?? '');
   const members = uniqueValues([...(data.members ?? []), user.uid]);
   const memberEmails = email ? uniqueValues([...(data.memberEmails ?? []), email]) : data.memberEmails ?? [];
@@ -164,9 +179,11 @@ export async function joinGroupByInviteCode(services: FirebaseServices, user: Fi
 }
 
 export async function leaveGroup(services: FirebaseServices, user: FirebaseUser, group: MenuGroup) {
-  const { db, firestoreModule } = services;
-  const email = normalizeEmail(user.email ?? '');
-  await firestoreModule.updateDoc(firestoreModule.doc(db, groupsCollection, group.id), { members: group.members.filter((member) => member !== user.uid), memberEmails: email ? group.memberEmails.filter((item) => item !== email) : group.memberEmails, updatedAt: firestoreModule.serverTimestamp() });
+  await leaveGroupMembership(services, {
+    groupId: group.id,
+    userId: user.uid,
+    email: user.email ?? '',
+  });
   await updateUserPreferences(services, user.uid, { groupId: null });
 }
 

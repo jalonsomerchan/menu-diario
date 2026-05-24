@@ -45,6 +45,8 @@ PUBLIC_FIREBASE_APPCHECK_REQUIRED_FOR_AI=false
 PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN=
 ```
 
+Los builds de Astro validan que existan al menos `PUBLIC_FIREBASE_API_KEY`, `PUBLIC_FIREBASE_AUTH_DOMAIN`, `PUBLIC_FIREBASE_PROJECT_ID` y `PUBLIC_FIREBASE_APP_ID`. Si falta alguna, el build falla para no desplegar una app que luego muestre `La app no está disponible ahora mismo`.
+
 `PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN` solo debe usarse en desarrollo local controlado. No lo rellenes en `.env.example`, README ni documentación compartida.
 
 ## App Check

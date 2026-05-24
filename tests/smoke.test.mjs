@@ -331,6 +331,7 @@ describe('project smoke checks', () => {
     const dishHelpers = readText('src/lib/dishes/helpers.mjs');
     const adminImport = readText('src/lib/dishes/admin-import.mjs');
     const dishRepository = readText('src/lib/dishes/repository.ts');
+    const groupMembership = readText('src/lib/menu/group-membership.ts');
     const menuRepository = readText('src/lib/menu/repository.ts');
     const dishesScript = readText('src/scripts/dishes-app.ts');
     const rules = readText('firestore.rules');
@@ -356,7 +357,10 @@ describe('project smoke checks', () => {
     assert.match(dishRepository, /updateGlobalDishMetadata/);
     assert.match(dishRepository, /dish-duplicate-global/);
     assert.match(dishRepository, /dish-not-editable/);
+    assert.match(groupMembership, /export async function leaveGroupMembership/);
+    assert.match(groupMembership, /export function getUserGroupId/);
     assert.match(menuRepository, /recordMenuDishUsage/);
+    assert.match(menuRepository, /leaveGroupMembership/);
     assert.match(dishesScript, /data-dish-editor-duplicate/);
     assert.match(dishesScript, /labels\.globalReadOnlyModal/);
     assert.match(dishesScript, /isEditableDish/);

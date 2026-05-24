@@ -66,6 +66,13 @@ function getDateTime(isoDate) {
   return new Date(`${isoDate}T00:00:00`).getTime() || 0;
 }
 
+function formatLocalIsoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function isIsoDateInRange(isoDate, range) {
   if (!isoDate) return false;
   if (range?.start && isoDate < range.start) return false;
@@ -78,7 +85,7 @@ function getWeekStart(isoDate) {
   const day = date.getDay();
   const diff = (day === 0 ? -6 : 1) - day;
   date.setDate(date.getDate() + diff);
-  return date.toISOString().slice(0, 10);
+  return formatLocalIsoDate(date);
 }
 
 function getMonthKey(isoDate) {
@@ -148,7 +155,7 @@ function getLastUsedTime(dish) {
 
 function getDishDateIso(dish) {
   const date = toDate(dish.lastUsedAt);
-  return date ? date.toISOString().slice(0, 10) : '';
+  return date ? formatLocalIsoDate(date) : '';
 }
 
 function buildStaleDishes(dishes, limit) {
@@ -252,5 +259,5 @@ export function getStatisticsRangePreset(days, now = new Date()) {
   end.setHours(0, 0, 0, 0);
   const start = new Date(end);
   start.setDate(start.getDate() - Math.max(1, days) + 1);
-  return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+  return { start: formatLocalIsoDate(start), end: formatLocalIsoDate(end) };
 }

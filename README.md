@@ -84,6 +84,8 @@ cp .env.example .env
 
 3. Rellena las variables `PUBLIC_FIREBASE_*` con la configuración pública de tu app web de Firebase.
 
+Si faltan `PUBLIC_FIREBASE_API_KEY`, `PUBLIC_FIREBASE_AUTH_DOMAIN`, `PUBLIC_FIREBASE_PROJECT_ID` o `PUBLIC_FIREBASE_APP_ID`, `npm run build` fallará para evitar publicar una app rota.
+
 4. Deja App Check desactivado al principio o actívalo solo cuando tengas `localhost` registrado o un token de depuración local controlado:
 
 ```env
