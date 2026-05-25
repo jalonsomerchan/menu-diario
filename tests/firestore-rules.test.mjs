@@ -20,7 +20,7 @@ describe('Firestore rules smoke checks', () => {
     const rules = readText('firestore.rules');
     const weeklyMenuRules = getRulesBlock(rules, 'weeklyMenus', 'menuId');
 
-    assert.match(weeklyMenuRules, /allow read: if isMemberDocument\(\);/);
+    assert.match(weeklyMenuRules, /allow read: if isMemberDocument\(\) \|\| isSharedGroupOwnerMenu\(\);/);
     assert.doesNotMatch(weeklyMenuRules, /allow read: if signedIn\(\);/);
   });
 
@@ -31,9 +31,11 @@ describe('Firestore rules smoke checks', () => {
     assert.match(rules, /function changesOnlyFields\(fields\)/);
     assert.match(rules, /function updatesMenuContent\(\)/);
     assert.match(rules, /function joinsMenuDocument\(\)/);
+    assert.match(rules, /function syncsSharedMenuMembership\(\)/);
     assert.match(rules, /changesOnlyFields\(\['days', 'updatedAt', 'updatedBy'\]\)/);
+    assert.match(rules, /changesOnlyFields\(\['members', 'groupId', 'updatedAt', 'updatedBy'\]\)/);
     assert.match(rules, /changesOnlyFields\(\['members', 'updatedAt', 'updatedBy'\]\)/);
-    assert.match(weeklyMenuRules, /allow update: if updatesMenuContent\(\) \|\| joinsMenuDocument\(\);/);
+    assert.match(weeklyMenuRules, /allow update: if updatesMenuContent\(\) \|\| joinsMenuDocument\(\) \|\| syncsSharedMenuMembership\(\);/);
     assert.doesNotMatch(weeklyMenuRules, /allow update: if isMemberDocument\(\) \|\| joinsDocument\(\);/);
   });
 

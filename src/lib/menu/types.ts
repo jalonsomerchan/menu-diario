@@ -50,6 +50,7 @@ export type WeekMenu = {
   title: string;
   ownerId: string;
   members: string[];
+  groupId?: string;
   inviteCode: string;
   weekStart: string;
   days: Record<string, DailyMenu>;

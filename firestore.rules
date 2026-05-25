@@ -14,11 +14,28 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
+    function currentUserGroupId() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.groupId is string
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.groupId
+        : null;
+    }
+
     function isGroupMember(groupId) {
       return signedIn()
         && groupId is string
         && exists(/databases/$(database)/documents/groups/$(groupId))
         && request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members;
+    }
+
+    function isSharedGroupOwnerMenu() {
+      let groupId = currentUserGroupId();
+      return signedIn()
+        && groupId is string
+        && exists(/databases/$(database)/documents/groups/$(groupId))
+        && request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members
+        && resource.data.ownerId == get(/databases/$(database)/documents/groups/$(groupId)).data.ownerId;
     }
 
     function canReadUserProfile(userId) {
@@ -59,14 +76,40 @@ service cloud.firestore {
     }
 
     function updatesMenuContent() {
-      return isMemberDocument()
+      return (isMemberDocument() || isSharedGroupOwnerMenu())
         && request.resource.data.members == resource.data.members
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.groupId == resource.data.groupId
         && changesOnlyFields(['days', 'updatedAt', 'updatedBy']);
     }
 
     function joinsMenuDocument() {
       return joinsDocument()
         && changesOnlyFields(['members', 'updatedAt', 'updatedBy']);
+    }
+
+    function createsSharedGroupMenu() {
+      let groupId = currentUserGroupId();
+      return signedIn()
+        && groupId is string
+        && request.resource.data.groupId == groupId
+        && exists(/databases/$(database)/documents/groups/$(groupId))
+        && request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members
+        && request.resource.data.ownerId == get(/databases/$(database)/documents/groups/$(groupId)).data.ownerId
+        && request.resource.data.members.hasAll(get(/databases/$(database)/documents/groups/$(groupId)).data.members)
+        && get(/databases/$(database)/documents/groups/$(groupId)).data.members.hasAll(request.resource.data.members);
+    }
+
+    function syncsSharedMenuMembership() {
+      let groupId = currentUserGroupId();
+      return isSharedGroupOwnerMenu()
+        && groupId is string
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.groupId == groupId
+        && request.resource.data.days == resource.data.days
+        && request.resource.data.members.hasAll(get(/databases/$(database)/documents/groups/$(groupId)).data.members)
+        && get(/databases/$(database)/documents/groups/$(groupId)).data.members.hasAll(request.resource.data.members)
+        && changesOnlyFields(['members', 'groupId', 'updatedAt', 'updatedBy']);
     }
 
     function isGlobalDishData(data) {
@@ -125,9 +168,9 @@ service cloud.firestore {
     }
 
     match /weeklyMenus/{menuId} {
-      allow create: if createsOwnMenu();
-      allow read: if isMemberDocument();
-      allow update: if updatesMenuContent() || joinsMenuDocument();
+      allow create: if createsOwnMenu() || createsSharedGroupMenu();
+      allow read: if isMemberDocument() || isSharedGroupOwnerMenu();
+      allow update: if updatesMenuContent() || joinsMenuDocument() || syncsSharedMenuMembership();
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
     }
 
