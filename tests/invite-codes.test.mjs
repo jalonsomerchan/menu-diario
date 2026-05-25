@@ -10,7 +10,7 @@ function readText(path) {
 }
 
 describe('invite code helpers', () => {
-  it('centralizes invite code generation and checks Firestore collisions', () => {
+  it('centralizes invite code generation and only checks Firestore collisions where rules allow it', () => {
     const helper = readText('src/lib/menu/invite-codes.ts');
     const repository = readText('src/lib/menu/repository.ts');
 
@@ -20,9 +20,9 @@ describe('invite code helpers', () => {
     assert.match(helper, /where\('inviteCode', '==', inviteCode\)/);
     assert.match(helper, /throw new Error\('invite-code-collision'\)/);
 
-    assert.match(repository, /import \{ createUniqueInviteCode \} from '\.\/invite-codes'/);
+    assert.match(repository, /import \{ createInviteCode, createUniqueInviteCode \} from '\.\/invite-codes'/);
     assert.match(repository, /createUniqueInviteCode\(services, groupsCollection\)/);
-    assert.match(repository, /createUniqueInviteCode\(services, menusCollection\)/);
+    assert.match(repository, /const inviteCode = createInviteCode\(\);/);
     assert.doesNotMatch(repository, /Math\.random/);
   });
 });

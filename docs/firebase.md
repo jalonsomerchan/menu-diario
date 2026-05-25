@@ -291,6 +291,8 @@ Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permi
 }
 ```
 
+Los menús semanales usan un `inviteCode` aleatorio generado en cliente sin consulta previa de colisión. Esto evita que el primer arranque quede bloqueado por reglas de Firestore, ya que `weeklyMenus` solo permite leer a miembros del propio documento y no puede hacerse una búsqueda global de códigos desde el navegador sin relajar permisos.
+
 ### `shoppingLists/{listId}`
 
 Lista de compra guardada por usuario o grupo para un rango próximo de fechas.
@@ -495,7 +497,7 @@ La app usa notificaciones del navegador cuando un documento escuchado en tiempo 
 
 Estas reglas están pensadas para que la app funcione en una primera versión cliente-only. Para producción conviene endurecerlas:
 
-- Mover la unión por código a una Cloud Function para reducir `allow read: if signedIn()` en `weeklyMenus` y `groups`.
+- Mover la unión por código y la garantía fuerte de unicidad de `inviteCode` a una Cloud Function para evitar búsquedas globales desde cliente en `weeklyMenus` y reducir `allow read: if signedIn()` en `groups`.
 - Enviar invitaciones reales por email desde backend o Cloud Functions.
 - Validar longitudes máximas de `meals.*.items`, `meals.*.note`, `notes`, `skipNote`, `title`, `inviteCode`, `name`, `memberEmails`, `pendingEmails`, `quickTags` y `tags`.
 - Impedir que usuarios no propietarios cambien `ownerId` o eliminen miembros arbitrariamente.

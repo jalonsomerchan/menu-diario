@@ -2,7 +2,7 @@ import { getWeekDays, getWeekTitle } from './dates';
 import { getAddedDishNames, isSameDayMenu } from './day-state';
 import { getAddedDishNamesFromItems } from './dish-usage.mjs';
 import { getUserGroupId, leaveGroupMembership } from './group-membership';
-import { createUniqueInviteCode } from './invite-codes';
+import { createInviteCode, createUniqueInviteCode } from './invite-codes';
 import { emptyDay, normalizeDay } from './normalizers';
 import { recordMenuDishUsage } from '../dishes/repository';
 import type {
@@ -189,7 +189,7 @@ export async function leaveGroup(services: FirebaseServices, user: FirebaseUser,
 
 export async function createWeekMenu(services: FirebaseServices, userId: string, weekStart: string, locale: string) {
   const { db, firestoreModule } = services;
-  const inviteCode = await createUniqueInviteCode(services, menusCollection);
+  const inviteCode = createInviteCode();
   const document = await firestoreModule.addDoc(firestoreModule.collection(db, menusCollection), { title: getWeekTitle(weekStart, locale), ownerId: userId, members: [userId], inviteCode, weekStart, days: buildEmptyDays(weekStart), createdAt: firestoreModule.serverTimestamp(), updatedAt: firestoreModule.serverTimestamp(), updatedBy: userId });
   return document.id;
 }
