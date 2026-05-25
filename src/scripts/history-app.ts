@@ -262,10 +262,10 @@ if (root) {
   function renderRowActions(row: HistoryRow) {
     return `
       <details class="day-actions" data-day-actions>
-        <summary aria-label="${escapeHtml(labels.moreActions)}">•••</summary>
+        <summary aria-label="${escapeHtml(labels.moreActions)}">⋮</summary>
         <div>
           <button type="button" data-action-kind="edit" data-history-edit="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.editDay)}</button>
-          ${row.menuId ? `<button type="button" data-action-kind="delete" data-clear-day="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.deleteDay)}</button>` : ''}
+          ${row.menuId ? `<button type="button" data-action-kind="delete" data-clear-day="${escapeHtml(row.isoDate)}" data-menu="${escapeHtml(row.menuId)}">${escapeHtml(labels.deleteMenu)}</button>` : ''}
         </div>
       </details>
     `;

@@ -246,6 +246,9 @@ if (root) {
           actionLabel: labels.editDay,
           actionAttr: 'data-quick-edit',
           actionStateAttr: disabledAttr,
+          deleteActionLabel: labels.deleteMenu,
+          deleteActionAttr: 'data-quick-clear',
+          deleteActionStateAttr: disabledAttr,
           moreActionsLabel: labels.moreActions,
           summariesHtml: renderDashboardDayMeals(day),
           notesHtml: renderDayNotesHtml(day),
@@ -520,6 +523,17 @@ if (root) {
             return;
           }
 
+          if (target.dataset.quickClear) {
+            if (shouldBlockOfflineWrites(isOnline) || !currentUser) {
+              showStatus(labels.offlineReadOnly, true);
+              return;
+            }
+
+            const menuId = getMenuIdForDay(target.dataset.quickClear);
+            if (!menuId) return;
+            const services = await getFirebaseServices();
+            await clearMenuDay(services, menuId, currentUser.uid, target.dataset.quickClear);
+          }
         });
 
         root.querySelector('[data-today-edit]')?.addEventListener('click', () => {

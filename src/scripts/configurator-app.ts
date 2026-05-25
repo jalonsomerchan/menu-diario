@@ -142,6 +142,9 @@ if (root) {
           dateLabel: formatDate(isoDate),
           actionLabel: labels.editDay,
           actionAttr: 'data-config-edit',
+          deleteActionLabel: labels.deleteMenu,
+          deleteActionAttr: 'data-config-clear',
+          moreActionsLabel: labels.moreActions,
           summariesHtml: summaries,
         });
       })
@@ -263,12 +266,31 @@ if (root) {
           await watchVisibleMenus(services);
         });
 
-        configDays?.addEventListener('click', (event) => {
+        configDays?.addEventListener('click', async (event) => {
           const target = event.target;
           if (!(target instanceof HTMLElement)) return;
           const button = target.closest<HTMLButtonElement>('[data-config-edit]');
-          if (!button) return;
-          dayEditModal.open(button.dataset.configEdit ?? '');
+          if (button) {
+            dayEditModal.open(button.dataset.configEdit ?? '');
+            return;
+          }
+
+          const clearButton = target.closest<HTMLButtonElement>('[data-config-clear]');
+          if (!clearButton || !currentUser) return;
+          if (getNetworkStatus() !== 'online') {
+            showStatus(labels.offlineReadOnly, true);
+            return;
+          }
+
+          const dayKey = clearButton.dataset.configClear ?? '';
+          const menuId = getMenuIdForDay(dayKey);
+          if (!menuId) return;
+          try {
+            const services = await getFirebaseServices();
+            await clearMenuDay(services, menuId, currentUser.uid, dayKey);
+          } catch (error) {
+            showStatus(formatError(error), true);
+          }
         });
 
         services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {

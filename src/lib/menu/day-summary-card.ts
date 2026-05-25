@@ -8,6 +8,9 @@ type DaySummaryCardOptions = {
   actionLabel?: string;
   actionAttr?: string;
   actionStateAttr?: string;
+  deleteActionLabel?: string;
+  deleteActionAttr?: string;
+  deleteActionStateAttr?: string;
   moreActionsLabel?: string;
   actionHtml?: string;
   notesHtml?: string;
@@ -29,14 +32,28 @@ function getMonthLabel(isoDate: string) {
     .toLocaleUpperCase();
 }
 
-function renderActionMenu({ isoDate, actionLabel, actionAttr, actionStateAttr = '', moreActionsLabel }: DaySummaryCardOptions) {
+function renderActionMenu({
+  isoDate,
+  actionLabel,
+  actionAttr,
+  actionStateAttr = '',
+  deleteActionLabel,
+  deleteActionAttr,
+  deleteActionStateAttr = '',
+  moreActionsLabel,
+}: DaySummaryCardOptions) {
   if (!actionLabel || !actionAttr) return '';
+  const deleteButton =
+    deleteActionLabel && deleteActionAttr
+      ? `<button type="button" data-action-kind="delete" ${deleteActionAttr}="${escapeHtml(isoDate)}" ${deleteActionStateAttr}>${escapeHtml(deleteActionLabel)}</button>`
+      : '';
 
   return `
     <details class="day-actions" data-day-actions>
-      <summary aria-label="${escapeHtml(moreActionsLabel || actionLabel)}">•••</summary>
+      <summary aria-label="${escapeHtml(moreActionsLabel || actionLabel)}">⋮</summary>
       <div>
         <button type="button" data-action-kind="edit" ${actionAttr}="${escapeHtml(isoDate)}" ${actionStateAttr}>${escapeHtml(actionLabel)}</button>
+        ${deleteButton}
       </div>
     </details>
   `;

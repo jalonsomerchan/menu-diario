@@ -32,6 +32,7 @@
   "dashboard.editDay": "Edit",
   "dashboard.quickEdit": "Edit day",
   "dashboard.deleteDay": "Clear day",
+  "dashboard.deleteMenu": "Clear menu",
   "dashboard.moreActions": "More actions",
   "dashboard.cancel": "Cancel",
   "dashboard.save": "Save",

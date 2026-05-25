@@ -30,7 +30,7 @@
 .menu-day-card__content { display: grid; align-content: start; gap: 0.65rem; min-width: 0; }
 .next-days--timeline { grid-template-columns: 1fr; }
 .next-days--timeline .history-card { min-height: 8.8rem; }
-.day-actions[data-day-actions] summary { width: 2.65rem; height: 2.65rem; border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 48%); background: var(--color-primary-soft); color: var(--color-primary); }
+.day-actions[data-day-actions] summary { width: 2.65rem; height: 2.65rem; border: 0; background: var(--color-primary-soft); color: var(--color-primary); }
 .day-actions[data-day-actions] div { min-width: 10rem; }
 .day-actions[data-day-actions] div button[data-action-kind='edit'] { color: var(--color-text); }
 .day-actions[data-day-actions] div button[data-action-kind='edit']::before { content: '✎'; width: 1rem; color: var(--color-primary); font-size: 1rem; line-height: 1; }
