@@ -1,5 +1,6 @@
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getFirebaseServices, signInAsGuest, signInWithGoogle } from '../lib/firebase/client';
+import { groupInviteStorageKey } from '../lib/menu/group-invite-link';
 
 const root = document.querySelector<HTMLElement>('[data-auth-gate]');
 
@@ -35,6 +36,11 @@ if (root) {
   }
 
   function goToDashboard() {
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(groupInviteStorageKey)) {
+      window.location.assign(labels.settingsPath || '/ajustes');
+      return;
+    }
+
     window.location.assign(labels.dashboardPath || '/dashboard');
   }
 

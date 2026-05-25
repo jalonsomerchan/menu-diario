@@ -2,6 +2,12 @@ import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { formatAppError } from '../lib/errors';
 import {
+  buildGroupInviteUrl,
+  buildGroupInvitePath,
+  groupInviteStorageKey,
+  readGroupInviteCode,
+} from '../lib/menu/group-invite-link';
+import {
   addPendingGroupEmail,
   ensureDefaultGroup,
   ensureUserProfile,
@@ -26,16 +32,19 @@ if (root) {
   const content = root.querySelector<HTMLElement>('[data-content]');
   const themeSelect = root.querySelector<HTMLSelectElement>('[data-theme-select]');
   const foodIntolerancesInput = root.querySelector<HTMLTextAreaElement>('[data-food-intolerances]');
-  const inviteCode = root.querySelector<HTMLElement>('[data-invite-code]');
+  const inviteLinkInput = root.querySelector<HTMLInputElement>('[data-invite-link]');
   const members = root.querySelector<HTMLElement>('[data-members]');
   const pending = root.querySelector<HTMLElement>('[data-pending]');
   const leaveButton = root.querySelector<HTMLButtonElement>('[data-leave-group]');
+  const joinLinkStatus = root.querySelector<HTMLElement>('[data-join-link-status]');
+  const joinLinkAction = root.querySelector<HTMLButtonElement>('[data-join-link-action]');
   const confirmDialogElement = root.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
   const confirmDialog = confirmDialogElement ? createConfirmDialog(confirmDialogElement) : null;
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
   let currentGroup: MenuGroup | null = null;
+  let pendingInviteCode = '';
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeGroup: (() => void) | undefined;
 
@@ -45,6 +54,42 @@ if (root) {
 
   function normalizeFoodIntolerances(value: string) {
     return value.trim().slice(0, maxFoodIntolerancesLength);
+  }
+
+  function readStoredInviteCode() {
+    if (typeof sessionStorage === 'undefined') return '';
+    return sessionStorage.getItem(groupInviteStorageKey)?.trim().toUpperCase() ?? '';
+  }
+
+  function storeInviteCode(inviteCode: string) {
+    if (typeof sessionStorage === 'undefined') return;
+    const normalizedCode = inviteCode.trim().toUpperCase();
+    if (normalizedCode) {
+      sessionStorage.setItem(groupInviteStorageKey, normalizedCode);
+      return;
+    }
+    sessionStorage.removeItem(groupInviteStorageKey);
+  }
+
+  function clearInviteCodeFromUrl() {
+    const nextPath = buildGroupInvitePath(labels.settingsPath || window.location.pathname, '');
+    window.history.replaceState({}, '', nextPath);
+  }
+
+  function syncPendingInviteCode() {
+    pendingInviteCode = readGroupInviteCode(window.location.search) || readStoredInviteCode();
+    return pendingInviteCode;
+  }
+
+  function renderPendingInviteState() {
+    const inviteCode = syncPendingInviteCode();
+    if (joinLinkStatus) {
+      joinLinkStatus.textContent = inviteCode ? labels.joinLinkReady : labels.joinLinkMissing;
+    }
+    if (joinLinkAction) {
+      joinLinkAction.disabled = !inviteCode;
+      joinLinkAction.setAttribute('aria-disabled', String(!inviteCode));
+    }
   }
 
   function showStatus(message: string, isError = false) {
@@ -120,8 +165,8 @@ if (root) {
     const isOwner = currentUser?.uid === group.ownerId;
     setGroupAdminState(isOwner);
 
-    if (inviteCode) {
-      inviteCode.innerHTML = `<button class="button button--secondary" type="button" data-copy-code ${isOwner ? '' : 'disabled'}>${escapeHtml(group.inviteCode)}</button>`;
+    if (inviteLinkInput) {
+      inviteLinkInput.value = buildGroupInviteUrl(window.location.origin, labels.settingsPath || window.location.pathname, group.inviteCode);
     }
 
     root.querySelectorAll<HTMLInputElement>('[data-meal-preference]').forEach((input) => {
@@ -130,6 +175,7 @@ if (root) {
 
     renderList(members, group.memberEmails.length ? group.memberEmails : group.members, labels.membersEmpty);
     renderList(pending, group.pendingEmails, labels.pendingEmpty);
+    renderPendingInviteState();
   }
 
   if (!hasFirebaseConfig()) {
@@ -181,14 +227,15 @@ if (root) {
           });
         });
 
-        root.querySelector('[data-join-form]')?.addEventListener('submit', (event) => {
-          event.preventDefault();
+        joinLinkAction?.addEventListener('click', () => {
           runAction(async () => {
-            const input = root.querySelector<HTMLInputElement>('[data-join-code]');
-            if (!currentUser || !input?.value) return;
-            await joinGroupByInviteCode(services, currentUser, input.value);
-            input.value = '';
-            showStatus(labels.updated);
+            const inviteCode = syncPendingInviteCode();
+            if (!currentUser || !inviteCode) return;
+            await joinGroupByInviteCode(services, currentUser, inviteCode);
+            storeInviteCode('');
+            clearInviteCodeFromUrl();
+            renderPendingInviteState();
+            showStatus(labels.joinedFromLink);
           });
         });
 
@@ -215,8 +262,8 @@ if (root) {
         root.addEventListener('click', (event) => {
           runAction(async () => {
             const target = event.target;
-            if (!(target instanceof HTMLElement) || !target.closest('[data-copy-code]') || !currentGroup) return;
-            await navigator.clipboard?.writeText(currentGroup.inviteCode);
+            if (!(target instanceof HTMLElement) || !target.closest('[data-copy-code]') || !currentGroup || !inviteLinkInput?.value) return;
+            await navigator.clipboard?.writeText(inviteLinkInput.value);
             showStatus(labels.copied);
           });
         });
@@ -228,10 +275,15 @@ if (root) {
             unsubscribeGroup?.();
 
             if (!user) {
+              const inviteCode = syncPendingInviteCode();
+              if (inviteCode) {
+                storeInviteCode(inviteCode);
+              }
               window.location.assign(labels.homePath || '/');
               return;
             }
 
+            renderPendingInviteState();
             await ensureUserProfile(services, user, labels.guestSession);
             unsubscribeProfile = watchUserProfile(
               services,
@@ -252,4 +304,6 @@ if (root) {
       })
       .catch(reportError);
   }
+
+  renderPendingInviteState();
 }

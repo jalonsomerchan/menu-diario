@@ -8,6 +8,7 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const dishesPath = getLocalizedPath('/mis-platos', locale);
+const settingsPath = getLocalizedPath('/ajustes', locale);
 
 const labels = {
   configMissing: t('menu.configMissing'),
@@ -38,8 +39,14 @@ const labels = {
   groupOptionsDescription: t('settings.groupOptionsDescription'),
   inviteTitle: t('settings.inviteTitle'),
   inviteDescription: t('settings.inviteDescription'),
+  inviteLinkLabel: t('settings.inviteLinkLabel'),
+  copyInviteLink: t('settings.copyInviteLink'),
   joinTitle: t('settings.joinTitle'),
   joinDescription: t('settings.joinDescription'),
+  joinLinkReady: t('settings.joinLinkReady'),
+  joinLinkMissing: t('settings.joinLinkMissing'),
+  joinLinkAction: t('settings.joinLinkAction'),
+  joinedFromLink: t('settings.joinedFromLink'),
   membersTitle: t('settings.membersTitle'),
   pendingTitle: t('settings.pendingTitle'),
   dangerTitle: t('settings.dangerTitle'),
@@ -63,6 +70,7 @@ const labels = {
   manageDishes: t('dishes.manageFromSettings'),
   guestSession: t('menu.guestSession'),
   homePath,
+  settingsPath,
 };
 ---
 
@@ -136,7 +144,13 @@ const labels = {
           <h3>{labels.inviteTitle}</h3>
           <p>{labels.inviteDescription}</p>
           <p class="settings-permission-note" data-group-permission-note hidden>{labels.ownerOnly}</p>
-          <div class="group-code" data-invite-code></div>
+          <div class="settings-invite-link" data-group-admin-control>
+            <label>
+              <span>{labels.inviteLinkLabel}</span>
+              <input type="text" data-invite-link readonly />
+            </label>
+            <button class="button button--secondary" type="button" data-copy-code>{labels.copyInviteLink}</button>
+          </div>
           <form class="join-form" data-invite-form data-group-admin-control>
             <label>
               <span>{labels.inviteEmail}</span>
@@ -149,13 +163,8 @@ const labels = {
         <article class="settings-card app-panel">
           <h3>{labels.joinTitle}</h3>
           <p>{labels.joinDescription}</p>
-          <form class="join-form" data-join-form>
-            <label>
-              <span>{labels.joinCode}</span>
-              <input type="text" data-join-code autocomplete="off" />
-            </label>
-            <button class="button button--secondary" type="submit">{labels.joinGroup}</button>
-          </form>
+          <p class="settings-join-status" data-join-link-status>{labels.joinLinkMissing}</p>
+          <button class="button button--secondary" type="button" data-join-link-action disabled>{labels.joinLinkAction}</button>
         </article>
 
         <article class="settings-card app-panel">
@@ -195,9 +204,24 @@ const labels = {
   .settings-section-heading,
   .settings-form,
   .join-form,
-  .group-lists {
+  .group-lists,
+  .settings-invite-link {
     display: grid;
     gap: 1rem;
+  }
+
+  .settings-invite-link input {
+    width: 100%;
+  }
+
+  .settings-join-status {
+    margin: 0;
+    border: 1px dashed color-mix(in srgb, var(--color-primary), var(--color-border) 42%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 35%);
+    padding: 0.85rem 1rem;
+    color: var(--color-text);
+    font-weight: 600;
   }
 
   .settings-hero h2,

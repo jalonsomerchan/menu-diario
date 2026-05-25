@@ -25,7 +25,12 @@ describe('settings UI smoke checks', () => {
       'groupTitle',
       'groupOptionsTitle',
       'inviteTitle',
+      'inviteLinkLabel',
+      'copyInviteLink',
       'joinTitle',
+      'joinLinkReady',
+      'joinLinkMissing',
+      'joinLinkAction',
       'membersTitle',
       'dangerTitle',
       'ownerOnly',
@@ -46,11 +51,17 @@ describe('settings UI smoke checks', () => {
     assert.match(component, /data-group-admin-section/);
     assert.match(component, /data-group-admin-control/);
     assert.match(component, /data-group-permission-note/);
+    assert.match(component, /data-invite-link/);
+    assert.match(component, /data-join-link-status/);
+    assert.match(component, /data-join-link-action/);
     assert.match(component, /<ConfirmDialog/);
     assert.match(component, /settings-leave-group-dialog/);
     assert.match(script, /createConfirmDialog/);
     assert.match(script, /currentGroup\.ownerId !== currentUser\.uid/);
     assert.match(script, /setGroupAdminState/);
+    assert.match(script, /buildGroupInviteUrl/);
+    assert.match(script, /joinGroupByInviteCode/);
+    assert.match(script, /groupInviteStorageKey/);
     assert.match(script, /labels\.leaveConfirmTitle/);
     assert.match(script, /membersEmpty/);
     assert.match(script, /pendingEmpty/);

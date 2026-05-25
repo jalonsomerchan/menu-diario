@@ -259,7 +259,7 @@ Grupo de convivencia o planificación. Permite ver miembros, emails pendientes y
 }
 ```
 
-La invitación por email no envía correo desde la app. Guarda el email como pendiente y muestra el código para compartirlo manualmente. La otra persona se une escribiendo ese código en **Ajustes**.
+La invitación por email no envía correo desde la app. Guarda el email como pendiente y muestra un enlace de invitación para compartirlo manualmente. La otra persona se une abriendo ese enlace en **Ajustes** después de autenticarse.
 
 ### `weeklyMenus/{menuId}`
 
