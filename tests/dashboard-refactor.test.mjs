@@ -20,4 +20,12 @@ describe('dashboard refactor smoke checks', () => {
     assert.match(dashboardScript, /import \{ escapeHtml \} from '\.\.\/lib\/ui\/html'/);
     assert.doesNotMatch(dashboardScript, /function escapeHtml/);
   });
+
+  it('catches async bootstrap errors before they become uncaught promise rejections', () => {
+    const dashboardScript = readText('src/scripts/dashboard-app.ts');
+
+    assert.match(dashboardScript, /async function initializeAuthenticatedDashboard/);
+    assert.match(dashboardScript, /try \{\s*await initializeAuthenticatedDashboard\(services, user\);/);
+    assert.match(dashboardScript, /catch \(error\) \{\s*setVisible\(false\);\s*showStatus\(formatError\(error\), true\);/);
+  });
 });

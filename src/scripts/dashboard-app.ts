@@ -381,6 +381,81 @@ if (root) {
     syncRenderedDayStates(nextDays ?? root, getNextSevenDates());
   }
 
+  async function initializeAuthenticatedDashboard(services: Awaited<ReturnType<typeof getFirebaseServices>>, user: FirebaseUser) {
+    if (userLabel) userLabel.textContent = `${labels.hello} ${user.displayName || user.email || labels.guestSession}`;
+
+    await ensureUserProfile(services, user, labels.guestSession);
+    currentMenuIdsByWeekStart = await getOrCreateWeekMenus(services, user.uid, getRelevantWeekStarts(), locale);
+    currentMenus = [];
+    firstMenuLoad = true;
+
+    unsubscribeProfile = watchUserProfile(
+      services,
+      user,
+      labels.guestSession,
+      (profile) => {
+        currentProfile = profile;
+        applyTheme(profile.theme);
+        unsubscribeDishes?.();
+        unsubscribeDishes = watchUserDishes(
+          services,
+          user.uid,
+          (nextDishes) => {
+            dishes = nextDishes;
+            if (currentMenu) renderDashboard(currentMenu);
+          },
+          (error) => showStatus(formatError(error), true),
+          false,
+          profile.groupId
+        );
+        unsubscribeGroup?.();
+        currentGroup = null;
+        if (profile.groupId) {
+          unsubscribeGroup = watchGroup(
+            services,
+            profile.groupId,
+            (group) => {
+              currentGroup = group;
+              if (currentMenu) renderDashboard(currentMenu);
+            },
+            (error) => showStatus(formatError(error), true)
+          );
+        }
+        if (currentMenu) {
+          renderDashboard(currentMenu);
+          cacheCurrentMenu(currentMenu);
+        }
+
+        unsubscribeTuppers?.();
+        unsubscribeTuppers = watchTuppers(
+          services,
+          user.uid,
+          (nextTuppers) => {
+            tuppers = nextTuppers;
+            renderExpiryBanner();
+          },
+          (error) => showStatus(formatError(error), true)
+        );
+      },
+      (error) => showStatus(formatError(error), true)
+    );
+
+    unsubscribeMenu = watchWeekMenusByIds(
+      services,
+      Object.values(currentMenuIdsByWeekStart),
+      (menus) => {
+        currentMenus = menus;
+        const mergedMenu = buildDisplayMenu(menus);
+        const changedByOtherUser = !firstMenuLoad && menus.some((menu) => menu.updatedBy && menu.updatedBy !== currentUser?.uid);
+        renderDashboard(mergedMenu);
+        cacheCurrentMenu(mergedMenu);
+        if (changedByOtherUser) notifyMenuChanged(labels.updated, labels.updatedBody);
+        firstMenuLoad = menus.length < Object.keys(currentMenuIdsByWeekStart).length;
+      },
+      (error) => showStatus(formatError(error), true)
+    );
+  }
+
   const dayEditModal = createDayEditModalController({
     root,
     labels,
@@ -464,78 +539,12 @@ if (root) {
             return;
           }
 
-          if (userLabel) userLabel.textContent = `${labels.hello} ${user.displayName || user.email || labels.guestSession}`;
-
-          await ensureUserProfile(services, user, labels.guestSession);
-          currentMenuIdsByWeekStart = await getOrCreateWeekMenus(services, user.uid, getRelevantWeekStarts(), locale);
-          currentMenus = [];
-          firstMenuLoad = true;
-
-          unsubscribeProfile = watchUserProfile(
-            services,
-            user,
-            labels.guestSession,
-            (profile) => {
-              currentProfile = profile;
-              applyTheme(profile.theme);
-              unsubscribeDishes?.();
-              unsubscribeDishes = watchUserDishes(
-                services,
-                user.uid,
-                (nextDishes) => {
-                  dishes = nextDishes;
-                  if (currentMenu) renderDashboard(currentMenu);
-                },
-                (error) => showStatus(formatError(error), true),
-                false,
-                profile.groupId
-              );
-              unsubscribeGroup?.();
-              currentGroup = null;
-              if (profile.groupId) {
-                unsubscribeGroup = watchGroup(
-                  services,
-                  profile.groupId,
-                  (group) => {
-                    currentGroup = group;
-                    if (currentMenu) renderDashboard(currentMenu);
-                  },
-                  (error) => showStatus(formatError(error), true)
-                );
-              }
-              if (currentMenu) {
-                renderDashboard(currentMenu);
-                cacheCurrentMenu(currentMenu);
-              }
-
-              unsubscribeTuppers?.();
-              unsubscribeTuppers = watchTuppers(
-                services,
-                user.uid,
-                (nextTuppers) => {
-                  tuppers = nextTuppers;
-                  renderExpiryBanner();
-                },
-                (error) => showStatus(formatError(error), true)
-              );
-            },
-            (error) => showStatus(formatError(error), true)
-          );
-
-          unsubscribeMenu = watchWeekMenusByIds(
-            services,
-            Object.values(currentMenuIdsByWeekStart),
-            (menus) => {
-              currentMenus = menus;
-              const mergedMenu = buildDisplayMenu(menus);
-              const changedByOtherUser = !firstMenuLoad && menus.some((menu) => menu.updatedBy && menu.updatedBy !== currentUser?.uid);
-              renderDashboard(mergedMenu);
-              cacheCurrentMenu(mergedMenu);
-              if (changedByOtherUser) notifyMenuChanged(labels.updated, labels.updatedBody);
-              firstMenuLoad = menus.length < Object.keys(currentMenuIdsByWeekStart).length;
-            },
-            (error) => showStatus(formatError(error), true)
-          );
+          try {
+            await initializeAuthenticatedDashboard(services, user);
+          } catch (error) {
+            setVisible(false);
+            showStatus(formatError(error), true);
+          }
         });
       })
       .catch((error: Error) => showStatus(formatError(error), true));
