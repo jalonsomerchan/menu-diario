@@ -1,45 +1,47 @@
 .tuppers-app { display: grid; gap: 1rem; max-width: none; }
 
 .tuppers-page-header { display: grid; gap: 1rem; margin-bottom: 1.2rem; }
-.tuppers-page-header__copy { display: grid; gap: 0.55rem; }
-.tuppers-page-header h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.8rem); line-height: 0.94; letter-spacing: -0.07em; }
+.tuppers-page-header__copy { display: grid; gap: 0.55rem; min-width: 0; }
+.tuppers-page-header h1 { margin: 0; font-size: clamp(2rem, 13vw, 3.8rem); line-height: 0.96; letter-spacing: -0.07em; overflow-wrap: anywhere; }
 .tuppers-page-header p { margin: 0; max-width: 72ch; color: var(--color-muted); font-size: clamp(1rem, 2.4vw, 1.15rem); line-height: var(--surface-copy-line-height); letter-spacing: var(--surface-copy-letter-spacing); }
+.tuppers-page-header .button { width: 100%; }
 .expiry-banner[hidden] { display: none; }
 
 .tuppers-form { display: grid; gap: 0.8rem; }
-.tuppers-form label { display: grid; gap: 0.35rem; color: var(--color-muted); font-size: 0.88rem; font-weight: 850; }
+.tuppers-form label { display: grid; gap: 0.35rem; color: var(--color-muted); font-size: 0.88rem; font-weight: 850; min-width: 0; }
 .tuppers-form input,
 .tuppers-form select,
 .tuppers-form textarea,
-.tupper-assign select { width: 100%; min-height: var(--form-control-min-height); border: 1px solid var(--color-border); border-radius: var(--radius-xl); background: var(--color-surface-raised); color: var(--color-text); padding: var(--form-control-padding-block) var(--form-control-padding-inline); line-height: 1.5; }
+.tupper-assign select { width: 100%; min-width: 0; min-height: var(--form-control-min-height); border: 1px solid var(--color-border); border-radius: var(--radius-xl); background: var(--color-surface-raised); color: var(--color-text); padding: var(--form-control-padding-block) var(--form-control-padding-inline); line-height: 1.5; }
 .tuppers-form input:focus-visible,
 .tuppers-form select:focus-visible,
 .tuppers-form textarea:focus-visible,
 .tupper-assign select:focus-visible { outline: 2px solid color-mix(in srgb, var(--color-primary), transparent 35%); outline-offset: 2px; }
 .tuppers-form textarea { resize: vertical; }
 
-.tupper-filters { display: flex; gap: 0.5rem; overflow-x: auto; margin-bottom: 1rem; padding-bottom: 0.2rem; }
-.tupper-filters button { flex: 0 0 auto; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); padding: 0.55rem 0.85rem; font-weight: 850; }
+.tupper-filters { display: flex; gap: 0.5rem; overflow-x: auto; margin: 0 -0.2rem 1rem; padding: 0 0.2rem 0.35rem; scroll-padding-inline: 0.2rem; -webkit-overflow-scrolling: touch; }
+.tupper-filters button { flex: 0 0 auto; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); color: var(--color-text); padding: 0.55rem 0.85rem; font-weight: 850; white-space: nowrap; }
 .tupper-filters button[aria-pressed='true'] { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%); background: var(--color-primary-soft); color: var(--color-primary); }
 
 .tupper-list { display: grid; gap: 0.85rem; }
-.tupper-card { display: grid; gap: 0.9rem; border: 1px solid var(--color-border); border-radius: var(--radius-2xl); background: var(--color-surface); padding: clamp(0.95rem, 4vw, 1.15rem); padding-bottom: max(clamp(0.95rem, 4vw, 1.15rem), 1rem); box-shadow: var(--shadow-sm); min-height: auto; overflow: hidden; }
+.tupper-card { display: grid; gap: 0.9rem; border: 1px solid var(--color-border); border-radius: var(--radius-2xl); background: var(--color-surface); padding: clamp(0.95rem, 4vw, 1.15rem); padding-bottom: max(clamp(0.95rem, 4vw, 1.15rem), 1rem); box-shadow: var(--shadow-sm); min-width: 0; min-height: auto; overflow: hidden; }
 .tupper-card { border-color: var(--panel-border); background: var(--panel-background); }
-.tupper-card header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 0.75rem; min-width: 0; }
+.tupper-card header { display: grid; gap: 0.65rem; min-width: 0; }
 .tupper-card__title { display: grid; gap: 0.4rem; min-width: 0; }
-.tupper-card h3 { margin: 0; font-size: clamp(1.7rem, 8vw, 2.2rem); line-height: 0.96; letter-spacing: -0.05em; text-wrap: balance; }
-.tupper-card__location { justify-self: start; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--color-accent), var(--color-border) 55%); background: var(--color-accent-soft); color: var(--color-text); padding: 0.35rem 0.65rem; font-size: 0.8rem; font-weight: 900; }
-.tupper-card__assignment { margin: 0; border-left: 3px solid color-mix(in srgb, var(--color-primary), transparent 25%); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: color-mix(in srgb, var(--color-primary-soft), transparent 25%); padding: 0.65rem 0.8rem; color: var(--color-text); font-size: 0.9rem; font-weight: 800; }
-.tupper-card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; margin: 0; }
+.tupper-card h3 { margin: 0; font-size: clamp(1.45rem, 9vw, 2.2rem); line-height: 1; letter-spacing: -0.05em; overflow-wrap: anywhere; text-wrap: balance; }
+.tupper-card__location { justify-self: start; max-width: 100%; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--color-accent), var(--color-border) 55%); background: var(--color-accent-soft); color: var(--color-text); padding: 0.35rem 0.65rem; font-size: 0.8rem; font-weight: 900; overflow-wrap: anywhere; }
+.tupper-card__assignment { margin: 0; border-left: 3px solid color-mix(in srgb, var(--color-primary), transparent 25%); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: color-mix(in srgb, var(--color-primary-soft), transparent 25%); padding: 0.65rem 0.8rem; color: var(--color-text); font-size: 0.9rem; font-weight: 800; overflow-wrap: anywhere; }
+.tupper-card dl { display: grid; gap: 0.55rem; margin: 0; }
 .tupper-card dl > div { display: grid; gap: 0.22rem; min-width: 0; border: 1px solid color-mix(in srgb, var(--color-border), transparent 8%); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-surface-soft), transparent 15%); padding: 0.75rem 0.8rem; }
 .tupper-card dt { color: var(--color-muted); font-size: 0.78rem; font-weight: 900; text-transform: uppercase; }
-.tupper-card dd { margin: 0; font-size: 1rem; font-weight: 850; line-height: 1.15; }
+.tupper-card dd { margin: 0; font-size: 1rem; font-weight: 850; line-height: 1.15; overflow-wrap: anywhere; }
 .tupper-card p { margin: 0; color: var(--color-muted); line-height: var(--surface-copy-line-height); letter-spacing: var(--surface-copy-letter-spacing); }
-.tupper-card__notes { border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-surface-soft), transparent 12%); padding: 0.75rem 0.8rem; }
+.tupper-card__notes { border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-surface-soft), transparent 12%); padding: 0.75rem 0.8rem; overflow-wrap: anywhere; }
 .tupper-assign { display: grid; gap: 0.65rem; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%); border-radius: var(--radius-xl); background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 10%), var(--color-surface-soft)); padding: clamp(0.85rem, 3vw, 1rem); padding-bottom: max(clamp(0.85rem, 3vw, 1rem), 1rem); }
-.tupper-assign label { display: grid; gap: 0.35rem; color: var(--color-muted); font-size: 0.85rem; font-weight: 850; }
+.tupper-assign label { display: grid; gap: 0.35rem; color: var(--color-muted); font-size: 0.85rem; font-weight: 850; min-width: 0; }
+.tupper-assign .button { width: 100%; }
 .tupper-card__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
-.tupper-card__actions button { width: 100%; min-width: 0; min-height: 2.55rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface-raised); color: var(--color-text); padding: 0.5rem 0.8rem; font-size: 0.84rem; font-weight: 850; text-align: center; transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base), transform var(--transition-base); }
+.tupper-card__actions button { width: 100%; min-width: 0; min-height: 2.55rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface-raised); color: var(--color-text); padding: 0.55rem 0.7rem; font-size: 0.82rem; font-weight: 850; line-height: 1.15; text-align: center; overflow-wrap: anywhere; transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base), transform var(--transition-base); }
 .tupper-card__actions button:hover { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 40%); background: var(--color-primary-soft); color: var(--color-primary); }
 .tupper-card__actions button:active { transform: scale(0.98); }
 .tupper-card__actions button[data-action='discard'],
@@ -47,16 +49,27 @@
 .tupper-card__actions button[data-action='unassign'] { border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 65%); background: color-mix(in srgb, var(--color-danger-soft), transparent 18%); color: var(--color-danger); }
 
 .tuppers-create-dialog__surface {
+  width: min(100%, 44rem);
   max-height: min(92dvh, 56rem);
+}
+
+@media (max-width: 390px) {
+  .tupper-card__actions { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 480px) {
+  .tupper-card dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (min-width: 720px) {
   .tuppers-page-header { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
-  .tuppers-page-header .button { margin-top: 0.15rem; }
+  .tuppers-page-header .button { width: auto; margin-top: 0.15rem; }
   .tuppers-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tuppers-form__wide { grid-column: 1 / -1; }
   .tupper-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tupper-card header { grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 0.75rem; }
   .tupper-assign { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+  .tupper-assign .button { width: auto; }
   .tupper-card__actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
