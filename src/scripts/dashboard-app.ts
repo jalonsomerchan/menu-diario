@@ -433,6 +433,7 @@ if (root) {
         unsubscribeTuppers = watchTuppers(
           services,
           user.uid,
+          profile.groupId,
           (nextTuppers) => {
             tuppers = nextTuppers;
             renderExpiryBanner();

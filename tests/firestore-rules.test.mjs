@@ -39,11 +39,15 @@ describe('Firestore rules smoke checks', () => {
     assert.doesNotMatch(weeklyMenuRules, /allow update: if isMemberDocument\(\) \|\| joinsDocument\(\);/);
   });
 
-  it('restricts tupper reads to document members', () => {
+  it('allows tupper reads for document members and real group members', () => {
     const rules = readText('firestore.rules');
     const tupperRules = getRulesBlock(rules, 'tuppers', 'tupperId');
 
-    assert.match(tupperRules, /allow read: if isMemberDocument\(\);/);
+    assert.match(rules, /function canAccessTupper\(data\)/);
+    assert.match(rules, /function isValidTupperCreate\(data\)/);
+    assert.match(tupperRules, /allow create: if isValidTupperCreate\(request\.resource\.data\);/);
+    assert.match(tupperRules, /allow read: if canAccessTupper\(resource\.data\);/);
+    assert.match(tupperRules, /allow update: if canAccessTupper\(resource\.data\) \|\| canAccessTupper\(request\.resource\.data\);/);
     assert.doesNotMatch(tupperRules, /allow read: if signedIn\(\);/);
   });
 });

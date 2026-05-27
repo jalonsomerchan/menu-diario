@@ -774,6 +774,7 @@ if (root) {
           unsubscribeTuppers = watchTuppers(
             services,
             user.uid,
+            profile.groupId,
             (tuppers) => {
               currentTuppers = tuppers;
               renderMeals();

@@ -52,26 +52,88 @@ function normalizeStatus(value: unknown): TupperStatus {
   return value === 'assigned' || value === 'consumed' || value === 'discarded' || value === 'archived' ? value : 'active';
 }
 
+function subscribeToTupperQuery(
+  services: FirebaseServices,
+  query: any,
+  onChange: (tuppers: TupperItem[]) => void,
+  onError: (error: Error) => void
+) {
+  return services.firestoreModule.onSnapshot(
+    query,
+    (snapshot: any) => {
+      onChange(snapshot.docs.map((item: any) => mapTupper(item.id, item.data())).sort(sortTuppersByPriority));
+    },
+    onError
+  );
+}
+
 export function watchTuppers(
   services: FirebaseServices,
   userId: string,
+  groupId: string | undefined,
   callback: (tuppers: TupperItem[]) => void,
   onError: (error: Error) => void
 ) {
   const { db, firestoreModule } = services;
-  const query = firestoreModule.query(
+  if (!groupId) {
+    const ownQuery = firestoreModule.query(
+      firestoreModule.collection(db, tuppersCollection),
+      firestoreModule.where('members', 'array-contains', userId),
+      firestoreModule.limit(80)
+    );
+
+    return subscribeToTupperQuery(services, ownQuery, callback, onError);
+  }
+
+  const tuppersBySource = new Map<'group' | 'legacy', TupperItem[]>([
+    ['group', []],
+    ['legacy', []],
+  ]);
+  const emit = () => {
+    const merged = new Map<string, TupperItem>();
+    tuppersBySource.forEach((items) => {
+      items.forEach((tupper) => merged.set(tupper.id, tupper));
+    });
+    callback([...merged.values()].sort(sortTuppersByPriority));
+  };
+
+  const groupQuery = firestoreModule.query(
+    firestoreModule.collection(db, tuppersCollection),
+    firestoreModule.where('groupId', '==', groupId),
+    firestoreModule.limit(120)
+  );
+  const legacyOwnQuery = firestoreModule.query(
     firestoreModule.collection(db, tuppersCollection),
     firestoreModule.where('members', 'array-contains', userId),
     firestoreModule.limit(80)
   );
 
-  return firestoreModule.onSnapshot(
-    query,
-    (snapshot: any) => {
-      callback(snapshot.docs.map((item: any) => mapTupper(item.id, item.data())).sort(sortTuppersByPriority));
+  const unsubscribeGroup = subscribeToTupperQuery(
+    services,
+    groupQuery,
+    (tuppers) => {
+      tuppersBySource.set('group', tuppers);
+      emit();
     },
     onError
   );
+  const unsubscribeLegacy = subscribeToTupperQuery(
+    services,
+    legacyOwnQuery,
+    (tuppers) => {
+      tuppersBySource.set(
+        'legacy',
+        tuppers.filter((tupper) => !tupper.groupId)
+      );
+      emit();
+    },
+    onError
+  );
+
+  return () => {
+    unsubscribeGroup();
+    unsubscribeLegacy();
+  };
 }
 
 export async function createTupper(
@@ -94,7 +156,7 @@ export async function createTupper(
     normalizedName,
     dishId: data.dishId || '',
     createdBy: user.uid,
-    groupId: profile?.groupId ?? '',
+    groupId: profile?.groupId ?? null,
     members: [user.uid],
     preparedAt: data.preparedAt,
     expiresAt: data.expiresAt,

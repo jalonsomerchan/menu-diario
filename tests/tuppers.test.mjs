@@ -112,6 +112,7 @@ describe('Tuppers domain helpers', () => {
     const configurator = readText('src/components/ConfiguratorApp.astro');
     const app = readText('src/components/TuppersApp.astro');
     const script = readText('src/scripts/tuppers-app.ts');
+    const repository = readText('src/lib/tuppers/repository.ts');
     const rules = readText('firestore.rules');
 
     assert.match(header, /getLocalizedPath\('\/tuppers'/);
@@ -123,12 +124,17 @@ describe('Tuppers domain helpers', () => {
     assert.match(app, /data-expiry-alert/);
     assert.match(app, /tt\('unassign'\)/);
     assert.match(script, /watchTuppers/);
+    assert.match(script, /resubscribeTuppers/);
+    assert.match(script, /currentProfile\?\.groupId/);
     assert.match(script, /assignTupperToMeal/);
     assert.match(script, /removeTupperFromMeal/);
     assert.match(script, /assignment-move-required/);
     assert.match(script, /data-action="unassign"/);
     assert.match(script, /createConfirmDialog/);
     assert.doesNotMatch(script, /window\.confirm/);
+    assert.match(repository, /firestoreModule\.where\('groupId', '==', groupId\)/);
+    assert.match(repository, /tuppers\.filter\(\(tupper\) => !tupper\.groupId\)/);
+    assert.match(repository, /groupId: profile\?\.groupId \?\? null/);
     assert.ok(rules.includes('match /tuppers/{tupperId}'));
   });
 
@@ -141,6 +147,7 @@ describe('Tuppers domain helpers', () => {
     assert.match(docs, /quitar una asignación/i);
     assert.match(docs, /recomendador inteligente/i);
     assert.match(docs, /lista de la compra/i);
+    assert.match(docs, /grupo/i);
     assert.match(i18n, /es:/);
     assert.match(i18n, /en:/);
     assert.match(i18n, /expiryAlert/);

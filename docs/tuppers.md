@@ -85,7 +85,11 @@ Los helpers de caducidad priorizan tuppers próximos a caducar. Cuando existan r
 
 ## Seguridad
 
-Las reglas de Firestore permiten crear tuppers propios y leer o actualizar documentos donde el usuario sea miembro. En esta primera fase, los tuppers se guardan por usuario con `members: [uid]`; `groupId` queda preparado para una sincronización grupal más completa.
+Las reglas de Firestore permiten crear tuppers propios y compartir automáticamente los tuppers del grupo con todos los miembros reales de `groups/{groupId}`.
+
+Los tuppers con `groupId` visible se leen y actualizan por pertenencia real al grupo, aunque el array `members` siga existiendo como metadato de compatibilidad para casos personales o datos antiguos.
+
+Los tuppers personales sin grupo siguen viéndose solo por su creador.
 
 ## Archivos principales
 

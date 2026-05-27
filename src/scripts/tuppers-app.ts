@@ -77,6 +77,38 @@ if (root) {
     if (content) content.hidden = false;
   }
 
+  function resubscribeTuppers() {
+    if (!firebaseServices || !currentUser) return;
+    unsubscribeTuppers?.();
+    unsubscribeTuppers = watchTuppers(
+      firebaseServices,
+      currentUser.uid,
+      currentProfile?.groupId,
+      (nextTuppers) => {
+        tuppers = nextTuppers;
+        setReady();
+        render();
+      },
+      (error) => showStatus(error.message, true)
+    );
+  }
+
+  function resubscribeDishes() {
+    if (!firebaseServices || !currentUser) return;
+    unsubscribeDishes?.();
+    unsubscribeDishes = watchUserDishes(
+      firebaseServices,
+      currentUser.uid,
+      (nextDishes) => {
+        dishes = nextDishes;
+        renderDishes();
+      },
+      (error) => showStatus(error.message, true),
+      false,
+      currentProfile?.groupId
+    );
+  }
+
   function formatDate(isoDate: string) {
     return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(`${isoDate}T00:00:00`));
   }
@@ -448,17 +480,8 @@ if (root) {
 
           unsubscribeProfile = watchUserProfile(services, user, labels.title, (profile) => {
             currentProfile = profile;
-            render();
-          }, (error) => showStatus(error.message, true));
-
-          unsubscribeDishes = watchUserDishes(services, user.uid, (nextDishes) => {
-            dishes = nextDishes;
-            renderDishes();
-          }, (error) => showStatus(error.message, true));
-
-          unsubscribeTuppers = watchTuppers(services, user.uid, (nextTuppers) => {
-            tuppers = nextTuppers;
-            setReady();
+            resubscribeDishes();
+            resubscribeTuppers();
             render();
           }, (error) => showStatus(error.message, true));
         });
