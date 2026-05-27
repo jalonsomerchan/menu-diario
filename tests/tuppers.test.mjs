@@ -130,6 +130,8 @@ describe('Tuppers domain helpers', () => {
     assert.match(script, /removeTupperFromMeal/);
     assert.match(script, /assignment-move-required/);
     assert.match(script, /data-action="unassign"/);
+    assert.match(script, /tupper-card__title/);
+    assert.match(script, /tupper-card__notes/);
     assert.match(script, /createConfirmDialog/);
     assert.doesNotMatch(script, /window\.confirm/);
     assert.match(repository, /firestoreModule\.where\('groupId', '==', groupId\)/);

@@ -167,7 +167,7 @@ if (root) {
     return `
       <article class="tupper-card" data-tupper-id="${escapeHtml(tupper.id)}">
         <header>
-          <div>
+          <div class="tupper-card__title">
             <p class="menu-app__eyebrow">${escapeHtml(stateLabel)}</p>
             <h3>${escapeHtml(tupper.name)}</h3>
           </div>
@@ -183,7 +183,7 @@ if (root) {
           <div><dt>${escapeHtml(labels.expiresAt)}</dt><dd>${escapeHtml(formatDate(tupper.expiresAt))}</dd></div>
           ${tupper.portions ? `<div><dt>${escapeHtml(labels.portions)}</dt><dd>${tupper.portions}</dd></div>` : ''}
         </dl>
-        ${tupper.notes ? `<p>${escapeHtml(tupper.notes)}</p>` : ''}
+        ${tupper.notes ? `<p class="tupper-card__notes">${escapeHtml(tupper.notes)}</p>` : ''}
         <form class="tupper-assign" data-assign-form>
           <label>
             <span>${escapeHtml(labels.assignDay)}</span>
