@@ -28,6 +28,7 @@
 .tupper-card { display: grid; gap: 0.8rem; border: 1px solid var(--color-border); border-radius: var(--radius-2xl); background: var(--color-surface); padding: clamp(0.95rem, 4vw, 1.2rem); padding-bottom: max(clamp(0.95rem, 4vw, 1.2rem), 1rem); box-shadow: var(--shadow-sm); min-width: 0; min-height: auto; overflow: hidden; }
 .tupper-card { border-color: var(--panel-border); background: var(--panel-background); }
 .tupper-card header { display: grid; gap: 0.55rem; min-width: 0; }
+.tupper-card__meta { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
 .tupper-card__title { display: grid; gap: 0.35rem; min-width: 0; }
 .tupper-card h3 { margin: 0; font-size: clamp(1.35rem, 6.9vw, 1.9rem); line-height: 1.04; letter-spacing: -0.05em; overflow-wrap: anywhere; text-wrap: balance; }
 .tupper-card__location { justify-self: start; max-width: 100%; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--color-accent), var(--color-border) 55%); background: color-mix(in srgb, var(--color-accent-soft), transparent 6%); color: var(--color-text); padding: 0.35rem 0.65rem; font-size: 0.74rem; font-weight: 900; overflow-wrap: anywhere; }
@@ -44,12 +45,17 @@
 .tupper-assign .button { width: 100%; min-height: 2.55rem; }
 .tupper-card__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
 .tupper-card__actions button { width: 100%; min-width: 0; min-height: 2.6rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface-raised); color: var(--color-text); padding: 0.55rem 0.65rem; font-size: 0.8rem; font-weight: 850; line-height: 1.14; text-align: center; overflow-wrap: anywhere; transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base), transform var(--transition-base); }
+.tupper-card__actions--main button:first-child { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 50%); background: color-mix(in srgb, var(--color-primary-soft), transparent 18%); color: var(--color-primary); }
 .tupper-card__actions button:hover { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 40%); background: var(--color-primary-soft); color: var(--color-primary); }
 .tupper-card__actions button:active { transform: scale(0.98); }
-.tupper-card__actions button[data-action='archive'] { grid-column: 1 / -1; }
-.tupper-card__actions button[data-action='consume'] { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 50%); background: color-mix(in srgb, var(--color-primary-soft), transparent 18%); color: var(--color-primary); }
-.tupper-card__actions button[data-action='freeze'],
-.tupper-card__actions button[data-action='defrost'] { border-color: color-mix(in srgb, var(--color-accent), var(--color-border) 58%); background: color-mix(in srgb, var(--color-accent-soft), transparent 14%); }
+.tupper-card__storage-action { width: 100%; min-height: 2.6rem; border: 1px solid color-mix(in srgb, var(--color-accent), var(--color-border) 58%); border-radius: 999px; background: color-mix(in srgb, var(--color-accent-soft), transparent 14%); color: var(--color-text); padding: 0.55rem 0.8rem; font-size: 0.82rem; font-weight: 850; line-height: 1.14; text-align: center; transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base), transform var(--transition-base); }
+.tupper-card__storage-action:hover { border-color: color-mix(in srgb, var(--color-accent), var(--color-border) 30%); }
+.tupper-card__storage-action:active { transform: scale(0.98); }
+.tupper-card__more { display: grid; gap: 0.55rem; }
+.tupper-card__more summary { display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 2.45rem; border: 1px dashed color-mix(in srgb, var(--color-border), var(--color-text) 8%); border-radius: var(--radius-full); background: color-mix(in srgb, var(--color-surface-soft), transparent 28%); color: var(--color-muted); padding: 0.45rem 0.8rem; font-size: 0.8rem; font-weight: 850; list-style: none; cursor: pointer; }
+.tupper-card__more summary::-webkit-details-marker { display: none; }
+.tupper-card__more[open] summary { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 45%); color: var(--color-primary); background: color-mix(in srgb, var(--color-primary-soft), transparent 30%); }
+.tupper-card__actions--secondary { grid-template-columns: 1fr; }
 .tupper-card__actions button[data-action='discard'],
 .tupper-card__actions button[data-action='archive'],
 .tupper-card__actions button[data-action='unassign'] { border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 65%); background: color-mix(in srgb, var(--color-danger-soft), transparent 18%); color: var(--color-danger); }
@@ -60,6 +66,8 @@
 }
 
 @media (max-width: 420px) {
+  .tupper-card dl { grid-template-columns: 1fr; }
+  .tupper-card dl > div:last-child:nth-child(odd) { grid-column: auto; }
   .tupper-card__actions { grid-template-columns: 1fr; }
 }
 
@@ -72,13 +80,14 @@
   .tuppers-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tuppers-form__wide { grid-column: 1 / -1; }
   .tupper-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
-  .tupper-card header { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
-  .tupper-card__location { justify-self: end; }
+  .tupper-card header { gap: 0.65rem; }
   .tupper-card dl { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tupper-card dl > div:last-child:nth-child(odd) { grid-column: auto; }
   .tupper-assign { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
   .tupper-assign .button { width: auto; }
   .tupper-card__actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tupper-card__actions--main { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tupper-card__actions--secondary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (min-width: 1024px) {

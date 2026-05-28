@@ -151,6 +151,10 @@ if (root) {
     const state = getTupperExpiryState(tupper);
     const stateLabel = labels[state] ?? state;
     const canAssign = tupper.status === 'active' || tupper.status === 'assigned';
+    const storageActionLabel = tupper.location === 'freezer' ? labels.defrost : labels.freeze;
+    const storageAction = canAssign
+      ? `<button type="button" class="tupper-card__storage-action" data-action="${tupper.location === 'freezer' ? 'defrost' : 'freeze'}">${escapeHtml(storageActionLabel)}</button>`
+      : '';
     const locationLabel =
       tupper.location === 'freezer'
         ? labels.locationFreezer
@@ -164,31 +168,37 @@ if (root) {
         return `<option value="${value}" ${isSelected ? 'selected' : ''}>${escapeHtml(target.label)}</option>`;
       })
       .join('');
-    const actionButtons = [
+    const mainActions = canAssign
+      ? `<div class="tupper-card__actions tupper-card__actions--main">
+          <button type="button" data-action="consume">${escapeHtml(labels.consume)}</button>
+          <button type="button" data-action="discard">${escapeHtml(labels.discard)}</button>
+        </div>`
+      : '';
+    const moreActionButtons = [
       tupper.status === 'assigned'
         ? `<button type="button" data-action="unassign">${escapeHtml(labels.unassign)}</button>`
-        : '',
-      canAssign ? `<button type="button" data-action="consume">${escapeHtml(labels.consume)}</button>` : '',
-      canAssign ? `<button type="button" data-action="discard">${escapeHtml(labels.discard)}</button>` : '',
-      canAssign && tupper.location !== 'freezer'
-        ? `<button type="button" data-action="freeze">${escapeHtml(labels.freeze)}</button>`
-        : '',
-      canAssign && tupper.location === 'freezer'
-        ? `<button type="button" data-action="defrost">${escapeHtml(labels.defrost)}</button>`
         : '',
       tupper.status !== 'archived' ? `<button type="button" data-action="archive">${escapeHtml(labels.archive)}</button>` : '',
     ]
       .filter(Boolean)
       .join('');
+    const moreActions = moreActionButtons
+      ? `<details class="tupper-card__more">
+          <summary>${escapeHtml(labels.moreActions)}</summary>
+          <div class="tupper-card__actions tupper-card__actions--secondary">${moreActionButtons}</div>
+        </details>`
+      : '';
 
     return `
       <article class="tupper-card" data-tupper-id="${escapeHtml(tupper.id)}">
         <header>
-          <div class="tupper-card__title">
+          <div class="tupper-card__meta">
             <p class="menu-app__eyebrow">${escapeHtml(stateLabel)}</p>
+            <span class="tupper-card__location">${escapeHtml(locationLabel)}</span>
+          </div>
+          <div class="tupper-card__title">
             <h3>${escapeHtml(tupper.name)}</h3>
           </div>
-          <span class="tupper-card__location">${escapeHtml(locationLabel)}</span>
         </header>
         ${
           tupper.status === 'assigned'
@@ -214,7 +224,9 @@ if (root) {
         </form>`
             : ''
         }
-        ${actionButtons ? `<div class="tupper-card__actions">${actionButtons}</div>` : ''}
+        ${mainActions}
+        ${storageAction}
+        ${moreActions}
       </article>
     `;
   }
