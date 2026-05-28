@@ -150,6 +150,7 @@ if (root) {
   function renderTupperCard(tupper: TupperItem, targets: ReturnType<typeof getNextTargets>) {
     const state = getTupperExpiryState(tupper);
     const stateLabel = labels[state] ?? state;
+    const canAssign = tupper.status === 'active' || tupper.status === 'assigned';
     const locationLabel =
       tupper.location === 'freezer'
         ? labels.locationFreezer
@@ -162,6 +163,22 @@ if (root) {
         const isSelected = tupper.assignedDay === target.dayKey && tupper.assignedMeal === target.meal;
         return `<option value="${value}" ${isSelected ? 'selected' : ''}>${escapeHtml(target.label)}</option>`;
       })
+      .join('');
+    const actionButtons = [
+      tupper.status === 'assigned'
+        ? `<button type="button" data-action="unassign">${escapeHtml(labels.unassign)}</button>`
+        : '',
+      canAssign ? `<button type="button" data-action="consume">${escapeHtml(labels.consume)}</button>` : '',
+      canAssign ? `<button type="button" data-action="discard">${escapeHtml(labels.discard)}</button>` : '',
+      canAssign && tupper.location !== 'freezer'
+        ? `<button type="button" data-action="freeze">${escapeHtml(labels.freeze)}</button>`
+        : '',
+      canAssign && tupper.location === 'freezer'
+        ? `<button type="button" data-action="defrost">${escapeHtml(labels.defrost)}</button>`
+        : '',
+      tupper.status !== 'archived' ? `<button type="button" data-action="archive">${escapeHtml(labels.archive)}</button>` : '',
+    ]
+      .filter(Boolean)
       .join('');
 
     return `
@@ -184,7 +201,9 @@ if (root) {
           ${tupper.portions ? `<div><dt>${escapeHtml(labels.portions)}</dt><dd>${tupper.portions}</dd></div>` : ''}
         </dl>
         ${tupper.notes ? `<p class="tupper-card__notes">${escapeHtml(tupper.notes)}</p>` : ''}
-        <form class="tupper-assign" data-assign-form>
+        ${
+          canAssign
+            ? `<form class="tupper-assign" data-assign-form>
           <label>
             <span>${escapeHtml(labels.assignDay)}</span>
             <select data-assign-target>${targetOptions}</select>
@@ -192,19 +211,10 @@ if (root) {
           <button class="button button--primary button--small" type="submit">
             ${escapeHtml(tupper.status === 'assigned' ? labels.reassign : labels.assign)}
           </button>
-        </form>
-        <div class="tupper-card__actions">
-          ${
-            tupper.status === 'assigned'
-              ? `<button type="button" data-action="unassign">${escapeHtml(labels.unassign)}</button>`
-              : ''
-          }
-          <button type="button" data-action="consume">${escapeHtml(labels.consume)}</button>
-          <button type="button" data-action="discard">${escapeHtml(labels.discard)}</button>
-          <button type="button" data-action="freeze">${escapeHtml(labels.freeze)}</button>
-          <button type="button" data-action="defrost">${escapeHtml(labels.defrost)}</button>
-          <button type="button" data-action="archive">${escapeHtml(labels.archive)}</button>
-        </div>
+        </form>`
+            : ''
+        }
+        ${actionButtons ? `<div class="tupper-card__actions">${actionButtons}</div>` : ''}
       </article>
     `;
   }
