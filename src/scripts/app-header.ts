@@ -1,4 +1,4 @@
-import { closeSession, getFirebaseServices } from '../lib/firebase/client';
+import { closeSession, getFirebaseAuthServices, getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { isAdminUser } from '../lib/firebase/auth';
 import { updateUserPreferences, watchUserProfile } from '../lib/menu/repository';
@@ -83,7 +83,7 @@ if (root && hasFirebaseConfig()) {
     });
   }
 
-  getFirebaseServices().then((services) => {
+  getFirebaseAuthServices().then((services) => {
     logoutButtons.forEach((logoutButton) => {
       logoutButton.addEventListener('click', () => closeSession());
     });

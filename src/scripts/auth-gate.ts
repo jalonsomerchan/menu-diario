@@ -1,5 +1,5 @@
 import { hasFirebaseConfig } from '../lib/firebase/config';
-import { getFirebaseServices, signInAsGuest, signInWithGoogle } from '../lib/firebase/client';
+import { getFirebaseAuthServices, signInAsGuest, signInWithGoogle } from '../lib/firebase/client';
 import { groupInviteStorageKey } from '../lib/menu/group-invite-link';
 
 const root = document.querySelector<HTMLElement>('[data-auth-gate]');
@@ -53,7 +53,7 @@ if (root) {
       if (button) button.disabled = true;
     });
   } else {
-    getFirebaseServices()
+    getFirebaseAuthServices()
       .then((services) => {
         services.authModule.onAuthStateChanged(services.auth, (user: unknown) => {
           if (user) {

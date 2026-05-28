@@ -16,7 +16,7 @@ La guía detallada de App Check vive en `docs/app-check.md`.
 
 ## Inicialización cliente
 
-`src/lib/firebase/client.ts` carga dinámicamente los módulos oficiales del Firebase Web SDK y llama a `initializeFirebaseAppCheck(app)` antes de exponer Auth y Firestore. Esto permite activar App Check por entorno sin añadir dependencias npm ni romper despliegues en GitHub Pages.
+`src/lib/firebase/client.ts` carga dinámicamente los módulos oficiales del Firebase Web SDK. La app separa un arranque rápido de Auth (`getFirebaseAuthServices()`) del arranque completo con Firestore (`getFirebaseServices()`): la home y el header pueden comprobar una sesión existente sin esperar a Firestore, mientras App Check se inicializa en paralelo y sigue completándose antes de exponer Firestore. Esto reduce la espera perceptible al reabrir la webapp sin renunciar a App Check en las rutas de datos.
 
 Archivos principales:
 

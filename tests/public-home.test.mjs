@@ -38,6 +38,7 @@ describe('public home page', () => {
     assert.match(authGate, /showGuest/);
     assert.match(authScript, /setSessionLoading\(true\)/);
     assert.match(authScript, /revealLogin\(\)/);
+    assert.match(authScript, /getFirebaseAuthServices\(\)/);
     assert.doesNotMatch(authGate, /<h2>\{t\('home.loginTitle'\)\}<\/h2>/);
   });
 });

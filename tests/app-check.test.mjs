@@ -24,12 +24,14 @@ describe('Firebase App Check configuration', () => {
     assert.doesNotMatch(envExample, /PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN=\S+/);
   });
 
-  it('initializes App Check before Firebase services are exposed', () => {
+  it('keeps the fast auth bootstrap and still gates Firestore behind App Check', () => {
     const firebaseClient = readText('src/lib/firebase/client.ts');
     const appCheck = readText('src/lib/firebase/app-check.ts');
 
     assert.match(firebaseClient, /initializeFirebaseAppCheck/);
-    assert.match(firebaseClient, /await initializeFirebaseAppCheck\(app\)/);
+    assert.match(firebaseClient, /getFirebaseAuthServices/);
+    assert.match(firebaseClient, /void ensureFirebaseAppCheck\(\)/);
+    assert.match(firebaseClient, /await ensureFirebaseAppCheck\(\)/);
     assert.match(appCheck, /firebase-app-check\.js/);
     assert.match(appCheck, /ReCaptchaEnterpriseProvider/);
     assert.match(appCheck, /isTokenAutoRefreshEnabled/);
