@@ -113,10 +113,17 @@
 }
 
 * { box-sizing: border-box; }
-html { min-height: 100%; scroll-behavior: smooth; }
+html {
+  min-height: 100%;
+  overflow-x: clip;
+  scroll-behavior: smooth;
+}
 body {
+  width: 100%;
+  max-width: 100%;
   min-height: 100%;
   margin: 0;
+  overflow-x: clip;
   background:
     radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary), transparent 89%), transparent 26rem),
     radial-gradient(circle at top right, color-mix(in srgb, var(--color-accent), transparent 92%), transparent 22rem),
@@ -367,22 +374,30 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 .dashboard-app__content { padding: 0; }
 .dashboard-app__loading {
-  position: relative;
-  grid-auto-flow: column;
-  justify-content: start;
-  align-items: center;
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  grid-auto-flow: row;
+  place-content: center;
+  place-items: center;
   gap: 0.9rem;
-  min-height: 5rem;
-  padding: var(--surface-padding-lg);
+  min-height: 100dvh;
+  border: 0;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--color-primary), transparent 86%), transparent 20rem),
+    color-mix(in srgb, var(--color-bg), var(--color-surface) 38%);
+  padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem max(1.25rem, env(safe-area-inset-bottom));
   color: var(--color-muted);
   font-weight: 800;
+  text-align: center;
 }
 
 .dashboard-app__loading::before {
   content: '';
-  width: 1.15rem;
-  height: 1.15rem;
-  border: 2.5px solid color-mix(in srgb, var(--color-primary), transparent 75%);
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 3px solid color-mix(in srgb, var(--color-primary), transparent 75%);
   border-top-color: var(--color-primary);
   border-radius: 999px;
   animation: app-spinner 0.9s linear infinite;
@@ -393,6 +408,14 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 @keyframes app-spinner {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 767.98px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
   }
 }
 

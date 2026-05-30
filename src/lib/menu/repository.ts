@@ -103,6 +103,19 @@ function getPatchMealItems(previousDay: DailyMenu, path: string) {
   return [];
 }
 
+function recordAddedDishUsage(
+  services: FirebaseServices,
+  userId: string,
+  additions: string[],
+  groupId?: string
+) {
+  if (!additions.length) return;
+
+  void Promise.all(additions.map((item) => recordMenuDishUsage(services, userId, item, groupId))).catch((error) => {
+    console.error('Unable to record menu dish usage', error);
+  });
+}
+
 async function getMenuAccessContext(services: FirebaseServices, userId: string): Promise<MenuAccessContext> {
   const { db, firestoreModule } = services;
   const userSnapshot = await firestoreModule.getDoc(firestoreModule.doc(db, 'users', userId));
@@ -473,9 +486,7 @@ export async function updateMenuPatch(services: FirebaseServices, menuId: string
   const previousDay = normalizeDay(snapshot?.exists?.() ? snapshot.data()?.days?.[patch.dayKey] : undefined);
   const addedItems = shouldRecordItems ? getAddedDishNamesFromItems(getPatchMealItems(previousDay, path), patch.value) : [];
   await firestoreModule.updateDoc(menuRef, { [`days.${patch.dayKey}.${path}`]: patch.value, updatedAt: firestoreModule.serverTimestamp(), updatedBy: userId });
-  if (addedItems.length) {
-    await Promise.all(addedItems.map((item) => recordMenuDishUsage(services, userId, item, groupId)));
-  }
+  recordAddedDishUsage(services, userId, addedItems, groupId);
 }
 
 export async function updateMenuDay(
@@ -503,9 +514,7 @@ export async function updateMenuDay(
   });
 
   const additions = getAddedDishNames(previousDay, normalizedNextDay);
-  if (additions.length) {
-    await Promise.all(additions.map((item) => recordMenuDishUsage(services, userId, item, groupId)));
-  }
+  recordAddedDishUsage(services, userId, additions, groupId);
 
   return true;
 }

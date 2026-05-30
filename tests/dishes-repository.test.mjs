@@ -359,4 +359,37 @@ describe('dishes repository', () => {
 
     assert.deepEqual(captured.map((dish) => dish.name), ['Lentejas', 'Arroz']);
   });
+
+  it('deduplicates visible global and own dishes by normalized name', async () => {
+    const { services } = createFirestoreHarness({
+      dishes: {
+        global_tortilla: {
+          name: 'Tortilla',
+          normalizedName: 'tortilla',
+          scope: 'global',
+          isGlobal: true,
+          editable: false,
+          createdBy: 'admin',
+          timesUsed: 8,
+        },
+        'group_group-1_tortilla': {
+          name: 'Tortilla',
+          normalizedName: 'tortilla',
+          scope: 'group',
+          groupId: 'group-1',
+          source: 'duplicated-global',
+          editable: true,
+          createdBy: 'user-1',
+          timesUsed: 2,
+        },
+      },
+    });
+
+    let captured = [];
+    watchUserDishes(services, 'user-1', (dishes) => {
+      captured = dishes;
+    }, () => {}, false, 'group-1');
+
+    assert.deepEqual(captured.map((dish) => dish.id), ['group_group-1_tortilla']);
+  });
 });

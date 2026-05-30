@@ -1,6 +1,7 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
+import { normalizeDishName } from '../lib/dishes/helpers.mjs';
 import { formatAppError } from '../lib/errors';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates, toIsoDate } from '../lib/menu/dates';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
@@ -298,6 +299,48 @@ if (root) {
     );
   }
 
+  function addOptimisticDishesFromDay(day: DailyMenu) {
+    const knownNames = new Set(dishes.map((dish) => dish.normalizedName).filter(Boolean));
+    const additions = getEnabledMeals()
+      .flatMap((meal) => day.meals[meal]?.items ?? [])
+      .map((name) => name.trim().replace(/\s+/g, ' '))
+      .filter(Boolean)
+      .filter((name) => {
+        const normalizedName = normalizeDishName(name);
+        if (!normalizedName || knownNames.has(normalizedName)) return false;
+        knownNames.add(normalizedName);
+        return true;
+      });
+
+    if (!additions.length) return;
+
+    const createdAt = new Date();
+    dishes = [
+      ...additions.map((name) => ({
+        id: `optimistic-${normalizeDishName(name)}`,
+        name,
+        normalizedName: normalizeDishName(name),
+        scope: currentProfile?.groupId ? 'group' : 'user',
+        source: 'menu',
+        groupId: currentProfile?.groupId,
+        createdBy: currentUser?.uid,
+        members: currentUser ? [currentUser.uid] : [],
+        isGlobal: false,
+        editable: true,
+        timesUsed: 1,
+        tags: [],
+        quickTags: [],
+        favorite: false,
+        blocked: false,
+        archived: false,
+        createdAt,
+        lastUsedAt: createdAt,
+        updatedAt: createdAt,
+      }) satisfies Dish),
+      ...dishes,
+    ];
+  }
+
   async function saveDay(dayKey: string, nextDay: DailyMenu, card?: HTMLElement) {
     if (shouldBlockOfflineWrites(isOnline)) {
       throw new Error(labels.offlineReadOnly);
@@ -318,6 +361,7 @@ if (root) {
     const changed = await updateMenuDay(services, menuId, currentUser.uid, dayKey, nextDay, currentProfile?.groupId);
     card?.setAttribute('data-day-state', nextState);
     updateLocalDay(dayKey, nextDay);
+    addOptimisticDishesFromDay(nextDay);
     saveFeedback.saved(changed ? labels.saveSaved : labels.saveSaved);
   }
 

@@ -185,7 +185,11 @@ function mergeDishLists(lists: Dish[][], includeArchived: boolean) {
   const merged = new Map<string, Dish>();
   lists.flat().forEach((dish) => {
     if (!includeArchived && dish.archived) return;
-    merged.set(dish.id, dish);
+    const key = dish.normalizedName || dish.id;
+    const current = merged.get(key);
+    if (!current || (!dish.isGlobal && current.isGlobal)) {
+      merged.set(key, dish);
+    }
   });
   return sortDishes([...merged.values()], 'most-used') as Dish[];
 }

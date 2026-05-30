@@ -4,11 +4,15 @@
   bottom: max(0.55rem, env(safe-area-inset-bottom));
   left: 0.75rem;
   z-index: 35;
+  max-width: calc(100vw - 1.5rem);
+  contain: layout paint;
   border: 1px solid color-mix(in srgb, var(--panel-border), var(--color-primary) 8%);
   border-radius: calc(var(--radius-2xl) + 0.35rem);
   background: color-mix(in srgb, var(--color-surface), transparent 8%);
   box-shadow: var(--shadow-md);
   backdrop-filter: blur(18px);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
 }
 
 .mobile-bottom-nav__list {
@@ -25,6 +29,7 @@
   min-height: 3.35rem;
   place-items: center;
   gap: 0.2rem;
+  min-width: 0;
   border-radius: var(--radius-xl);
   color: var(--color-muted);
   font-size: 0.68rem;
@@ -32,6 +37,7 @@
   line-height: 1.05;
   text-align: center;
   text-decoration: none;
+  touch-action: manipulation;
   transition:
     background var(--transition-base),
     color var(--transition-base),
@@ -41,6 +47,14 @@
 .mobile-bottom-nav__link svg {
   width: 1.35rem;
   height: 1.35rem;
+  flex: 0 0 auto;
+}
+
+.mobile-bottom-nav__link span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mobile-bottom-nav__link:hover,
