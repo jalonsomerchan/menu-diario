@@ -10,6 +10,7 @@
   background: transparent !important;
   padding: 0 !important;
   color: var(--color-text);
+  margin: auto !important;
 }
 
 .app-dialog--confirm {
@@ -45,7 +46,7 @@
   max-height: min(92dvh, 56rem) !important;
   overflow: hidden !important;
   border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 16%) !important;
-  border-radius: 0.42rem !important;
+  border-radius: var(--radius-md) !important;
   background: var(--color-surface) !important;
   box-shadow: 0 1.25rem 4rem rgb(15 23 42 / 0.18) !important;
   padding: 0 !important;

@@ -6,7 +6,7 @@ function closeDetails(details: HTMLDetailsElement) {
 }
 
 function closeOtherDetails(current: HTMLDetailsElement) {
-  document.querySelectorAll<HTMLDetailsElement>('details[data-day-actions][open]').forEach((details) => {
+  document.querySelectorAll<HTMLDetailsElement>('details[data-day-actions][open], details[data-details-menu][open]').forEach((details) => {
     if (details !== current) closeDetails(details);
   });
 }
@@ -19,21 +19,21 @@ function installDocumentListeners() {
     const target = event.target;
     if (!(target instanceof Node)) return;
 
-    document.querySelectorAll<HTMLDetailsElement>('details[data-day-actions][open]').forEach((details) => {
+    document.querySelectorAll<HTMLDetailsElement>('details[data-day-actions][open], details[data-details-menu][open]').forEach((details) => {
       if (!details.contains(target)) closeDetails(details);
     });
   });
 
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
-    document.querySelectorAll<HTMLDetailsElement>('details[data-day-actions][open]').forEach(closeDetails);
+    document.querySelectorAll<HTMLDetailsElement>('details[data-day-actions][open], details[data-details-menu][open]').forEach(closeDetails);
   });
 
   document.addEventListener(
     'toggle',
     (event) => {
       const target = event.target;
-      if (!(target instanceof HTMLDetailsElement) || !target.matches('details[data-day-actions]') || !target.open) return;
+      if (!(target instanceof HTMLDetailsElement) || !target.matches('details[data-day-actions], details[data-details-menu]') || !target.open) return;
       closeOtherDetails(target);
     },
     true
@@ -49,8 +49,8 @@ export function installDetailsMenuAutoClose(root: ParentNode) {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
 
-    const button = target.closest<HTMLButtonElement>('details[data-day-actions] button');
-    const details = button?.closest<HTMLDetailsElement>('details[data-day-actions]');
+    const button = target.closest<HTMLButtonElement>('details[data-day-actions] button, details[data-details-menu] button');
+    const details = button?.closest<HTMLDetailsElement>('details[data-day-actions], details[data-details-menu]');
     if (details) closeDetails(details);
   });
 }

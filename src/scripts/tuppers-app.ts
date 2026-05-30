@@ -2,6 +2,7 @@ import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
 import { createConfirmDialog } from '../lib/ui/confirm-dialog';
+import { installDetailsMenuAutoClose } from '../lib/ui/details-menu';
 import { toIsoDate } from '../lib/menu/dates';
 import { watchUserProfile } from '../lib/menu/repository';
 import type { Dish, FirebaseUser, MealSlot, UserProfile } from '../lib/menu/types';
@@ -44,6 +45,7 @@ if (root) {
   const expiryAlert = root.querySelector<HTMLElement>('[data-expiry-alert]');
   const confirmDialog = root.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
   const closeCreateButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-close-create]')];
+  const dateFormatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' });
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -59,6 +61,7 @@ if (root) {
 
   const today = toIsoDate(new Date());
   resetCreateForm();
+  installDetailsMenuAutoClose(root);
 
   function escapeHtml(value = '') {
     return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -135,7 +138,7 @@ if (root) {
   }
 
   function formatDate(isoDate: string) {
-    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(`${isoDate}T00:00:00`));
+    return dateFormatter.format(new Date(`${isoDate}T00:00:00`));
   }
 
   function getNextTargets() {
@@ -176,10 +179,6 @@ if (root) {
     const state = getTupperExpiryState(tupper);
     const stateLabel = labels[state] ?? state;
     const canAssign = tupper.status === 'active' || tupper.status === 'assigned';
-    const storageActionLabel = tupper.location === 'freezer' ? labels.defrost : labels.freeze;
-    const storageAction = canAssign
-      ? `<button type="button" class="tupper-card__storage-action" data-action="${tupper.location === 'freezer' ? 'defrost' : 'freeze'}">${escapeHtml(storageActionLabel)}</button>`
-      : '';
     const locationLabel =
       tupper.location === 'freezer'
         ? labels.locationFreezer
@@ -193,26 +192,26 @@ if (root) {
         return `<option value="${value}" ${isSelected ? 'selected' : ''}>${escapeHtml(target.label)}</option>`;
       })
       .join('');
-    const mainActions = canAssign
-      ? `<div class="tupper-card__actions tupper-card__actions--main">
-          <button type="button" data-action="consume">${escapeHtml(labels.consume)}</button>
-          <button type="button" data-action="discard">${escapeHtml(labels.discard)}</button>
-        </div>`
-      : '';
-    const moreActionButtons = [
+    const menuActionButtons = [
+      `<button type="button" data-action="edit">${escapeHtml(labels.edit)}</button>`,
+      canAssign ? `<button type="button" data-action="consume">${escapeHtml(labels.consume)}</button>` : '',
+      canAssign
+        ? `<button type="button" data-action="${tupper.location === 'freezer' ? 'defrost' : 'freeze'}">${escapeHtml(
+            tupper.location === 'freezer' ? labels.defrost : labels.freeze
+          )}</button>`
+        : '',
       tupper.status === 'assigned'
         ? `<button type="button" data-action="unassign">${escapeHtml(labels.unassign)}</button>`
         : '',
+      canAssign ? `<button type="button" data-action="discard">${escapeHtml(labels.discard)}</button>` : '',
       tupper.status !== 'archived' ? `<button type="button" data-action="archive">${escapeHtml(labels.archive)}</button>` : '',
     ]
       .filter(Boolean)
       .join('');
-    const moreActions = moreActionButtons
-      ? `<details class="tupper-card__more">
-          <summary>${escapeHtml(labels.moreActions)}</summary>
-          <div class="tupper-card__actions tupper-card__actions--secondary">${moreActionButtons}</div>
-        </details>`
-      : '';
+    const actionsMenu = `<details class="tupper-card__menu" data-details-menu>
+      <summary aria-label="${escapeHtml(labels.moreActions)}"><span aria-hidden="true">&#8943;</span></summary>
+      <div class="tupper-card__menu-list">${menuActionButtons}</div>
+    </details>`;
 
     return `
       <article class="tupper-card tupper-card--${escapeHtml(state)}" data-tupper-id="${escapeHtml(tupper.id)}">
@@ -222,7 +221,7 @@ if (root) {
               <p class="menu-app__eyebrow">${escapeHtml(stateLabel)}</p>
               <span class="tupper-card__location">${escapeHtml(locationLabel)}</span>
             </div>
-            <button type="button" class="tupper-card__edit" data-action="edit">${escapeHtml(labels.edit)}</button>
+            ${actionsMenu}
           </div>
           <div class="tupper-card__title">
             <h3>${escapeHtml(tupper.name)}</h3>
@@ -252,9 +251,6 @@ if (root) {
         </form>`
             : ''
         }
-        ${mainActions}
-        ${storageAction}
-        ${moreActions}
       </article>
     `;
   }

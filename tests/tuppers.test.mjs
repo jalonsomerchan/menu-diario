@@ -138,7 +138,9 @@ describe('Tuppers domain helpers', () => {
     assert.match(script, /data-action=\"edit\"/);
     assert.match(script, /data-action="unassign"/);
     assert.match(script, /tupper-card__topline/);
-    assert.match(script, /tupper-card__edit/);
+    assert.match(script, /installDetailsMenuAutoClose/);
+    assert.match(script, /data-details-menu/);
+    assert.match(script, /tupper-card__menu/);
     assert.match(script, /tupper-card__title/);
     assert.match(script, /tupper-card__notes/);
     assert.match(script, /createConfirmDialog/);
@@ -158,7 +160,8 @@ describe('Tuppers domain helpers', () => {
 
     assert.match(docs, /colección `tuppers`/);
     assert.match(docs, /No sobrescribe platos existentes/i);
-    assert.match(docs, /Cada tarjeta permite editar el tupper/i);
+    assert.match(docs, /menú compacto/i);
+    assert.match(docs, /se puede editar el tupper/i);
     assert.match(docs, /se actualiza para mantener la planificación alineada/i);
     assert.match(docs, /quitar una asignación/i);
     assert.match(docs, /recomendador inteligente/i);

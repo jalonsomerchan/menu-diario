@@ -65,7 +65,7 @@ La UI mobile first permite filtrar por:
 
 ## Edición
 
-Cada tarjeta permite editar el tupper sin crear uno nuevo. El formulario reutiliza el modal de alta y permite cambiar:
+Cada tarjeta agrupa las acciones secundarias en un menú compacto para evitar saturar la vista móvil. Desde ese menú se puede editar el tupper sin crear uno nuevo. El formulario reutiliza el modal de alta y permite cambiar:
 
 - Nombre.
 - Plato asociado.
