@@ -169,6 +169,38 @@ export async function createTupper(
   });
 }
 
+export async function updateTupper(
+  services: FirebaseServices,
+  user: FirebaseUser,
+  tupper: TupperItem,
+  data: TupperFormData
+) {
+  const cleanName = data.name.trim();
+  if (!cleanName || !data.preparedAt || !data.expiresAt) {
+    throw new Error('invalid-tupper');
+  }
+
+  const { db, firestoreModule } = services;
+  const normalizedName = normalizeName(cleanName);
+
+  await firestoreModule.updateDoc(firestoreModule.doc(db, tuppersCollection, tupper.id), {
+    name: cleanName,
+    normalizedName,
+    dishId: data.dishId || '',
+    preparedAt: data.preparedAt,
+    expiresAt: data.expiresAt,
+    portions: data.portions ?? null,
+    location: data.location,
+    notes: data.notes.trim(),
+    updatedAt: firestoreModule.serverTimestamp(),
+  });
+
+  if (cleanName !== tupper.name) {
+    await syncAssignedTupperName(services, tupper, cleanName, user.uid);
+    await recordMenuDishUsage(services, user.uid, cleanName);
+  }
+}
+
 export async function updateTupperState(
   services: FirebaseServices,
   tupper: TupperItem,
@@ -228,7 +260,7 @@ export async function assignTupperToMeal(
     value: result.nextItems,
   });
 
-      const { db, firestoreModule } = services;
+  const { db, firestoreModule } = services;
   await firestoreModule.updateDoc(firestoreModule.doc(db, tuppersCollection, tupper.id), {
     status: 'assigned',
     assignedMenuId: menuId,
@@ -287,6 +319,39 @@ async function removeTupperAssignmentFromMenu(
     const nextItems = removeTupperFromMealItems(meal.items, tupper);
 
     if (nextItems.length === meal.items.length) {
+      return false;
+    }
+
+    await updateMenuPatch(services, tupper.assignedMenuId, userId, {
+      dayKey: tupper.assignedDay,
+      path: `meals.${tupper.assignedMeal}.items`,
+      value: nextItems,
+    });
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function syncAssignedTupperName(
+  services: FirebaseServices,
+  tupper: TupperItem,
+  nextName: string,
+  userId = tupper.createdBy
+) {
+  if (!tupper.assignedMenuId || !tupper.assignedDay || !tupper.assignedMeal) {
+    return false;
+  }
+
+  try {
+    const menu = await readWeekMenu(services, tupper.assignedMenuId);
+    const meal = getMealForAssignment(menu, tupper.assignedDay, tupper.assignedMeal);
+    const previousLabel = `Tupper: ${tupper.name}`;
+    const nextLabel = `Tupper: ${nextName}`;
+    const nextItems = meal.items.map((item) => (item === previousLabel ? nextLabel : item));
+
+    if (nextItems.every((item, index) => item === meal.items[index])) {
       return false;
     }
 

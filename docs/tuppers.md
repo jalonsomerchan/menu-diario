@@ -63,6 +63,20 @@ La UI mobile first permite filtrar por:
 - Nevera.
 - Consumidos/asignados.
 
+## Edición
+
+Cada tarjeta permite editar el tupper sin crear uno nuevo. El formulario reutiliza el modal de alta y permite cambiar:
+
+- Nombre.
+- Plato asociado.
+- Fecha de preparación.
+- Fecha de caducidad.
+- Raciones.
+- Ubicación.
+- Notas.
+
+Si se cambia el nombre de un tupper que ya estaba asignado a una comida, la entrada `Tupper: nombre` de esa comida se actualiza para mantener la planificación alineada.
+
 ## Asignación al menú
 
 Al asignar un tupper se busca o crea el menú de la semana correspondiente y se añade una entrada con el formato:

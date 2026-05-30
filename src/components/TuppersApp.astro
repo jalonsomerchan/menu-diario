@@ -20,6 +20,9 @@ const labels = {
   openCreate: tt('openCreate'),
   createTitle: tt('createTitle'),
   createDescription: tt('createDescription'),
+  edit: tt('edit'),
+  editTitle: tt('editTitle'),
+  editDescription: tt('editDescription'),
   name: tt('name'),
   namePlaceholder: tt('namePlaceholder'),
   dish: tt('dish'),
@@ -34,6 +37,8 @@ const labels = {
   notes: tt('notes'),
   create: tt('create'),
   created: tt('created'),
+  update: tt('update'),
+  updated: tt('updated'),
   filters: tt('filters'),
   filterAll: tt('filterAll'),
   filterExpiring: tt('filterExpiring'),
@@ -131,8 +136,8 @@ const labels = {
       <header class="app-dialog__header">
         <div class="app-dialog__heading">
           <p class="menu-app__eyebrow">{labels.title}</p>
-          <h2 id="tuppers-create-title">{labels.createTitle}</h2>
-          <p id="tuppers-create-description">{labels.createDescription}</p>
+          <h2 id="tuppers-create-title" data-dialog-title>{labels.createTitle}</h2>
+          <p id="tuppers-create-description" data-dialog-description>{labels.createDescription}</p>
         </div>
         <button class="app-dialog__dismiss" type="button" data-close-create aria-label={labels.cancel}>
           <span aria-hidden="true">×</span>
@@ -178,7 +183,7 @@ const labels = {
       </div>
       <footer class="app-dialog__footer">
         <button class="button button--ghost" type="button" data-close-create>{labels.cancel}</button>
-        <button class="button button--primary" type="submit">{labels.create}</button>
+        <button class="button button--primary" type="submit" data-submit-label>{labels.create}</button>
       </footer>
     </form>
   </dialog>

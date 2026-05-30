@@ -12,6 +12,7 @@ import {
   createTupper,
   getDishOptions,
   removeTupperFromMeal,
+  updateTupper,
   updateTupperState,
   watchTuppers,
 } from '../lib/tuppers/repository';
@@ -28,6 +29,9 @@ if (root) {
   const createDialog = root.querySelector<HTMLDialogElement>('[data-create-dialog]');
   const openCreateButton = root.querySelector<HTMLButtonElement>('[data-open-create]');
   const form = root.querySelector<HTMLFormElement>('[data-tupper-form]');
+  const dialogTitle = root.querySelector<HTMLElement>('[data-dialog-title]');
+  const dialogDescription = root.querySelector<HTMLElement>('[data-dialog-description]');
+  const submitLabel = root.querySelector<HTMLButtonElement>('[data-submit-label]');
   const dishSelect = root.querySelector<HTMLSelectElement>('[data-dish-select]');
   const nameInput = root.querySelector<HTMLInputElement>('[data-name]');
   const preparedInput = root.querySelector<HTMLInputElement>('[data-prepared]');
@@ -50,6 +54,7 @@ if (root) {
   let unsubscribeDishes: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let firebaseServices: Awaited<ReturnType<typeof getFirebaseServices>> | undefined;
+  let editingTupper: TupperItem | null = null;
   const assignmentConfirmation = confirmDialog ? createConfirmDialog(confirmDialog) : null;
 
   const today = toIsoDate(new Date());
@@ -67,9 +72,29 @@ if (root) {
   }
 
   function resetCreateForm() {
+    editingTupper = null;
     form?.reset();
+    if (dialogTitle) dialogTitle.textContent = labels.createTitle;
+    if (dialogDescription) dialogDescription.textContent = labels.createDescription;
+    if (submitLabel) submitLabel.textContent = labels.create;
     if (preparedInput) preparedInput.value = today;
     if (expiresInput) expiresInput.value = today;
+  }
+
+  function openEditForm(tupper: TupperItem) {
+    editingTupper = tupper;
+    form?.reset();
+    if (dialogTitle) dialogTitle.textContent = labels.editTitle;
+    if (dialogDescription) dialogDescription.textContent = labels.editDescription;
+    if (submitLabel) submitLabel.textContent = labels.update;
+    if (dishSelect) dishSelect.value = tupper.dishId ?? '';
+    if (nameInput) nameInput.value = tupper.name;
+    if (preparedInput) preparedInput.value = tupper.preparedAt;
+    if (expiresInput) expiresInput.value = tupper.expiresAt;
+    if (portionsInput) portionsInput.value = tupper.portions ? String(tupper.portions) : '';
+    if (locationInput) locationInput.value = tupper.location || 'fridge';
+    if (notesInput) notesInput.value = tupper.notes;
+    createDialog?.showModal();
   }
 
   function setReady() {
@@ -190,11 +215,14 @@ if (root) {
       : '';
 
     return `
-      <article class="tupper-card" data-tupper-id="${escapeHtml(tupper.id)}">
+      <article class="tupper-card tupper-card--${escapeHtml(state)}" data-tupper-id="${escapeHtml(tupper.id)}">
         <header>
-          <div class="tupper-card__meta">
-            <p class="menu-app__eyebrow">${escapeHtml(stateLabel)}</p>
-            <span class="tupper-card__location">${escapeHtml(locationLabel)}</span>
+          <div class="tupper-card__topline">
+            <div class="tupper-card__meta">
+              <p class="menu-app__eyebrow">${escapeHtml(stateLabel)}</p>
+              <span class="tupper-card__location">${escapeHtml(locationLabel)}</span>
+            </div>
+            <button type="button" class="tupper-card__edit" data-action="edit">${escapeHtml(labels.edit)}</button>
           </div>
           <div class="tupper-card__title">
             <h3>${escapeHtml(tupper.name)}</h3>
@@ -232,6 +260,7 @@ if (root) {
   }
 
   function actionMessage(action: string) {
+    if (action === 'edit') return labels.updated;
     if (action === 'unassign') return labels.unassigned;
     if (action === 'consume') return labels.consumed;
     if (action === 'discard') return labels.discarded;
@@ -360,7 +389,7 @@ if (root) {
     if (!currentUser || !firebaseServices) return;
 
     try {
-      await createTupper(firebaseServices, currentUser, currentProfile, {
+      const formData = {
         name: nameInput?.value ?? '',
         dishId: dishSelect?.value || undefined,
         preparedAt: preparedInput?.value ?? '',
@@ -368,10 +397,17 @@ if (root) {
         portions: portionsInput?.value ? Number(portionsInput.value) : undefined,
         location: (locationInput?.value ?? 'fridge') as TupperLocation,
         notes: notesInput?.value ?? '',
-      });
+      };
+
+      if (editingTupper) {
+        await updateTupper(firebaseServices, currentUser, editingTupper, formData);
+        showStatus(labels.updated);
+      } else {
+        await createTupper(firebaseServices, currentUser, currentProfile, formData);
+        showStatus(labels.created);
+      }
       resetCreateForm();
       createDialog?.close();
-      showStatus(labels.created);
     } catch (error) {
       showStatus(formatError(error), true);
     }
@@ -383,9 +419,14 @@ if (root) {
     const tupper = getTupperFromElement(button);
     if (!tupper) return;
 
-    const action = button.dataset.action as 'consume' | 'discard' | 'archive' | 'freeze' | 'defrost' | 'unassign';
+    const action = button.dataset.action as 'edit' | 'consume' | 'discard' | 'archive' | 'freeze' | 'defrost' | 'unassign';
 
     try {
+      if (action === 'edit') {
+        openEditForm(tupper);
+        return;
+      }
+
       if (action === 'unassign') {
         const confirmed = await openAssignmentConfirm('unassign', button);
         if (!confirmed) return;
