@@ -1,5 +1,6 @@
 import { formatParticipantSummary } from './participants';
-import type { DailyMenu, MealSlot, MenuParticipant, NoMealReason } from './types';
+import { getSelectedDailyOptions } from './daily-options';
+import type { DailyMenu, DailyOption, MealSlot, MenuParticipant, NoMealReason } from './types';
 
 export type DayCardLabels = Record<string, string>;
 
@@ -102,4 +103,22 @@ export function renderDayCardMealsHtml(meals: PreparedDayMeal[]) {
       `;
     })
     .join('');
+}
+
+export function renderDayOptionBadgesHtml(day: DailyMenu, dailyOptions: DailyOption[], label = 'Day options') {
+  const selected = getSelectedDailyOptions(day, dailyOptions);
+  if (!selected.length) return '';
+
+  return `
+    <div class="day-option-badges" aria-label="${escapeHtml(label)}">
+      ${selected
+        .map((option) => `
+          <span class="day-option-badge day-option-badge--${escapeHtml(option.color)}">
+            <span aria-hidden="true">${escapeHtml(option.icon)}</span>
+            ${escapeHtml(option.name)}
+          </span>
+        `)
+        .join('')}
+    </div>
+  `;
 }

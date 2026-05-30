@@ -37,6 +37,35 @@ const labels = {
   groupDescription: t('settings.groupDescription'),
   groupOptionsTitle: t('settings.groupOptionsTitle'),
   groupOptionsDescription: t('settings.groupOptionsDescription'),
+  dailyOptionsTitle: t('settings.dailyOptionsTitle'),
+  dailyOptionsDescription: t('settings.dailyOptionsDescription'),
+  dailyOptionName: t('settings.dailyOptionName'),
+  dailyOptionDescription: t('settings.dailyOptionDescription'),
+  dailyOptionColor: t('settings.dailyOptionColor'),
+  dailyOptionIcon: t('settings.dailyOptionIcon'),
+  dailyOptionActive: t('settings.dailyOptionActive'),
+  dailyOptionInactive: t('settings.dailyOptionInactive'),
+  dailyOptionOrder: t('settings.dailyOptionOrder'),
+  dailyOptionSave: t('settings.dailyOptionSave'),
+  dailyOptionNew: t('settings.dailyOptionNew'),
+  dailyOptionEdit: t('settings.dailyOptionEdit'),
+  dailyOptionDelete: t('settings.dailyOptionDelete'),
+  dailyOptionEmpty: t('settings.dailyOptionEmpty'),
+  dailyOptionSaved: t('settings.dailyOptionSaved'),
+  dailyOptionDeleted: t('settings.dailyOptionDeleted'),
+  dailyOptionInvalid: t('settings.dailyOptionInvalid'),
+  dailyOptionColorBlue: t('settings.dailyOptionColorBlue'),
+  dailyOptionColorGreen: t('settings.dailyOptionColorGreen'),
+  dailyOptionColorOrange: t('settings.dailyOptionColorOrange'),
+  dailyOptionColorRose: t('settings.dailyOptionColorRose'),
+  dailyOptionColorViolet: t('settings.dailyOptionColorViolet'),
+  dailyOptionColorSlate: t('settings.dailyOptionColorSlate'),
+  dailyOptionIconClock: t('settings.dailyOptionIconClock'),
+  dailyOptionIconUtensils: t('settings.dailyOptionIconUtensils'),
+  dailyOptionIconKids: t('settings.dailyOptionIconKids'),
+  dailyOptionIconTraining: t('settings.dailyOptionIconTraining'),
+  dailyOptionIconNoCook: t('settings.dailyOptionIconNoCook'),
+  dailyOptionIconNote: t('settings.dailyOptionIconNote'),
   inviteTitle: t('settings.inviteTitle'),
   inviteDescription: t('settings.inviteDescription'),
   inviteLinkLabel: t('settings.inviteLinkLabel'),
@@ -141,6 +170,60 @@ const labels = {
         </article>
 
         <article class="settings-card app-panel" data-group-admin-section>
+          <h3>{labels.dailyOptionsTitle}</h3>
+          <p>{labels.dailyOptionsDescription}</p>
+          <p class="settings-permission-note" data-group-permission-note hidden>{labels.ownerOnly}</p>
+          <form class="settings-daily-option-form" data-daily-option-form data-group-admin-control>
+            <input type="hidden" data-daily-option-id />
+            <label>
+              <span>{labels.dailyOptionName}</span>
+              <input type="text" maxlength="60" required data-daily-option-name />
+            </label>
+            <label>
+              <span>{labels.dailyOptionDescription}</span>
+              <input type="text" maxlength="180" data-daily-option-description />
+            </label>
+            <div class="settings-daily-option-grid">
+              <label>
+                <span>{labels.dailyOptionColor}</span>
+                <select data-daily-option-color>
+                  <option value="blue">{labels.dailyOptionColorBlue}</option>
+                  <option value="green">{labels.dailyOptionColorGreen}</option>
+                  <option value="orange">{labels.dailyOptionColorOrange}</option>
+                  <option value="rose">{labels.dailyOptionColorRose}</option>
+                  <option value="violet">{labels.dailyOptionColorViolet}</option>
+                  <option value="slate">{labels.dailyOptionColorSlate}</option>
+                </select>
+              </label>
+              <label>
+                <span>{labels.dailyOptionIcon}</span>
+                <select data-daily-option-icon>
+                  <option value="clock">{labels.dailyOptionIconClock}</option>
+                  <option value="utensils">{labels.dailyOptionIconUtensils}</option>
+                  <option value="kids">{labels.dailyOptionIconKids}</option>
+                  <option value="training">{labels.dailyOptionIconTraining}</option>
+                  <option value="no-cook">{labels.dailyOptionIconNoCook}</option>
+                  <option value="note">{labels.dailyOptionIconNote}</option>
+                </select>
+              </label>
+              <label>
+                <span>{labels.dailyOptionOrder}</span>
+                <input type="number" min="0" step="1" data-daily-option-order />
+              </label>
+            </div>
+            <label class="settings-check-row">
+              <input type="checkbox" data-daily-option-active checked />
+              <span>{labels.dailyOptionActive}</span>
+            </label>
+            <div class="settings-daily-option-actions">
+              <button class="button button--primary" type="submit">{labels.dailyOptionSave}</button>
+              <button class="button button--ghost" type="button" data-daily-option-reset>{labels.dailyOptionNew}</button>
+            </div>
+          </form>
+          <div class="settings-daily-option-list" data-daily-options-list data-group-admin-control></div>
+        </article>
+
+        <article class="settings-card app-panel" data-group-admin-section>
           <h3>{labels.inviteTitle}</h3>
           <p>{labels.inviteDescription}</p>
           <p class="settings-permission-note" data-group-permission-note hidden>{labels.ownerOnly}</p>
@@ -203,6 +286,8 @@ const labels = {
   .settings-column,
   .settings-section-heading,
   .settings-form,
+  .settings-daily-option-form,
+  .settings-daily-option-list,
   .join-form,
   .group-lists,
   .settings-invite-link {
@@ -345,13 +430,16 @@ const labels = {
   }
 
   .join-form label,
-  .settings-form label {
+  .settings-form label,
+  .settings-daily-option-form label {
     display: grid;
     gap: 0.4rem;
   }
 
   .join-form input,
-  .settings-form textarea {
+  .settings-form textarea,
+  .settings-daily-option-form input,
+  .settings-daily-option-form select {
     width: 100%;
     min-height: var(--form-control-min-height);
     border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 5%);
@@ -360,6 +448,61 @@ const labels = {
     color: var(--color-text);
     padding: var(--form-control-padding-block) var(--form-control-padding-inline);
     line-height: 1.5;
+  }
+
+  .settings-daily-option-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .settings-check-row {
+    display: flex !important;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .settings-check-row input {
+    width: 1.25rem;
+    min-height: auto;
+    height: 1.25rem;
+    accent-color: var(--color-primary);
+  }
+
+  .settings-daily-option-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+
+  .settings-daily-option-item {
+    display: grid;
+    gap: 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 7%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
+    padding: 0.85rem;
+  }
+
+  .settings-daily-option-item__header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .settings-daily-option-item__header strong,
+  .settings-daily-option-item p {
+    overflow-wrap: anywhere;
+  }
+
+  .settings-daily-option-item p {
+    margin: 0;
+  }
+
+  .settings-daily-option-item__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
   .group-code:empty {
@@ -392,6 +535,10 @@ const labels = {
 
   @media (min-width: 620px) {
     .meal-preferences__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .settings-daily-option-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 

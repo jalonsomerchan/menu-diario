@@ -277,6 +277,7 @@ Menú compartido. Cada día permite desayuno, comida y cena, y cada bloque permi
       "skipped": false,
       "reason": "",
       "skipNote": "",
+      "optionIds": ["late-arrival"],
       "meals": {
         "breakfast": { "items": ["Café", "Tostada"], "skipped": false, "reason": "", "note": "" },
         "lunch": { "items": ["Lentejas", "Ensalada"], "skipped": false, "reason": "", "note": "" },
@@ -332,7 +333,42 @@ App Check y límites de cliente siguen siendo medidas de contención parcial: no
 
 Las vistas de próximos días pueden mezclar fechas de dos semanas distintas, pero cada fecha debe leerse y escribirse en el documento `weeklyMenus` de su `weekStart` real. Dashboard y planificación agrupan la UI por rango de días, no por un único documento mezclado.
 
-La forma normalizada del menú vive en `src/lib/menu/normalizers.ts`. La UI y el repositorio deben trabajar sobre `days[isoDate].meals.breakfast|lunch|dinner`, `skipped`, `reason`, `skipNote` y `notes`. Los campos legacy `lunch`, `lunchItems`, `noLunch`, `noLunchReason` y `noLunchDescription` se siguen aceptando solo como compatibilidad de lectura y se transforman al bloque `meals.lunch`.
+La forma normalizada del menú vive en `src/lib/menu/normalizers.ts`. La UI y el repositorio deben trabajar sobre `days[isoDate].meals.breakfast|lunch|dinner`, `skipped`, `reason`, `skipNote`, `notes` y `optionIds`. Los campos legacy `lunch`, `lunchItems`, `noLunch`, `noLunchReason` y `noLunchDescription` se siguen aceptando solo como compatibilidad de lectura y se transforman al bloque `meals.lunch`.
+
+`optionIds` guarda solo los identificadores de condiciones personalizadas marcadas para ese día. No se mezcla con platos, notas ni comidas saltadas.
+
+### `dailyOptions/{optionId}`
+
+Opciones configurables que aparecen como checkboxes en cada día. Sirven para condiciones como “llego tarde”, “comida fuera”, “día de niños”, “entreno” o “no cocinar”. En cuentas individuales se guardan dentro del grupo personal creado automáticamente; en grupos compartidos las gestionan los miembros autorizados del grupo.
+
+```json
+{
+  "name": "Llego tarde",
+  "description": "Priorizar comidas rápidas",
+  "active": true,
+  "color": "orange",
+  "icon": "clock",
+  "order": 10,
+  "scope": "group",
+  "ownerId": "group-id",
+  "groupId": "group-id",
+  "createdBy": "uid",
+  "members": ["uid"],
+  "createdAt": "serverTimestamp",
+  "updatedAt": "serverTimestamp"
+}
+```
+
+Campos clave:
+
+- `name`: texto visible corto.
+- `description`: ayuda opcional que también se puede enviar como contexto a la IA.
+- `active`: si es `false`, la opción deja de mostrarse en nuevos editores pero los históricos conservan `optionIds`.
+- `color` e `icon`: tokens pequeños usados por la UI, sin dependencias externas.
+- `order`: orden manual de aparición.
+- `scope`, `ownerId`, `groupId`, `members`: permisos y consultas. Para `scope: group`, `ownerId` coincide con `groupId`.
+
+La app escucha `dailyOptions` desde `src/lib/menu/daily-options-repository.ts` y pinta resúmenes mediante helpers de `src/lib/menu/daily-options.ts`. El planificador con IA recibe las opciones marcadas como condiciones de planificación: por ejemplo, llegada tarde prioriza platos rápidos y no cocinar prioriza preparaciones frías o de muy bajo esfuerzo.
 
 ### `dishes/{dishId}`
 

@@ -11,6 +11,7 @@ function stableDay(day: Partial<DailyMenu>) {
     reason: normalized.reason ?? '',
     skipNote: normalized.skipNote ?? '',
     notes: normalized.notes ?? '',
+    optionIds: [...(normalized.optionIds ?? [])].sort(),
     meals: Object.fromEntries(
       mealSlots.map((meal) => [
         meal,

@@ -2,13 +2,14 @@ import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
 import { formatAppError } from '../lib/errors';
+import { watchDailyOptions } from '../lib/menu/daily-options-repository';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { renderDaySummaryCard } from '../lib/menu/day-summary-card';
 import { serializeDay } from '../lib/menu/day-state';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
-import { prepareDayCardMeals, renderDayCardMealsHtml } from '../lib/menu/day-card-data';
+import { prepareDayCardMeals, renderDayCardMealsHtml, renderDayOptionBadgesHtml } from '../lib/menu/day-card-data';
 import { getMenuParticipants } from '../lib/menu/participants';
 import {
   clearMenuDay,
@@ -19,7 +20,7 @@ import {
   watchUserProfile,
   watchWeekMenusByIds,
 } from '../lib/menu/repository';
-import type { DailyMenu, Dish, FirebaseUser, MealSlot, MenuGroup, MenuParticipant, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, DailyOption, Dish, FirebaseUser, MealSlot, MenuGroup, MenuParticipant, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
@@ -42,8 +43,10 @@ if (root) {
   let currentMenuIdsByWeekStart: Record<string, string> = {};
   let visibleDayCount = 7;
   let dishes: Dish[] = [];
+  let dailyOptions: DailyOption[] = [];
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
+  let unsubscribeDailyOptions: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeGroup: (() => void) | undefined;
   const saveFeedback = createSaveFeedback(status, {
@@ -133,7 +136,10 @@ if (root) {
     configDays.innerHTML = getConfigDates()
       .map((isoDate) => {
         const day = normalizeDay(menu.days[isoDate]);
-        const summaries = renderDayCardMealsHtml(prepareDayCardMeals(labels, day, getEnabledMeals(), getParticipants()));
+        const summaries = [
+          renderDayOptionBadgesHtml(day, dailyOptions, labels.dailyOptionsSummary),
+          renderDayCardMealsHtml(prepareDayCardMeals(labels, day, getEnabledMeals(), getParticipants())),
+        ].join('');
 
         return renderDaySummaryCard({
           isoDate,
@@ -202,6 +208,7 @@ if (root) {
     labels,
     getDay: (dayKey) => normalizeDay(currentMenu?.days[dayKey]),
     getDishes: () => dishes,
+    getDailyOptions: () => dailyOptions,
     getEnabledMeals,
     getParticipants,
     getSavedDayState: (dayKey) => serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined)),
@@ -297,6 +304,7 @@ if (root) {
           currentUser = user;
           unsubscribeMenu?.();
           unsubscribeDishes?.();
+          unsubscribeDailyOptions?.();
           unsubscribeProfile?.();
           unsubscribeGroup?.();
 
@@ -326,6 +334,16 @@ if (root) {
                 (error) => showStatus(formatError(error), true),
                 false,
                 profile.groupId
+              );
+              unsubscribeDailyOptions?.();
+              unsubscribeDailyOptions = watchDailyOptions(
+                services,
+                { userId: user.uid, groupId: profile.groupId },
+                (nextOptions) => {
+                  dailyOptions = nextOptions;
+                  if (currentMenu) renderConfig(currentMenu);
+                },
+                (error) => showStatus(formatError(error), true)
               );
               unsubscribeGroup?.();
               currentGroup = null;

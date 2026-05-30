@@ -15,6 +15,7 @@ describe('menu normalizers', () => {
       reason: '',
       skipNote: '',
       notes: '',
+      optionIds: [],
     });
   });
 
@@ -42,6 +43,7 @@ describe('menu normalizers', () => {
         reason: '',
         skipNote: '',
         notes: '',
+        optionIds: [],
       }
     );
   });
@@ -65,6 +67,7 @@ describe('menu normalizers', () => {
         reason: '',
         skipNote: '',
         notes: '',
+        optionIds: [],
       }
     );
   });

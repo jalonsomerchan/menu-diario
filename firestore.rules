@@ -169,6 +169,28 @@ service cloud.firestore {
         );
     }
 
+    function isDailyOptionScope(data) {
+      return signedIn()
+        && (
+          (data.scope == 'user'
+            && data.ownerId == request.auth.uid
+            && data.groupId == null
+            && request.auth.uid in data.members)
+          || (data.scope == 'group'
+            && data.groupId is string
+            && data.ownerId == data.groupId
+            && isGroupMember(data.groupId))
+        );
+    }
+
+    function canAccessDailyOption(data) {
+      return signedIn()
+        && (
+          request.auth.uid in data.members
+          || (data.groupId is string && isGroupMember(data.groupId))
+        );
+    }
+
     function isValidTupperCreate(data) {
       return signedIn()
         && data.createdBy == request.auth.uid
@@ -212,6 +234,17 @@ service cloud.firestore {
           && ((keepsGroupDishScope() && isGroupDishData(resource.data) && isGroupDishData(request.resource.data))
             || isOwnPersonalDish(request.resource.data)));
       allow delete: if false;
+    }
+
+    match /dailyOptions/{optionId} {
+      allow read: if canAccessDailyOption(resource.data);
+      allow create: if isDailyOptionScope(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if canAccessDailyOption(resource.data)
+        && isDailyOptionScope(request.resource.data)
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.groupId == resource.data.groupId;
+      allow delete: if canAccessDailyOption(resource.data);
     }
 
     match /tuppers/{tupperId} {

@@ -2,9 +2,10 @@ import { watchUserDishes } from '../lib/dishes/repository';
 import { formatAppError } from '../lib/errors';
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
+import { watchDailyOptions } from '../lib/menu/daily-options-repository';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { renderDaySummaryCard } from '../lib/menu/day-summary-card';
-import { getDayCardMealLabel, getDayCardSkippedSummary, prepareHistoryDayCardMeal, renderDayCardMealsHtml } from '../lib/menu/day-card-data';
+import { getDayCardMealLabel, getDayCardSkippedSummary, prepareHistoryDayCardMeal, renderDayCardMealsHtml, renderDayOptionBadgesHtml } from '../lib/menu/day-card-data';
 import { serializeDay } from '../lib/menu/day-state';
 import { getMonday, getWeekStartForDate, normalizeDateRange, toIsoDate } from '../lib/menu/dates';
 import {
@@ -26,7 +27,7 @@ import {
   watchUserMenusByWeekRange,
   watchUserProfile,
 } from '../lib/menu/repository';
-import type { Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyOption, Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
 import { installDetailsMenuAutoClose } from '../lib/ui/details-menu';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
@@ -61,9 +62,11 @@ if (root) {
   let currentProfile: UserProfile | null = null;
   let menus: WeekMenu[] = [];
   let dishes: Dish[] = [];
+  let dailyOptions: DailyOption[] = [];
   let editMenuId = '';
   let unsubscribeMenus: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
+  let unsubscribeDailyOptions: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let activeRange = { start: '', end: '' };
   let visibleCount = pageSize;
@@ -273,6 +276,7 @@ if (root) {
 
   function renderRow(row: HistoryRow) {
     const summary = row.daySkipped || row.mealSkipped ? skippedReason(row) : row.items.length ? row.items.join(', ') : labels.todayEmpty;
+    const menuDay = normalizeDay(menus.find((menu) => menu.id === row.menuId)?.days[row.isoDate]);
 
     return renderDaySummaryCard({
       isoDate: row.isoDate,
@@ -282,7 +286,10 @@ if (root) {
       menuId: row.menuId,
       dayStatus: row.dayStatus,
       actionHtml: renderRowActions(row),
-      summariesHtml: renderDayCardMealsHtml([prepareHistoryDayCardMeal(labels, row.meal as MealSlot, summary)]),
+      summariesHtml: [
+        renderDayOptionBadgesHtml(menuDay, dailyOptions, labels.dailyOptionsSummary),
+        renderDayCardMealsHtml([prepareHistoryDayCardMeal(labels, row.meal as MealSlot, summary)]),
+      ].join(''),
       badgesHtml: renderBadges(row),
     });
   }
@@ -409,6 +416,7 @@ if (root) {
     labels,
     getDay: (dayKey) => normalizeDay(getEditingMenu()?.days[dayKey]),
     getDishes: () => dishes,
+    getDailyOptions: () => dailyOptions,
     getEnabledMeals,
     getSavedDayState: (dayKey) => serializeDay(getEditingMenu()?.days[dayKey] ?? normalizeDay(undefined)),
     getDayNumber,
@@ -483,6 +491,7 @@ if (root) {
           currentUser = user;
           unsubscribeMenus?.();
           unsubscribeDishes?.();
+          unsubscribeDailyOptions?.();
           unsubscribeProfile?.();
 
           if (!user) {
@@ -503,6 +512,16 @@ if (root) {
                 dishes = nextDishes;
                 renderHistory();
               }, (error) => showStatus(formatError(error), true), false, profile.groupId);
+              unsubscribeDailyOptions?.();
+              unsubscribeDailyOptions = watchDailyOptions(
+                services,
+                { userId: user.uid, groupId: profile.groupId },
+                (nextOptions) => {
+                  dailyOptions = nextOptions;
+                  renderHistory();
+                },
+                (error) => showStatus(formatError(error), true)
+              );
               renderHistory();
             },
             (error) => showStatus(formatError(error), true)

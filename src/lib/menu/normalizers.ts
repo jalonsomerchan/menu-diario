@@ -15,11 +15,17 @@ export function emptyDay(): DailyMenu {
     reason: '',
     skipNote: '',
     notes: '',
+    optionIds: [],
   };
 }
 
 function normalizeParticipantIds(value: unknown) {
   if (!Array.isArray(value)) return undefined;
+  return [...new Set(value.filter((id): id is string => typeof id === 'string' && id.trim()).map((id) => id.trim()))];
+}
+
+function normalizeOptionIds(value: unknown) {
+  if (!Array.isArray(value)) return [];
   return [...new Set(value.filter((id): id is string => typeof id === 'string' && id.trim()).map((id) => id.trim()))];
 }
 
@@ -68,5 +74,6 @@ export function normalizeDay(data: Partial<DailyMenu> = {}): DailyMenu {
     reason: data.reason ?? '',
     skipNote: data.skipNote ?? '',
     notes: data.notes ?? '',
+    optionIds: normalizeOptionIds(data.optionIds),
   };
 }

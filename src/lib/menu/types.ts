@@ -22,6 +22,7 @@ export type NoMealReason = 'away' | 'eating-out' | 'not-hungry' | 'other';
 export type ThemePreference = 'system' | 'light' | 'dark';
 export type DishScope = 'global' | 'group' | 'user';
 export type DishSource = 'admin' | 'group' | 'legacy' | 'duplicated-global' | 'manual' | 'menu';
+export type DailyOptionScope = 'group' | 'user';
 
 export type MealEntry = {
   items: string[];
@@ -42,7 +43,25 @@ export type DailyMenu = {
   reason?: NoMealReason | '';
   skipNote?: string;
   notes?: string;
+  optionIds?: string[];
   meals: Record<MealSlot, MealEntry>;
+};
+
+export type DailyOption = {
+  id: string;
+  name: string;
+  description: string;
+  active: boolean;
+  color: string;
+  icon: string;
+  order: number;
+  scope: DailyOptionScope;
+  ownerId: string;
+  groupId?: string;
+  createdBy: string;
+  members: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export type WeekMenu = {

@@ -3,6 +3,7 @@ import { hasFirebaseConfig } from '../lib/firebase/config';
 import { watchUserDishes } from '../lib/dishes/repository';
 import { normalizeDishName } from '../lib/dishes/helpers.mjs';
 import { formatAppError } from '../lib/errors';
+import { watchDailyOptions } from '../lib/menu/daily-options-repository';
 import { getUpcomingDates, getWeekStartForDate, getWeekStartsForDates, toIsoDate } from '../lib/menu/dates';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { renderDaySummaryCard } from '../lib/menu/day-summary-card';
@@ -10,7 +11,7 @@ import { serializeDay } from '../lib/menu/day-state';
 import { renderPlateRow } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
-import { getDayCardMealLabel, getDayCardMealSummary, getDayCardParticipantSummary, prepareDayCardMeals, renderDayCardMealsHtml } from '../lib/menu/day-card-data';
+import { getDayCardMealLabel, getDayCardMealSummary, getDayCardParticipantSummary, prepareDayCardMeals, renderDayCardMealsHtml, renderDayOptionBadgesHtml } from '../lib/menu/day-card-data';
 import { getMenuParticipants } from '../lib/menu/participants';
 import {
   clearMenuDay,
@@ -21,7 +22,7 @@ import {
   watchUserProfile,
   watchWeekMenusByIds,
 } from '../lib/menu/repository';
-import type { DailyMenu, Dish, FirebaseUser, MealSlot, MenuGroup, MenuParticipant, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, DailyOption, Dish, FirebaseUser, MealSlot, MenuGroup, MenuParticipant, UserProfile, WeekMenu } from '../lib/menu/types';
 import { notifyMenuChanged, requestChangeNotifications } from '../lib/notifications/browser';
 import { getNetworkStatus, watchNetworkStatus } from '../lib/pwa/network-status';
 import { readLastOfflineMenuCache, saveOfflineMenuCache } from '../lib/pwa/offline-cache';
@@ -55,9 +56,11 @@ if (root) {
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
   let dishes: Dish[] = [];
+  let dailyOptions: DailyOption[] = [];
   let tuppers: TupperItem[] = [];
   let unsubscribeMenu: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
+  let unsubscribeDailyOptions: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeGroup: (() => void) | undefined;
   let unsubscribeTuppers: (() => void) | undefined;
@@ -227,7 +230,10 @@ if (root) {
   }
 
   function renderDashboardDayMeals(day: DailyMenu) {
-    return renderDayCardMealsHtml(prepareDayCardMeals(labels, day, getEnabledMeals(), getParticipants()));
+    return [
+      renderDayOptionBadgesHtml(day, dailyOptions, labels.dailyOptionsSummary),
+      renderDayCardMealsHtml(prepareDayCardMeals(labels, day, getEnabledMeals(), getParticipants())),
+    ].join('');
   }
 
   function renderNextSeven(menu: WeekMenu) {
@@ -455,6 +461,16 @@ if (root) {
           false,
           profile.groupId
         );
+        unsubscribeDailyOptions?.();
+        unsubscribeDailyOptions = watchDailyOptions(
+          services,
+          { userId: user.uid, groupId: profile.groupId },
+          (nextOptions) => {
+            dailyOptions = nextOptions;
+            if (currentMenu) renderDashboard(currentMenu);
+          },
+          (error) => showStatus(formatError(error), true)
+        );
         unsubscribeGroup?.();
         currentGroup = null;
         if (profile.groupId) {
@@ -509,6 +525,7 @@ if (root) {
     labels,
     getDay: (dayKey) => normalizeDay(currentMenu?.days[dayKey]),
     getDishes: () => dishes,
+    getDailyOptions: () => dailyOptions,
     getEnabledMeals,
     getParticipants,
     getSavedDayState: (dayKey) => serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined)),
@@ -589,6 +606,7 @@ if (root) {
           currentUser = user;
           unsubscribeMenu?.();
           unsubscribeDishes?.();
+          unsubscribeDailyOptions?.();
           unsubscribeProfile?.();
           unsubscribeGroup?.();
           unsubscribeTuppers?.();

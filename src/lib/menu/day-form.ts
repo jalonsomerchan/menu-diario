@@ -15,6 +15,9 @@ export function readDayDraft(
     return normalizeDay({
       ...currentDay,
       skipped: true,
+      optionIds: [...card.querySelectorAll<HTMLInputElement>('[data-day-option-input]')]
+        .filter((input) => input.checked)
+        .map((input) => input.value),
       reason: card.querySelector<HTMLSelectElement>('[data-field="reason"]')?.value ?? currentDay.reason ?? '',
       skipNote: card.querySelector<HTMLTextAreaElement>('[data-field="skipNote"]')?.value.trim() ?? currentDay.skipNote ?? '',
     });
@@ -43,6 +46,9 @@ export function readDayDraft(
   return normalizeDay({
     ...currentDay,
     skipped: false,
+    optionIds: [...card.querySelectorAll<HTMLInputElement>('[data-day-option-input]')]
+      .filter((input) => input.checked)
+      .map((input) => input.value),
     notes: card.querySelector<HTMLTextAreaElement>('[data-field="notes"]')?.value.trim() ?? currentDay.notes ?? '',
     meals: {
       ...currentDay.meals,

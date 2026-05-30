@@ -50,4 +50,16 @@ describe('Firestore rules smoke checks', () => {
     assert.match(tupperRules, /allow update: if canAccessTupper\(resource\.data\) \|\| canAccessTupper\(request\.resource\.data\);/);
     assert.doesNotMatch(tupperRules, /allow read: if signedIn\(\);/);
   });
+
+  it('restricts daily options to owners or real group members', () => {
+    const rules = readText('firestore.rules');
+    const optionRules = getRulesBlock(rules, 'dailyOptions', 'optionId');
+
+    assert.match(rules, /function isDailyOptionScope\(data\)/);
+    assert.match(rules, /function canAccessDailyOption\(data\)/);
+    assert.match(optionRules, /allow read: if canAccessDailyOption\(resource\.data\);/);
+    assert.match(optionRules, /allow create: if isDailyOptionScope\(request\.resource\.data\)/);
+    assert.match(optionRules, /allow update: if canAccessDailyOption\(resource\.data\)/);
+    assert.doesNotMatch(optionRules, /allow read: if signedIn\(\);/);
+  });
 });

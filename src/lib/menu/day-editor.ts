@@ -1,6 +1,7 @@
 import { getParticipantDisplayName, getParticipantInitials, getSelectedParticipantIds } from './participants';
 import { emptyMeal } from './normalizers';
-import type { DailyMenu, Dish, MealEntry, MealSlot, MenuParticipant } from './types';
+import { getActiveDailyOptions } from './daily-options';
+import type { DailyMenu, DailyOption, Dish, MealEntry, MealSlot, MenuParticipant } from './types';
 
 type DayEditorLabels = Record<string, string>;
 
@@ -14,6 +15,7 @@ type DayEditorOptions = {
   dishes: Dish[];
   labels: DayEditorLabels;
   participants?: MenuParticipant[];
+  dailyOptions?: DailyOption[];
   compact?: boolean;
 };
 
@@ -50,6 +52,33 @@ function renderSkipToggle(labels: DayEditorLabels, skipped: boolean) {
       <input type="checkbox" data-field="skipped" ${skipped ? 'checked' : ''} />
       <span>${escapeHtml(labels.noDay)}</span>
     </label>
+  `;
+}
+
+function renderDailyOptions(labels: DayEditorLabels, day: DailyMenu, dailyOptions: DailyOption[]) {
+  const options = getActiveDailyOptions(dailyOptions);
+  if (!options.length) return '';
+
+  const selectedIds = new Set(day.optionIds ?? []);
+  return `
+    <fieldset class="day-options day-edit-block">
+      <legend>${escapeHtml(labels.dailyOptionsTitle)}</legend>
+      <p>${escapeHtml(labels.dailyOptionsDescription)}</p>
+      <div class="day-options__grid">
+        ${options
+          .map((option) => `
+            <label class="day-option-chip day-option-chip--${escapeHtml(option.color)}">
+              <input type="checkbox" value="${escapeHtml(option.id)}" data-day-option-input ${selectedIds.has(option.id) ? 'checked' : ''} />
+              <span class="day-option-chip__icon" aria-hidden="true">${escapeHtml(option.icon)}</span>
+              <span class="day-option-chip__body">
+                <span>${escapeHtml(option.name)}</span>
+                ${option.description ? `<small>${escapeHtml(option.description)}</small>` : ''}
+              </span>
+            </label>
+          `)
+          .join('')}
+      </div>
+    </fieldset>
   `;
 }
 
@@ -136,18 +165,21 @@ function renderMeal(labels: DayEditorLabels, meal: MealSlot, mealData: MealEntry
 }
 
 export function renderDayEditor(options: DayEditorOptions) {
-  const { dayKey, dayNumber, weekday, dateLabel, day, enabledMeals, dishes, labels, participants = [], compact = false } = options;
+  const { dayKey, dayNumber, weekday, dateLabel, day, enabledMeals, dishes, labels, participants = [], dailyOptions = [], compact = false } = options;
   const skipped = Boolean(day.skipped);
   const skipToggle = renderSkipToggle(labels, skipped);
+  const dailyOptionsHtml = renderDailyOptions(labels, day, dailyOptions);
   const editorBody = skipped
     ? `
       <div class="day-skipped-block" data-day-skipped-block>
         ${skipToggle}
+        ${dailyOptionsHtml}
         ${renderReasonFields(labels, day.reason, day.skipNote)}
       </div>
     `
     : `
       <div class="day-meals-block" data-day-meals-block>
+        ${dailyOptionsHtml}
         ${enabledMeals.map((meal) => renderMeal(labels, meal, day.meals[meal] ?? emptyMeal(), dishes, participants)).join('')}
         <label class="day-edit-field day-edit-field--textarea day-edit-block day-edit-notes">${escapeHtml(labels.notes)}
           <textarea data-field="notes" rows="3">${escapeHtml(day.notes ?? '')}</textarea>

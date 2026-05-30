@@ -3,7 +3,7 @@ import { appendRecommendedMealDraft, applyRecommendedMealDraft, setDaySkippedDra
 import { renderDayEditor, renderPlateRow } from './day-editor';
 import { normalizeDay } from './normalizers';
 import { serializeDay } from './day-state';
-import type { DailyMenu, Dish, MealSlot, MenuParticipant } from './types';
+import type { DailyMenu, DailyOption, Dish, MealSlot, MenuParticipant } from './types';
 
 type DayEditModalLabels = Record<string, string>;
 
@@ -12,6 +12,7 @@ type DayEditModalControllerOptions = {
   labels: DayEditModalLabels;
   getDay: (dayKey: string) => DailyMenu;
   getDishes: () => Dish[];
+  getDailyOptions?: () => DailyOption[];
   getEnabledMeals: () => MealSlot[];
   getParticipants?: () => MenuParticipant[];
   getSavedDayState: (dayKey: string) => string;
@@ -176,6 +177,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
       day: draftDay,
       enabledMeals: options.getEnabledMeals(),
       dishes: options.getDishes(),
+      dailyOptions: options.getDailyOptions?.() ?? [],
       labels: options.labels,
       participants: getParticipants(),
       compact: true,

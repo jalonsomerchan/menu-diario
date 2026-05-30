@@ -16,6 +16,7 @@ import {
 import { watchUserDishes } from '../lib/dishes/repository';
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
+import { watchDailyOptions } from '../lib/menu/daily-options-repository';
 import { createDayEditModalController } from '../lib/menu/day-edit-modal';
 import { getDateOffset, getDatesInRange, getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
@@ -30,7 +31,7 @@ import {
   watchWeekMenusByIds,
 } from '../lib/menu/repository';
 import { serializeDay } from '../lib/menu/day-state';
-import type { DailyMenu, Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, DailyOption, Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { getNetworkStatus } from '../lib/pwa/network-status';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
@@ -67,6 +68,7 @@ if (root) {
   let currentMenus: WeekMenu[] = [];
   let currentMenuIdsByWeekStart: Record<string, string> = {};
   let dishes: Dish[] = [];
+  let dailyOptions: DailyOption[] = [];
   let currentRequest: PlanningRequest | null = null;
   let recommendations: PlanningRecommendation[] = [];
   let selectedPendingKeys = new Set<string>();
@@ -76,6 +78,7 @@ if (root) {
   let unsubscribeMenus: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
+  let unsubscribeDailyOptions: (() => void) | undefined;
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -498,6 +501,7 @@ if (root) {
     labels,
     getDay: (dayKey) => normalizeDay(getMenuForDay(dayKey)?.days?.[dayKey]),
     getDishes: () => dishes,
+    getDailyOptions: () => dailyOptions,
     getEnabledMeals: () => getSelectedMeals(),
     getSavedDayState: (dayKey) => serializeDay(getMenuForDay(dayKey)?.days?.[dayKey] ?? normalizeDay(undefined)),
     getDayNumber,
@@ -628,6 +632,7 @@ if (root) {
                 pendingMeals,
                 days: getDaysForRequest(request),
                 dishes,
+                dailyOptions,
                 foodIntolerances: intolerancesInput?.value.trim() || (await getGroupFoodIntolerancesForPrompt(services, currentProfile)),
                 mealLabels: {
                   breakfast: labels.breakfast,
@@ -718,6 +723,7 @@ if (root) {
           unsubscribeMenus?.();
           unsubscribeProfile?.();
           unsubscribeDishes?.();
+          unsubscribeDailyOptions?.();
 
           if (!user) {
             window.location.assign(labels.homePath || '/');
@@ -745,6 +751,16 @@ if (root) {
                 (error) => showStatus(formatError(error), true),
                 false,
                 profile.groupId
+              );
+              unsubscribeDailyOptions?.();
+              unsubscribeDailyOptions = watchDailyOptions(
+                services,
+                { userId: user.uid, groupId: profile.groupId },
+                (nextOptions) => {
+                  dailyOptions = nextOptions;
+                  renderCurrentState();
+                },
+                (error) => showStatus(formatError(error), true)
               );
             },
             (error) => showStatus(formatError(error), true)

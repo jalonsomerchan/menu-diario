@@ -513,6 +513,25 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .dish-suggestions { display: flex; gap: 0.45rem; overflow-x: auto; padding-bottom: 0.15rem; }
 .dish-suggestions button { flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 55%); border-radius: 999px; background: color-mix(in srgb, var(--color-primary-soft), transparent 25%); color: var(--color-text); padding: 0.42rem 0.7rem; font-size: 0.82rem; font-weight: 800; }
 .day-skip-toggle { border-top: 1px solid var(--color-border); padding-top: 0.9rem; }
+.day-options { display: grid; gap: 0.75rem; margin: 0; }
+.day-options legend { color: var(--color-text); font-weight: 950; }
+.day-options p { margin: 0; color: var(--color-muted); font-size: 0.88rem; }
+.day-options__grid { display: grid; gap: 0.55rem; }
+.day-option-chip { display: grid !important; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0.7rem; min-height: 3.2rem; border: 1px solid color-mix(in srgb, var(--day-option-color, var(--color-primary)), var(--color-border) 58%); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--day-option-color, var(--color-primary)), transparent 90%); color: var(--color-text) !important; padding: 0.72rem 0.85rem; }
+.day-option-chip input { width: 1.2rem; height: 1.2rem; margin: 0; accent-color: var(--day-option-color, var(--color-primary)); }
+.day-option-chip__icon { display: none; }
+.day-option-chip__body { display: grid; min-width: 0; gap: 0.1rem; }
+.day-option-chip__body span { font-weight: 900; overflow-wrap: anywhere; }
+.day-option-chip__body small { color: var(--color-muted); font-size: 0.78rem; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.day-option-chip:has(input:checked) { background: color-mix(in srgb, var(--day-option-color, var(--color-primary)), transparent 82%); border-color: color-mix(in srgb, var(--day-option-color, var(--color-primary)), var(--color-border) 24%); }
+.day-option-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.day-option-badge { display: inline-flex; align-items: center; gap: 0.32rem; max-width: 100%; border: 1px solid color-mix(in srgb, var(--day-option-color, var(--color-primary)), var(--color-border) 52%); border-radius: var(--radius-full); background: color-mix(in srgb, var(--day-option-color, var(--color-primary)), transparent 88%); color: var(--color-text); padding: 0.34rem 0.58rem; font-size: 0.76rem; font-weight: 900; line-height: 1.1; }
+.day-option-chip--blue, .day-option-badge--blue { --day-option-color: var(--color-primary); }
+.day-option-chip--green, .day-option-badge--green { --day-option-color: #16a34a; }
+.day-option-chip--orange, .day-option-badge--orange { --day-option-color: var(--color-accent); }
+.day-option-chip--rose, .day-option-badge--rose { --day-option-color: #e11d48; }
+.day-option-chip--violet, .day-option-badge--violet { --day-option-color: #7c3aed; }
+.day-option-chip--slate, .day-option-badge--slate { --day-option-color: var(--color-muted); }
 
 .app-dialog { width: min(96vw, 40rem); border: 0; border-radius: var(--radius-2xl); background: transparent; padding: 0; }
 .app-dialog--editor { width: min(96vw, 46rem); }

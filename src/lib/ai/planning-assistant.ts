@@ -1,6 +1,7 @@
 import { cleanDishName, normalizeDishName } from '../dishes/helpers.mjs';
+import { getDailyOptionPromptHints } from '../menu/daily-options.ts';
 import { normalizeDay } from '../menu/normalizers.ts';
-import type { DailyMenu, Dish, MealSlot } from '../menu/types';
+import type { DailyMenu, DailyOption, Dish, MealSlot } from '../menu/types';
 
 const maxPlanningMeals = 42;
 const maxCatalogDishes = 84;
@@ -52,6 +53,7 @@ export function buildPlanningAssistantPrompt(input: {
   pendingMeals: PlanningRecommendationInput[];
   days: Record<string, Partial<DailyMenu> | undefined>;
   dishes: Dish[];
+  dailyOptions?: DailyOption[];
   mealLabels: Record<MealSlot, string>;
   foodIntolerances?: string;
 }) {
@@ -60,7 +62,7 @@ export function buildPlanningAssistantPrompt(input: {
     .slice(0, maxPlanningMeals)
     .map((slot) => `- ${slot.dayKey} | ${slot.meal} | ${input.mealLabels[slot.meal] ?? slot.meal}`)
     .join('\n');
-  const currentMeals = describeCurrentMeals(input.days, input.pendingMeals, input.mealLabels);
+  const currentMeals = describeCurrentMeals(input.days, input.pendingMeals, input.mealLabels, input.dailyOptions ?? []);
   const catalogSection = describeCatalog(input.dishes, input.mode);
   const knownNames = getVisibleDishes(input.dishes)
     .slice(0, maxCatalogDishes)
@@ -85,6 +87,8 @@ export function buildPlanningAssistantPrompt(input: {
     pendingMeals || '- none',
     'Already planned meals in this range:',
     currentMeals || '- none',
+    'Day planning conditions. Treat these as planning constraints: late arrival means prioritize quick meals, eating out means avoid planning that slot, kids day means family-friendly, training means nourishing, no-cook means cold/no-cook or very low effort.',
+    describeDayOptions(input.days, input.pendingMeals, input.dailyOptions ?? []) || '- none',
     'Food restrictions:',
     foodIntolerances || '- none',
     'Taste profile inferred from saved dishes:',
@@ -201,22 +205,40 @@ function describeFoodIntolerances(foodIntolerances = '') {
 function describeCurrentMeals(
   days: Record<string, Partial<DailyMenu> | undefined>,
   pendingMeals: PlanningRecommendationInput[],
-  mealLabels: Record<MealSlot, string>
+  mealLabels: Record<MealSlot, string>,
+  dailyOptions: DailyOption[] = []
 ) {
   const dateKeys = [...new Set(pendingMeals.map((slot) => slot.dayKey))].sort();
 
   return dateKeys
     .flatMap((dayKey) => {
       const day = normalizeDay(days[dayKey]);
-      if (day.skipped) return [`- ${dayKey} | whole day skipped`];
+      const optionHints = getDailyOptionPromptHints(day, dailyOptions).join(', ');
+      const optionText = optionHints ? ` | conditions: ${optionHints}` : '';
+      if (day.skipped) return [`- ${dayKey} | whole day skipped${optionText}`];
 
       return (['breakfast', 'lunch', 'dinner'] as MealSlot[]).flatMap((meal) => {
         const mealState = day.meals[meal];
-        if (mealState.skipped) return [`- ${dayKey} | ${mealLabels[meal] ?? meal} | skipped`];
+        if (mealState.skipped) return [`- ${dayKey} | ${mealLabels[meal] ?? meal} | skipped${optionText}`];
         if (mealState.items.length === 0) return [];
-        return [`- ${dayKey} | ${mealLabels[meal] ?? meal} | ${mealState.items.join(', ')}`];
+        return [`- ${dayKey} | ${mealLabels[meal] ?? meal} | ${mealState.items.join(', ')}${optionText}`];
       });
     })
+    .join('\n');
+}
+
+function describeDayOptions(
+  days: Record<string, Partial<DailyMenu> | undefined>,
+  pendingMeals: PlanningRecommendationInput[],
+  dailyOptions: DailyOption[]
+) {
+  const dateKeys = [...new Set(pendingMeals.map((slot) => slot.dayKey))].sort();
+  return dateKeys
+    .map((dayKey) => {
+      const hints = getDailyOptionPromptHints(normalizeDay(days[dayKey]), dailyOptions);
+      return hints.length ? `- ${dayKey}: ${hints.join(', ')}` : '';
+    })
+    .filter(Boolean)
     .join('\n');
 }
 
