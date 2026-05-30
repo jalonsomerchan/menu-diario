@@ -344,4 +344,62 @@
   .day-edit-modal__action-label {
     display: none !important;
   }
+
+  .day-edit-modal {
+    max-height: calc(100dvh - 0.75rem) !important;
+  }
+
+  .day-edit-modal__box {
+    height: min(calc(100dvh - 0.75rem), 46rem) !important;
+    max-height: min(calc(100dvh - 0.75rem), 46rem) !important;
+    min-height: 0 !important;
+  }
+
+  .day-edit-modal__body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .day-edit-modal__footer {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    overflow-x: hidden !important;
+  }
+
+  .day-edit-modal__hint {
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .day-edit-modal__actions {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .day-edit-modal__actions .button {
+    display: inline-flex !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    gap: 0.25rem !important;
+    padding-inline: 0.4rem !important;
+    font-size: clamp(0.68rem, 3vw, 0.82rem) !important;
+  }
+
+  .day-edit-modal__action-icon {
+    flex: 0 0 auto !important;
+  }
+
+  .day-edit-modal__action-label {
+    display: inline !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
 }

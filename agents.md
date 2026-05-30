@@ -13,6 +13,7 @@ Antes de modificar páginas, layouts, componentes, estilos, SEO, rutas, i18n, te
 - `docs/i18n-guide.md`
 - `docs/github-pages.md`
 - `docs/testing-guide.md`
+- `docs/project-files-index.md`
 
 ## Prioridad
 
@@ -57,6 +58,7 @@ Todo agente IA debe aplicar estas reglas en cualquier cambio:
 8. No duplicar lógica entre idiomas, páginas o componentes si puede centralizarse.
 9. No crear ficheros grandes por comodidad; preferir piezas pequeñas con nombres claros.
 10. Documentar cualquier convención nueva que afecte al uso del proyecto.
+11. Si se añaden, mueven, renombran o eliminan archivos relevantes, actualizar `docs/project-files-index.md`.
 
 ## Reglas obligatorias para crear issues
 
@@ -343,6 +345,7 @@ Si se cambia una convención importante, actualizar el documento correspondiente
 - ¿El código cumple estándares de calidad, accesibilidad, SEO y rendimiento?
 - ¿Se mantiene `npm test` como comprobación básica?
 - ¿Se actualizó la documentación si cambió una convención?
+- ¿Se actualizó `docs/project-files-index.md` si se añadieron, movieron, renombraron o eliminaron archivos relevantes?
 
 ## Comandos útiles
 
