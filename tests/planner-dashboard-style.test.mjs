@@ -23,4 +23,11 @@ describe('planner dashboard style alignment', () => {
     assert.match(configurator, /data-config-load-more/);
     assert.match(configurator, /button button--secondary/);
   });
+
+  it('keeps the day timeline date strip rounded without clipping action menus', () => {
+    const historyStyles = readText('src/styles/history.css');
+
+    assert.match(historyStyles, /\.history-card \{[^}]*overflow: visible;/);
+    assert.match(historyStyles, /\.history-card__date \{[^}]*border-radius: calc\(var\(--radius-2xl\) - 1px\) 0 0 calc\(var\(--radius-2xl\) - 1px\);/);
+  });
 });

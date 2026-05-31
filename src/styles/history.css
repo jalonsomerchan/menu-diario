@@ -15,7 +15,7 @@
 .history-results-summary { margin: 0 0 0.8rem; color: var(--color-muted); font-weight: 850; }
 .history-results { display: grid; gap: 0.75rem; margin-bottom: 1rem; }
 .history-card { display: grid; grid-template-columns: clamp(3.9rem, 18vw, 5.4rem) minmax(0, 1fr); overflow: visible; border: 1px solid var(--color-border); border-radius: var(--radius-2xl); background: color-mix(in srgb, var(--color-surface), transparent 3%); box-shadow: var(--shadow-sm); }
-.history-card__date { display: grid; place-items: center; align-content: center; gap: 0.18rem; border-right: 1px solid var(--color-border); background: var(--color-surface-soft); color: var(--color-primary); font-weight: 100; letter-spacing: -0.08em; line-height: 0.9; }
+.history-card__date { display: grid; place-items: center; align-content: center; gap: 0.18rem; border-right: 1px solid var(--color-border); border-radius: calc(var(--radius-2xl) - 1px) 0 0 calc(var(--radius-2xl) - 1px); background: var(--color-surface-soft); color: var(--color-primary); font-weight: 100; letter-spacing: -0.08em; line-height: 0.9; }
 .history-card__day-number { display: block; padding-right: 0.08em; font-size: clamp(2.35rem, 11vw, 3.6rem); letter-spacing: -0.08em; }
 .history-card__month { display: block; color: var(--color-muted); font-size: 0.78rem; font-weight: 950; letter-spacing: 0.12em; line-height: 1; }
 .history-card__body { display: grid; align-content: start; gap: 0.75rem; min-width: 0; padding: var(--surface-padding-tight); padding-bottom: max(var(--surface-padding-tight), 1rem); min-height: auto; }
