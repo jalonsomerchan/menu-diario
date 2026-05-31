@@ -180,7 +180,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/lib/pwa/`: cache offline, sincronizacion y estado de red.
 - `src/lib/shopping/`: normalizacion, exportacion, tipos y repositorio de compra.
 - `src/lib/tuppers/`: asignacion, caducidad, estado, tipos y repositorio de tuppers.
-- `src/lib/ui/`: utilidades UI compartidas para dialogos, menus, HTML, feedback y tareas con debounce.
+- `src/lib/ui/`: utilidades UI compartidas para dialogos, menus, HTML, feedback, bloqueo de scroll y tareas con debounce.
 
 ## Scripts de cliente
 

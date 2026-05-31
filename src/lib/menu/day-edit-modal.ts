@@ -3,6 +3,7 @@ import { appendRecommendedMealDraft, applyRecommendedMealDraft, setDaySkippedDra
 import { renderDayEditor, renderPlateRow } from './day-editor';
 import { normalizeDay } from './normalizers';
 import { serializeDay } from './day-state';
+import { lockBodyScroll } from '../ui/body-scroll-lock';
 import type { DailyMenu, DailyOption, Dish, MealSlot, MenuParticipant } from './types';
 
 type DayEditModalLabels = Record<string, string>;
@@ -46,6 +47,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   let draftDay = normalizeDay(undefined);
   let returnFocusTo: HTMLElement | null = null;
   let allowNextClose = false;
+  let releaseBodyScroll: (() => void) | null = null;
 
   if (!modal || !form || !fields) {
     return {
@@ -193,6 +195,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     render(dayKey, normalizeDay(config.day ?? options.getDay(dayKey)));
     if (!modal.open) {
       modal.showModal();
+      releaseBodyScroll = lockBodyScroll();
     }
     const firstField =
       fields.querySelector<HTMLElement>('input:not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled])') ??
@@ -363,6 +366,8 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
 
   modal.addEventListener('close', () => {
     allowNextClose = false;
+    releaseBodyScroll?.();
+    releaseBodyScroll = null;
     returnFocusTo?.focus();
     returnFocusTo = null;
   });

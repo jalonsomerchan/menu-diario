@@ -26,6 +26,15 @@ describe('day edit modal unsaved changes protection', () => {
     assert.match(source, /allowNextClose = true;\n\s+modal\.close\(\)/);
   });
 
+  it('locks body scrolling while the day edit modal is open and releases it on close', () => {
+    const source = readText('src/lib/menu/day-edit-modal.ts');
+
+    assert.match(source, /import \{ lockBodyScroll \} from '\.\.\/ui\/body-scroll-lock'/);
+    assert.match(source, /let releaseBodyScroll: \(\(\) => void\) \| null = null/);
+    assert.match(source, /modal\.showModal\(\);\n\s+releaseBodyScroll = lockBodyScroll\(\)/);
+    assert.match(source, /modal\.addEventListener\('close', \(\) => \{\n\s+allowNextClose = false;\n\s+releaseBodyScroll\?\.\(\);\n\s+releaseBodyScroll = null;/);
+  });
+
   it('keeps the mobile modal body scrollable and footer actions readable in one row', () => {
     const styles = readText('src/styles/modals.css');
 
