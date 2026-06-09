@@ -11,8 +11,22 @@ export type PreparedDayMeal = {
   participantSummary: string;
 };
 
+const dailyOptionIconSymbols: Record<string, string> = {
+  clock: '⏱️',
+  utensils: '🍽️',
+  kids: '👨‍👩‍👧',
+  training: '🏃',
+  'no-cook': '🥗',
+  note: '📝',
+};
+
 function escapeHtml(value = '') {
   return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+}
+
+function renderDailyOptionIcon(icon: string) {
+  const symbol = dailyOptionIconSymbols[icon];
+  return symbol ? `<span aria-hidden="true">${escapeHtml(symbol)}</span>` : '';
 }
 
 function reasonKey(reason: NoMealReason | '' | string) {
@@ -114,7 +128,7 @@ export function renderDayOptionBadgesHtml(day: DailyMenu, dailyOptions: DailyOpt
       ${selected
         .map((option) => `
           <span class="day-option-badge day-option-badge--${escapeHtml(option.color)}">
-            <span aria-hidden="true">${escapeHtml(option.icon)}</span>
+            ${renderDailyOptionIcon(option.icon)}
             ${escapeHtml(option.name)}
           </span>
         `)
