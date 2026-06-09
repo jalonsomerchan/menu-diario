@@ -4,9 +4,10 @@ import { ensureUserProfile, watchUserProfile } from '../lib/menu/repository';
 import type { FirebaseUser, UserProfile } from '../lib/menu/types';
 import { buildShoppingListText } from '../lib/shopping/export';
 import { getToBuyItems, groupShoppingItems, normalizeShoppingItem } from '../lib/shopping/normalize';
-import { saveShoppingList, watchShoppingLists } from '../lib/shopping/repository';
+import { deleteShoppingList, saveShoppingList, watchShoppingLists } from '../lib/shopping/repository';
 import type { ShoppingItem, ShoppingListDocument, ShoppingScope } from '../lib/shopping/types';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
+import '../styles/shopping-lists-modern.css';
 
 const root = document.querySelector<HTMLElement>('[data-shopping-lists-app]');
 
@@ -28,6 +29,14 @@ if (root) {
     saving: labels.saveSaving,
     saved: labels.saveSaved,
   });
+
+  const deleteLabel = labels.deleteList || (locale === 'en-US' ? 'Delete' : 'Borrar');
+  const deleteConfirmLabel =
+    labels.deleteListConfirm ||
+    (locale === 'en-US'
+      ? 'Delete this shopping list? This action cannot be undone.'
+      : '¿Borrar esta lista de la compra? Esta acción no se puede deshacer.');
+  const deletedLabel = labels.deletedList || (locale === 'en-US' ? 'Shopping list deleted.' : 'Lista de la compra borrada.');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -79,26 +88,31 @@ if (root) {
     if (!savedLists) return;
     const visibleLists = currentLists.filter((list) => list.status !== 'archived');
     if (visibleLists.length === 0) {
-      savedLists.innerHTML = `<p class="shopping-empty">${escapeHtml(labels.savedListsEmpty)}</p>`;
+      savedLists.innerHTML = `<div class="shopping-empty-state"><p class="shopping-empty">${escapeHtml(labels.savedListsEmpty)}</p><a class="button button--primary button--small" href="${escapeHtml(labels.aiPath)}">${escapeHtml(labels.createWithAi)}</a></div>`;
       return;
     }
 
     savedLists.innerHTML = visibleLists
       .map((list) => {
         const pendingCount = getToBuyItems(list.items).length;
+        const reviewedCount = list.items.length - pendingCount;
         const countLabel = formatCountLabel('listItemsCountSingle', 'listItemsCountPlural', pendingCount);
         return `
           <article class="shopping-saved-card" data-list-id="${escapeHtml(list.id)}" data-active="${list.id === activeList?.id}" role="listitem">
             <div class="shopping-saved-card__head">
-              <div>
+              <div class="shopping-saved-card__main">
                 <h3 class="shopping-saved-card__title">${escapeHtml(list.title || labels.exportTitle)}</h3>
                 <p class="shopping-saved-card__meta">
-                  <span class="shopping-pill">${escapeHtml(countLabel)}</span>
+                  <span class="shopping-pill shopping-pill--primary">${escapeHtml(countLabel)}</span>
                   <span class="shopping-pill">${escapeHtml(formatListRange(list))}</span>
-                  ${list.id === activeList?.id ? `<span class="shopping-pill">${escapeHtml(labels.activeList)}</span>` : ''}
+                  ${reviewedCount > 0 ? `<span class="shopping-pill">${reviewedCount} ${escapeHtml(labels.doneTitle).toLocaleLowerCase()}</span>` : ''}
+                  ${list.id === activeList?.id ? `<span class="shopping-pill shopping-pill--active">${escapeHtml(labels.activeList)}</span>` : ''}
                 </p>
               </div>
-              <button class="button button--secondary button--small" type="button" data-open-list="${escapeHtml(list.id)}">${escapeHtml(labels.openList)}</button>
+              <div class="shopping-saved-card__actions">
+                <button class="button button--secondary button--small" type="button" data-open-list="${escapeHtml(list.id)}">${escapeHtml(labels.openList)}</button>
+                <button class="button button--ghost button--small shopping-saved-card__delete" type="button" data-delete-list="${escapeHtml(list.id)}">${escapeHtml(deleteLabel)}</button>
+              </div>
             </div>
           </article>
         `;
@@ -241,6 +255,28 @@ if (root) {
     }
   }
 
+  async function deleteCurrentList(listId: string) {
+    if (!currentUser) return;
+    const confirmed = window.confirm(deleteConfirmLabel);
+    if (!confirmed) return;
+
+    try {
+      saveFeedback.saving();
+      await deleteShoppingList(await getFirebaseServices(), listId);
+      if (activeList?.id === listId) {
+        activeList = null;
+        draftItems = [];
+        draftDirty = false;
+        renderDetail();
+      }
+      currentLists = currentLists.filter((list) => list.id !== listId);
+      renderSavedLists();
+      showStatus(deletedLabel);
+    } catch (error) {
+      showStatus(formatError(error), true);
+    }
+  }
+
   function resubscribeShoppingLists(services: Awaited<ReturnType<typeof getFirebaseServices>>) {
     unsubscribeShoppingLists?.();
     if (!currentUser) return;
@@ -258,6 +294,12 @@ if (root) {
         if (refreshedActive && !draftDirty) {
           activeList = refreshedActive;
           draftItems = groupShoppingItems(refreshedActive.items);
+          renderDetail();
+        }
+        if (activeList && !refreshedActive) {
+          activeList = null;
+          draftItems = [];
+          draftDirty = false;
           renderDetail();
         }
         renderSavedLists();
@@ -282,6 +324,12 @@ if (root) {
       signInAsGuest().catch((error: Error) => showStatus(error.message, true))
     );
     savedLists?.addEventListener('click', (event) => {
+      const deleteButton = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-delete-list]');
+      if (deleteButton?.dataset.deleteList) {
+        deleteCurrentList(deleteButton.dataset.deleteList).catch((error) => showStatus(formatError(error), true));
+        return;
+      }
+
       const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-open-list]');
       const listId = button?.dataset.openList;
       const list = currentLists.find((entry) => entry.id === listId);
