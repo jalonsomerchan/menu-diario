@@ -245,7 +245,7 @@ const labels = {
 
   .next-days--timeline .history-card.dashboard-day-card {
     min-height: 9.25rem;
-    overflow: hidden;
+    overflow: visible;
     border-color: color-mix(in srgb, var(--panel-border), var(--color-primary) 5%);
     background: color-mix(in srgb, var(--color-surface), transparent 3%);
     box-shadow: var(--shadow-xs);
@@ -334,6 +334,20 @@ const labels = {
 
     .today-hero__edit {
       width: fit-content;
+    }
+
+    .next-days--timeline .history-card.dashboard-day-card {
+      min-height: 10rem;
+    }
+
+    .next-days--timeline .history-card h2 {
+      font-size: clamp(1.5rem, 7.2vw, 1.9rem);
+      line-height: 1.08;
+    }
+
+    .next-days--timeline .day-actions[data-day-actions] summary {
+      width: 3rem;
+      height: 3rem;
     }
 
   }
