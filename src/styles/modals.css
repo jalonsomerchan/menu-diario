@@ -357,20 +357,27 @@
   }
 
   .day-edit-modal {
+    height: calc(100dvh - 0.75rem) !important;
     max-height: calc(100dvh - 0.75rem) !important;
+    overflow: hidden !important;
+    overscroll-behavior: contain !important;
   }
 
   .day-edit-modal__box {
     height: min(calc(100dvh - 0.75rem), 46rem) !important;
     max-height: min(calc(100dvh - 0.75rem), 46rem) !important;
     min-height: 0 !important;
+    overflow: hidden !important;
   }
 
   .day-edit-modal__body {
-    flex: 1 1 auto !important;
+    flex: 1 1 0 !important;
     min-height: 0 !important;
+    max-height: none !important;
+    touch-action: pan-y !important;
     overflow-x: hidden !important;
-    overflow-y: auto !important;
+    overflow-y: scroll !important;
+    overscroll-behavior-y: contain !important;
     -webkit-overflow-scrolling: touch !important;
   }
 

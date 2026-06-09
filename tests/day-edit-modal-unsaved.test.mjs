@@ -38,9 +38,11 @@ describe('day edit modal unsaved changes protection', () => {
   it('keeps the mobile modal body scrollable and footer actions readable in one row', () => {
     const styles = readText('src/styles/modals.css');
 
+    assert.match(styles, /\.day-edit-modal \{\n\s+height: calc\(100dvh - 0\.75rem\) !important;\n\s+max-height: calc\(100dvh - 0\.75rem\) !important;\n\s+overflow: hidden !important;/);
     assert.match(styles, /\.day-edit-modal__box \{\n\s+height: min\(calc\(100dvh - 0\.75rem\), 46rem\) !important;/);
-    assert.match(styles, /\.day-edit-modal__body \{\n\s+flex: 1 1 auto !important;\n\s+min-height: 0 !important;/);
-    assert.match(styles, /overflow-y: auto !important;/);
+    assert.match(styles, /\.day-edit-modal__body \{\n\s+flex: 1 1 0 !important;\n\s+min-height: 0 !important;/);
+    assert.match(styles, /overflow-y: scroll !important;/);
+    assert.match(styles, /touch-action: pan-y !important;/);
     assert.match(styles, /\.day-edit-modal__actions \{\n\s+display: grid !important;\n\s+grid-template-columns: repeat\(3, minmax\(0, 1fr\)\) !important;/);
     assert.match(styles, /\.day-edit-modal__action-label \{\n\s+display: inline !important;\n\s+min-width: 0 !important;\n\s+overflow: hidden !important;\n\s+text-overflow: ellipsis !important;\n\s+white-space: nowrap !important;/);
   });
