@@ -200,6 +200,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/scripts/settings-app.ts`: logica de ajustes.
 - `src/scripts/shopping-alexa-integration.ts`: integracion de compra con Alexa.
 - `src/scripts/shopping-app.ts`: logica cliente de compra.
+- `src/scripts/shopping-list-actions.ts`: acciones adicionales para crear y borrar listas de compra desde la vista de compra.
 - `src/scripts/shopping-lists-app.ts`: logica de listas de compra.
 - `src/scripts/shopping-wizard.ts`: asistente de compra.
 - `src/scripts/statistics-app.ts`: logica cliente de estadisticas.
@@ -217,6 +218,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/styles/mobile-bottom-nav.css`: estilos de navegacion movil inferior.
 - `src/styles/modals.css`: estilos comunes de modales.
 - `src/styles/pwa.css`: estilos relacionados con PWA/offline.
+- `src/styles/shopping-list-actions.css`: estilos de gestion y visualizacion de listas de compra.
 - `src/styles/shopping-planning-wizard.css`: estilos del asistente de compra/planificacion.
 - `src/styles/statistics.css`: estilos de estadisticas.
 - `src/styles/toasts.css`: estilos de avisos/toasts.
