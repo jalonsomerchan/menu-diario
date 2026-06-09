@@ -1,7 +1,10 @@
 .shopping-app .planning-ai-panel {
   display: grid;
   gap: var(--surface-gap);
-  background: var(--panel-background);
+  border-color: color-mix(in srgb, var(--panel-border), var(--color-primary) 6%);
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-primary), transparent 92%), transparent 14rem),
+    var(--panel-background);
 }
 
 .shopping-app .planning-ai-panel-heading {
@@ -34,7 +37,7 @@
 .shopping-app .planning-ai-wizard-progress {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.45rem;
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -51,13 +54,19 @@
   width: 100%;
   min-height: 4.25rem;
   align-content: center;
-  padding: 0.6rem 0.45rem;
+  padding: 0.65rem 0.5rem;
   border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--color-surface), transparent 3%);
   color: var(--color-muted);
   font: inherit;
   text-align: center;
+  box-shadow: var(--shadow-xs);
+  transition:
+    border-color var(--transition-base),
+    background var(--transition-base),
+    color var(--transition-base),
+    transform var(--transition-base);
 }
 
 .shopping-app .planning-ai-wizard-step span {
@@ -87,6 +96,7 @@
   border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 24%);
   background: color-mix(in srgb, var(--color-primary-soft), transparent 18%);
   color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
 .shopping-app .planning-ai-wizard-step[aria-current='step'] span,
@@ -113,9 +123,10 @@
   gap: 0.9rem;
   padding: var(--surface-padding-tight);
   padding-bottom: max(var(--surface-padding-tight), 1rem);
-  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
+  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 5%);
   border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+  box-shadow: var(--shadow-xs);
 }
 
 .shopping-app .planning-ai-results-panel {

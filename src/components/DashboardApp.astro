@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 import type { Locale } from '../config/site';
 import DayEditModal from './DayEditModal.astro';
 import { useTupperTranslations } from '../i18n/tuppers';
@@ -14,6 +15,10 @@ const t = useTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
+const plannerPath = getLocalizedPath('/planificador', locale);
+const shoppingPath = getLocalizedPath('/compras', locale);
+const dishesPath = getLocalizedPath('/mis-platos', locale);
+const shoppingLabel = t('appNav.shopping');
 
 const labels = {
   configMissing: t('menu.configMissing'),
@@ -26,6 +31,7 @@ const labels = {
   todayForLunch: t('dashboard.todayForLunch'),
   todayEmpty: t('dashboard.todayEmpty'),
   nextSeven: t('dashboard.nextSeven'),
+  shortcuts: t('dashboard.shortcuts'),
   configure: t('dashboard.configure'),
   configureDescription: t('dashboard.configureDescription'),
   editDay: t('dashboard.editDay'),
@@ -75,6 +81,33 @@ const labels = {
   tuppersExpiryAlert: tt('expiryAlert'),
   homePath,
 };
+
+const quickActions = [
+  {
+    href: plannerPath,
+    icon: 'mdi:calendar-edit',
+    label: labels.configure,
+    description: labels.configureDescription,
+  },
+  {
+    href: shoppingPath,
+    icon: 'mdi:cart-outline',
+    label: shoppingLabel,
+    description: t('shopping.description'),
+  },
+  {
+    href: tuppersPath,
+    icon: 'mdi:food-takeout-box-outline',
+    label: labels.tuppers,
+    description: tt('description'),
+  },
+  {
+    href: dishesPath,
+    icon: 'mdi:silverware-fork-knife',
+    label: t('appNav.dishes'),
+    description: t('dishes.description'),
+  },
+] as const;
 ---
 
 <section class="dashboard-app dashboard-app--compact" data-dashboard-app data-labels={JSON.stringify(labels)}>
@@ -86,15 +119,36 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div class="dashboard-app__content" data-content hidden>
-    <section class="today-hero app-panel" aria-live="polite">
+    <section class="today-hero app-panel dashboard-shell__hero" aria-live="polite">
       <div class="today-hero__topline">
-        <p class="today-hero__hello" data-user-label>{labels.hello}</p>
+        <div class="today-hero__heading">
+          <p class="today-hero__hello" data-user-label>{labels.hello}</p>
+          <h2>{labels.todayForLunch}</h2>
+        </div>
         <button class="button button--ghost button--small today-hero__edit" type="button" data-today-edit>{labels.editDay}</button>
       </div>
       <div class="today-hero__content">
-        <h2>{labels.todayForLunch}</h2>
         <ul data-today-summary></ul>
         <div class="today-hero__notes" data-today-notes hidden></div>
+      </div>
+    </section>
+
+    <section class="dashboard-quick-actions" aria-labelledby="dashboard-quick-actions-title">
+      <div class="section-heading section-heading--simple dashboard-quick-actions__heading">
+        <h2 id="dashboard-quick-actions-title">{labels.shortcuts}</h2>
+      </div>
+      <div class="dashboard-quick-actions__grid">
+        {quickActions.map((item) => (
+          <a class="dashboard-quick-action" href={item.href}>
+            <span class="dashboard-quick-action__icon">
+              <Icon name={item.icon} aria-hidden="true" />
+            </span>
+            <span class="dashboard-quick-action__copy">
+              <strong>{item.label}</strong>
+              <span>{item.description}</span>
+            </span>
+          </a>
+        ))}
       </div>
     </section>
 
@@ -124,17 +178,23 @@ const labels = {
 </section>
 
 <style is:global>
+  .dashboard-app__content {
+    display: grid;
+    gap: clamp(1rem, 2.4vw, 1.4rem);
+  }
+
   .today-hero.app-panel {
     position: relative;
     display: grid;
     align-content: start;
-    gap: clamp(1.05rem, 2.4vw, 1.65rem);
+    gap: clamp(1rem, 2.4vw, 1.45rem);
     overflow: hidden;
     border-color: color-mix(in srgb, var(--color-border), var(--color-primary) 12%);
     background:
-      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-primary), transparent 91%), transparent 18rem),
-      linear-gradient(135deg, color-mix(in srgb, var(--color-surface), transparent 0%), color-mix(in srgb, var(--color-surface-soft), transparent 62%));
-    padding: clamp(1.35rem, 4.5vw, 2.6rem);
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-primary), transparent 88%), transparent 17rem),
+      radial-gradient(circle at 0% 100%, color-mix(in srgb, var(--color-accent), transparent 93%), transparent 15rem),
+      linear-gradient(135deg, color-mix(in srgb, var(--color-surface), transparent 0%), color-mix(in srgb, var(--color-surface-soft), transparent 58%));
+    padding: clamp(1.15rem, 4vw, 2.35rem);
     box-shadow: var(--shadow-sm);
   }
 
@@ -145,14 +205,20 @@ const labels = {
     gap: 1rem;
   }
 
+  .today-hero__heading {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
   .today-hero__hello {
     margin: 0;
     max-width: min(100%, 58rem);
     color: var(--color-primary);
-    font-size: clamp(1.05rem, 2.5vw, 2rem);
-    font-weight: 380;
-    letter-spacing: -0.045em;
-    line-height: 1.05;
+    font-size: clamp(0.86rem, 1.9vw, 1rem);
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    line-height: 1.15;
     text-transform: none;
   }
 
@@ -166,17 +232,17 @@ const labels = {
 
   .today-hero__content {
     display: grid;
-    gap: 0.35rem;
+    gap: 0.55rem;
   }
 
   .today-hero h2 {
-    margin: 0 0 0.05rem;
+    margin: 0;
     max-width: 100%;
     color: var(--color-muted);
-    font-size: clamp(1rem, 2.6vw, 2rem);
-    font-weight: 400;
-    letter-spacing: -0.04em;
-    line-height: 1.05;
+    font-size: clamp(1.15rem, 3.2vw, 2.2rem);
+    font-weight: 680;
+    letter-spacing: -0.035em;
+    line-height: 1;
   }
 
   .today-hero ul[data-today-summary] {
@@ -194,9 +260,9 @@ const labels = {
     gap: 0.45rem;
     min-width: 0;
     color: var(--color-text);
-    font-size: clamp(2rem, 5.3vw, 4rem);
+    font-size: clamp(2rem, 6.4vw, 4.15rem);
     font-weight: 680;
-    letter-spacing: -0.075em;
+    letter-spacing: -0.065em;
     line-height: 0.95;
     overflow-wrap: anywhere;
   }
@@ -208,6 +274,149 @@ const labels = {
 
   .today-hero__notes {
     margin-top: 0.45rem;
+  }
+
+  .dashboard-quick-actions {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .dashboard-quick-actions__heading {
+    margin-bottom: 0;
+  }
+
+  .dashboard-quick-actions__heading h2 {
+    font-size: clamp(1.15rem, 3vw, 1.6rem);
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+  }
+
+  .dashboard-quick-actions__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .dashboard-quick-action {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    min-height: 5.35rem;
+    border: 1px solid color-mix(in srgb, var(--panel-border), var(--color-primary) 6%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface), transparent 4%);
+    padding: 0.85rem;
+    color: var(--color-text);
+    text-decoration: none;
+    box-shadow: var(--shadow-xs);
+    transition:
+      background var(--transition-base),
+      border-color var(--transition-base),
+      box-shadow var(--transition-base),
+      transform var(--transition-base);
+  }
+
+  .dashboard-quick-action:hover,
+  .dashboard-quick-action:focus-visible {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 45%);
+    background: color-mix(in srgb, var(--color-primary-soft), var(--color-surface) 74%);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+  }
+
+  .dashboard-quick-action__icon {
+    display: grid;
+    width: 2.65rem;
+    height: 2.65rem;
+    place-items: center;
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 8%);
+    color: var(--color-primary);
+  }
+
+  .dashboard-quick-action__icon svg {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .dashboard-quick-action__copy {
+    display: grid;
+    gap: 0.18rem;
+    min-width: 0;
+  }
+
+  .dashboard-quick-action strong {
+    overflow: hidden;
+    font-size: 0.96rem;
+    font-weight: 900;
+    line-height: 1.12;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dashboard-quick-action__copy span {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    font-weight: 720;
+    line-height: 1.3;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .dashboard-section {
+    margin-bottom: 0;
+  }
+
+  .dashboard-section .section-heading {
+    align-items: center;
+    margin-bottom: 0.7rem;
+  }
+
+  .dashboard-section .section-heading h2 {
+    font-size: clamp(1.25rem, 3.4vw, 1.85rem);
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+  }
+
+  .next-days--timeline {
+    margin-bottom: 0;
+  }
+
+  .next-days--timeline .history-card.dashboard-day-card {
+    min-height: 9.25rem;
+    overflow: hidden;
+    border-color: color-mix(in srgb, var(--panel-border), var(--color-primary) 5%);
+    background: color-mix(in srgb, var(--color-surface), transparent 3%);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .next-days--timeline .history-card__date {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--color-primary-soft), var(--color-surface) 72%), color-mix(in srgb, var(--color-surface-soft), transparent 2%));
+  }
+
+  .next-days--timeline .history-card__day-number {
+    font-size: clamp(2.5rem, 11vw, 3.75rem);
+    font-weight: 220;
+  }
+
+  .next-days--timeline .history-card__body {
+    gap: 0.7rem;
+  }
+
+  .next-days--timeline .history-card h2 {
+    font-size: clamp(1.2rem, 5vw, 1.75rem);
+    letter-spacing: -0.035em;
+    text-transform: capitalize;
+  }
+
+  .next-days--timeline .day-meal-row {
+    border-radius: var(--radius-lg);
+    padding: 0.65rem 0.7rem;
   }
 
   .planner-day-card__notes {
@@ -247,9 +456,20 @@ const labels = {
 
   @media (min-width: 768px) {
     .today-hero.app-panel {
-      min-height: clamp(15rem, 24vw, 20rem);
+      min-height: clamp(13.5rem, 22vw, 18rem);
       align-content: center;
       padding-inline: clamp(2rem, 5vw, 4rem);
+    }
+
+    .dashboard-quick-actions__grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .dashboard-quick-action {
+      grid-template-columns: 1fr;
+      align-content: start;
+      align-items: start;
+      min-height: 8.2rem;
     }
   }
 
@@ -267,6 +487,14 @@ const labels = {
 
     .today-hero__edit {
       width: fit-content;
+    }
+
+    .dashboard-quick-actions__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .dashboard-quick-action {
+      min-height: 4.8rem;
     }
   }
 </style>

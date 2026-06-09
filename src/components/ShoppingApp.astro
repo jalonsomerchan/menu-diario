@@ -275,7 +275,7 @@ const labels = {
 <style is:global>
   .shopping-app[data-shopping-app] {
     display: grid;
-    gap: 1rem;
+    gap: clamp(0.85rem, 2.2vw, 1.15rem);
   }
 
   .shopping-app [data-workspace][hidden],
@@ -301,9 +301,21 @@ const labels = {
     display: grid;
     gap: 0.75rem;
     padding: var(--surface-padding);
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 8%);
     border-radius: var(--radius-xl);
     background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+    box-shadow: var(--shadow-xs);
+    transition:
+      border-color var(--transition-base),
+      box-shadow var(--transition-base),
+      transform var(--transition-base);
+  }
+
+  .shopping-saved-card:hover,
+  .shopping-saved-card:focus-within {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 45%);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
   }
 
   .shopping-saved-card[data-active='true'] {
@@ -337,6 +349,7 @@ const labels = {
     flex-wrap: wrap;
     gap: 0.75rem;
     align-items: center;
+    justify-content: flex-end;
   }
 
   .shopping-range__day,
@@ -445,9 +458,23 @@ const labels = {
     min-height: auto;
     padding: var(--surface-padding);
     padding-bottom: max(var(--surface-padding), 1rem);
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 8%);
     border-radius: var(--radius-xl);
     background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+    box-shadow: var(--shadow-xs);
+    transition:
+      border-color var(--transition-base),
+      box-shadow var(--transition-base),
+      transform var(--transition-base);
+  }
+
+  .shopping-meal-card:hover,
+  .shopping-meal-card:focus-within,
+  .shopping-item:hover,
+  .shopping-item:focus-within {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 45%);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
   }
 
   .shopping-meal-card h3,

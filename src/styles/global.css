@@ -22,7 +22,10 @@
   --color-accent-soft: #fef1dd;
   --color-danger: #dc2626;
   --color-danger-soft: #fee2e2;
+  --color-success: #16a34a;
   --color-success-soft: #dcfce7;
+  --color-warning: #d97706;
+  --color-warning-soft: #fef3c7;
   --radius-md: 0.6rem;
   --radius-lg: 0.8rem;
   --radius-xl: 1rem;
@@ -69,7 +72,10 @@
     --color-accent-soft: rgb(240 163 74 / 0.18);
     --color-danger: #f87171;
     --color-danger-soft: rgb(220 38 38 / 0.18);
+    --color-success: #4ade80;
     --color-success-soft: rgb(34 197 94 / 0.18);
+    --color-warning: #fbbf24;
+    --color-warning-soft: rgb(217 119 6 / 0.18);
     --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.22);
     --shadow-sm: 0 12px 34px rgb(0 0 0 / 0.28);
     --shadow-md: 0 26px 70px rgb(0 0 0 / 0.4);
@@ -100,7 +106,10 @@
   --color-accent-soft: rgb(240 163 74 / 0.18);
   --color-danger: #f87171;
   --color-danger-soft: rgb(220 38 38 / 0.18);
+  --color-success: #4ade80;
   --color-success-soft: rgb(34 197 94 / 0.18);
+  --color-warning: #fbbf24;
+  --color-warning-soft: rgb(217 119 6 / 0.18);
   --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.22);
   --shadow-sm: 0 12px 34px rgb(0 0 0 / 0.28);
   --shadow-md: 0 26px 70px rgb(0 0 0 / 0.4);

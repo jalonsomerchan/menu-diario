@@ -1,11 +1,22 @@
-.tuppers-app { display: grid; gap: 1rem; max-width: none; padding-bottom: 5.5rem; }
+.tuppers-app { display: grid; gap: clamp(0.85rem, 2.2vw, 1.15rem); max-width: none; padding-bottom: 5.5rem; }
 
-.tuppers-page-header { display: grid; gap: 0.9rem; margin-bottom: 1rem; }
+.tuppers-page-header {
+  display: grid;
+  gap: 0.9rem;
+  margin-bottom: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--panel-border), var(--color-primary) 7%);
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-accent), transparent 91%), transparent 14rem),
+    color-mix(in srgb, var(--color-surface), transparent 4%);
+  padding: clamp(1rem, 3vw, 1.45rem);
+  box-shadow: var(--shadow-xs);
+}
 .tuppers-page-header__copy { display: grid; gap: 0.45rem; min-width: 0; }
-.tuppers-page-header h1 { margin: 0; font-size: clamp(1.7rem, 8.5vw, 3.15rem); line-height: 0.98; letter-spacing: -0.06em; overflow-wrap: anywhere; }
-.tuppers-page-header p { margin: 0; max-width: 56ch; color: var(--color-muted); font-size: clamp(0.96rem, 2.9vw, 1.08rem); line-height: 1.45; letter-spacing: var(--surface-copy-letter-spacing); }
+.tuppers-page-header h1 { margin: 0; font-size: clamp(1.9rem, 5vw, 3.35rem); line-height: 0.98; letter-spacing: -0.055em; overflow-wrap: anywhere; text-wrap: balance; }
+.tuppers-page-header p { margin: 0; max-width: 62ch; color: var(--color-muted); font-size: clamp(0.96rem, 2.2vw, 1.08rem); line-height: var(--surface-copy-line-height); letter-spacing: var(--surface-copy-letter-spacing); }
 .tuppers-page-header .button { width: 100%; min-height: 2.65rem; }
-.expiry-banner { border: 1px solid color-mix(in srgb, var(--color-accent), var(--color-border) 45%); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-accent-soft), transparent 10%); padding: 0.9rem 1rem; color: var(--color-text); font-size: 0.94rem; line-height: 1.4; }
+.expiry-banner { border: 1px solid color-mix(in srgb, var(--color-accent), var(--color-border) 45%); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-accent-soft), transparent 10%); padding: 0.9rem 1rem; color: var(--color-text); font-size: 0.94rem; line-height: 1.4; box-shadow: var(--shadow-xs); }
 .expiry-banner[hidden] { display: none; }
 
 .tuppers-form { display: grid; gap: 0.8rem; }
@@ -21,12 +32,14 @@
 .tuppers-form textarea { resize: vertical; }
 
 .tupper-filters { display: flex; flex-wrap: wrap; gap: 0.55rem; margin: 0 0 0.95rem; }
-.tupper-filters button { flex: 1 1 9.5rem; min-height: 2.32rem; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-surface); color: var(--color-text); padding: 0.42rem 0.7rem; font-size: 0.84rem; font-weight: 850; text-align: center; }
+.tupper-filters button { flex: 1 1 9.5rem; min-height: 2.45rem; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 5%); border-radius: var(--radius-full); background: color-mix(in srgb, var(--color-surface), transparent 3%); color: var(--color-text); padding: 0.48rem 0.75rem; font-size: 0.84rem; font-weight: 850; text-align: center; box-shadow: var(--shadow-xs); }
 .tupper-filters button[aria-pressed='true'] { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%); background: var(--color-primary-soft); color: var(--color-primary); }
 
 .tupper-list { display: grid; gap: 0.9rem; }
-.tupper-card { position: relative; display: grid; gap: 0.72rem; border: 1px solid var(--panel-border); border-radius: var(--radius-lg); background: linear-gradient(180deg, color-mix(in srgb, var(--panel-background), var(--color-surface-raised) 26%), var(--panel-background)); padding: clamp(0.8rem, 3.5vw, 1.05rem); padding-bottom: max(clamp(0.8rem, 3.5vw, 1.05rem), 0.9rem); box-shadow: var(--shadow-xs); min-width: 0; min-height: auto; overflow: visible; }
-.tupper-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 0.32rem; background: var(--color-primary); opacity: 0.8; }
+.tupper-card { position: relative; display: grid; gap: 0.78rem; border: 1px solid color-mix(in srgb, var(--panel-border), var(--color-primary) 4%); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--color-surface), transparent 3%); padding: clamp(0.9rem, 3.5vw, 1.15rem); padding-bottom: max(clamp(0.9rem, 3.5vw, 1.15rem), 1rem); box-shadow: var(--shadow-xs); min-width: 0; min-height: auto; overflow: hidden; transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base); }
+.tupper-card:hover,
+.tupper-card:focus-within { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 48%); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.tupper-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 0.34rem; background: var(--color-primary); opacity: 0.8; }
 .tupper-card--expiring::before { background: var(--color-warning); }
 .tupper-card--expired::before { background: var(--color-danger); }
 .tupper-card--done::before { background: var(--color-muted); opacity: 0.55; }
@@ -35,7 +48,7 @@
 .tupper-card__meta { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
 .tupper-card__title { display: grid; gap: 0.35rem; min-width: 0; }
 .tupper-card h3 { margin: 0; color: var(--color-text); font-size: clamp(1.14rem, 5.7vw, 1.62rem); line-height: 1.05; letter-spacing: -0.035em; overflow-wrap: anywhere; text-wrap: balance; }
-.tupper-card__location { justify-self: start; max-width: 100%; border-radius: var(--radius-full); border: 1px solid color-mix(in srgb, var(--color-accent), var(--color-border) 58%); background: color-mix(in srgb, var(--color-accent-soft), transparent 12%); color: var(--color-text); padding: 0.28rem 0.55rem; font-size: 0.7rem; font-weight: 900; overflow-wrap: anywhere; }
+.tupper-card__location { justify-self: start; max-width: 100%; border-radius: var(--radius-full); border: 1px solid color-mix(in srgb, var(--color-accent), var(--color-border) 58%); background: color-mix(in srgb, var(--color-accent-soft), transparent 12%); color: var(--color-text); padding: 0.32rem 0.6rem; font-size: 0.72rem; font-weight: 900; overflow-wrap: anywhere; }
 .tupper-card__menu { position: relative; z-index: 5; }
 .tupper-card__menu summary { display: grid; place-items: center; width: 2.15rem; height: 2.15rem; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 8%); border-radius: var(--radius-full); background: var(--color-surface-raised); color: var(--color-muted); box-shadow: var(--shadow-xs); font-size: 1.25rem; font-weight: 900; line-height: 1; list-style: none; cursor: pointer; transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base), transform var(--transition-base); }
 .tupper-card__menu summary::-webkit-details-marker { display: none; }
@@ -51,7 +64,7 @@
 .tupper-card__menu-list button[data-action='unassign'] { color: var(--color-danger); }
 .tupper-card__assignment { margin: 0; border-left: 3px solid color-mix(in srgb, var(--color-primary), transparent 25%); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: color-mix(in srgb, var(--color-primary-soft), transparent 20%); padding: 0.65rem 0.75rem; color: var(--color-text); font-size: 0.86rem; font-weight: 800; overflow-wrap: anywhere; }
 .tupper-card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin: 0; }
-.tupper-card dl > div { display: grid; gap: 0.24rem; min-width: 0; border: 1px solid color-mix(in srgb, var(--color-border), transparent 6%); border-radius: var(--radius-md); background: color-mix(in srgb, var(--color-surface-soft), transparent 18%); padding: 0.68rem 0.72rem; }
+.tupper-card dl > div { display: grid; gap: 0.24rem; min-width: 0; border: 1px solid color-mix(in srgb, var(--color-border), transparent 6%); border-radius: var(--radius-lg); background: color-mix(in srgb, var(--color-surface-soft), transparent 18%); padding: 0.68rem 0.72rem; }
 .tupper-card dl > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .tupper-card dt { color: var(--color-muted); font-size: 0.68rem; font-weight: 900; letter-spacing: 0.02em; text-transform: uppercase; }
 .tupper-card dd { margin: 0; font-size: 1rem; font-weight: 850; line-height: 1.15; overflow-wrap: anywhere; }

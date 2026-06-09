@@ -19,7 +19,8 @@ const { title, description, eyebrow } = Astro.props;
   .page-header {
     display: grid;
     gap: 0.55rem;
-    margin-bottom: 1.2rem;
+    margin-bottom: clamp(1rem, 2.6vw, 1.6rem);
+    max-width: 76ch;
   }
 
   .page-header__eyebrow {
@@ -37,9 +38,10 @@ const { title, description, eyebrow } = Astro.props;
 
   .page-header__title {
     margin: 0;
-    font-size: clamp(2rem, 5vw, 3.8rem);
-    line-height: 0.94;
-    letter-spacing: -0.07em;
+    font-size: clamp(2rem, 5vw, 3.55rem);
+    line-height: 0.98;
+    letter-spacing: -0.055em;
+    text-wrap: balance;
   }
 
   .page-header__description {
