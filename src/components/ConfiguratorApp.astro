@@ -120,8 +120,15 @@ const labels = {
 
   .configurator-page-header {
     display: grid;
-    gap: 1rem;
-    margin-bottom: 1.2rem;
+    gap: 0.95rem;
+    margin-bottom: 0.35rem;
+    border: 1px solid color-mix(in srgb, var(--panel-border), var(--color-primary) 7%);
+    border-radius: var(--radius-2xl);
+    background:
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-primary), transparent 90%), transparent 14rem),
+      color-mix(in srgb, var(--color-surface), transparent 4%);
+    padding: clamp(1rem, 3vw, 1.45rem);
+    box-shadow: var(--shadow-xs);
   }
 
   .configurator-page-header__copy {
@@ -131,16 +138,17 @@ const labels = {
 
   .configurator-page-header h1 {
     margin: 0;
-    font-size: clamp(2rem, 5vw, 3.8rem);
-    line-height: 0.94;
-    letter-spacing: -0.07em;
+    font-size: clamp(1.9rem, 5vw, 3.35rem);
+    line-height: 0.98;
+    letter-spacing: -0.055em;
+    text-wrap: balance;
   }
 
   .configurator-page-header p {
     margin: 0;
     max-width: 72ch;
     color: var(--color-muted);
-    font-size: clamp(1rem, 2.4vw, 1.15rem);
+    font-size: clamp(0.96rem, 2.2vw, 1.08rem);
     line-height: var(--surface-copy-line-height);
     letter-spacing: var(--surface-copy-letter-spacing);
   }
@@ -148,7 +156,11 @@ const labels = {
   .configurator-planner-panel {
     display: grid;
     gap: 1rem;
-    background: var(--panel-background);
+    border-color: color-mix(in srgb, var(--panel-border), var(--color-primary) 7%);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--color-surface), transparent 2%), color-mix(in srgb, var(--color-surface-soft), transparent 50%)),
+      var(--panel-background);
+    box-shadow: var(--shadow-xs);
   }
 
   .configurator-planner-panel .menu-days--cards {

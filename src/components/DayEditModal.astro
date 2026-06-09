@@ -223,7 +223,7 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
   }
 
   .day-edit-modal .day-edit-card__content {
-    gap: 0.9rem;
+    gap: clamp(0.85rem, 2.2vw, 1.1rem);
   }
 
   .day-edit-modal .day-card[data-day-mode='skipped'] .day-edit-card__content {
@@ -232,11 +232,11 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
   }
 
   .day-edit-modal .day-edit-block {
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 8%);
-    border-radius: 1.2rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 7%);
+    border-radius: var(--radius-xl);
     background:
-      linear-gradient(180deg, color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 10%), color-mix(in srgb, var(--color-surface-soft), transparent 10%));
-    padding: 0.92rem;
+      linear-gradient(180deg, color-mix(in srgb, var(--color-surface), var(--color-primary-soft) 7%), color-mix(in srgb, var(--color-surface-soft), transparent 36%));
+    padding: clamp(0.85rem, 2.4vw, 1.05rem);
     box-shadow: inset 0 1px 0 color-mix(in srgb, #fff, transparent 94%);
   }
 
@@ -252,15 +252,20 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
   }
 
   .day-edit-modal .meal-editor {
-    gap: 0.82rem;
+    gap: 0.9rem;
+    overflow: hidden;
   }
 
   .day-edit-modal .plate-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
-    gap: 0.85rem;
+    gap: 0.7rem;
     min-width: 0;
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 10%);
+    border-radius: var(--radius-xl);
+    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+    padding: 0.55rem;
   }
 
   .day-edit-modal .plate-row label {
@@ -271,6 +276,8 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
 
   .day-edit-modal .meal-editor__header {
     align-items: center;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border), transparent 18%);
+    padding-bottom: 0.65rem;
   }
 
   .day-edit-modal .meal-editor__title {
@@ -280,20 +287,28 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
   }
 
   .day-edit-modal .meal-editor h4 {
-    font-size: 0.92rem;
-    letter-spacing: 0.1em;
-    color: var(--color-muted);
+    width: fit-content;
+    margin: 0;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 12%);
+    color: var(--color-primary);
+    padding: 0.28rem 0.62rem;
+    font-size: 0.78rem;
+    font-weight: 950;
+    letter-spacing: 0.08em;
   }
 
   .day-edit-modal .plate-list {
-    gap: 0.7rem;
+    gap: 0.65rem;
   }
 
   .day-edit-modal .plate-row .icon-button--danger {
-    width: 2.85rem;
-    height: 3.2rem;
+    width: 2.75rem;
+    height: 100%;
+    min-height: 3.15rem;
     align-self: stretch;
     background: color-mix(in srgb, var(--color-danger-soft), transparent 8%);
+    box-shadow: none;
   }
 
   .day-edit-modal .button--primary[aria-busy='true'] {
@@ -304,12 +319,12 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     grid-template-columns: minmax(0, 1fr) 3rem;
     width: 100%;
     min-width: 0;
-    border-radius: 1.1rem;
+    border-radius: var(--radius-lg);
     background: color-mix(in srgb, var(--color-surface-raised), var(--color-surface) 35%);
   }
 
   .day-edit-modal .dish-combobox input {
-    min-height: 3.3rem;
+    min-height: 3.1rem;
     padding: 0.82rem 1rem;
     font-size: 1rem;
     font-weight: 850;
@@ -350,7 +365,7 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
 
   .day-edit-modal .day-edit-field textarea {
     min-height: 7rem;
-    border-radius: 1.15rem;
+    border-radius: var(--radius-xl);
     background: color-mix(in srgb, var(--color-surface-raised), var(--color-surface) 35%);
     padding: 1rem;
     line-height: 1.55;
@@ -364,8 +379,8 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     display: flex !important;
     align-items: center;
     gap: 0.8rem;
-    border-style: dashed;
-    background: color-mix(in srgb, var(--color-surface-soft), transparent 6%);
+    border-style: solid;
+    background: color-mix(in srgb, var(--color-surface), var(--color-surface-soft) 45%);
     padding: 0.88rem 0.95rem;
   }
 
@@ -378,6 +393,32 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
   .day-edit-modal .day-edit-toggle-card:has(input:checked) {
     border-color: color-mix(in srgb, var(--color-warning), var(--color-border) 35%);
     background: color-mix(in srgb, var(--color-warning-soft), transparent 25%);
+  }
+
+  .day-edit-modal .day-options {
+    gap: 0.7rem;
+  }
+
+  .day-edit-modal .day-options legend {
+    margin-bottom: 0.1rem;
+    font-size: 0.95rem;
+    line-height: 1.15;
+  }
+
+  .day-edit-modal .day-options__grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    gap: 0.55rem;
+  }
+
+  .day-edit-modal .day-option-chip {
+    min-height: 3.45rem;
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--day-option-color, var(--color-primary)), var(--color-surface) 88%);
+    padding: 0.75rem;
+  }
+
+  .day-edit-modal .day-option-chip:has(input:checked) {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--day-option-color, var(--color-primary)), transparent 72%);
   }
 
   @media (min-width: 480px) {
