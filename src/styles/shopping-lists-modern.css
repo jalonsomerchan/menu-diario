@@ -1,0 +1,146 @@
+.shopping-lists-layout {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: clamp(1rem, 2.4vw, 1.35rem) !important;
+}
+
+.shopping-lists-app .shopping-saved-panel {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--color-border), var(--color-primary) 14%);
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-primary), transparent 90%), transparent 15rem),
+    linear-gradient(135deg, color-mix(in srgb, var(--color-surface), transparent 0%), color-mix(in srgb, var(--color-surface-soft), transparent 64%));
+}
+
+.shopping-lists-app .shopping-saved-panel__heading {
+  align-items: center;
+}
+
+.shopping-lists-app .shopping-saved-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+.shopping-lists-app .shopping-saved-card {
+  border-radius: var(--radius-2xl);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-surface-raised), transparent 0%), color-mix(in srgb, var(--color-surface-soft), transparent 58%));
+}
+
+.shopping-lists-app .shopping-saved-card__head {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch !important;
+  gap: 0.85rem;
+}
+
+.shopping-lists-app .shopping-saved-card__main {
+  min-width: 0;
+}
+
+.shopping-lists-app .shopping-saved-card__title {
+  font-size: clamp(1.06rem, 3.8vw, 1.28rem) !important;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+}
+
+.shopping-lists-app .shopping-saved-card__meta {
+  justify-content: flex-start !important;
+  margin-top: 0.55rem !important;
+}
+
+.shopping-lists-app .shopping-saved-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.shopping-lists-app .shopping-saved-card__actions .button {
+  flex: 1 1 9rem;
+}
+
+.shopping-lists-app .shopping-saved-card__delete {
+  border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 42%) !important;
+  color: var(--color-danger) !important;
+}
+
+.shopping-lists-app .shopping-saved-card__delete:hover,
+.shopping-lists-app .shopping-saved-card__delete:focus-visible {
+  background: color-mix(in srgb, var(--color-danger-soft), transparent 14%) !important;
+}
+
+.shopping-lists-app .shopping-pill--primary,
+.shopping-lists-app .shopping-pill--active {
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.shopping-lists-app .shopping-empty-state {
+  display: grid;
+  justify-items: start;
+  gap: 0.8rem;
+  border: 1px dashed color-mix(in srgb, var(--color-border), var(--color-primary) 14%);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-surface), transparent 5%);
+  padding: var(--surface-padding);
+}
+
+.shopping-lists-app .planning-ai-panel[aria-labelledby='shopping-list-detail-title'] {
+  min-width: 0;
+}
+
+.shopping-lists-app .shopping-review-group {
+  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 8%);
+  border-radius: var(--radius-2xl);
+  background: color-mix(in srgb, var(--color-surface), transparent 4%);
+  padding: clamp(0.85rem, 2.4vw, 1rem);
+}
+
+.shopping-lists-app .shopping-review-group__header {
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border), transparent 25%);
+}
+
+.shopping-lists-app .shopping-item {
+  border-radius: var(--radius-xl);
+}
+
+.shopping-lists-app .shopping-status {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.5rem !important;
+}
+
+.shopping-lists-app .shopping-status__button {
+  flex: 1 1 8.5rem;
+  justify-content: flex-start !important;
+  border-radius: var(--radius-lg) !important;
+  padding-inline: 0.85rem !important;
+  text-align: left;
+  white-space: normal !important;
+}
+
+@media (min-width: 640px) {
+  .shopping-lists-app .shopping-saved-card__head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center !important;
+  }
+
+  .shopping-lists-app .shopping-saved-card__actions {
+    justify-content: end;
+  }
+
+  .shopping-lists-app .shopping-saved-card__actions .button {
+    flex: 0 0 auto;
+  }
+}
+
+@media (min-width: 860px) {
+  .shopping-lists-app .shopping-item {
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.88fr);
+    align-items: center;
+  }
+}

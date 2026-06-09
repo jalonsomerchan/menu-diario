@@ -31,24 +31,38 @@ if (root) {
           newList: labels.newList || 'Nueva lista',
         };
 
+  function getPermissionSafeMessage(error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return message.toLowerCase().includes('permission') ? labels.permissionsError : message;
+  }
+
+  function createDeleteButton(listId: string) {
+    const button = document.createElement('button');
+    button.className = 'button button--ghost button--small shopping-saved-card__delete';
+    button.type = 'button';
+    button.dataset.deleteList = listId;
+    button.textContent = copy.deleteList;
+    return button;
+  }
+
   function enhanceSavedLists() {
     if (!savedLists) return;
 
     savedLists.querySelectorAll<HTMLElement>('.shopping-saved-card').forEach((card) => {
-      if (card.dataset.enhanced === 'true') return;
       const listId = card.dataset.listId;
       const head = card.querySelector<HTMLElement>('.shopping-saved-card__head');
       const openButton = card.querySelector<HTMLButtonElement>('[data-open-list]');
       if (!listId || !head || !openButton) return;
 
-      const actions = document.createElement('div');
-      actions.className = 'shopping-saved-card__actions';
-      actions.append(openButton);
-      actions.insertAdjacentHTML(
-        'beforeend',
-        `<button class="button button--ghost button--small shopping-saved-card__delete" type="button" data-delete-list="${listId}">${copy.deleteList}</button>`
-      );
-      head.append(actions);
+      let actions = card.querySelector<HTMLElement>('.shopping-saved-card__actions');
+      if (!actions) {
+        actions = document.createElement('div');
+        actions.className = 'shopping-saved-card__actions';
+        head.append(actions);
+      }
+
+      if (!actions.contains(openButton)) actions.prepend(openButton);
+      if (!actions.querySelector('[data-delete-list]')) actions.append(createDeleteButton(listId));
       card.dataset.enhanced = 'true';
     });
 
@@ -85,8 +99,7 @@ if (root) {
       saveFeedback.info(copy.deleted);
       newListButton?.click();
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      saveFeedback.error(message || labels.permissionsError);
+      saveFeedback.error(getPermissionSafeMessage(error) || labels.permissionsError);
       deleteButton.disabled = false;
     }
   });
@@ -97,4 +110,7 @@ if (root) {
   }
 
   enhanceSavedLists();
+  window.requestAnimationFrame(enhanceSavedLists);
+  window.setTimeout(enhanceSavedLists, 250);
+  window.setTimeout(enhanceSavedLists, 1000);
 }
