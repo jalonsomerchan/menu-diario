@@ -157,8 +157,14 @@ service cloud.firestore {
 
     function canAccessShoppingList(data) {
       return signedIn()
-        && data.ownerId is string
-        && (data.ownerId == request.auth.uid || (data.groupId is string && isGroupMember(data.groupId)));
+        && (
+          (data.ownerId is string && data.ownerId == request.auth.uid)
+          || (data.groupId is string && isGroupMember(data.groupId))
+        );
+    }
+
+    function keepsShoppingListOwner() {
+      return !(resource.data.ownerId is string) || request.resource.data.ownerId == resource.data.ownerId;
     }
 
     function canAccessTupper(data) {
@@ -260,7 +266,7 @@ service cloud.firestore {
         && request.resource.data.ownerId == request.auth.uid
         && isShoppingListScope(request.resource.data);
       allow update: if canAccessShoppingList(resource.data)
-        && request.resource.data.ownerId == resource.data.ownerId
+        && keepsShoppingListOwner()
         && request.resource.data.groupId == resource.data.groupId
         && isShoppingListScope(request.resource.data);
       allow delete: if canAccessShoppingList(resource.data);
