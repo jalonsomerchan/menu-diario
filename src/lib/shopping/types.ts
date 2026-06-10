@@ -7,7 +7,7 @@ export type ShoppingItemSource = (typeof shoppingItemSources)[number];
 export const shoppingConfidenceLevels = ['low', 'medium', 'high'] as const;
 export type ShoppingConfidence = (typeof shoppingConfidenceLevels)[number];
 
-export const shoppingListStatuses = ['active', 'archived'] as const;
+export const shoppingListStatuses = ['active', 'completed', 'archived'] as const;
 export type ShoppingListStatus = (typeof shoppingListStatuses)[number];
 
 export const shoppingCategories = [

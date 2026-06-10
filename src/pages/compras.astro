@@ -3,10 +3,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import AppPageShell from '../components/AppPageShell.astro';
 import ShoppingListsApp from '../components/ShoppingListsApp.astro';
 import { defaultLocale, siteConfig } from '../config/site';
+import { useTranslations } from '../i18n/ui';
 
 const locale = defaultLocale;
-const title = 'Compras';
-const description = 'Consulta tus listas de la compra guardadas y abre la que necesites revisar.';
+const t = useTranslations(locale);
+const title = t('shoppingLists.title');
+const description = t('shoppingLists.description');
 ---
 
 <BaseLayout title={`${title} · ${siteConfig.name}`} description={description} locale={locale}>

@@ -33,24 +33,37 @@ const labels = {
   shared: t('shopping.shared'),
   share: t('shopping.share'),
   saveList: t('shopping.saveList'),
+  addManualItem: t('shopping.addManualItem'),
+  itemName: t('shopping.itemName'),
+  itemQuantity: t('shopping.itemQuantity'),
+  removeItem: t('shopping.removeItem'),
   pendingCountSingle: t('shopping.pendingCountSingle'),
   pendingCountPlural: t('shopping.pendingCountPlural'),
-  savedListsTitle: locale === 'en' ? 'Saved shopping lists' : 'Listas de la compra guardadas',
-  savedListsDescription:
-    locale === 'en'
-      ? 'Review your saved lists, mark items as bought and open only the list you need.'
-      : 'Revisa tus listas guardadas, marca productos como comprados y abre solo la lista que necesites.',
-  savedListsEmpty:
-    locale === 'en'
-      ? 'You do not have saved shopping lists yet. Generate one from AI shopping first.'
-      : 'Todavía no tienes listas de la compra guardadas. Genera una desde Compras con IA primero.',
-  createWithAi: locale === 'en' ? 'Create with AI' : 'Crear con IA',
-  openList: locale === 'en' ? 'Open list' : 'Abrir lista',
-  activeList: locale === 'en' ? 'Open list' : 'Lista abierta',
-  listItemsCountSingle: locale === 'en' ? '1 item pending' : '1 pendiente',
-  listItemsCountPlural: locale === 'en' ? '{count} items pending' : '{count} pendientes',
+  savedListsTitle: t('shoppingLists.title'),
+  savedListsDescription: t('shoppingLists.description'),
+  savedListsEmpty: t('shoppingLists.empty'),
+  createWithAi: t('shoppingLists.createWithAi'),
+  createManual: t('shoppingLists.createManual'),
+  manualTitle: t('shoppingLists.manualTitle'),
+  manualTitlePlaceholder: t('shoppingLists.manualTitlePlaceholder'),
+  openList: t('shoppingLists.openList'),
+  activeList: t('shoppingLists.activeList'),
+  backToLists: t('shoppingLists.backToLists'),
+  completed: t('shoppingLists.completed'),
+  markCompleted: t('shoppingLists.markCompleted'),
+  reopenList: t('shoppingLists.reopenList'),
+  deleteList: t('shoppingLists.deleteList'),
+  deleteListConfirm: t('shoppingLists.deleteListConfirm'),
+  deletedList: t('shoppingLists.deletedList'),
+  createdList: t('shoppingLists.createdList'),
+  completedList: t('shoppingLists.completedList'),
+  reopenedList: t('shoppingLists.reopenedList'),
+  listItemsCountSingle: t('shoppingLists.itemsCountSingle'),
+  listItemsCountPlural: t('shoppingLists.itemsCountPlural'),
   listDateRange: '{start} - {end}',
-  selectList: locale === 'en' ? 'Select a saved list to review it.' : 'Selecciona una lista guardada para revisarla.',
+  selectList: t('shoppingLists.selectList'),
+  addItemPlaceholder: t('shoppingLists.addItemPlaceholder'),
+  quantityPlaceholder: t('shoppingLists.quantityPlaceholder'),
   aiPath,
 };
 ---
@@ -72,8 +85,8 @@ const labels = {
 
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
-  <div class="shopping-lists-layout" data-workspace hidden>
-    <section class="planning-ai-panel app-panel shopping-saved-panel" aria-labelledby="shopping-saved-title">
+  <div class="shopping-lists-layout" data-workspace data-view="index" hidden>
+    <section class="planning-ai-panel app-panel shopping-saved-panel" aria-labelledby="shopping-saved-title" data-list-screen>
       <div class="planning-ai-section-heading shopping-saved-panel__heading">
         <div>
           <p class="menu-app__eyebrow">{labels.exportTitle}</p>
@@ -82,10 +95,17 @@ const labels = {
         </div>
         <a class="button button--primary button--small" href={aiPath}>{labels.createWithAi}</a>
       </div>
+      <form class="shopping-create-form" data-create-list-form>
+        <label class="shopping-field">
+          <span>{labels.manualTitle}</span>
+          <input type="text" name="title" autocomplete="off" placeholder={labels.manualTitlePlaceholder} />
+        </label>
+        <button class="button button--secondary button--small" type="submit">{labels.createManual}</button>
+      </form>
       <div class="shopping-saved-list" data-saved-lists role="list"></div>
     </section>
 
-    <section class="planning-ai-panel app-panel" aria-labelledby="shopping-list-detail-title">
+    <section class="planning-ai-panel app-panel shopping-detail-panel" aria-labelledby="shopping-list-detail-title" data-detail-screen>
       <div class="planning-ai-section-heading">
         <div>
           <p class="menu-app__eyebrow">{labels.activeList}</p>
@@ -94,9 +114,23 @@ const labels = {
         </div>
       </div>
       <div class="shopping-toolbar">
+        <button class="button button--ghost button--small" type="button" data-back-to-lists>{labels.backToLists}</button>
         <button class="button button--ghost button--small" type="button" data-share disabled>{labels.share}</button>
+        <button class="button button--secondary button--small" type="button" data-complete disabled>{labels.markCompleted}</button>
         <button class="button button--primary button--small" type="button" data-save disabled>{labels.saveList}</button>
+        <button class="button button--ghost button--small shopping-saved-card__delete" type="button" data-delete-active disabled>{labels.deleteList}</button>
       </div>
+      <form class="shopping-add-item-form" data-add-item-form>
+        <label class="shopping-field">
+          <span>{labels.itemName}</span>
+          <input type="text" name="name" autocomplete="off" placeholder={labels.addItemPlaceholder} />
+        </label>
+        <label class="shopping-field">
+          <span>{labels.itemQuantity}</span>
+          <input type="text" name="quantity" autocomplete="off" placeholder={labels.quantityPlaceholder} />
+        </label>
+        <button class="button button--secondary button--small" type="submit">{labels.addManualItem}</button>
+      </form>
       <div class="planning-ai-results shopping-draft" data-detail></div>
     </section>
   </div>
@@ -113,9 +147,16 @@ const labels = {
     display: none;
   }
 
-  .shopping-lists-layout {
+  .shopping-lists-layout,
+  .shopping-create-form,
+  .shopping-add-item-form {
     display: grid;
     gap: clamp(0.85rem, 2.2vw, 1.15rem);
+  }
+
+  .shopping-lists-layout[data-view='index'] [data-detail-screen],
+  .shopping-lists-layout[data-view='detail'] [data-list-screen] {
+    display: none;
   }
 
   .shopping-saved-panel__heading {
@@ -162,6 +203,10 @@ const labels = {
     background: color-mix(in srgb, var(--color-primary-soft), transparent 20%);
   }
 
+  .shopping-saved-card[data-status='completed'] {
+    border-color: color-mix(in srgb, var(--color-success), var(--color-border) 35%);
+  }
+
   .shopping-saved-card__head,
   .shopping-item__head,
   .shopping-review-group__header {
@@ -187,6 +232,30 @@ const labels = {
     justify-content: flex-end;
     gap: 0.55rem;
     margin: 0;
+  }
+
+  .shopping-field {
+    display: grid;
+    gap: 0.35rem;
+    color: var(--color-text);
+    font-size: 0.86rem;
+    font-weight: 850;
+  }
+
+  .shopping-field input {
+    width: 100%;
+    min-height: 2.75rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 8%);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-text);
+    padding: 0.65rem 0.8rem;
+    font: inherit;
+  }
+
+  .shopping-field input:focus-visible {
+    border-color: var(--color-primary);
+    outline: 3px solid color-mix(in srgb, var(--color-primary), transparent 75%);
   }
 
   .shopping-pill {
@@ -258,11 +327,6 @@ const labels = {
   }
 
   @media (min-width: 960px) {
-    .shopping-lists-layout {
-      grid-template-columns: minmax(18rem, 0.82fr) minmax(0, 1.18fr);
-      align-items: start;
-    }
-
     .shopping-saved-panel {
       position: sticky;
       top: 5.5rem;

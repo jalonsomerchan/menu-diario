@@ -3,8 +3,8 @@ import { hasFirebaseConfig } from '../lib/firebase/config';
 import { ensureUserProfile, watchUserProfile } from '../lib/menu/repository';
 import type { FirebaseUser, UserProfile } from '../lib/menu/types';
 import { buildShoppingListText } from '../lib/shopping/export';
-import { getToBuyItems, groupShoppingItems, normalizeShoppingItem } from '../lib/shopping/normalize';
-import { deleteShoppingList, saveShoppingList, watchShoppingLists } from '../lib/shopping/repository';
+import { createManualShoppingItemId, getToBuyItems, groupShoppingItems, normalizeShoppingItem } from '../lib/shopping/normalize';
+import { deleteShoppingList, saveShoppingList, updateShoppingListStatus, watchShoppingLists } from '../lib/shopping/repository';
 import type { ShoppingItem, ShoppingListDocument, ShoppingScope } from '../lib/shopping/types';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 import '../styles/shopping-lists-modern.css';
@@ -22,21 +22,17 @@ if (root) {
   const detail = root.querySelector<HTMLElement>('[data-detail]');
   const detailTitle = root.querySelector<HTMLElement>('[data-detail-title]');
   const detailDescription = root.querySelector<HTMLElement>('[data-detail-description]');
+  const createListForm = root.querySelector<HTMLFormElement>('[data-create-list-form]');
+  const addItemForm = root.querySelector<HTMLFormElement>('[data-add-item-form]');
   const saveButton = root.querySelector<HTMLButtonElement>('[data-save]');
   const shareButton = root.querySelector<HTMLButtonElement>('[data-share]');
+  const completeButton = root.querySelector<HTMLButtonElement>('[data-complete]');
+  const deleteActiveButton = root.querySelector<HTMLButtonElement>('[data-delete-active]');
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
     saved: labels.saveSaved,
   });
-
-  const deleteLabel = labels.deleteList || (locale === 'en-US' ? 'Delete' : 'Borrar');
-  const deleteConfirmLabel =
-    labels.deleteListConfirm ||
-    (locale === 'en-US'
-      ? 'Delete this shopping list? This action cannot be undone.'
-      : '¿Borrar esta lista de la compra? Esta acción no se puede deshacer.');
-  const deletedLabel = labels.deletedList || (locale === 'en-US' ? 'Shopping list deleted.' : 'Lista de la compra borrada.');
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -75,6 +71,7 @@ if (root) {
   }
 
   function formatListRange(list: ShoppingListDocument) {
+    if (!list.rangeStart || !list.rangeEnd) return '';
     return (labels.listDateRange ?? '{start} - {end}')
       .replace('{start}', formatDateLabel(list.rangeStart))
       .replace('{end}', formatDateLabel(list.rangeEnd));
@@ -97,21 +94,23 @@ if (root) {
         const pendingCount = getToBuyItems(list.items).length;
         const reviewedCount = list.items.length - pendingCount;
         const countLabel = formatCountLabel('listItemsCountSingle', 'listItemsCountPlural', pendingCount);
+        const rangeLabel = formatListRange(list);
         return `
-          <article class="shopping-saved-card" data-list-id="${escapeHtml(list.id)}" data-active="${list.id === activeList?.id}" role="listitem">
+          <article class="shopping-saved-card" data-list-id="${escapeHtml(list.id)}" data-active="${list.id === activeList?.id}" data-status="${escapeHtml(list.status)}" role="listitem">
             <div class="shopping-saved-card__head">
               <div class="shopping-saved-card__main">
                 <h3 class="shopping-saved-card__title">${escapeHtml(list.title || labels.exportTitle)}</h3>
                 <p class="shopping-saved-card__meta">
                   <span class="shopping-pill shopping-pill--primary">${escapeHtml(countLabel)}</span>
-                  <span class="shopping-pill">${escapeHtml(formatListRange(list))}</span>
+                  ${rangeLabel ? `<span class="shopping-pill">${escapeHtml(rangeLabel)}</span>` : ''}
                   ${reviewedCount > 0 ? `<span class="shopping-pill">${reviewedCount} ${escapeHtml(labels.doneTitle).toLocaleLowerCase()}</span>` : ''}
+                  ${list.status === 'completed' ? `<span class="shopping-pill shopping-pill--completed">${escapeHtml(labels.completed)}</span>` : ''}
                   ${list.id === activeList?.id ? `<span class="shopping-pill shopping-pill--active">${escapeHtml(labels.activeList)}</span>` : ''}
                 </p>
               </div>
               <div class="shopping-saved-card__actions">
                 <button class="button button--secondary button--small" type="button" data-open-list="${escapeHtml(list.id)}">${escapeHtml(labels.openList)}</button>
-                <button class="button button--ghost button--small shopping-saved-card__delete" type="button" data-delete-list="${escapeHtml(list.id)}">${escapeHtml(deleteLabel)}</button>
+                <button class="button button--ghost button--small shopping-saved-card__delete" type="button" data-delete-list="${escapeHtml(list.id)}">${escapeHtml(labels.deleteList)}</button>
               </div>
             </div>
           </article>
@@ -139,6 +138,9 @@ if (root) {
           ${renderStatusButton(item, 'to-buy', labels.markToBuy)}
           ${renderStatusButton(item, 'owned', labels.markOwned)}
           ${renderStatusButton(item, 'dismissed', labels.markDismissed)}
+          <button class="shopping-status__button shopping-status__button--danger" type="button" data-remove-item>
+            ${escapeHtml(labels.removeItem)}
+          </button>
         </div>
       </article>
     `;
@@ -155,7 +157,10 @@ if (root) {
     }
 
     if (detailTitle) detailTitle.textContent = activeList.title || labels.exportTitle;
-    if (detailDescription) detailDescription.textContent = formatListRange(activeList);
+    if (detailDescription) {
+      const rangeLabel = formatListRange(activeList);
+      detailDescription.textContent = activeList.status === 'completed' ? labels.completed : rangeLabel || labels.selectList;
+    }
 
     const pendingItems = draftItems.filter((item) => item.status === 'to-buy');
     const reviewedItems = draftItems.filter((item) => item.status !== 'to-buy');
@@ -187,6 +192,7 @@ if (root) {
     activeList = list;
     draftItems = groupShoppingItems(list.items);
     draftDirty = false;
+    workspace?.setAttribute('data-view', 'detail');
     renderSavedLists();
     renderDetail();
   }
@@ -196,6 +202,11 @@ if (root) {
     const hasToBuy = getToBuyItems(draftItems).length > 0;
     if (saveButton) saveButton.disabled = !currentUser || !hasList || !draftDirty;
     if (shareButton) shareButton.disabled = !hasList || !hasToBuy || typeof navigator.share !== 'function';
+    if (completeButton) {
+      completeButton.disabled = !currentUser || !hasList || !activeList?.id;
+      completeButton.textContent = activeList?.status === 'completed' ? labels.reopenList : labels.markCompleted;
+    }
+    if (deleteActiveButton) deleteActiveButton.disabled = !currentUser || !hasList || !activeList?.id;
   }
 
   function updateItemStatus(itemId: string, nextStatus: ShoppingItem['status']) {
@@ -208,6 +219,56 @@ if (root) {
     draftDirty = true;
     renderDetail();
     renderSavedLists();
+  }
+
+  function removeItem(itemId: string) {
+    draftItems = draftItems.filter((item) => item.id !== itemId);
+    draftDirty = true;
+    renderDetail();
+    renderSavedLists();
+  }
+
+  function addManualItem(name: string, quantity: string) {
+    if (!activeList) return;
+    const nextItem = normalizeShoppingItem(
+      {
+        id: createManualShoppingItemId(),
+        name,
+        quantity,
+        category: name,
+        source: 'manual',
+        status: 'to-buy',
+        checked: false,
+        order: draftItems.length,
+      },
+      draftItems.length
+    );
+    draftItems = groupShoppingItems([...draftItems, nextItem]);
+    draftDirty = true;
+    renderDetail();
+    renderSavedLists();
+  }
+
+  function createManualList(title: string) {
+    const today = new Date().toISOString().slice(0, 10);
+    activeList = {
+      id: '',
+      title: title.trim() || labels.exportTitle,
+      ownerId: currentUser?.uid ?? '',
+      groupId: currentProfile?.groupId,
+      scope: getScope(),
+      status: 'active',
+      source: 'manual',
+      rangeStart: today,
+      rangeEnd: today,
+      items: [],
+    };
+    draftItems = [];
+    draftDirty = true;
+    workspace?.setAttribute('data-view', 'detail');
+    renderSavedLists();
+    renderDetail();
+    showStatus(labels.createdList);
   }
 
   function buildExportText() {
@@ -243,7 +304,8 @@ if (root) {
         rangeStart: activeList.rangeStart,
         rangeEnd: activeList.rangeEnd,
         items: draftItems,
-        listId: activeList.id,
+        listId: activeList.id || undefined,
+        status: activeList.status,
       });
       activeList = { ...activeList, id: listId, items: draftItems };
       draftDirty = false;
@@ -257,7 +319,7 @@ if (root) {
 
   async function deleteCurrentList(listId: string) {
     if (!currentUser) return;
-    const confirmed = window.confirm(deleteConfirmLabel);
+    const confirmed = window.confirm(labels.deleteListConfirm);
     if (!confirmed) return;
 
     try {
@@ -270,8 +332,30 @@ if (root) {
         renderDetail();
       }
       currentLists = currentLists.filter((list) => list.id !== listId);
+      workspace?.setAttribute('data-view', 'index');
       renderSavedLists();
-      showStatus(deletedLabel);
+      showStatus(labels.deletedList);
+    } catch (error) {
+      showStatus(formatError(error), true);
+    }
+  }
+
+  async function toggleCurrentListCompleted() {
+    if (!currentUser || !activeList?.id) return;
+
+    try {
+      saveFeedback.saving();
+      const nextStatus = activeList.status === 'completed' ? 'active' : 'completed';
+      await updateShoppingListStatus(await getFirebaseServices(), {
+        listId: activeList.id,
+        userId: currentUser.uid,
+        status: nextStatus,
+      });
+      activeList = { ...activeList, status: nextStatus };
+      currentLists = currentLists.map((list) => (list.id === activeList?.id ? { ...list, status: nextStatus } : list));
+      renderSavedLists();
+      renderDetail();
+      showStatus(nextStatus === 'completed' ? labels.completedList : labels.reopenedList);
     } catch (error) {
       showStatus(formatError(error), true);
     }
@@ -337,6 +421,13 @@ if (root) {
       openList(list);
     });
     detail?.addEventListener('click', (event) => {
+      const removeButton = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-remove-item]');
+      const removeItemId = removeButton?.closest<HTMLElement>('[data-item-id]')?.dataset.itemId;
+      if (removeButton && removeItemId) {
+        removeItem(removeItemId);
+        return;
+      }
+
       const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-set-status]');
       const itemId = button?.closest<HTMLElement>('[data-item-id]')?.dataset.itemId;
       const nextStatus = button?.dataset.setStatus as ShoppingItem['status'] | undefined;
@@ -345,6 +436,32 @@ if (root) {
     });
     saveButton?.addEventListener('click', () => {
       saveCurrentList().catch((error) => showStatus(formatError(error), true));
+    });
+    createListForm?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!currentUser) return;
+      const formData = new FormData(createListForm);
+      createManualList(String(formData.get('title') ?? ''));
+      createListForm.reset();
+    });
+    addItemForm?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const formData = new FormData(addItemForm);
+      const name = String(formData.get('name') ?? '').trim();
+      if (!name) return;
+      addManualItem(name, String(formData.get('quantity') ?? ''));
+      addItemForm.reset();
+      addItemForm.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
+    });
+    root.querySelector('[data-back-to-lists]')?.addEventListener('click', () => {
+      workspace?.setAttribute('data-view', 'index');
+    });
+    completeButton?.addEventListener('click', () => {
+      toggleCurrentListCompleted().catch((error) => showStatus(formatError(error), true));
+    });
+    deleteActiveButton?.addEventListener('click', () => {
+      if (!activeList?.id) return;
+      deleteCurrentList(activeList.id).catch((error) => showStatus(formatError(error), true));
     });
     shareButton?.addEventListener('click', () => {
       shareCurrentList().catch((error) => showStatus(formatError(error), true));

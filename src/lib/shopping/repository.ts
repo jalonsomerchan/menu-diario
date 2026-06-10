@@ -145,6 +145,19 @@ export async function archiveShoppingList(services: FirebaseServices, input: { l
   });
 }
 
+export async function updateShoppingListStatus(
+  services: FirebaseServices,
+  input: { listId: string; userId: string; status: ShoppingListStatus }
+) {
+  const { db, firestoreModule } = services;
+  await firestoreModule.updateDoc(firestoreModule.doc(db, shoppingListsCollection, input.listId), {
+    status: input.status,
+    archivedAt: input.status === 'archived' ? firestoreModule.serverTimestamp() : null,
+    updatedAt: firestoreModule.serverTimestamp(),
+    updatedBy: input.userId,
+  });
+}
+
 export async function deleteShoppingList(services: FirebaseServices, listId: string) {
   const { db, firestoreModule } = services;
   await firestoreModule.deleteDoc(firestoreModule.doc(db, shoppingListsCollection, listId));
@@ -173,7 +186,7 @@ function mapShoppingList(id: string, data: Record<string, any>): ShoppingListDoc
     ownerId: data.ownerId ?? '',
     groupId: data.groupId ?? undefined,
     scope: data.scope === 'group' ? 'group' : 'user',
-    status: data.status === 'archived' ? 'archived' : 'active',
+    status: data.status === 'archived' || data.status === 'completed' ? data.status : 'active',
     source: data.source === 'manual' || data.source === 'mixed' ? data.source : 'ai',
     rangeStart: data.rangeStart ?? '',
     rangeEnd: data.rangeEnd ?? '',

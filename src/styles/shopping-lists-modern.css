@@ -78,6 +78,21 @@
   color: var(--color-primary);
 }
 
+.shopping-lists-app .shopping-pill--completed {
+  border-color: color-mix(in srgb, var(--color-success), var(--color-border) 35%);
+  background: color-mix(in srgb, var(--color-success-soft), transparent 10%);
+  color: var(--color-success);
+}
+
+.shopping-lists-app .shopping-create-form,
+.shopping-lists-app .shopping-add-item-form {
+  align-items: end;
+  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-surface), transparent 5%);
+  padding: clamp(0.85rem, 2.4vw, 1rem);
+}
+
 .shopping-lists-app .shopping-empty-state {
   display: grid;
   justify-items: start;
@@ -123,7 +138,21 @@
   white-space: normal !important;
 }
 
+.shopping-lists-app .shopping-status__button--danger {
+  border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 42%) !important;
+  color: var(--color-danger) !important;
+}
+
 @media (min-width: 640px) {
+  .shopping-lists-app .shopping-create-form,
+  .shopping-lists-app .shopping-add-item-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .shopping-lists-app .shopping-add-item-form {
+    grid-template-columns: minmax(0, 1.2fr) minmax(10rem, 0.6fr) auto;
+  }
+
   .shopping-lists-app .shopping-saved-card__head {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center !important;
