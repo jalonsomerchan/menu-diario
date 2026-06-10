@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 import type { Locale } from '../config/site';
 import DayEditModal from './DayEditModal.astro';
 import { useTupperTranslations } from '../i18n/tuppers';
@@ -14,6 +15,7 @@ const t = useTranslations(locale);
 const tt = useTupperTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const tuppersPath = getLocalizedPath('/tuppers', locale);
+const summaryPath = getLocalizedPath('/resumen-semanal', locale);
 
 const labels = {
   configMissing: t('menu.configMissing'),
@@ -24,6 +26,14 @@ const labels = {
   loading: t('dashboard.loading'),
   hello: t('dashboard.hello'),
   todayForLunch: t('dashboard.todayForLunch'),
+  weekSummary: t('dashboard.weekSummary'),
+  daysWithMenu: t('dashboard.daysWithMenu'),
+  daysWithoutMenu: t('dashboard.daysWithoutMenu'),
+  averagePeople: t('dashboard.averagePeople'),
+  nextMeal: t('dashboard.nextMeal'),
+  viewSummary: t('dashboard.viewSummary'),
+  plannedStatus: t('dashboard.plannedStatus'),
+  viewBeyondWeek: t('dashboard.viewBeyondWeek'),
   todayEmpty: t('dashboard.todayEmpty'),
   nextSeven: t('dashboard.nextSeven'),
   configure: t('dashboard.configure'),
@@ -86,17 +96,55 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div class="dashboard-app__content" data-content hidden>
-    <section class="today-hero app-panel dashboard-shell__hero" aria-live="polite">
-      <div class="today-hero__topline">
-        <div class="today-hero__heading">
-          <p class="today-hero__hello" data-user-label>{labels.hello}</p>
-          <h2>{labels.todayForLunch}</h2>
+    <section class="week-overview app-panel" aria-labelledby="week-overview-title" aria-live="polite">
+      <div class="week-overview__header">
+        <div class="week-overview__title">
+          <h2 id="week-overview-title">{labels.weekSummary}</h2>
+          <span class="week-overview__range">
+            <Icon name="mdi:calendar-blank-outline" aria-hidden="true" />
+            <span data-week-range></span>
+            <Icon name="mdi:chevron-down" aria-hidden="true" />
+          </span>
         </div>
-        <button class="button button--ghost button--small today-hero__edit" type="button" data-today-edit>{labels.editDay}</button>
+        <a class="week-overview__summary-link" href={summaryPath}>
+          <span>{labels.viewSummary}</span>
+          <Icon name="mdi:chevron-right" aria-hidden="true" />
+        </a>
       </div>
-      <div class="today-hero__content">
-        <ul data-today-summary></ul>
-        <div class="today-hero__notes" data-today-notes hidden></div>
+
+      <div class="week-overview__grid" aria-label={labels.weekSummary}>
+        <div class="week-overview__stats">
+          <div class="week-overview__stat">
+            <span class="week-overview__stat-icon week-overview__stat-icon--success" aria-hidden="true">
+              <Icon name="mdi:check-circle" />
+            </span>
+            <strong data-week-planned>0</strong>
+            <span>{labels.daysWithMenu}</span>
+          </div>
+          <div class="week-overview__stat">
+            <span class="week-overview__stat-icon week-overview__stat-icon--warning" aria-hidden="true">
+              <Icon name="mdi:progress-clock" />
+            </span>
+            <strong data-week-empty>0</strong>
+            <span>{labels.daysWithoutMenu}</span>
+          </div>
+          <div class="week-overview__stat">
+            <span class="week-overview__stat-icon" aria-hidden="true">
+              <Icon name="mdi:account-group-outline" />
+            </span>
+            <strong data-week-people>0</strong>
+            <span>{labels.averagePeople}</span>
+          </div>
+        </div>
+
+        <div class="week-overview__next">
+          <div class="week-overview__next-copy">
+            <span>{labels.nextMeal}</span>
+            <small data-week-next-meta></small>
+            <strong data-week-next-dish>{labels.todayEmpty}</strong>
+            <em data-week-next-people></em>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -106,11 +154,12 @@ const labels = {
     </section>
 
     <section class="dashboard-section">
-      <div class="section-heading section-heading--simple">
-        <h2>{labels.nextSeven}</h2>
-        <button class="button button--ghost button--small" type="button" data-notifications>{labels.enableNotifications}</button>
-      </div>
+      <button class="dashboard-notifications-control" type="button" data-notifications hidden>{labels.enableNotifications}</button>
       <div class="next-days next-days--timeline" data-next-days></div>
+      <a class="dashboard-week-more" href={getLocalizedPath('/planificador', locale)}>
+        <span>{labels.viewBeyondWeek}</span>
+        <Icon name="mdi:chevron-down" aria-hidden="true" />
+      </a>
     </section>
   </div>
 
@@ -128,104 +177,172 @@ const labels = {
 <style is:global>
   .dashboard-app__content {
     display: grid;
-    gap: clamp(1rem, 2.4vw, 1.4rem);
+    gap: 0;
   }
 
-  .today-hero.app-panel {
-    position: relative;
+  .week-overview.app-panel {
     display: grid;
-    align-content: start;
-    gap: clamp(1rem, 2.4vw, 1.45rem);
-    overflow: hidden;
-    border-color: color-mix(in srgb, var(--color-border), var(--color-primary) 12%);
-    background:
-      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-primary), transparent 88%), transparent 17rem),
-      radial-gradient(circle at 0% 100%, color-mix(in srgb, var(--color-accent), transparent 93%), transparent 15rem),
-      linear-gradient(135deg, color-mix(in srgb, var(--color-surface), transparent 0%), color-mix(in srgb, var(--color-surface-soft), transparent 58%));
-    padding: clamp(1.15rem, 4vw, 2.35rem);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .today-hero__topline {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .today-hero__heading {
-    display: grid;
-    gap: 0.35rem;
-    min-width: 0;
-  }
-
-  .today-hero__hello {
-    margin: 0;
-    max-width: min(100%, 58rem);
-    color: var(--color-primary);
-    font-size: clamp(0.86rem, 1.9vw, 1rem);
-    font-weight: 900;
-    letter-spacing: 0.05em;
-    line-height: 1.15;
-    text-transform: none;
-  }
-
-  .today-hero__edit {
-    flex: 0 0 auto;
-    min-height: 2.4rem;
-    border-color: color-mix(in srgb, var(--color-border), transparent 8%);
-    background: color-mix(in srgb, var(--color-surface-raised), transparent 6%);
+    gap: 2.2rem;
+    border: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--color-border);
+    background: transparent;
+    padding: clamp(2.1rem, 5vw, 2.45rem) clamp(0rem, 1vw, 0.1rem) clamp(2.2rem, 5vw, 2.55rem);
     box-shadow: none;
   }
 
-  .today-hero__content {
-    display: grid;
-    gap: 0.55rem;
+  .week-overview__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
   }
 
-  .today-hero h2 {
+  .week-overview__title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    min-width: 0;
+  }
+
+  .week-overview h2 {
     margin: 0;
-    max-width: 100%;
+    color: var(--color-text);
+    font-size: clamp(1.35rem, 3.6vw, 1.75rem);
+    font-weight: 520;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+  }
+
+  .week-overview__range,
+  .week-overview__summary-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
     color: var(--color-muted);
-    font-size: clamp(1.15rem, 3.2vw, 2.2rem);
-    font-weight: 680;
+    font-size: clamp(0.98rem, 2.6vw, 1.2rem);
+    font-weight: 450;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .week-overview__range svg {
+    width: 1.55rem;
+    height: 1.55rem;
+    color: var(--color-text);
+  }
+
+  .week-overview__summary-link {
+    flex: 0 0 auto;
+    color: var(--color-primary);
+    font-weight: 520;
+  }
+
+  .week-overview__summary-link svg {
+    width: 1.65rem;
+    height: 1.65rem;
+  }
+
+  .week-overview__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.45fr);
+    gap: 0;
+  }
+
+  .week-overview__stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .week-overview__stat,
+  .week-overview__next {
+    display: grid;
+    align-content: start;
+    gap: 0.55rem;
+    min-width: 0;
+    padding-inline: clamp(0.75rem, 3vw, 2rem);
+    color: var(--color-muted);
+    font-size: clamp(1rem, 2.7vw, 1.12rem);
+    font-weight: 420;
+    line-height: 1.25;
+  }
+
+  .week-overview__stat + .week-overview__stat,
+  .week-overview__next {
+    border-left: 1px solid var(--color-border);
+  }
+
+  .week-overview__stat strong {
+    color: var(--color-text);
+    font-size: clamp(2rem, 6vw, 2.35rem);
+    font-weight: 650;
     letter-spacing: -0.035em;
     line-height: 1;
   }
 
-  .today-hero ul[data-today-summary] {
+  .week-overview__stat-icon {
     display: grid;
-    gap: 0.25rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    width: 2.35rem;
+    height: 2.35rem;
+    place-items: center;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    font-size: 0.92rem;
+    font-weight: 950;
   }
 
-  .today-hero ul[data-today-summary] li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+  .week-overview__stat-icon svg {
+    width: 1.45rem;
+    height: 1.45rem;
+  }
+
+  .week-overview__stat-icon--success {
+    background: var(--color-success-soft);
+    color: var(--color-success);
+  }
+
+  .week-overview__stat-icon--warning {
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+
+  .week-overview__next-copy {
+    display: grid;
     gap: 0.45rem;
     min-width: 0;
-    color: var(--color-text);
-    font-size: clamp(2rem, 6.4vw, 4.15rem);
-    font-weight: 680;
-    letter-spacing: -0.065em;
-    line-height: 0.95;
-    overflow-wrap: anywhere;
   }
 
-  .today-hero ul[data-today-summary] .meal-participants-summary {
-    font-size: clamp(0.9rem, 1.8vw, 1.05rem);
-    letter-spacing: 0;
+  .week-overview__next-copy > span,
+  .week-overview__next small,
+  .week-overview__next em {
+    color: var(--color-muted);
+    font-style: normal;
+    font-weight: 420;
+  }
+
+  .week-overview__next small {
+    color: var(--color-primary);
+  }
+
+  .week-overview__next-copy > strong {
+    display: block;
+    color: var(--color-text);
+    font-size: clamp(1.05rem, 2.9vw, 1.22rem);
+    font-weight: 550;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
   }
 
   .today-hero__notes {
-    margin-top: 0.45rem;
+    flex-basis: 100%;
   }
 
   .dashboard-section {
     margin-bottom: 0;
+    padding-top: 1.3rem;
   }
 
   .dashboard-section .section-heading {
@@ -244,36 +361,20 @@ const labels = {
   }
 
   .next-days--timeline .history-card.dashboard-day-card {
-    min-height: 9.25rem;
+    min-height: 9.55rem;
     overflow: visible;
-    border-color: color-mix(in srgb, var(--panel-border), var(--color-primary) 5%);
-    background: color-mix(in srgb, var(--color-surface), transparent 3%);
-    box-shadow: var(--shadow-xs);
-  }
-
-  .next-days--timeline .history-card__date {
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--color-primary-soft), var(--color-surface) 72%), color-mix(in srgb, var(--color-surface-soft), transparent 2%));
-  }
-
-  .next-days--timeline .history-card__day-number {
-    font-size: clamp(2.5rem, 11vw, 3.75rem);
-    font-weight: 220;
+    border-color: var(--color-border);
+    background: var(--color-surface);
+    box-shadow: none;
   }
 
   .next-days--timeline .history-card__body {
     gap: 0.7rem;
   }
 
-  .next-days--timeline .history-card h2 {
-    font-size: clamp(1.2rem, 5vw, 1.75rem);
-    letter-spacing: -0.035em;
-    text-transform: capitalize;
-  }
-
   .next-days--timeline .day-meal-row {
     border-radius: var(--radius-lg);
-    padding: 0.65rem 0.7rem;
+    padding: 0;
   }
 
   .planner-day-card__notes {
@@ -283,6 +384,27 @@ const labels = {
     border-radius: var(--radius-xl);
     background: color-mix(in srgb, var(--color-accent-soft), transparent 24%);
     padding: 0.7rem 0.8rem;
+  }
+
+  .dashboard-day-card .planner-day-card__notes {
+    display: none;
+  }
+
+  .dashboard-week-more {
+    display: inline-flex;
+    align-items: center;
+    justify-self: center;
+    gap: 0.45rem;
+    margin-block: 1.65rem 0.35rem;
+    color: var(--color-primary);
+    font-size: clamp(1rem, 2.8vw, 1.18rem);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .dashboard-week-more svg {
+    width: 1.5rem;
+    height: 1.5rem;
   }
 
   .planner-day-card__notes-label {
@@ -312,12 +434,6 @@ const labels = {
   }
 
   @media (min-width: 768px) {
-    .today-hero.app-panel {
-      min-height: clamp(13.5rem, 22vw, 18rem);
-      align-content: center;
-      padding-inline: clamp(2rem, 5vw, 4rem);
-    }
-
   }
 
   @media (min-width: 1024px) {
@@ -328,21 +444,39 @@ const labels = {
   }
 
   @media (max-width: 520px) {
-    .today-hero__topline {
-      display: grid;
+    .week-overview.app-panel {
+      gap: 1.4rem;
+      padding-block: 1.5rem;
     }
 
-    .today-hero__edit {
-      width: fit-content;
+    .week-overview__header,
+    .week-overview__title {
+      align-items: flex-start;
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    .week-overview__grid {
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+
+    .week-overview__stats {
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 1.2rem;
+    }
+
+    .week-overview__stat {
+      padding-inline: 0.65rem;
+    }
+
+    .week-overview__next {
+      border-left: 0;
+      padding-inline: 0.65rem;
     }
 
     .next-days--timeline .history-card.dashboard-day-card {
-      min-height: 10rem;
-    }
-
-    .next-days--timeline .history-card h2 {
-      font-size: clamp(1.5rem, 7.2vw, 1.9rem);
-      line-height: 1.08;
+      min-height: 8.25rem;
     }
 
     .next-days--timeline .day-actions[data-day-actions] summary {

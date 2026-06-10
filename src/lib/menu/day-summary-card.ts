@@ -12,6 +12,8 @@ type DaySummaryCardOptions = {
   deleteActionAttr?: string;
   deleteActionStateAttr?: string;
   moreActionsLabel?: string;
+  actionKind?: 'edit' | 'add';
+  statusLabel?: string;
   actionHtml?: string;
   notesHtml?: string;
   badgesHtml?: string;
@@ -41,6 +43,7 @@ function renderActionMenu({
   deleteActionAttr,
   deleteActionStateAttr = '',
   moreActionsLabel,
+  actionKind = 'edit',
 }: DaySummaryCardOptions) {
   if (!actionLabel || !actionAttr) return '';
   const deleteButton =
@@ -48,14 +51,26 @@ function renderActionMenu({
       ? `<button type="button" data-action-kind="delete" ${deleteActionAttr}="${escapeHtml(isoDate)}" ${deleteActionStateAttr}>${escapeHtml(deleteActionLabel)}</button>`
       : '';
 
+  const primaryAction = `
+    <button class="day-card-primary-action day-card-primary-action--${escapeHtml(actionKind)}" type="button" aria-label="${escapeHtml(actionLabel)}" ${actionAttr}="${escapeHtml(isoDate)}" ${actionStateAttr}>
+      <span class="day-card-primary-action__icon" aria-hidden="true">${actionKind === 'add' ? '+' : '✎'}</span>
+      ${actionKind === 'add' ? `<span class="day-card-primary-action__label">${escapeHtml(actionLabel)}</span>` : ''}
+      <span class="sr-only">${escapeHtml(actionLabel)}</span>
+    </button>
+  `;
+
+  if (!deleteButton) return primaryAction;
+
   return `
-    <details class="day-actions" data-day-actions>
-      <summary aria-label="${escapeHtml(moreActionsLabel || actionLabel)}">⋮</summary>
+    <div class="day-card-actions">
+      ${primaryAction}
+      <details class="day-actions day-actions--secondary" data-day-actions>
+      <summary aria-label="${escapeHtml(moreActionsLabel || actionLabel)}">⋯</summary>
       <div>
-        <button type="button" data-action-kind="edit" ${actionAttr}="${escapeHtml(isoDate)}" ${actionStateAttr}>${escapeHtml(actionLabel)}</button>
         ${deleteButton}
       </div>
-    </details>
+      </details>
+    </div>
   `;
 }
 
@@ -69,6 +84,7 @@ export function renderDaySummaryCard(options: DaySummaryCardOptions) {
     actionHtml,
     notesHtml = '',
     badgesHtml = '',
+    statusLabel = '',
     menuId = '',
     dayStatus = '',
     className = '',
@@ -81,14 +97,13 @@ export function renderDaySummaryCard(options: DaySummaryCardOptions) {
   return `
     <article class="${escapeHtml(classes)}" data-day="${escapeHtml(isoDate)}"${menuAttr}${statusAttr}>
       <div class="history-card__date" aria-label="${escapeHtml(dateLabel)}">
-        <span class="history-card__day-number">${escapeHtml(dayNumber)}</span>
+        <span class="history-card__weekday">${escapeHtml(weekday)}</span>
         <span class="history-card__month">${escapeHtml(monthLabel)}</span>
+        <span class="history-card__day-number">${escapeHtml(dayNumber)}</span>
       </div>
       <div class="history-card__body">
         <header class="history-card__header">
-          <div class="history-card__heading">
-            <h2>${escapeHtml(weekday)}</h2>
-          </div>
+          ${statusLabel ? `<span class="day-status-pill day-status-pill--planned"><span aria-hidden="true">✓</span>${escapeHtml(statusLabel)}</span>` : ''}
           ${actionHtml ?? renderActionMenu(options)}
         </header>
         <div class="menu-day-card__content">${summariesHtml}</div>

@@ -38,7 +38,7 @@
 .meal-participant-chip {
   position: relative;
   display: inline-grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 0.48rem;
   max-width: min(100%, 14rem);
@@ -50,7 +50,7 @@
   cursor: pointer;
   font-size: 0.86rem;
   font-weight: 850;
-  padding: 0.28rem 0.72rem 0.28rem 0.34rem;
+  padding: 0.4rem 0.82rem;
   transition:
     background var(--transition-base),
     border-color var(--transition-base),
@@ -95,17 +95,7 @@
 }
 
 .meal-participant-chip__avatar {
-  display: inline-grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 1.9rem;
-  height: 1.9rem;
-  border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-primary-soft), var(--color-surface) 24%);
-  color: var(--color-primary);
-  font-size: 0.72rem;
-  font-weight: 950;
-  letter-spacing: -0.03em;
+  display: none;
 }
 
 .meal-participant-chip__name {

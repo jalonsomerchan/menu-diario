@@ -18,7 +18,7 @@ describe('planner dashboard style alignment', () => {
     assert.doesNotMatch(configurator, /configurator-planner-panel__actions/);
     assert.doesNotMatch(configurator, /configurator-ai-shortcut/);
     assert.match(configurator, /class="dashboard-section app-panel configurator-planner-panel"/);
-    assert.match(configurator, /var\(--panel-background\)/);
+    assert.match(configurator, /background: transparent/);
     assert.match(configurator, /data-config-days/);
     assert.match(configurator, /data-config-load-more/);
     assert.match(configurator, /button button--secondary/);

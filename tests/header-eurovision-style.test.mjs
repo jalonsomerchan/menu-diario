@@ -9,19 +9,23 @@ function readText(path) {
   return readFileSync(join(root, path), 'utf8');
 }
 
-describe('Eurovision-style header', () => {
-  it('keeps app navigation while matching the Eurovision header pattern', () => {
+describe('app header', () => {
+  it('keeps app navigation while matching the meal-card app bar pattern', () => {
     const header = readText('src/components/Header.astro');
     const script = readText('src/scripts/app-header.ts');
 
     assert.match(header, /site-header app-header/);
     assert.match(header, /class=\"header-inner\"/);
     assert.match(header, /class=\"site-brand\"/);
-    assert.match(header, /site-brand__mark\">MD/);
+    assert.match(header, /site-brand__mark/);
+    assert.match(header, /mdi:silverware-fork-knife/);
     assert.match(header, /site-brand__text/);
     assert.match(header, /main-nav main-nav--desktop/);
     assert.match(header, /nav-dropdown/);
     assert.match(header, /locale-menu/);
+    assert.match(header, /locale\.toUpperCase\(\)/);
+    assert.match(header, /mdi:web/);
+    assert.match(header, /mdi:white-balance-sunny/);
     assert.match(header, /class=\"mobile-menu\" data-mobile-menu/);
     assert.match(header, /mobile-menu__panel/);
     assert.match(header, /mobile-menu__head/);

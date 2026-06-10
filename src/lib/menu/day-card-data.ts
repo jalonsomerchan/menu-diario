@@ -9,6 +9,7 @@ export type PreparedDayMeal = {
   label: string;
   summary: string;
   participantSummary: string;
+  state?: 'empty' | 'skipped' | 'filled';
 };
 
 const dailyOptionIconSymbols: Record<string, string> = {
@@ -84,12 +85,19 @@ export function prepareDayCardMeals(
   enabledMeals: MealSlot[],
   participants: MenuParticipant[] = []
 ): PreparedDayMeal[] {
-  return enabledMeals.map((meal) => ({
-    meal,
-    label: getDayCardMealLabel(labels, meal),
-    summary: getDayCardMealSummary(labels, day, meal),
-    participantSummary: getDayCardParticipantSummary(labels, day, meal, participants),
-  }));
+  return enabledMeals.map((meal) => {
+    const mealState = day.meals[meal];
+    const isSkipped = day.skipped || mealState.skipped;
+    const isEmpty = !isSkipped && mealState.items.filter(Boolean).length === 0;
+
+    return {
+      meal,
+      label: getDayCardMealLabel(labels, meal),
+      summary: getDayCardMealSummary(labels, day, meal),
+      participantSummary: getDayCardParticipantSummary(labels, day, meal, participants),
+      state: isSkipped ? 'skipped' : isEmpty ? 'empty' : 'filled',
+    };
+  });
 }
 
 export function prepareHistoryDayCardMeal(labels: DayCardLabels, meal: MealSlot, summary: string, participantSummary = ''): PreparedDayMeal {
@@ -107,9 +115,10 @@ export function renderDayCardMealsHtml(meals: PreparedDayMeal[]) {
       const participantHtml = meal.participantSummary
         ? `<span class="meal-participants-summary">${escapeHtml(meal.participantSummary)}</span>`
         : '';
+      const stateClass = meal.state ? ` day-meal-row--${escapeHtml(meal.state)}` : '';
 
       return `
-        <div class="day-meal-row">
+        <div class="day-meal-row${stateClass}">
           <span>${escapeHtml(meal.label)}</span>
           <strong>${escapeHtml(meal.summary)}</strong>
           ${participantHtml}

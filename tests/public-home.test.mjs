@@ -19,13 +19,15 @@ describe('public home page', () => {
 
     assert.match(rootHome, /<HomeLanding locale=\{locale\} \/>/);
     assert.match(localizedHome, /<HomeLanding locale=\{locale\} \/>/);
-    assert.match(landing, /Bienvenido a Menu Diario/);
-    assert.match(landing, /Tu app para planificar comidas con tu familia o grupo/);
+    assert.match(landing, /t\('home\.title'\)/);
+    assert.match(landing, /t\('home\.description'\)/);
     assert.match(landing, /home-landing-hero/);
+    assert.match(landing, /home-landing-preview/);
     assert.match(landing, /home-landing-grid/);
-    assert.match(landing, /Toda la semana en una sola vista/);
-    assert.match(landing, /Pensado para decidir en grupo/);
-    assert.match(landing, /IA y platos guardados cuando hagan falta/);
+    assert.match(landing, /home\.featureHistory/);
+    assert.match(landing, /home\.featureShare/);
+    assert.match(landing, /home\.featureNotifications/);
+    assert.match(landing, /home\.previewDish1/);
     assert.match(landing, /showGuest=\{false\}/);
     assert.doesNotMatch(landing, /siteConfig\.repositoryUrl/);
 

@@ -136,6 +136,8 @@ if (root) {
     configDays.innerHTML = getConfigDates()
       .map((isoDate) => {
         const day = normalizeDay(menu.days[isoDate]);
+        const primaryMeal = getEnabledMeals()[0] ?? 'lunch';
+        const hasPrimaryMeal = !day.skipped && !day.meals[primaryMeal].skipped && day.meals[primaryMeal].items.some(Boolean);
         const summaries = [
           renderDayOptionBadgesHtml(day, dailyOptions, labels.dailyOptionsSummary),
           renderDayCardMealsHtml(prepareDayCardMeals(labels, day, getEnabledMeals(), getParticipants())),
@@ -152,6 +154,8 @@ if (root) {
           deleteActionAttr: 'data-config-clear',
           moreActionsLabel: labels.moreActions,
           summariesHtml: summaries,
+          statusLabel: hasPrimaryMeal ? labels.plannedStatus : '',
+          actionKind: hasPrimaryMeal ? 'edit' : 'add',
         });
       })
       .join('');

@@ -14,6 +14,7 @@ No incluye artefactos locales o generados como `.env`, `.astro/`, `dist/`, `node
 - `README.md`: descripcion general del proyecto y primeros pasos.
 - `agents.md`: reglas obligatorias para agentes IA y automatizaciones.
 - `astro.config.mjs`: configuracion de Astro, integraciones, `site`, `base`, i18n y compatibilidad con GitHub Pages.
+- `design-qa.md`: informe de QA visual del ultimo rediseño realizado con Product Design.
 - `firestore.rules`: reglas de seguridad de Firestore.
 - `package.json`: scripts, dependencias y metadatos del paquete.
 - `package-lock.json`: bloqueo de versiones instaladas con npm.

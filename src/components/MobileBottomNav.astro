@@ -1,7 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
 import type { Locale } from '../config/site';
-import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 import { stripBasePath } from '../utils/paths';
 
@@ -18,9 +17,8 @@ type NavItem = {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-const tt = useTupperTranslations(locale);
 const currentPath = stripBasePath(Astro.url.pathname).replace(/\/$/, '') || '/';
-const shoppingLabel = locale === 'en' ? 'Shopping' : 'Compras';
+const shoppingLabel = t('appNav.shopping');
 
 const items: NavItem[] = [
   {
@@ -32,7 +30,7 @@ const items: NavItem[] = [
   {
     href: getLocalizedPath('/planificador', locale),
     icon: 'mdi:calendar-edit',
-    label: t('appNav.planning'),
+    label: t('appNav.week'),
     match: ['/planificador', '/planificador-ai', '/configurar', '/planificacion'],
   },
   {
@@ -43,9 +41,9 @@ const items: NavItem[] = [
   },
   {
     href: getLocalizedPath('/tuppers', locale),
-    icon: 'mdi:food-takeout-box-outline',
-    label: tt('nav'),
-    match: ['/tuppers'],
+    icon: 'mdi:dots-horizontal',
+    label: t('appNav.more'),
+    match: ['/ajustes', '/tuppers', '/mis-platos', '/historico', '/estadisticas', '/resumen-semanal', '/recomendador-platos', '/planificador-ai'],
   },
 ];
 

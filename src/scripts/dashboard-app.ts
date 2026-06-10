@@ -12,7 +12,7 @@ import { renderPlateRow } from '../lib/menu/day-editor';
 import { normalizeDay } from '../lib/menu/normalizers';
 import { attachDishSuggestions } from '../lib/menu/dish-suggestions';
 import { getDayCardMealLabel, getDayCardMealSummary, getDayCardParticipantSummary, prepareDayCardMeals, renderDayCardMealsHtml, renderDayOptionBadgesHtml } from '../lib/menu/day-card-data';
-import { getMenuParticipants } from '../lib/menu/participants';
+import { getMenuParticipants, getSelectedParticipantIds } from '../lib/menu/participants';
 import {
   clearMenuDay,
   ensureUserProfile,
@@ -42,7 +42,13 @@ if (root) {
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const content = root.querySelector<HTMLElement>('[data-content]');
   const userLabel = root.querySelector<HTMLElement>('[data-user-label]');
-  const todaySummary = root.querySelector<HTMLElement>('[data-today-summary]');
+  const weekPlanned = root.querySelector<HTMLElement>('[data-week-planned]');
+  const weekEmpty = root.querySelector<HTMLElement>('[data-week-empty]');
+  const weekPeople = root.querySelector<HTMLElement>('[data-week-people]');
+  const weekNextDish = root.querySelector<HTMLElement>('[data-week-next-dish]');
+  const weekNextMeta = root.querySelector<HTMLElement>('[data-week-next-meta]');
+  const weekNextPeople = root.querySelector<HTMLElement>('[data-week-next-people]');
+  const weekRange = root.querySelector<HTMLElement>('[data-week-range]');
   const todayNotes = root.querySelector<HTMLElement>('[data-today-notes]');
   const nextDays = root.querySelector<HTMLElement>('[data-next-days]');
   const offlineBanner = root.querySelector<HTMLElement>('[data-offline-banner]');
@@ -148,6 +154,10 @@ if (root) {
     return getUpcomingDates(new Date(), 1, 7);
   }
 
+  function getOverviewDates() {
+    return getUpcomingDates(new Date(), 0, 7);
+  }
+
   function getRelevantWeekStarts() {
     return getWeekStartsForDates([toIsoDate(new Date()), ...getNextSevenDates()]);
   }
@@ -190,6 +200,12 @@ if (root) {
     return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(`${isoDate}T00:00:00`));
   }
 
+  function formatShortDayMonth(isoDate: string) {
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' })
+      .format(new Date(`${isoDate}T00:00:00`))
+      .replace('.', '');
+  }
+
   function getDayNumber(isoDate: string) {
     return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(new Date(`${isoDate}T00:00:00`));
   }
@@ -207,17 +223,44 @@ if (root) {
     if (content) content.hidden = !isReady;
   }
 
-  function renderToday(menu: WeekMenu) {
-    if (!todaySummary) return;
+  function getSelectedCount(day: DailyMenu, meal: MealSlot) {
+    const participants = getParticipants();
+    if (!participants.length || day.skipped) return 0;
+    return getSelectedParticipantIds(day.meals[meal], participants).length;
+  }
 
-    const day = normalizeDay(menu.days[toIsoDate(new Date())]);
-    const firstMeal = getEnabledMeals()[0] ?? 'lunch';
-    const meal = day.meals[firstMeal];
-    const items = day.skipped || meal.skipped || meal.items.length === 0 ? [renderDaySummary(day, firstMeal)] : meal.items;
-    const notesHtml = renderDayNotesHtml(day);
-    const participantHtml = renderParticipantSummary(day, firstMeal);
+  function renderWeekOverview(menu: WeekMenu) {
+    const primaryMeal = getEnabledMeals()[0] ?? 'lunch';
+    const dates = getOverviewDates();
+    const days = dates.map((date) => ({ date, day: normalizeDay(menu.days[date]) }));
+    const plannedDays = days.filter(({ day }) => !day.skipped && !day.meals[primaryMeal].skipped && day.meals[primaryMeal].items.some(Boolean));
+    const emptyDays = days.length - plannedDays.length;
+    const averagePeople = plannedDays.length
+      ? Math.round(plannedDays.reduce((total, { day }) => total + getSelectedCount(day, primaryMeal), 0) / plannedDays.length)
+      : 0;
+    const nextPlanned = plannedDays[0];
+    const today = toIsoDate(new Date());
+    const todayDay = normalizeDay(menu.days[today]);
+    const notesHtml = renderDayNotesHtml(todayDay);
+    const firstDate = dates[0];
+    const lastDate = dates[dates.length - 1];
 
-    todaySummary.innerHTML = items.map((item) => `<li>${escapeHtml(item)} ${participantHtml}</li>`).join('');
+    if (weekPlanned) weekPlanned.textContent = String(plannedDays.length);
+    if (weekEmpty) weekEmpty.textContent = String(emptyDays);
+    if (weekPeople) weekPeople.textContent = String(averagePeople || getParticipants().length || 0);
+    if (weekNextDish) weekNextDish.textContent = nextPlanned ? renderDaySummary(nextPlanned.day, primaryMeal) : labels.todayEmpty;
+    if (weekRange && firstDate && lastDate) weekRange.textContent = `${formatShortDayMonth(firstDate)} - ${formatShortDayMonth(lastDate)}`;
+    if (weekNextMeta) {
+      const metaDate = nextPlanned
+        ? nextPlanned.date === today
+          ? labels.todayForLunch.replace(':', '').replace(/^hoy para /i, 'Hoy · ')
+          : `${formatWeekday(nextPlanned.date)} · ${mealLabel(primaryMeal)}`
+        : '';
+      weekNextMeta.textContent = metaDate;
+    }
+    if (weekNextPeople) {
+      weekNextPeople.textContent = nextPlanned ? renderParticipantSummary(nextPlanned.day, primaryMeal).replace(/<[^>]+>/g, '') : '';
+    }
     if (todayNotes) {
       todayNotes.innerHTML = notesHtml;
       todayNotes.hidden = !notesHtml;
@@ -241,9 +284,11 @@ if (root) {
 
     const disabledAttr = isReadOnlyOffline ? 'disabled aria-disabled="true"' : '';
     const mealSummary = getEnabledMeals().map(mealLabel).join(' · ');
+    const primaryMeal = getEnabledMeals()[0] ?? 'lunch';
     nextDays.innerHTML = getNextSevenDates()
       .map((isoDate) => {
         const day = normalizeDay(menu.days[isoDate]);
+        const hasPrimaryMeal = !day.skipped && !day.meals[primaryMeal].skipped && day.meals[primaryMeal].items.some(Boolean);
 
         return renderDaySummaryCard({
           isoDate,
@@ -259,6 +304,8 @@ if (root) {
           moreActionsLabel: labels.moreActions,
           summariesHtml: renderDashboardDayMeals(day),
           notesHtml: renderDayNotesHtml(day),
+          statusLabel: hasPrimaryMeal ? labels.plannedStatus : '',
+          actionKind: hasPrimaryMeal ? 'edit' : 'add',
           className: 'dashboard-day-card',
         });
       })
@@ -428,7 +475,7 @@ if (root) {
   function renderDashboard(menu: WeekMenu) {
     currentMenu = menu;
     setVisible(true);
-    renderToday(menu);
+    renderWeekOverview(menu);
     renderExpiryBanner();
     renderNextSeven(menu);
     syncRenderedDayStates(nextDays ?? root, getNextSevenDates());
@@ -578,23 +625,25 @@ if (root) {
 
         nextDays?.addEventListener('click', async (event) => {
           const target = event.target;
-          if (!(target instanceof HTMLButtonElement)) return;
+          if (!(target instanceof HTMLElement)) return;
+          const button = target.closest<HTMLButtonElement>('button');
+          if (!button) return;
 
-          if (target.dataset.quickEdit) {
-            openQuickEdit(target.dataset.quickEdit);
+          if (button.dataset.quickEdit) {
+            openQuickEdit(button.dataset.quickEdit);
             return;
           }
 
-          if (target.dataset.quickClear) {
+          if (button.dataset.quickClear) {
             if (shouldBlockOfflineWrites(isOnline) || !currentUser) {
               showStatus(labels.offlineReadOnly, true);
               return;
             }
 
-            const menuId = getMenuIdForDay(target.dataset.quickClear);
+            const menuId = getMenuIdForDay(button.dataset.quickClear);
             if (!menuId) return;
             const services = await getFirebaseServices();
-            await clearMenuDay(services, menuId, currentUser.uid, target.dataset.quickClear);
+            await clearMenuDay(services, menuId, currentUser.uid, button.dataset.quickClear);
           }
         });
 

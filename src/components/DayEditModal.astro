@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 import '../styles/day-edit-modal-layout.css';
 import '../styles/meal-participants.css';
 
@@ -31,7 +32,7 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
         <p id="day-edit-modal-description" class="sr-only" data-day-edit-subtitle>{subtitle}</p>
       </div>
       <button class="day-edit-modal__close" type="button" data-day-edit-cancel aria-label={cancelLabel}>
-        <span aria-hidden="true">×</span>
+        <Icon name="mdi:close" aria-hidden="true" />
       </button>
     </header>
 
@@ -41,15 +42,15 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
       <p class="day-edit-modal__hint" data-day-edit-save-state role="status" aria-live="polite" data-idle-label={saveHint} data-pending-label={savePendingLabel} hidden>{saveHint}</p>
       <div class="day-edit-modal__actions">
         <button class="button button--ghost button--small" type="button" data-day-edit-cancel-footer>
-          <span class="day-edit-modal__action-icon" aria-hidden="true">✕</span>
+          <Icon name="mdi:close" aria-hidden="true" />
           <span class="day-edit-modal__action-label">{cancelLabel}</span>
         </button>
         <button class="button button--ghost button--small" type="button" data-day-edit-clear>
-          <span class="day-edit-modal__action-icon" aria-hidden="true">⌫</span>
+          <Icon name="mdi:trash-can-outline" aria-hidden="true" />
           <span class="day-edit-modal__action-label">{clearLabel}</span>
         </button>
         <button class="button button--primary" value="save" type="submit" data-day-edit-save>
-          <span class="day-edit-modal__action-icon" aria-hidden="true">✓</span>
+          <Icon name="mdi:check" aria-hidden="true" />
           <span class="day-edit-modal__action-label">{saveLabel}</span>
         </button>
       </div>
@@ -468,5 +469,97 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
       padding: 0.6rem 0.55rem;
       font-size: 0.78rem;
     }
+  }
+
+  .day-edit-modal {
+    width: min(94vw, 42rem);
+  }
+
+  .day-edit-modal::backdrop {
+    background: rgb(15 23 42 / 0.38);
+    backdrop-filter: blur(8px);
+  }
+
+  .day-edit-modal__box {
+    max-height: min(92dvh, 48rem);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    background: var(--color-surface);
+    box-shadow: 0 18px 54px rgb(15 23 42 / 0.24);
+  }
+
+  .day-edit-modal__header,
+  .day-edit-modal__footer {
+    background: var(--color-surface);
+  }
+
+  .day-edit-modal__header {
+    border-bottom: 1px solid var(--color-border);
+    padding: 1rem clamp(1rem, 3.5vw, 1.25rem);
+  }
+
+  .day-edit-modal__heading h2 {
+    font-size: clamp(1.35rem, 5vw, 1.9rem);
+    font-weight: 820;
+    letter-spacing: -0.035em;
+  }
+
+  .day-edit-modal__close {
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    box-shadow: none;
+  }
+
+  .day-edit-modal__close svg {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+
+  .day-edit-modal__body {
+    gap: 0.75rem;
+    background: var(--color-bg);
+    padding: clamp(0.85rem, 3vw, 1rem);
+  }
+
+  .day-edit-modal__footer {
+    border-top: 1px solid var(--color-border);
+    padding: 0.72rem clamp(0.85rem, 3vw, 1rem) calc(0.72rem + env(safe-area-inset-bottom));
+  }
+
+  .day-edit-modal__actions .button svg {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  .day-edit-modal .day-edit-block {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .day-edit-modal .meal-editor h4 {
+    background: transparent;
+    padding: 0;
+    color: var(--color-primary);
+    font-size: 0.94rem;
+    font-weight: 760;
+    letter-spacing: -0.015em;
+    text-transform: none;
+  }
+
+  .day-edit-modal .meal-editor__header {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .day-edit-modal .plate-row {
+    border-color: var(--color-border);
+    background: var(--color-surface);
+    box-shadow: none;
+  }
+
+  .day-edit-modal .dish-combobox,
+  .day-edit-modal .day-edit-field textarea {
+    background: var(--color-surface-raised);
   }
 </style>

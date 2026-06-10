@@ -24,7 +24,7 @@ describe('mobile bottom navigation', () => {
     assert.match(component, /'\/planificador-ai'/);
     assert.match(component, /'\/configurar'/);
     assert.match(component, /'\/planificacion'/);
-    assert.match(component, /appNav\.planning/);
+    assert.match(component, /appNav\.week/);
     assert.match(component, /aria-current/);
     assert.match(styles, /repeat\(4, minmax\(0, 1fr\)\)/);
     assert.match(styles, /env\(safe-area-inset-bottom\)/);

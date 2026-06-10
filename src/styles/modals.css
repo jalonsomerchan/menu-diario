@@ -31,9 +31,8 @@
 .dishes-create-dialog::backdrop,
 .tuppers-create-dialog::backdrop {
   background:
-    radial-gradient(circle at 50% 8%, color-mix(in srgb, var(--color-primary), transparent 82%), transparent 24rem),
-    color-mix(in srgb, var(--color-bg), transparent 14%) !important;
-  backdrop-filter: blur(8px) saturate(1.08) !important;
+    color-mix(in srgb, var(--color-text), transparent 72%) !important;
+  backdrop-filter: blur(4px) !important;
 }
 
 .app-dialog__surface,
@@ -47,11 +46,10 @@
   gap: 0 !important;
   max-height: min(92dvh, 56rem) !important;
   overflow: hidden !important;
-  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 12%) !important;
-  border-radius: var(--radius-xl) !important;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface), #fff 4%), var(--color-surface)) !important;
-  box-shadow: 0 1.4rem 4.8rem rgb(15 23 42 / 0.22) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-2xl) !important;
+  background: var(--color-surface) !important;
+  box-shadow: 0 1rem 3rem rgb(13 27 46 / 0.18) !important;
   padding: 0 !important;
 }
 
@@ -67,11 +65,10 @@
   grid-template-columns: minmax(0, 1fr) auto !important;
   align-items: center !important;
   gap: 1rem !important;
-  min-height: 5.35rem !important;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%) !important;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface), var(--color-primary-soft) 10%), color-mix(in srgb, var(--color-surface), transparent 2%)) !important;
-  padding: clamp(1rem, 3.2vw, 1.45rem) clamp(1.1rem, 3.6vw, 1.7rem) !important;
+  min-height: 4.9rem !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  background: var(--color-surface) !important;
+  padding: clamp(1rem, 3.2vw, 1.35rem) clamp(1.1rem, 3.6vw, 1.65rem) !important;
 }
 
 .dish-editor-dialog__header {
@@ -101,7 +98,7 @@
   overflow: hidden !important;
   color: var(--color-text) !important;
   font-size: clamp(1.45rem, 4.6vw, 2rem) !important;
-  font-weight: 880 !important;
+  font-weight: 560 !important;
   letter-spacing: -0.038em !important;
   line-height: 1.05 !important;
   text-overflow: ellipsis !important;
@@ -167,7 +164,7 @@
   overflow: auto !important;
   overscroll-behavior: contain !important;
   border: 0 !important;
-  background: color-mix(in srgb, var(--color-surface), var(--color-surface-soft) 18%) !important;
+  background: var(--color-bg) !important;
   padding: clamp(1rem, 3.2vw, 1.55rem) clamp(1rem, 3.6vw, 1.7rem) !important;
 }
 
@@ -184,9 +181,8 @@
   align-items: center !important;
   justify-content: flex-end !important;
   gap: 0.75rem !important;
-  border-top: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%) !important;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface), transparent 2%), color-mix(in srgb, var(--color-surface-soft), var(--color-surface) 66%)) !important;
+  border-top: 1px solid var(--color-border) !important;
+  background: var(--color-surface) !important;
   padding: 0.85rem clamp(1rem, 3.6vw, 1.7rem) calc(0.85rem + env(safe-area-inset-bottom)) !important;
 }
 
@@ -216,11 +212,11 @@
   width: auto !important;
   min-width: 7.25rem !important;
   min-height: 3rem !important;
-  border-radius: var(--radius-full) !important;
+  border-radius: var(--radius-lg) !important;
   padding: 0.72rem 1.1rem !important;
   box-shadow: none !important;
   font-size: 0.96rem !important;
-  font-weight: 850 !important;
+  font-weight: 560 !important;
 }
 
 .app-dialog__footer .button--primary,

@@ -48,10 +48,10 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
           if (theme === 'light' || theme === 'dark') {
             document.documentElement.dataset.theme = theme;
           } else {
-            document.documentElement.removeAttribute('data-theme');
+            document.documentElement.dataset.theme = 'light';
           }
         } catch {
-          document.documentElement.removeAttribute('data-theme');
+          document.documentElement.dataset.theme = 'light';
         }
       })();
     </script>
@@ -63,7 +63,7 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
     <link rel="icon" href={withBasePath('favicon.ico')} />
     <link rel="apple-touch-icon" href={withBasePath('og-image.svg')} />
     <link rel="manifest" href={withBasePath('manifest.webmanifest')} />
-    <meta name="theme-color" content="#ea580c" />
+    <meta name="theme-color" content="#ffffff" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content={siteConfig.name} />

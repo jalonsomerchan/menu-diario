@@ -290,6 +290,8 @@ if (root) {
         renderDayOptionBadgesHtml(menuDay, dailyOptions, labels.dailyOptionsSummary),
         renderDayCardMealsHtml([prepareHistoryDayCardMeal(labels, row.meal as MealSlot, summary)]),
       ].join(''),
+      statusLabel: row.state === 'planned' ? labels.plannedStatus : '',
+      actionKind: row.state === 'planned' ? 'edit' : 'add',
       badgesHtml: renderBadges(row),
     });
   }

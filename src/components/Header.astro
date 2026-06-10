@@ -66,7 +66,9 @@ const moreItems = [
 <header class="site-header app-header" data-site-header data-labels={JSON.stringify(labels)}>
   <Container class="header-inner">
     <a class="site-brand" href={homePath} aria-label={siteConfig.name}>
-      <span class="site-brand__mark">MD</span>
+      <span class="site-brand__mark">
+        <Icon name="mdi:silverware-fork-knife" aria-hidden="true" />
+      </span>
       <span class="site-brand__copy">
         <span class="site-brand__text">{siteConfig.name}</span>
         <span class="site-brand__subtitle">{t('home.eyebrow')}</span>
@@ -100,19 +102,10 @@ const moreItems = [
         </div>
       </details>
 
-      <details class="locale-menu">
-        <summary>{localeLabels[alternateLocales[0] ?? locale]}</summary>
-        <div class="locale-menu__list">
-          {alternateLocales.map((alternateLocale) => (
-            <a href={getLocalizedEquivalentPath(Astro.url.pathname, alternateLocale)} hreflang={alternateLocale}>{localeLabels[alternateLocale]}</a>
-          ))}
-        </div>
-      </details>
-
       <details class="nav-dropdown nav-dropdown--settings">
-        <summary aria-label={t('appNav.settings')} class="theme-toggle-summary">
-          <Icon name="mdi:moon-waning-crescent" aria-hidden="true" />
-          <span class="sr-only">{t('appNav.settings')}</span>
+        <summary aria-label={t('appNav.browserTheme')} class="theme-toggle-summary">
+          <Icon name="mdi:white-balance-sunny" aria-hidden="true" />
+          <span class="sr-only">{t('appNav.browserTheme')}</span>
         </summary>
         <div class="nav-dropdown__list nav-dropdown__list--settings">
           <label>
@@ -126,6 +119,22 @@ const moreItems = [
           <button class="settings-trigger" type="button" data-global-logout hidden>{t('menu.signOut')}</button>
         </div>
       </details>
+
+      <details class="locale-menu">
+        <summary>
+          <Icon name="mdi:web" aria-hidden="true" />
+          <span>{locale.toUpperCase()}</span>
+        </summary>
+        <div class="locale-menu__list">
+          {alternateLocales.map((alternateLocale) => (
+            <a href={getLocalizedEquivalentPath(Astro.url.pathname, alternateLocale)} hreflang={alternateLocale}>{localeLabels[alternateLocale]}</a>
+          ))}
+        </div>
+      </details>
+
+      <a class="settings-shortcut" href={settingsPath} aria-label={t('appNav.settings')}>
+        <Icon name="mdi:cog-outline" aria-hidden="true" />
+      </a>
     </nav>
 
     <details class="mobile-menu" data-mobile-menu>
@@ -196,27 +205,28 @@ const moreItems = [
     top: 0;
     z-index: 40;
     border-bottom: 1px solid var(--color-border);
-    background: color-mix(in srgb, var(--color-surface) 84%, transparent);
+    background: color-mix(in srgb, var(--color-surface) 92%, transparent);
     box-shadow: none;
-    backdrop-filter: blur(24px);
+    backdrop-filter: blur(20px);
   }
 
   .header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    min-height: 4.25rem;
-    padding-block: 0.75rem;
+    gap: 0.75rem;
+    min-height: 6.45rem;
+    padding-block: calc(1.05rem + env(safe-area-inset-top)) 1rem;
   }
 
   .site-brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.75rem;
+    flex: 1 1 auto;
+    gap: clamp(0.85rem, 2.8vw, 1.35rem);
     min-width: 0;
     color: var(--color-text);
-    font-weight: 650;
+    font-weight: 760;
     letter-spacing: -0.025em;
     text-decoration: none;
   }
@@ -226,15 +236,17 @@ const moreItems = [
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: 1rem;
-    background: var(--color-primary);
-    color: var(--color-primary-contrast, #fff);
-    font-size: 1rem;
-    font-weight: 950;
-    letter-spacing: -0.06em;
-    box-shadow: var(--shadow-sm);
+    width: clamp(2.25rem, 5.4vw, 3.05rem);
+    height: clamp(2.25rem, 5.4vw, 3.05rem);
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-primary);
+    box-shadow: none;
+  }
+
+  .site-brand__mark svg {
+    width: clamp(2.2rem, 5.2vw, 2.95rem);
+    height: clamp(2.2rem, 5.2vw, 2.95rem);
   }
 
   .site-brand__copy {
@@ -247,50 +259,51 @@ const moreItems = [
     overflow: hidden;
     max-width: 58vw;
     color: var(--color-text);
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.2;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .site-brand__subtitle {
-    overflow: hidden;
-    max-width: 58vw;
-    color: var(--color-text-soft, var(--color-muted));
-    font-size: 0.75rem;
+    font-size: clamp(1.8rem, 7vw, 2.35rem);
     font-weight: 500;
     line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
+  .site-brand__subtitle {
+    display: none;
+  }
+
   .main-nav {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    flex: 0 0 auto;
+    gap: clamp(0.55rem, 2.2vw, 1.15rem);
     color: var(--color-text-muted, var(--color-muted));
     font-size: 0.875rem;
   }
 
   .main-nav--desktop {
+    display: flex;
+    gap: clamp(0.45rem, 2vw, 1rem);
+  }
+
+  .main-nav--desktop > a:not(.settings-shortcut),
+  .main-nav--desktop > .site-header__more {
     display: none;
   }
 
   .main-nav > a,
   .nav-dropdown summary,
-  .locale-menu summary {
+  .locale-menu summary,
+  .settings-shortcut {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.38rem;
-    min-height: 2.5rem;
+    gap: 0.35rem;
+    min-height: 2.8rem;
     border: 0;
     border-radius: 999px;
     background: transparent;
     color: var(--color-text-muted, var(--color-muted));
     cursor: pointer;
-    padding: 0.5rem 0.75rem;
+    padding: 0.4rem 0.45rem;
     font: inherit;
     font-weight: 600;
     list-style: none;
@@ -298,8 +311,14 @@ const moreItems = [
     transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
   }
 
+  .main-nav.main-nav--desktop > a:not(.settings-shortcut),
+  .main-nav.main-nav--desktop > .site-header__more {
+    display: none;
+  }
+
   .main-nav > a:hover,
   .locale-menu summary:hover,
+  .settings-shortcut:hover,
   .nav-dropdown summary:hover,
   .nav-dropdown[open] summary,
   .locale-menu[open] summary {
@@ -308,36 +327,43 @@ const moreItems = [
     transform: none;
   }
 
-  .main-nav > a :global(svg),
-  .site-header__more > summary :global(svg) {
+  .main-nav > a:not(.settings-shortcut) svg,
+  .site-header__more > summary svg {
     display: none;
   }
 
   .locale-menu summary {
     min-width: auto;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface-raised);
+    border: 0;
+    background: transparent;
     box-shadow: none;
-    padding-inline: 0.75rem;
-    color: var(--color-text-muted, var(--color-muted));
-    font-size: 0.75rem;
-    font-weight: 700;
+    padding-inline: 0.25rem;
+    color: var(--color-text);
+    font-size: clamp(1rem, 2.4vw, 1.5rem);
+    font-weight: 650;
   }
 
-  .nav-dropdown--settings > summary {
-    width: 2.75rem;
-    height: 2.75rem;
-    min-height: 2.75rem;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface-raised);
-    box-shadow: var(--shadow-xs, none);
+  .locale-menu summary svg {
+    width: clamp(1.9rem, 4.2vw, 2.55rem);
+    height: clamp(1.9rem, 4.2vw, 2.55rem);
+  }
+
+  .nav-dropdown--settings > summary,
+  .settings-shortcut {
+    width: clamp(2.8rem, 5.2vw, 3.45rem);
+    height: clamp(2.8rem, 5.2vw, 3.45rem);
+    min-height: clamp(2.8rem, 5.2vw, 3.45rem);
+    border: 0;
+    background: transparent;
+    box-shadow: none;
     padding: 0;
     color: var(--color-text);
   }
 
-  .nav-dropdown--settings > summary :global(svg) {
-    width: 1rem;
-    height: 1rem;
+  .nav-dropdown--settings > summary svg,
+  .settings-shortcut svg {
+    width: clamp(2rem, 4.3vw, 2.7rem);
+    height: clamp(2rem, 4.3vw, 2.7rem);
   }
 
   .locale-menu,
@@ -440,6 +466,7 @@ const moreItems = [
   .mobile-menu {
     z-index: 45;
     flex: 0 0 auto;
+    display: none;
   }
 
   .mobile-menu > summary {
@@ -631,15 +658,24 @@ const moreItems = [
     justify-content: center;
   }
 
-  .mobile-menu__nav :global(svg) {
+  .mobile-menu__nav svg {
     width: 1rem;
     height: 1rem;
   }
 
   @media (min-width: 768px) {
     .header-inner {
-      min-height: 4.75rem;
+      min-height: 6.45rem;
       padding-block: 1rem;
+    }
+
+    .site-brand__mark {
+      width: 3.05rem;
+      height: 3.05rem;
+    }
+
+    .site-brand__text {
+      font-size: 2.35rem;
     }
 
     .site-brand__text,
@@ -649,6 +685,11 @@ const moreItems = [
 
     .main-nav--desktop {
       display: flex;
+    }
+
+    .main-nav--desktop > a:not(.settings-shortcut),
+    .main-nav--desktop > .site-header__more {
+      display: inline-flex;
     }
 
     .mobile-menu {
