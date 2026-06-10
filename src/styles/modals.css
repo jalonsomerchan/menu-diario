@@ -357,6 +357,10 @@
   }
 
   .day-edit-modal {
+    height: calc(100vh - 0.75rem) !important;
+    max-height: calc(100vh - 0.75rem) !important;
+    height: calc(100svh - 0.75rem) !important;
+    max-height: calc(100svh - 0.75rem) !important;
     height: calc(100dvh - 0.75rem) !important;
     max-height: calc(100dvh - 0.75rem) !important;
     overflow: hidden !important;
@@ -364,6 +368,10 @@
   }
 
   .day-edit-modal__box {
+    height: min(calc(100vh - 0.75rem), 46rem) !important;
+    max-height: min(calc(100vh - 0.75rem), 46rem) !important;
+    height: min(calc(100svh - 0.75rem), 46rem) !important;
+    max-height: min(calc(100svh - 0.75rem), 46rem) !important;
     height: min(calc(100dvh - 0.75rem), 46rem) !important;
     max-height: min(calc(100dvh - 0.75rem), 46rem) !important;
     min-height: 0 !important;
@@ -372,6 +380,7 @@
 
   .day-edit-modal__body {
     flex: 1 1 0 !important;
+    height: 0 !important;
     min-height: 0 !important;
     max-height: none !important;
     touch-action: pan-y !important;
@@ -419,5 +428,35 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 520px) {
+    .day-edit-modal__box {
+      height: 100% !important;
+      max-height: 100% !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+
+    .day-edit-modal__header {
+      position: sticky !important;
+      top: 0 !important;
+    }
+
+    .day-edit-modal__body {
+      flex: 0 0 auto !important;
+      height: auto !important;
+      min-height: auto !important;
+      overflow: visible !important;
+      -webkit-overflow-scrolling: auto !important;
+    }
+
+    .day-edit-modal__footer {
+      position: sticky !important;
+      bottom: 0 !important;
+    }
   }
 }
