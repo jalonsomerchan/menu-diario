@@ -34,6 +34,6 @@
   "insightPlanning": "You planned {planned} out of {total} possible meals in the selected range.",
   "insightVariety": "The most repeated dish is {dish}, with {count} appearances.",
   "insightEmpty": "There are not enough planned meals to detect patterns yet.",
-  "errorOffline": "Statistics could not be loaded. Check your connection or try again.",
+  "errorLoad": "Statistics could not be loaded. Try again.",
   "homePath": "Back home"
 }

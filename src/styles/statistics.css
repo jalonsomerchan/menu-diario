@@ -23,7 +23,11 @@
   gap: 1rem;
 }
 
-.statistics-filters h2,
+.statistics-filters__intro {
+  gap: 0.4rem;
+}
+
+.statistics-filters h1,
 .statistics-panel h2,
 .statistics-empty h2,
 .statistics-filters p,
@@ -32,7 +36,7 @@
   margin: 0;
 }
 
-.statistics-filters h2,
+.statistics-filters h1,
 .statistics-panel h2,
 .statistics-empty h2 {
   font-size: clamp(1.35rem, 5vw, 2rem);

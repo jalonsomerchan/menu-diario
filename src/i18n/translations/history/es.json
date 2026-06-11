@@ -24,7 +24,6 @@
   "loadMore": "Cargar más",
   "showingResults": "Mostrando {shown} de {total} resultados",
   "emptySearch": "No hay resultados para esos filtros.",
-  "errorOffline": "Sin conexión. Puedes consultar lo cargado, pero no editar hasta recuperar conexión.",
   "resultsLabel": "Resultados del histórico",
   "favoriteBadge": "Favorito",
   "leftoversBadge": "Sobras"

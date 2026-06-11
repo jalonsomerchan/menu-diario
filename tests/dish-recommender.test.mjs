@@ -86,12 +86,10 @@ describe('dish recommender smoke checks', () => {
     assert.match(translations, /timeoutError/);
   });
 
-  it('exposes the dish recommender from navigation and app shell cache', () => {
+  it('exposes the dish recommender from navigation', () => {
     const header = readText('src/components/Header.astro');
-    const serviceWorker = readText('src/pages/sw.js.ts');
     assert.match(header, /useDishRecommenderTranslations/);
     assert.match(header, /getLocalizedPath\('\/recomendador-platos'/);
     assert.match(header, /mdi:chef-hat/);
-    assert.match(serviceWorker, /recomendador-platos/);
   });
 });

@@ -123,12 +123,14 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div class="dishes-app__content" data-content hidden>
-    <header class="dishes-page-header">
-      <div class="dishes-page-header__copy">
+    <header class="dishes-page-header app-page-intro app-panel">
+      <div class="dishes-page-header__copy app-page-intro__copy">
         <h1>{labels.title}</h1>
         <p>{labels.description}</p>
       </div>
-      <button class="button button--primary" type="button" data-open-dish-create>{labels.addButton}</button>
+      <div class="app-page-intro__actions">
+        <button class="button button--primary" type="button" data-open-dish-create>{labels.addButton}</button>
+      </div>
     </header>
 
     <section class="dishes-toolbar" aria-label={labels.title}>

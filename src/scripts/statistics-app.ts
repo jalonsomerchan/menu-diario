@@ -41,7 +41,7 @@ if (root) {
   }
 
   function showError(error: unknown) {
-    feedback.error(formatError(error) || labels.errorOffline);
+    feedback.error(formatError(error) || labels.errorLoad);
   }
 
   function getSelectedPreset() {

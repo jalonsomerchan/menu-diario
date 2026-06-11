@@ -511,31 +511,6 @@ describe('project smoke checks', () => {
     assert.match(designSystem, /Guardado y estado/);
   });
 
-  it('keeps PWA cache configured for current app shell routes', () => {
-    const serviceWorker = readText('src/pages/sw.js.ts');
-    const docs = readText('docs/pwa-offline.md');
-
-    [
-      'dashboard',
-      'planificacion',
-      'configurar',
-      'compra',
-      'tuppers',
-      'mis-platos',
-      'platos',
-      'historico',
-      'ajustes',
-      'admin/platos',
-      'resumen-semanal',
-    ].forEach((route) => assert.match(serviceWorker, new RegExp(`['\"]${route}['\"]`)));
-    assert.match(serviceWorker, /appShellRoutes/);
-    assert.match(serviceWorker, /staticAssets/);
-    assert.match(serviceWorker, /menu-diario-static-v3/);
-    assert.match(serviceWorker, /withBasePath/);
-    assert.match(serviceWorker, /getLocalizedPath/);
-    assert.match(docs, /Precache de rutas principales/);
-    assert.match(docs, /Cache de navegación con network-first/);
-  });
 
   it('includes GitHub workflows for CI and Pages', () => {
     const pagesWorkflow = readText('.github/workflows/pages.yml');

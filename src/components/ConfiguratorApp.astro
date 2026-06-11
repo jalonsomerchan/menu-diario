@@ -25,6 +25,7 @@ const labels = {
   configure: t('dashboard.configure'),
   configureHint: t('dashboard.configureHint'),
   configureDescription: t('dashboard.configureDescription'),
+  todayShort: t('dashboard.todayShort'),
   planning: tp('nav'),
   planningTitle: tp('title'),
   planningHint: tp('hint'),
@@ -66,7 +67,6 @@ const labels = {
   saveSaved: t('menu.saveSaved'),
   permissionsError: t('menu.permissionsError'),
   guestSession: t('menu.guestSession'),
-  offlineReadOnly: t('pwa.offlineReadOnly'),
   tuppers: tt('nav'),
   shopping: t('appNav.shopping'),
   dashboard: t('appNav.dashboard'),
@@ -80,12 +80,14 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>
-    <header class="configurator-page-header">
-      <div class="configurator-page-header__copy">
+    <header class="configurator-page-header app-page-intro app-panel">
+      <div class="configurator-page-header__copy app-page-intro__copy">
         <h1>{labels.configure}</h1>
         <p>{labels.configureDescription}</p>
       </div>
-      <a class="button button--primary" href={planningPath}>{labels.planning}</a>
+      <div class="app-page-intro__actions">
+        <a class="button button--primary" href={planningPath}>{labels.planning}</a>
+      </div>
     </header>
 
     <section id="configurador" class="dashboard-section app-panel configurator-planner-panel">
@@ -119,39 +121,6 @@ const labels = {
     gap: 0.35rem;
   }
 
-  .configurator-page-header {
-    display: grid;
-    gap: 0.95rem;
-    margin-bottom: 0.35rem;
-    border: 1px solid color-mix(in srgb, var(--panel-border), var(--color-primary) 7%);
-    border-radius: var(--radius-2xl);
-    background: color-mix(in srgb, var(--color-surface), transparent 3%);
-    padding: clamp(1rem, 3vw, 1.45rem);
-    box-shadow: var(--shadow-xs);
-  }
-
-  .configurator-page-header__copy {
-    display: grid;
-    gap: 0.55rem;
-  }
-
-  .configurator-page-header h1 {
-    margin: 0;
-    font-size: clamp(1.9rem, 5vw, 3.35rem);
-    line-height: 0.98;
-    letter-spacing: -0.055em;
-    text-wrap: balance;
-  }
-
-  .configurator-page-header p {
-    margin: 0;
-    max-width: 72ch;
-    color: var(--color-muted);
-    font-size: clamp(0.96rem, 2.2vw, 1.08rem);
-    line-height: var(--surface-copy-line-height);
-    letter-spacing: var(--surface-copy-letter-spacing);
-  }
-
   .configurator-planner-panel {
     display: grid;
     gap: 1rem;
@@ -165,6 +134,87 @@ const labels = {
     gap: 1rem;
   }
 
+  .configurator-app .history-card.configurator-day-card {
+    min-height: 7.75rem;
+    border-color: var(--color-border);
+    background: var(--color-surface);
+    box-shadow: none;
+  }
+
+  .configurator-app .history-card.configurator-day-card--today {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 52%);
+    background: color-mix(in srgb, var(--color-primary-soft), var(--color-surface) 92%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary), transparent 72%);
+  }
+
+  .configurator-app .configurator-day-card .history-card__body {
+    gap: 0.5rem;
+  }
+
+  .configurator-app .configurator-day-card .history-card__date {
+    align-content: center;
+    gap: 0.1rem;
+    padding-inline: 1rem 0.9rem;
+  }
+
+  .configurator-app .configurator-day-card--today .history-card__date {
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 58%);
+  }
+
+  .configurator-app .configurator-day-card .history-card__today {
+    color: var(--color-primary);
+    font-size: 0.76rem;
+    font-weight: 820;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+
+  .configurator-app .configurator-day-card .history-card__weekday {
+    font-size: clamp(1.02rem, 2.3vw, 1.15rem);
+    font-weight: 620;
+  }
+
+  .configurator-app .configurator-day-card--today .history-card__weekday {
+    color: var(--color-primary);
+  }
+
+  .configurator-app .configurator-day-card .history-card__month {
+    color: var(--color-muted);
+    font-size: clamp(0.82rem, 1.6vw, 0.95rem);
+    font-weight: 700;
+  }
+
+  .configurator-app .configurator-day-card .history-card__day-number {
+    font-size: clamp(1.95rem, 4vw, 2.25rem);
+    line-height: 0.92;
+  }
+
+  .configurator-app .configurator-day-card .day-meal-row {
+    border-radius: var(--radius-lg);
+    padding: 0;
+  }
+
+  .configurator-app .configurator-day-card .day-meal-row span {
+    font-size: 0.78rem;
+  }
+
+  .configurator-app .configurator-day-card .day-meal-row strong {
+    font-size: clamp(0.98rem, 2.3vw, 1.12rem);
+    font-weight: 760;
+    line-height: 1.14;
+  }
+
+  .configurator-app .configurator-day-card .meal-participants-summary {
+    min-height: 1.45rem;
+    padding: 0.18rem 0.6rem;
+    font-size: 0.72rem;
+  }
+
+  .configurator-app .configurator-day-card .day-card-primary-action--edit {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
   .configurator-app__load-more {
     display: flex;
     justify-content: center;
@@ -176,13 +226,18 @@ const labels = {
   }
 
   @media (min-width: 720px) {
-    .configurator-page-header {
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: start;
-    }
-
     .configurator-page-header .button {
       margin-top: 0.15rem;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .configurator-app .history-card.configurator-day-card {
+      min-height: 7.4rem;
+    }
+
+    .configurator-app .configurator-day-card .history-card__date {
+      padding-inline: 0.85rem 0.7rem;
     }
   }
 </style>

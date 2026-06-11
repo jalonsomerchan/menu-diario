@@ -320,7 +320,71 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .app-page-shell {
   display: grid;
   gap: 0;
-  padding-block: 2rem 1.5rem;
+  padding-block: 1.1rem 1.35rem;
+}
+
+.app-page-intro {
+  display: grid;
+  gap: 0.9rem;
+  margin-bottom: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--panel-border), var(--color-primary) 7%);
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-primary-soft), transparent 68%), transparent 14rem),
+    color-mix(in srgb, var(--color-surface), transparent 4%);
+  padding: clamp(1rem, 3vw, 1.45rem);
+  box-shadow: var(--shadow-xs);
+}
+
+.app-page-intro__copy {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.app-page-intro__eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  min-height: 1.7rem;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary-soft), transparent 16%);
+  padding: 0.2rem 0.58rem;
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-page-intro h1,
+.app-page-intro h2 {
+  margin: 0;
+  font-size: clamp(1.75rem, 5vw, 2.9rem);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.app-page-intro p {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--color-muted);
+  font-size: clamp(0.96rem, 2.2vw, 1.08rem);
+  line-height: var(--surface-copy-line-height);
+  letter-spacing: var(--surface-copy-letter-spacing);
+}
+
+.app-page-intro__actions {
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+}
+
+.app-page-intro__actions > .button,
+.app-page-intro__actions > label {
+  width: 100%;
 }
 
 .menu-app, .dashboard-app, .configurator-app, .settings-app, .history-app, .auth-card, .shopping-app, .tuppers-app, .weekly-summary-app, .dishes-app, .planning-ai-app, .dish-recommender-app, .admin-dishes-app {
@@ -628,7 +692,6 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .group-lists ul { margin: 0; padding-left: 1.1rem; color: var(--color-muted); }
 .menu-list__empty { margin: 0; color: var(--color-muted); }
 
-.offline-banner,
 .expiry-banner {
   margin-bottom: 1rem;
   border: 1px solid color-mix(in srgb, var(--color-accent), var(--color-border) 44%);
@@ -643,7 +706,21 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
     padding-top: 1.25rem;
   }
 
-  .app-page-shell { padding-block: 2.35rem 2rem; }
+  .app-page-shell { padding-block: 1.45rem 1.6rem; }
+
+  .app-page-intro {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .app-page-intro__actions {
+    justify-items: end;
+  }
+
+  .app-page-intro__actions > .button,
+  .app-page-intro__actions > label {
+    width: auto;
+  }
 }
 
 .site-footer {

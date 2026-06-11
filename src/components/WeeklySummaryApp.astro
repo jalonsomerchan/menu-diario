@@ -56,12 +56,18 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div class="weekly-summary-app__content" data-content hidden>
-    <section class="weekly-summary-hero app-panel" aria-labelledby="weekly-summary-title">
-      <h2 id="weekly-summary-title" class="sr-only">{labels.title}</h2>
-      <label class="weekly-summary-week">
-        <span>{labels.weekLabel}</span>
-        <select data-week-select></select>
-      </label>
+    <section class="weekly-summary-hero app-panel app-page-intro" aria-labelledby="weekly-summary-title">
+      <div class="app-page-intro__copy">
+        <span class="app-page-intro__eyebrow">{labels.eyebrow}</span>
+        <h1 id="weekly-summary-title">{labels.title}</h1>
+        <p>{labels.description}</p>
+      </div>
+      <div class="app-page-intro__actions">
+        <label class="weekly-summary-week">
+          <span>{labels.weekLabel}</span>
+          <select data-week-select></select>
+        </label>
+      </div>
     </section>
 
     <section class="weekly-summary-grid" aria-label={labels.title} data-summary-metrics></section>

@@ -24,7 +24,6 @@
   "loadMore": "Load more",
   "showingResults": "Showing {shown} of {total} results",
   "emptySearch": "No results match those filters.",
-  "errorOffline": "You are offline. You can view loaded data, but editing is blocked until the connection returns.",
   "resultsLabel": "History results",
   "favoriteBadge": "Favorite",
   "leftoversBadge": "Leftovers"

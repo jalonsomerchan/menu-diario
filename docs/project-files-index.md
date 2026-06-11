@@ -45,7 +45,6 @@ No incluye artefactos locales o generados como `.env`, `.astro/`, `dist/`, `node
 - `docs/navigation.md`: convenciones de navegacion.
 - `docs/project-files-index.md`: este indice de archivos y responsabilidades.
 - `docs/public-sharing.md`: documentacion de comparticion publica.
-- `docs/pwa-offline.md`: PWA, cache y comportamiento offline.
 - `docs/statistics.md`: estadisticas y calculos asociados.
 - `docs/template-usage.md`: guia para usar y modificar la base Astro.
 - `docs/testing-guide.md`: criterios y comandos de tests.
@@ -145,7 +144,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/pages/admin/platos.astro` y `src/pages/[locale]/admin/platos.astro`: administracion de platos globales.
 - `src/pages/manifest.webmanifest.ts`: manifest dinamico compatible con `base`.
 - `src/pages/robots.txt.ts`: robots dinamico con sitemap correcto.
-- `src/pages/sw.js.ts`: service worker de PWA/offline.
+- `src/pages/sw.js.ts`: limpieza de service workers y caches antiguos para instalaciones previas.
 
 ## Internacionalizacion
 
@@ -178,7 +177,6 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/lib/menu/`: logica de menus, fechas, formularios, historico, grupos, invitaciones, participantes, estadisticas y repositorios.
 - `src/lib/notifications/`: utilidades de notificaciones del navegador.
 - `src/lib/public-sharing/`: metadatos para comparticion publica.
-- `src/lib/pwa/`: cache offline, sincronizacion y estado de red.
 - `src/lib/shopping/`: normalizacion, exportacion, tipos y repositorio de compra.
 - `src/lib/tuppers/`: asignacion, caducidad, estado, tipos y repositorio de tuppers.
 - `src/lib/ui/`: utilidades UI compartidas para dialogos, menus, HTML, feedback, bloqueo de scroll y tareas con debounce.
@@ -197,7 +195,6 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/scripts/planning-ai-app.ts`: logica del planificador IA.
 - `src/scripts/planning-ai-date-range.ts`: seleccion y calculo de rangos de fechas para planificacion IA.
 - `src/scripts/planning-ai-wizard.ts`: asistente guiado de planificacion IA.
-- `src/scripts/pwa-register.ts`: registro del service worker.
 - `src/scripts/settings-app.ts`: logica de ajustes.
 - `src/scripts/shopping-alexa-integration.ts`: integracion de compra con Alexa.
 - `src/scripts/shopping-app.ts`: logica cliente de compra.
@@ -218,7 +215,6 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/styles/meal-participants.css`: estilos de participantes.
 - `src/styles/mobile-bottom-nav.css`: estilos de navegacion movil inferior.
 - `src/styles/modals.css`: estilos comunes de modales.
-- `src/styles/pwa.css`: estilos relacionados con PWA/offline.
 - `src/styles/shopping-list-actions.css`: estilos de gestion y visualizacion de listas de compra.
 - `src/styles/shopping-planning-wizard.css`: estilos del asistente de compra/planificacion.
 - `src/styles/statistics.css`: estilos de estadisticas.
@@ -242,6 +238,5 @@ Los tests viven en `tests/*.test.mjs` y usan `node:test`. Cada archivo cubre una
 - `tests/*firebase*.test.mjs`, `tests/app-check.test.mjs`, `tests/firestore-rules.test.mjs`: Firebase, App Check y reglas.
 - `tests/*group*.test.mjs`, `tests/invite-codes.test.mjs`: grupos, permisos e invitaciones.
 - `tests/*settings*.test.mjs`, `tests/user-preferences.test.mjs`: ajustes y preferencias.
-- `tests/*pwa*.test.mjs`: PWA/offline.
 - `tests/ai*.test.mjs`: funciones de IA.
 - `tests/app-errors.test.mjs`, `tests/debounced-task-map.test.mjs`, `tests/mobile-bottom-nav.test.mjs`, `tests/footer-projects.test.mjs`, `tests/header-eurovision-style.test.mjs`, `tests/planner-dashboard-style.test.mjs`: utilidades y validaciones UI especificas.

@@ -28,7 +28,6 @@ import {
   watchUserProfile,
 } from '../lib/menu/repository';
 import type { DailyOption, Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
-import { getNetworkStatus } from '../lib/pwa/network-status';
 import { installDetailsMenuAutoClose } from '../lib/ui/details-menu';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
@@ -361,9 +360,6 @@ if (root) {
   }
 
   async function saveDay(dayKey: string, nextDay: WeekMenu['days'][string], card?: HTMLElement) {
-    if (getNetworkStatus() !== 'online') {
-      throw new Error(labels.offlineReadOnly);
-    }
     if (!currentUser || !editMenuId) return;
     const nextState = serializeDay(nextDay);
     const savedState = serializeDay(getEditingMenu()?.days[dayKey] ?? normalizeDay(undefined));
@@ -424,14 +420,11 @@ if (root) {
     getDayNumber,
     getWeekday: formatWeekday,
     getDateLabel: formatDate,
-    canWrite: () => getNetworkStatus() === 'online',
-    getWriteErrorMessage: () => labels.offlineReadOnly,
+    canWrite: () => true,
+    getWriteErrorMessage: () => labels.saveHint,
     onSaveDay: (dayKey, nextDay, card) => saveDay(dayKey, nextDay, card),
     onClearDay: async (dayKey) => {
-      if (getNetworkStatus() !== 'online' || !currentUser || !editMenuId) {
-        saveFeedback.error(labels.offlineReadOnly);
-        return false;
-      }
+      if (!currentUser || !editMenuId) return false;
 
       const services = await getFirebaseServices();
       await clearMenuDay(services, editMenuId, currentUser.uid, dayKey);
@@ -471,7 +464,6 @@ if (root) {
           visibleCount += pageSize;
           renderHistory();
         });
-        window.addEventListener('offline', () => showStatus(labels.errorOffline, true));
 
         list?.addEventListener('click', async (event) => {
           const target = event.target;

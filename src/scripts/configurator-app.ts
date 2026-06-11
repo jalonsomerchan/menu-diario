@@ -21,7 +21,6 @@ import {
   watchWeekMenusByIds,
 } from '../lib/menu/repository';
 import type { DailyMenu, DailyOption, Dish, FirebaseUser, MealSlot, MenuGroup, MenuParticipant, UserProfile, WeekMenu } from '../lib/menu/types';
-import { getNetworkStatus } from '../lib/pwa/network-status';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-configurator-app]');
@@ -125,6 +124,10 @@ if (root) {
     return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(new Date(`${isoDate}T00:00:00`));
   }
 
+  function getTodayIsoDate() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
   function setVisible(isReady: boolean) {
     if (loading) loading.hidden = isReady;
     if (content) content.hidden = !isReady;
@@ -133,6 +136,7 @@ if (root) {
   function renderConfig(menu: WeekMenu) {
     if (!configDays) return;
 
+    const today = getTodayIsoDate();
     configDays.innerHTML = getConfigDates()
       .map((isoDate) => {
         const day = normalizeDay(menu.days[isoDate]);
@@ -145,17 +149,16 @@ if (root) {
 
         return renderDaySummaryCard({
           isoDate,
+          isToday: isoDate === today,
+          todayLabel: labels.todayShort,
           dayNumber: getDayNumber(isoDate),
           weekday: formatWeekday(isoDate),
           dateLabel: formatDate(isoDate),
           actionLabel: labels.editDay,
           actionAttr: 'data-config-edit',
-          deleteActionLabel: labels.deleteMenu,
-          deleteActionAttr: 'data-config-clear',
-          moreActionsLabel: labels.moreActions,
           summariesHtml: summaries,
-          statusLabel: hasPrimaryMeal ? labels.plannedStatus : '',
           actionKind: hasPrimaryMeal ? 'edit' : 'add',
+          className: `configurator-day-card${isoDate === today ? ' configurator-day-card--today' : ''}`,
         });
       })
       .join('');
@@ -186,9 +189,6 @@ if (root) {
   }
 
   async function saveDay(dayKey: string, nextDay: DailyMenu, card?: HTMLElement) {
-    if (getNetworkStatus() !== 'online') {
-      throw new Error(labels.offlineReadOnly);
-    }
     if (!currentUser) return;
     const menuId = getMenuIdForDay(dayKey);
     if (!menuId) return;
@@ -219,14 +219,11 @@ if (root) {
     getDayNumber,
     getWeekday: formatWeekday,
     getDateLabel: formatDate,
-    canWrite: () => getNetworkStatus() === 'online',
-    getWriteErrorMessage: () => labels.offlineReadOnly,
+    canWrite: () => true,
+    getWriteErrorMessage: () => labels.saveHint,
     onSaveDay: (dayKey, nextDay, card) => saveDay(dayKey, nextDay, card),
     onClearDay: async (dayKey) => {
-      if (getNetworkStatus() !== 'online' || !currentUser) {
-        saveFeedback.error(labels.offlineReadOnly);
-        return false;
-      }
+      if (!currentUser) return false;
 
       const menuId = getMenuIdForDay(dayKey);
       if (!menuId) return false;
@@ -288,10 +285,6 @@ if (root) {
 
           const clearButton = target.closest<HTMLButtonElement>('[data-config-clear]');
           if (!clearButton || !currentUser) return;
-          if (getNetworkStatus() !== 'online') {
-            showStatus(labels.offlineReadOnly, true);
-            return;
-          }
 
           const dayKey = clearButton.dataset.configClear ?? '';
           const menuId = getMenuIdForDay(dayKey);

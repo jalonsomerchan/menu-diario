@@ -29,7 +29,7 @@ const fallbackLabels: ErrorLabelFallback[] = [
   { key: 'errors.dishDuplicateGlobal', aliases: ['duplicateGlobal'] },
   { key: 'errors.dishNotEditable', aliases: ['notEditable'] },
   { key: 'errors.permissionDenied', aliases: ['permissionsError'] },
-  { key: 'errors.unavailable', aliases: ['offlineReadOnly', 'offlineNoCache'] },
+  { key: 'errors.unavailable', aliases: ['genericError'] },
   { key: 'errors.generic', aliases: ['genericError', 'permissionsError', 'configMissing'] },
 ];
 

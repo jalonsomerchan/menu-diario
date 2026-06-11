@@ -98,12 +98,14 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>
-    <header class="tuppers-page-header">
-      <div class="tuppers-page-header__copy">
+    <header class="tuppers-page-header app-page-intro app-panel">
+      <div class="tuppers-page-header__copy app-page-intro__copy">
         <h1>{labels.title}</h1>
         <p>{labels.description}</p>
       </div>
-      <button class="button button--primary" type="button" data-open-create>{labels.openCreate}</button>
+      <div class="app-page-intro__actions">
+        <button class="button button--primary" type="button" data-open-create>{labels.openCreate}</button>
+      </div>
     </header>
 
     <section class="expiry-banner" data-expiry-alert hidden role="status" aria-live="polite">

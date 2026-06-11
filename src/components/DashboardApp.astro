@@ -32,9 +32,12 @@ const labels = {
   averagePeople: t('dashboard.averagePeople'),
   nextMeal: t('dashboard.nextMeal'),
   viewSummary: t('dashboard.viewSummary'),
+  collapseSummary: t('dashboard.collapseSummary'),
+  expandSummary: t('dashboard.expandSummary'),
   plannedStatus: t('dashboard.plannedStatus'),
   viewBeyondWeek: t('dashboard.viewBeyondWeek'),
   todayEmpty: t('dashboard.todayEmpty'),
+  todayShort: t('dashboard.todayShort'),
   nextSeven: t('dashboard.nextSeven'),
   configure: t('dashboard.configure'),
   configureDescription: t('dashboard.configureDescription'),
@@ -76,11 +79,6 @@ const labels = {
   updatedBody: t('menu.updatedBody'),
   permissionsError: t('menu.permissionsError'),
   guestSession: t('menu.guestSession'),
-  offlineTitle: t('pwa.offlineTitle'),
-  offlineCached: t('pwa.offlineCached'),
-  offlineReadOnly: t('pwa.offlineReadOnly'),
-  offlineNoCache: t('pwa.offlineNoCache'),
-  backOnline: t('pwa.backOnline'),
   tuppers: tt('nav'),
   tuppersExpiryAlert: tt('expiryAlert'),
   homePath,
@@ -89,60 +87,72 @@ const labels = {
 
 <section class="dashboard-app dashboard-app--compact" data-dashboard-app data-labels={JSON.stringify(labels)}>
   <div class="menu-app__status" data-status role="status" aria-live="polite" hidden></div>
-  <div class="offline-banner" data-offline-banner hidden role="status" aria-live="polite">
-    <strong data-offline-title>{labels.offlineTitle}</strong>
-    <span data-offline-message>{labels.offlineReadOnly}</span>
-  </div>
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div class="dashboard-app__content" data-content hidden>
-    <section class="week-overview app-panel" aria-labelledby="week-overview-title" aria-live="polite">
+    <section class="week-overview app-panel" data-week-overview data-collapsed="false" aria-labelledby="week-overview-title" aria-live="polite">
       <div class="week-overview__header">
-        <div class="week-overview__title">
-          <h2 id="week-overview-title">{labels.weekSummary}</h2>
-          <span class="week-overview__range">
-            <Icon name="mdi:calendar-blank-outline" aria-hidden="true" />
-            <span data-week-range></span>
-            <Icon name="mdi:chevron-down" aria-hidden="true" />
-          </span>
+        <div class="week-overview__title-block">
+          <div class="week-overview__title">
+            <h2 id="week-overview-title">{labels.weekSummary}</h2>
+          </div>
+          <div class="week-overview__meta">
+            <span class="week-overview__range">
+              <Icon name="mdi:calendar-blank-outline" aria-hidden="true" />
+              <span data-week-range></span>
+              <Icon name="mdi:chevron-down" aria-hidden="true" />
+            </span>
+            <a class="week-overview__summary-link" href={summaryPath}>
+              <span>{labels.viewSummary}</span>
+              <Icon name="mdi:chevron-right" aria-hidden="true" />
+            </a>
+          </div>
         </div>
-        <a class="week-overview__summary-link" href={summaryPath}>
-          <span>{labels.viewSummary}</span>
-          <Icon name="mdi:chevron-right" aria-hidden="true" />
-        </a>
+        <button
+          class="week-overview__toggle"
+          type="button"
+          data-overview-toggle
+          aria-expanded="true"
+          aria-controls="week-overview-body"
+          aria-label={labels.collapseSummary}
+        >
+          <Icon name="mdi:chevron-up" aria-hidden="true" />
+        </button>
       </div>
 
-      <div class="week-overview__grid" aria-label={labels.weekSummary}>
-        <div class="week-overview__stats">
-          <div class="week-overview__stat">
-            <span class="week-overview__stat-icon week-overview__stat-icon--success" aria-hidden="true">
-              <Icon name="mdi:check-circle" />
-            </span>
-            <strong data-week-planned>0</strong>
-            <span>{labels.daysWithMenu}</span>
+      <div id="week-overview-body" class="week-overview__body" data-overview-body>
+        <div class="week-overview__grid" aria-label={labels.weekSummary}>
+          <div class="week-overview__stats">
+            <div class="week-overview__stat">
+              <span class="week-overview__stat-icon week-overview__stat-icon--success" aria-hidden="true">
+                <Icon name="mdi:check-circle" />
+              </span>
+              <strong data-week-planned>0</strong>
+              <span>{labels.daysWithMenu}</span>
+            </div>
+            <div class="week-overview__stat">
+              <span class="week-overview__stat-icon week-overview__stat-icon--warning" aria-hidden="true">
+                <Icon name="mdi:progress-clock" />
+              </span>
+              <strong data-week-empty>0</strong>
+              <span>{labels.daysWithoutMenu}</span>
+            </div>
+            <div class="week-overview__stat">
+              <span class="week-overview__stat-icon" aria-hidden="true">
+                <Icon name="mdi:account-group-outline" />
+              </span>
+              <strong data-week-people>0</strong>
+              <span>{labels.averagePeople}</span>
+            </div>
           </div>
-          <div class="week-overview__stat">
-            <span class="week-overview__stat-icon week-overview__stat-icon--warning" aria-hidden="true">
-              <Icon name="mdi:progress-clock" />
-            </span>
-            <strong data-week-empty>0</strong>
-            <span>{labels.daysWithoutMenu}</span>
-          </div>
-          <div class="week-overview__stat">
-            <span class="week-overview__stat-icon" aria-hidden="true">
-              <Icon name="mdi:account-group-outline" />
-            </span>
-            <strong data-week-people>0</strong>
-            <span>{labels.averagePeople}</span>
-          </div>
-        </div>
 
-        <div class="week-overview__next">
-          <div class="week-overview__next-copy">
-            <span>{labels.nextMeal}</span>
-            <small data-week-next-meta></small>
-            <strong data-week-next-dish>{labels.todayEmpty}</strong>
-            <em data-week-next-people></em>
+          <div class="week-overview__next">
+            <div class="week-overview__next-copy">
+              <span>{labels.nextMeal}</span>
+              <small data-week-next-meta></small>
+              <strong data-week-next-dish>{labels.todayEmpty}</strong>
+              <em data-week-next-people></em>
+            </div>
           </div>
         </div>
       </div>
@@ -182,35 +192,47 @@ const labels = {
 
   .week-overview.app-panel {
     display: grid;
-    gap: 2.2rem;
+    gap: 1.1rem;
     border: 0;
     border-radius: 0;
     border-bottom: 1px solid var(--color-border);
     background: transparent;
-    padding: clamp(2.1rem, 5vw, 2.45rem) clamp(0rem, 1vw, 0.1rem) clamp(2.2rem, 5vw, 2.55rem);
+    padding: clamp(1rem, 2.7vw, 1.35rem) 0 clamp(1.15rem, 2.8vw, 1.45rem);
     box-shadow: none;
   }
 
   .week-overview__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.25rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.75rem;
+  }
+
+  .week-overview__title-block {
+    display: grid;
+    gap: 0.45rem;
+    min-width: 0;
   }
 
   .week-overview__title {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 1.5rem;
+    gap: 0.55rem;
     min-width: 0;
+  }
+
+  .week-overview__meta {
+    display: grid;
+    gap: 0.45rem;
+    align-items: start;
+    justify-items: start;
   }
 
   .week-overview h2 {
     margin: 0;
     color: var(--color-text);
-    font-size: clamp(1.35rem, 3.6vw, 1.75rem);
-    font-weight: 520;
+    font-size: clamp(1.05rem, 2.8vw, 1.38rem);
+    font-weight: 560;
     letter-spacing: -0.035em;
     line-height: 1.1;
   }
@@ -219,18 +241,54 @@ const labels = {
   .week-overview__summary-link {
     display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.3rem;
     color: var(--color-muted);
-    font-size: clamp(0.98rem, 2.6vw, 1.2rem);
-    font-weight: 450;
+    font-size: clamp(0.88rem, 2vw, 1rem);
+    font-weight: 500;
     line-height: 1;
     text-decoration: none;
     white-space: nowrap;
   }
 
+  .week-overview__toggle {
+    display: inline-grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-muted);
+    padding: 0;
+    transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base), transform var(--transition-base);
+  }
+
+  .week-overview__toggle:hover,
+  .week-overview__toggle:focus-visible {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 38%);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    outline: 0;
+  }
+
+  .week-overview__toggle svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    transition: transform var(--transition-base);
+  }
+
+  .week-overview[data-collapsed='true'] .week-overview__toggle svg {
+    transform: rotate(180deg);
+  }
+
+  .week-overview__body {
+    display: grid;
+    gap: 0;
+  }
+
   .week-overview__range svg {
-    width: 1.55rem;
-    height: 1.55rem;
+    width: 1.15rem;
+    height: 1.15rem;
     color: var(--color-text);
   }
 
@@ -241,32 +299,33 @@ const labels = {
   }
 
   .week-overview__summary-link svg {
-    width: 1.65rem;
-    height: 1.65rem;
+    width: 1.2rem;
+    height: 1.2rem;
   }
 
   .week-overview__grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.45fr);
+    grid-template-columns: 1fr;
     gap: 0;
   }
 
   .week-overview__stats {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-block: 0.35rem 0.7rem;
   }
 
   .week-overview__stat,
   .week-overview__next {
     display: grid;
     align-content: start;
-    gap: 0.55rem;
+    gap: 0.4rem;
     min-width: 0;
-    padding-inline: clamp(0.75rem, 3vw, 2rem);
+    padding-inline: clamp(0.55rem, 2vw, 1.15rem);
     color: var(--color-muted);
-    font-size: clamp(1rem, 2.7vw, 1.12rem);
+    font-size: clamp(0.92rem, 2vw, 1rem);
     font-weight: 420;
-    line-height: 1.25;
+    line-height: 1.18;
   }
 
   .week-overview__stat + .week-overview__stat,
@@ -274,9 +333,15 @@ const labels = {
     border-left: 1px solid var(--color-border);
   }
 
+  .week-overview__next {
+    border-top: 1px solid var(--color-border);
+    border-left: 0;
+    padding-top: 0.9rem;
+  }
+
   .week-overview__stat strong {
     color: var(--color-text);
-    font-size: clamp(2rem, 6vw, 2.35rem);
+    font-size: clamp(1.7rem, 4.6vw, 2rem);
     font-weight: 650;
     letter-spacing: -0.035em;
     line-height: 1;
@@ -284,19 +349,19 @@ const labels = {
 
   .week-overview__stat-icon {
     display: grid;
-    width: 2.35rem;
-    height: 2.35rem;
+    width: 2rem;
+    height: 2rem;
     place-items: center;
     border-radius: var(--radius-full);
     background: var(--color-primary-soft);
     color: var(--color-primary);
-    font-size: 0.92rem;
+    font-size: 0.8rem;
     font-weight: 950;
   }
 
   .week-overview__stat-icon svg {
-    width: 1.45rem;
-    height: 1.45rem;
+    width: 1.15rem;
+    height: 1.15rem;
   }
 
   .week-overview__stat-icon--success {
@@ -311,7 +376,7 @@ const labels = {
 
   .week-overview__next-copy {
     display: grid;
-    gap: 0.45rem;
+    gap: 0.28rem;
     min-width: 0;
   }
 
@@ -325,15 +390,21 @@ const labels = {
 
   .week-overview__next small {
     color: var(--color-primary);
+    font-size: 0.96rem;
+    font-weight: 520;
   }
 
   .week-overview__next-copy > strong {
     display: block;
     color: var(--color-text);
-    font-size: clamp(1.05rem, 2.9vw, 1.22rem);
-    font-weight: 550;
+    font-size: clamp(0.98rem, 2.4vw, 1.14rem);
+    font-weight: 600;
     letter-spacing: -0.025em;
     line-height: 1.15;
+  }
+
+  .week-overview__next em:empty {
+    display: none;
   }
 
   .today-hero__notes {
@@ -342,7 +413,7 @@ const labels = {
 
   .dashboard-section {
     margin-bottom: 0;
-    padding-top: 1.3rem;
+    padding-top: 0.9rem;
   }
 
   .dashboard-section .section-heading {
@@ -361,20 +432,85 @@ const labels = {
   }
 
   .next-days--timeline .history-card.dashboard-day-card {
-    min-height: 9.55rem;
+    min-height: 7.75rem;
     overflow: visible;
     border-color: var(--color-border);
     background: var(--color-surface);
     box-shadow: none;
   }
 
+  .next-days--timeline .history-card.dashboard-day-card--today {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 52%);
+    background: color-mix(in srgb, var(--color-primary-soft), var(--color-surface) 92%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary), transparent 72%);
+  }
+
   .next-days--timeline .history-card__body {
-    gap: 0.7rem;
+    gap: 0.5rem;
+  }
+
+  .dashboard-day-card .history-card__date {
+    align-content: center;
+    gap: 0.1rem;
+    padding-inline: 1rem 0.9rem;
+  }
+
+  .dashboard-day-card--today .history-card__date {
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 58%);
+  }
+
+  .dashboard-day-card .history-card__today {
+    color: var(--color-primary);
+    font-size: 0.76rem;
+    font-weight: 820;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+
+  .dashboard-day-card .history-card__weekday {
+    font-size: clamp(1.02rem, 2.3vw, 1.15rem);
+    font-weight: 620;
+  }
+
+  .dashboard-day-card--today .history-card__weekday {
+    color: var(--color-primary);
+  }
+
+  .dashboard-day-card .history-card__month {
+    color: var(--color-muted);
+    font-size: clamp(0.82rem, 1.6vw, 0.95rem);
+    font-weight: 700;
+  }
+
+  .dashboard-day-card .history-card__day-number {
+    font-size: clamp(1.95rem, 4vw, 2.25rem);
+    line-height: 0.92;
   }
 
   .next-days--timeline .day-meal-row {
     border-radius: var(--radius-lg);
     padding: 0;
+  }
+
+  .dashboard-day-card .day-meal-row span {
+    font-size: 0.78rem;
+  }
+
+  .dashboard-day-card .day-meal-row strong {
+    font-size: clamp(0.98rem, 2.3vw, 1.12rem);
+    font-weight: 760;
+    line-height: 1.14;
+  }
+
+  .dashboard-day-card .meal-participants-summary {
+    min-height: 1.45rem;
+    padding: 0.18rem 0.6rem;
+    font-size: 0.72rem;
+  }
+
+  .dashboard-day-card .day-card-primary-action--edit {
+    width: 2.2rem;
+    height: 2.2rem;
   }
 
   .planner-day-card__notes {
@@ -394,17 +530,17 @@ const labels = {
     display: inline-flex;
     align-items: center;
     justify-self: center;
-    gap: 0.45rem;
-    margin-block: 1.65rem 0.35rem;
+    gap: 0.35rem;
+    margin-block: 1.15rem 0.2rem;
     color: var(--color-primary);
-    font-size: clamp(1rem, 2.8vw, 1.18rem);
+    font-size: clamp(0.92rem, 2.2vw, 1rem);
     font-weight: 500;
     text-decoration: none;
   }
 
   .dashboard-week-more svg {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.2rem;
+    height: 1.2rem;
   }
 
   .planner-day-card__notes-label {
@@ -434,6 +570,22 @@ const labels = {
   }
 
   @media (min-width: 768px) {
+    .week-overview__meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.8rem 1rem;
+    }
+
+    .week-overview__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(13.25rem, 0.48fr);
+    }
+
+    .week-overview__next {
+      border-top: 0;
+      border-left: 1px solid var(--color-border);
+      padding-top: 0;
+    }
   }
 
   @media (min-width: 1024px) {
@@ -445,25 +597,24 @@ const labels = {
 
   @media (max-width: 520px) {
     .week-overview.app-panel {
-      gap: 1.4rem;
-      padding-block: 1.5rem;
+      gap: 1.15rem;
+      padding-block: 1rem 1.2rem;
     }
 
-    .week-overview__header,
-    .week-overview__title {
+    .week-overview__header {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.5rem;
+    }
+
+    .week-overview__title,
+    .week-overview__meta {
       align-items: flex-start;
       display: grid;
-      gap: 0.85rem;
-    }
-
-    .week-overview__grid {
-      grid-template-columns: 1fr;
-      gap: 1.25rem;
+      gap: 0.55rem;
     }
 
     .week-overview__stats {
-      border-bottom: 1px solid var(--color-border);
-      padding-bottom: 1.2rem;
+      padding-block: 0.2rem 0.8rem;
     }
 
     .week-overview__stat {
@@ -471,17 +622,21 @@ const labels = {
     }
 
     .week-overview__next {
-      border-left: 0;
       padding-inline: 0.65rem;
+      padding-top: 0.85rem;
     }
 
     .next-days--timeline .history-card.dashboard-day-card {
-      min-height: 8.25rem;
+      min-height: 7.4rem;
+    }
+
+    .dashboard-day-card .history-card__date {
+      padding-inline: 0.85rem 0.7rem;
     }
 
     .next-days--timeline .day-actions[data-day-actions] summary {
-      width: 3rem;
-      height: 3rem;
+      width: 2.5rem;
+      height: 2.5rem;
     }
 
   }

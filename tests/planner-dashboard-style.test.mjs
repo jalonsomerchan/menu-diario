@@ -13,7 +13,7 @@ describe('planner dashboard style alignment', () => {
   it('uses a clean planner header and dashboard panel surface', () => {
     const configurator = readText('src/components/ConfiguratorApp.astro');
 
-    assert.match(configurator, /class="configurator-page-header"/);
+    assert.match(configurator, /class="configurator-page-header[^"]*"/);
     assert.match(configurator, /class="button button--primary" href=\{planningPath\}/);
     assert.doesNotMatch(configurator, /configurator-planner-panel__actions/);
     assert.doesNotMatch(configurator, /configurator-ai-shortcut/);

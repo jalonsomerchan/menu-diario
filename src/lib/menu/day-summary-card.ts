@@ -3,6 +3,8 @@ type DaySummaryCardOptions = {
   dayNumber: string;
   monthLabel?: string;
   weekday: string;
+  todayLabel?: string;
+  isToday?: boolean;
   dateLabel: string;
   summariesHtml: string;
   actionLabel?: string;
@@ -79,6 +81,8 @@ export function renderDaySummaryCard(options: DaySummaryCardOptions) {
     isoDate,
     dayNumber,
     weekday,
+    todayLabel = '',
+    isToday = false,
     dateLabel,
     summariesHtml,
     actionHtml,
@@ -97,6 +101,7 @@ export function renderDaySummaryCard(options: DaySummaryCardOptions) {
   return `
     <article class="${escapeHtml(classes)}" data-day="${escapeHtml(isoDate)}"${menuAttr}${statusAttr}>
       <div class="history-card__date" aria-label="${escapeHtml(dateLabel)}">
+        ${isToday && todayLabel ? `<span class="history-card__today">${escapeHtml(todayLabel)}</span>` : ''}
         <span class="history-card__weekday">${escapeHtml(weekday)}</span>
         <span class="history-card__month">${escapeHtml(monthLabel)}</span>
         <span class="history-card__day-number">${escapeHtml(dayNumber)}</span>

@@ -24,9 +24,6 @@ import {
 } from '../lib/menu/repository';
 import type { DailyMenu, DailyOption, Dish, FirebaseUser, MealSlot, MenuGroup, MenuParticipant, UserProfile, WeekMenu } from '../lib/menu/types';
 import { notifyMenuChanged, requestChangeNotifications } from '../lib/notifications/browser';
-import { getNetworkStatus, watchNetworkStatus } from '../lib/pwa/network-status';
-import { readLastOfflineMenuCache, saveOfflineMenuCache } from '../lib/pwa/offline-cache';
-import { shouldBlockOfflineWrites } from '../lib/pwa/offline-sync';
 import { escapeHtml } from '../lib/ui/html';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 import { watchTuppers } from '../lib/tuppers/repository';
@@ -49,11 +46,13 @@ if (root) {
   const weekNextMeta = root.querySelector<HTMLElement>('[data-week-next-meta]');
   const weekNextPeople = root.querySelector<HTMLElement>('[data-week-next-people]');
   const weekRange = root.querySelector<HTMLElement>('[data-week-range]');
+  const weekOverview = root.querySelector<HTMLElement>('[data-week-overview]');
+  const weekOverviewBody = root.querySelector<HTMLElement>('[data-overview-body]');
+  const weekOverviewToggle = root.querySelector<HTMLButtonElement>('[data-overview-toggle]');
   const todayNotes = root.querySelector<HTMLElement>('[data-today-notes]');
   const nextDays = root.querySelector<HTMLElement>('[data-next-days]');
-  const offlineBanner = root.querySelector<HTMLElement>('[data-offline-banner]');
-  const offlineMessage = root.querySelector<HTMLElement>('[data-offline-message]');
   const expiryBanner = root.querySelector<HTMLElement>('[data-expiry-banner]');
+  const weekOverviewStorageKey = 'menu-diario-dashboard-week-overview-collapsed';
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -71,8 +70,6 @@ if (root) {
   let unsubscribeGroup: (() => void) | undefined;
   let unsubscribeTuppers: (() => void) | undefined;
   let firstMenuLoad = true;
-  let isOnline = getNetworkStatus() === 'online';
-  let isReadOnlyOffline = !isOnline;
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -80,6 +77,42 @@ if (root) {
   });
 
   attachDishSuggestions(root, () => dishes);
+
+  function setWeekOverviewCollapsed(collapsed: boolean) {
+    if (weekOverview) {
+      weekOverview.dataset.collapsed = collapsed ? 'true' : 'false';
+    }
+
+    if (weekOverviewBody) {
+      weekOverviewBody.hidden = collapsed;
+    }
+
+    if (weekOverviewToggle) {
+      weekOverviewToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      weekOverviewToggle.setAttribute('aria-label', collapsed ? labels.expandSummary : labels.collapseSummary);
+    }
+
+    try {
+      window.localStorage.setItem(weekOverviewStorageKey, collapsed ? 'true' : 'false');
+    } catch {
+      // Ignore storage failures so the dashboard keeps working in restricted browsers.
+    }
+  }
+
+  function getStoredWeekOverviewCollapsed() {
+    try {
+      return window.localStorage.getItem(weekOverviewStorageKey) === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  weekOverviewToggle?.addEventListener('click', () => {
+    const isCollapsed = weekOverview?.dataset.collapsed === 'true';
+    setWeekOverviewCollapsed(!isCollapsed);
+  });
+
+  setWeekOverviewCollapsed(getStoredWeekOverviewCollapsed());
 
   function showStatus(message: string, isError = false) {
     if (isError) {
@@ -97,13 +130,6 @@ if (root) {
     return getMenuParticipants(currentGroup, currentUser, currentProfile, labels.guestSession);
   }
 
-  function updateOfflineState(message = labels.offlineReadOnly) {
-    isReadOnlyOffline = !isOnline;
-    if (!offlineBanner) return;
-
-    offlineBanner.hidden = isOnline;
-    if (offlineMessage) offlineMessage.textContent = message;
-  }
 
   function getEnabledMeals(): MealSlot[] {
     return currentProfile?.enabledMeals?.length ? currentProfile.enabledMeals : ['lunch'];
@@ -151,7 +177,7 @@ if (root) {
   }
 
   function getNextSevenDates() {
-    return getUpcomingDates(new Date(), 1, 7);
+    return getUpcomingDates(new Date(), 0, 7);
   }
 
   function getOverviewDates() {
@@ -159,7 +185,7 @@ if (root) {
   }
 
   function getRelevantWeekStarts() {
-    return getWeekStartsForDates([toIsoDate(new Date()), ...getNextSevenDates()]);
+    return getWeekStartsForDates(getNextSevenDates());
   }
 
   function getMenuIdForDay(dayKey: string) {
@@ -174,7 +200,7 @@ if (root) {
   function buildDisplayMenu(menus: WeekMenu[]) {
     const today = toIsoDate(new Date());
     const days = Object.fromEntries(
-      [today, ...getNextSevenDates()].map((dayKey) => [dayKey, normalizeDay(getMenuForDay(dayKey)?.days?.[dayKey])])
+      getNextSevenDates().map((dayKey) => [dayKey, normalizeDay(getMenuForDay(dayKey)?.days?.[dayKey])])
     );
     const todayWeekStart = getWeekStartForDate(today);
     const primaryMenu = menus.find((menu) => menu.weekStart === todayWeekStart);
@@ -194,6 +220,10 @@ if (root) {
 
   function formatWeekday(isoDate: string) {
     return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(new Date(`${isoDate}T00:00:00`));
+  }
+
+  function capitalizeLabel(value: string) {
+    return value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
   }
 
   function formatDate(isoDate: string) {
@@ -251,15 +281,16 @@ if (root) {
     if (weekNextDish) weekNextDish.textContent = nextPlanned ? renderDaySummary(nextPlanned.day, primaryMeal) : labels.todayEmpty;
     if (weekRange && firstDate && lastDate) weekRange.textContent = `${formatShortDayMonth(firstDate)} - ${formatShortDayMonth(lastDate)}`;
     if (weekNextMeta) {
+      const participantSummary = nextPlanned ? getDayCardParticipantSummary(labels, nextPlanned.day, primaryMeal, getParticipants()) : '';
       const metaDate = nextPlanned
         ? nextPlanned.date === today
-          ? labels.todayForLunch.replace(':', '').replace(/^hoy para /i, 'Hoy · ')
-          : `${formatWeekday(nextPlanned.date)} · ${mealLabel(primaryMeal)}`
+          ? [labels.todayForLunch.replace(':', ''), participantSummary].filter(Boolean).join(' · ')
+          : [capitalizeLabel(formatWeekday(nextPlanned.date)), participantSummary].filter(Boolean).join(' · ')
         : '';
       weekNextMeta.textContent = metaDate;
     }
     if (weekNextPeople) {
-      weekNextPeople.textContent = nextPlanned ? renderParticipantSummary(nextPlanned.day, primaryMeal).replace(/<[^>]+>/g, '') : '';
+      weekNextPeople.textContent = '';
     }
     if (todayNotes) {
       todayNotes.innerHTML = notesHtml;
@@ -282,9 +313,10 @@ if (root) {
   function renderNextSeven(menu: WeekMenu) {
     if (!nextDays) return;
 
-    const disabledAttr = isReadOnlyOffline ? 'disabled aria-disabled="true"' : '';
+    const disabledAttr = '';
     const mealSummary = getEnabledMeals().map(mealLabel).join(' · ');
     const primaryMeal = getEnabledMeals()[0] ?? 'lunch';
+    const today = toIsoDate(new Date());
     nextDays.innerHTML = getNextSevenDates()
       .map((isoDate) => {
         const day = normalizeDay(menu.days[isoDate]);
@@ -292,31 +324,25 @@ if (root) {
 
         return renderDaySummaryCard({
           isoDate,
+          isToday: isoDate === today,
+          todayLabel: labels.todayShort,
           dayNumber: getDayNumber(isoDate),
           weekday: formatWeekday(isoDate),
           dateLabel: `${formatDate(isoDate)} · ${mealSummary}`,
           actionLabel: labels.editDay,
           actionAttr: 'data-quick-edit',
           actionStateAttr: disabledAttr,
-          deleteActionLabel: labels.deleteMenu,
-          deleteActionAttr: 'data-quick-clear',
-          deleteActionStateAttr: disabledAttr,
-          moreActionsLabel: labels.moreActions,
           summariesHtml: renderDashboardDayMeals(day),
           notesHtml: renderDayNotesHtml(day),
-          statusLabel: hasPrimaryMeal ? labels.plannedStatus : '',
+          statusLabel: '',
           actionKind: hasPrimaryMeal ? 'edit' : 'add',
-          className: 'dashboard-day-card',
+          className: `dashboard-day-card${isoDate === today ? ' dashboard-day-card--today' : ''}`,
         });
       })
       .join('');
   }
 
   function openQuickEdit(dayKey: string) {
-    if (isReadOnlyOffline) {
-      showStatus(labels.offlineReadOnly, true);
-      return;
-    }
     dayEditModal.open(dayKey);
   }
 
@@ -395,10 +421,6 @@ if (root) {
   }
 
   async function saveDay(dayKey: string, nextDay: DailyMenu, card?: HTMLElement) {
-    if (shouldBlockOfflineWrites(isOnline)) {
-      throw new Error(labels.offlineReadOnly);
-    }
-
     if (!currentUser) return;
     const menuId = getMenuIdForDay(dayKey);
     if (!menuId) return;
@@ -418,53 +440,8 @@ if (root) {
     saveFeedback.saved(changed ? labels.saveSaved : labels.saveSaved);
   }
 
-  function cacheCurrentMenu(menu = currentMenu) {
-    const todayMenuId = getMenuIdForDay(toIsoDate(new Date()));
-    if (!menu || !currentUser || !todayMenuId) return;
-
-    saveOfflineMenuCache({
-      userId: currentUser.uid,
-      menuId: todayMenuId,
-      menu,
-      profile: {
-        displayName: currentProfile?.displayName || currentUser.displayName || currentUser.email || labels.guestSession,
-        enabledMeals: getEnabledMeals(),
-        theme: currentProfile?.theme ?? 'system',
-      },
-    });
-  }
-
-  function renderOfflineCache() {
-    const cached = readLastOfflineMenuCache();
-    if (!cached) {
-      setVisible(false);
-      showStatus(labels.offlineNoCache, true);
-      updateOfflineState(labels.offlineNoCache);
-      return;
-    }
-
-    currentUser = { uid: cached.userId, displayName: cached.profile.displayName };
-    currentMenuIdsByWeekStart = { [getWeekStartForDate(cached.menu.weekStart)]: cached.menuId };
-    currentMenus = [cached.menu];
-    currentProfile = {
-      id: cached.userId,
-      displayName: cached.profile.displayName,
-      email: '',
-      enabledMeals: cached.profile.enabledMeals,
-      theme: cached.profile.theme,
-    };
-    if (userLabel) userLabel.textContent = `${labels.hello} ${cached.profile.displayName}`;
-    applyTheme(cached.profile.theme);
-    renderDashboard(cached.menu);
-    updateOfflineState(`${labels.offlineCached} ${new Date(cached.savedAt).toLocaleString(locale)}. ${labels.offlineReadOnly}`);
-  }
 
   function addPlate(card: HTMLElement, meal: MealSlot) {
-    if (isReadOnlyOffline) {
-      showStatus(labels.offlineReadOnly, true);
-      return;
-    }
-
     const list = card.querySelector<HTMLElement>(`[data-plate-list="${meal}"]`);
     if (!list) return;
 
@@ -533,7 +510,6 @@ if (root) {
         }
         if (currentMenu) {
           renderDashboard(currentMenu);
-          cacheCurrentMenu(currentMenu);
         }
 
         unsubscribeTuppers?.();
@@ -559,7 +535,6 @@ if (root) {
         const mergedMenu = buildDisplayMenu(menus);
         const changedByOtherUser = !firstMenuLoad && menus.some((menu) => menu.updatedBy && menu.updatedBy !== currentUser?.uid);
         renderDashboard(mergedMenu);
-        cacheCurrentMenu(mergedMenu);
         if (changedByOtherUser) notifyMenuChanged(labels.updated, labels.updatedBody);
         firstMenuLoad = menus.length < Object.keys(currentMenuIdsByWeekStart).length;
       },
@@ -578,14 +553,11 @@ if (root) {
     getSavedDayState: (dayKey) => serializeDay(currentMenu?.days[dayKey] ?? normalizeDay(undefined)),
     getDayNumber,
     getWeekday: formatWeekday,
-    canWrite: () => !shouldBlockOfflineWrites(isOnline),
-    getWriteErrorMessage: () => labels.offlineReadOnly,
+    canWrite: () => true,
+    getWriteErrorMessage: () => labels.saveHint,
     onSaveDay: (dayKey, nextDay, card) => saveDay(dayKey, nextDay, card),
     onClearDay: async (dayKey) => {
-      if (shouldBlockOfflineWrites(isOnline) || !currentUser) {
-        showStatus(labels.offlineReadOnly, true);
-        return false;
-      }
+      if (!currentUser) return false;
 
       const menuId = getMenuIdForDay(dayKey);
       if (!menuId) return false;
@@ -595,26 +567,10 @@ if (root) {
     },
   });
 
-  watchNetworkStatus((networkStatus) => {
-    const wasOffline = !isOnline;
-    isOnline = networkStatus === 'online';
-    updateOfflineState();
-
-    if (!isOnline && !currentMenu) {
-      renderOfflineCache();
-    }
-
-    if (isOnline && wasOffline) {
-      showStatus(labels.backOnline);
-      if (currentMenu) renderDashboard(currentMenu);
-    }
-  });
 
   if (!hasFirebaseConfig()) {
     setVisible(false);
     showStatus(labels.configMissing, true);
-  } else if (!isOnline) {
-    renderOfflineCache();
   } else {
     getFirebaseServices()
       .then((services) => {
@@ -635,10 +591,7 @@ if (root) {
           }
 
           if (button.dataset.quickClear) {
-            if (shouldBlockOfflineWrites(isOnline) || !currentUser) {
-              showStatus(labels.offlineReadOnly, true);
-              return;
-            }
+            if (!currentUser) return;
 
             const menuId = getMenuIdForDay(button.dataset.quickClear);
             if (!menuId) return;

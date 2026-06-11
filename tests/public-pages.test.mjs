@@ -39,12 +39,9 @@ describe('public pages smoke checks', () => {
     assert.equal(en['howItWorks.nav'], 'How it works');
   });
 
-  it('links and precaches the how it works public page with base-safe helpers', () => {
+  it('links the how it works public page with base-safe helpers', () => {
     const footer = readText('src/components/Footer.astro');
-    const sw = readText('src/pages/sw.js.ts');
     assert.match(footer, /getLocalizedPath\('\/como-funciona'/);
     assert.match(footer, /public\.howItWorks\.nav/);
-    assert.match(sw, /withBasePath\('como-funciona'\)/);
-    assert.match(sw, /getLocalizedPath\('\/como-funciona'/);
   });
 });

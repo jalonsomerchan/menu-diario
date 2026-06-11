@@ -107,6 +107,13 @@ const labels = {
   <div class="menu-app__status" data-status hidden></div>
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
   <div class="settings-app__content" data-content hidden>
+    <section class="settings-intro app-page-intro app-panel" aria-labelledby="settings-title">
+      <div class="app-page-intro__copy">
+        <span class="app-page-intro__eyebrow">{labels.settings}</span>
+        <h1 id="settings-title">{labels.settings}</h1>
+        <p>{labels.description}</p>
+      </div>
+    </section>
     <div class="settings-layout">
       <section class="settings-column" aria-labelledby="settings-personal-title">
         <div class="settings-section-heading">
@@ -293,6 +300,10 @@ const labels = {
   .settings-invite-link {
     display: grid;
     gap: 1rem;
+  }
+
+  .settings-intro {
+    margin-bottom: 1rem;
   }
 
   .settings-invite-link input {

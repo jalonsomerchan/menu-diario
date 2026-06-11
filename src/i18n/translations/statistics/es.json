@@ -34,6 +34,6 @@
   "insightPlanning": "Has planificado {planned} de {total} comidas posibles en el rango seleccionado.",
   "insightVariety": "El plato más repetido es {dish}, con {count} apariciones.",
   "insightEmpty": "No hay suficientes comidas planificadas para detectar patrones todavía.",
-  "errorOffline": "No se pudieron cargar las estadísticas. Revisa la conexión o vuelve a intentarlo.",
+  "errorLoad": "No se pudieron cargar las estadísticas. Vuelve a intentarlo.",
   "homePath": "Volver al inicio"
 }

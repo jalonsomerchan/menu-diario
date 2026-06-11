@@ -11,80 +11,61 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-const featureKeys = ['home.featureHistory', 'home.featureShare', 'home.featureNotifications'] as const;
-const previewCards = [
-  { day: t('home.previewDay1'), date: t('home.previewDate1'), dish: t('home.previewDish1'), planned: true },
-  { day: t('home.previewDay2'), date: t('home.previewDate2'), dish: t('dashboard.todayEmpty'), planned: false },
-  { day: t('home.previewDay3'), date: t('home.previewDate3'), dish: t('home.previewDish3'), planned: true },
-];
+const copy =
+  locale === 'es'
+    ? {
+        title: 'Bienvenido a Menu Diario',
+        subtitle: 'Tu app para planificar comidas con tu familia o grupo',
+        cards: [
+          {
+            title: 'Toda la semana en una sola vista',
+            description: 'Centraliza desayunos, comidas, cenas, notas y participantes para no depender de mensajes sueltos.',
+          },
+          {
+            title: 'Pensado para decidir en grupo',
+            description: 'Comparte cambios al momento y mantén claro quién come cada día sin duplicar conversaciones.',
+          },
+          {
+            title: 'IA y platos guardados cuando hagan falta',
+            description: 'Reutiliza tus platos habituales o pide ideas rápidas cuando haya huecos sin planificar.',
+          },
+        ],
+      }
+    : {
+        title: 'Welcome to Menu Diario',
+        subtitle: 'Your app for planning meals with your family or group',
+        cards: [
+          {
+            title: 'The whole week in one view',
+            description: 'Centralize breakfasts, lunches, dinners, notes and participants without relying on loose messages.',
+          },
+          {
+            title: 'Built for group decisions',
+            description: 'Share changes instantly and keep clear who is eating each day without duplicate conversations.',
+          },
+          {
+            title: 'AI and saved dishes when needed',
+            description: 'Reuse your regular dishes or ask for quick ideas when there are empty planning slots.',
+          },
+        ],
+      };
 ---
 
 <BaseLayout title={siteConfig.name} description={t('site.description')} locale={locale}>
   <Container class="home-landing-container" size="page">
-    <section class="home-app-preview home-landing-hero" aria-labelledby="home-title">
-      <h1 id="home-title" class="sr-only">{t('home.title')}</h1>
-      <p class="sr-only">{t('home.description')}</p>
-
-      <div class="home-week-overview">
-        <div class="home-week-overview__header">
-          <div class="home-week-overview__title">
-            <h2>{t('dashboard.weekSummary')}</h2>
-            <span>19 - 25 may</span>
-          </div>
-          <a href="#login">{t('home.docs')}</a>
-        </div>
-
-        <div class="home-week-overview__grid">
-          <div class="home-week-stat">
-            <span class="home-week-stat__icon home-week-stat__icon--success">✓</span>
-            <strong>5</strong>
-            <span>{t('dashboard.daysWithMenu')}</span>
-          </div>
-          <div class="home-week-stat">
-            <span class="home-week-stat__icon home-week-stat__icon--warning">○</span>
-            <strong>2</strong>
-            <span>{t('dashboard.daysWithoutMenu')}</span>
-          </div>
-          <div class="home-week-stat">
-            <span class="home-week-stat__icon">3</span>
-            <strong>3</strong>
-            <span>{t('dashboard.averagePeople')}</span>
-          </div>
-          <div class="home-week-next">
-            <span>{t('dashboard.nextMeal')}</span>
-            <small>{t('dashboard.todayForLunch').replace(':', '')}</small>
-            <strong>{t('home.previewDish1')}</strong>
-            <em>{t('home.previewPeople')}</em>
-          </div>
-        </div>
-      </div>
-
-      <div class="home-preview-days home-landing-preview" aria-hidden="true">
-        {previewCards.map((card) => (
-          <article class="home-preview-day-card">
-            <div class="home-preview-day-card__date">
-              <span>{card.day}</span>
-              <small>{card.date}</small>
-            </div>
-            <div class="home-preview-day-card__body">
-              <span>{t('dashboard.lunch')}</span>
-              <strong>{card.dish}</strong>
-              <small>{card.planned ? t('home.previewPeople') : t('dashboard.addDish')}</small>
-            </div>
-            {card.planned ? <span class="home-preview-day-card__status">{t('dashboard.plannedStatus')}</span> : <span class="home-preview-day-card__add">{t('dashboard.addPlate')}</span>}
-          </article>
-        ))}
-      </div>
-
-      <div class="home-app-preview__auth" id="login">
+    <section class="home-landing-hero" aria-labelledby="home-title">
+      <h1 id="home-title">{copy.title}</h1>
+      <p>{copy.subtitle}</p>
+      <div class="home-landing-hero__auth" id="login">
         <AuthGate locale={locale} showGuest={false} />
       </div>
     </section>
 
     <section class="home-landing-grid" aria-label={t('home.eyebrow')}>
-      {featureKeys.map((key) => (
+      {copy.cards.map((card) => (
         <article class="home-landing-card">
-          <h2>{t(key)}</h2>
+          <h2>{card.title}</h2>
+          <p>{card.description}</p>
         </article>
       ))}
     </section>
@@ -92,191 +73,47 @@ const previewCards = [
 </BaseLayout>
 
 <style>
-  :global(.home-landing-container) {
-    padding-block: 0 clamp(2rem, 7vw, 5rem);
+  .home-landing-container {
+    padding-block: clamp(3rem, 9vw, 6rem);
   }
 
-  .home-app-preview {
-    display: grid;
-    gap: 0.95rem;
-  }
-
-  .home-week-overview {
-    display: grid;
-    gap: 2.15rem;
-    border-bottom: 1px solid var(--color-border);
-    padding-block: clamp(2rem, 5vw, 2.45rem);
-  }
-
-  .home-week-overview__header,
-  .home-week-overview__title {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1.35rem;
-  }
-
-  .home-week-overview__header {
-    justify-content: space-between;
-  }
-
-  .home-week-overview h2 {
-    margin: 0;
-    font-size: clamp(1.35rem, 3.6vw, 1.75rem);
-    font-weight: 520;
-    letter-spacing: -0.035em;
-  }
-
-  .home-week-overview__title span,
-  .home-week-overview__header a {
-    color: var(--color-muted);
-    font-size: clamp(0.98rem, 2.6vw, 1.2rem);
-    text-decoration: none;
-  }
-
-  .home-week-overview__header a {
-    color: var(--color-primary);
-  }
-
-  .home-week-overview__grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(14rem, 0.65fr);
-  }
-
-  .home-week-stat,
-  .home-week-next {
-    display: grid;
-    align-content: start;
-    gap: 0.55rem;
-    border-left: 1px solid var(--color-border);
-    padding-inline: clamp(0.75rem, 3vw, 2rem);
-    color: var(--color-muted);
-  }
-
-  .home-week-stat:first-child {
-    border-left: 0;
-  }
-
-  .home-week-stat__icon {
-    display: grid;
-    width: 2.35rem;
-    height: 2.35rem;
-    place-items: center;
-    border-radius: 999px;
-    background: var(--color-primary-soft);
-    color: var(--color-primary);
-    font-weight: 700;
-  }
-
-  .home-week-stat__icon--success {
-    background: var(--color-success-soft);
-    color: var(--color-success);
-  }
-
-  .home-week-stat__icon--warning {
-    background: var(--color-accent-soft);
-    color: var(--color-accent);
-  }
-
-  .home-week-stat strong {
-    color: var(--color-text);
-    font-size: clamp(2rem, 6vw, 2.35rem);
-    font-weight: 650;
-    line-height: 1;
-  }
-
-  .home-week-next strong {
-    color: var(--color-text);
-    font-size: 1.1rem;
-    font-weight: 560;
-  }
-
-  .home-week-next small {
-    color: var(--color-primary);
-  }
-
-  .home-week-next em {
-    color: var(--color-muted);
-    font-style: normal;
-  }
-
-  .home-preview-days {
-    display: grid;
-    gap: 0.95rem;
-  }
-
-  .home-preview-day-card {
-    display: grid;
-    grid-template-columns: clamp(7.1rem, 18vw, 9.5rem) minmax(0, 1fr) auto;
-    align-items: center;
-    min-height: 9.55rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-2xl);
-    background: var(--color-surface);
-  }
-
-  .home-preview-day-card__date {
-    display: grid;
-    gap: 0.35rem;
-    height: 100%;
-    align-content: center;
-    border-right: 1px solid var(--color-border);
-    padding: 1.15rem 1.85rem 1.15rem 2rem;
-  }
-
-  .home-preview-day-card__date span {
-    color: var(--color-primary);
-    font-size: clamp(1.24rem, 3vw, 1.45rem);
-    font-weight: 520;
-  }
-
-  .home-preview-day-card__date small {
-    color: var(--color-text);
-    font-size: clamp(1.12rem, 2.5vw, 1.35rem);
-  }
-
-  .home-preview-day-card__body {
-    display: grid;
-    gap: 0.4rem;
-    min-width: 0;
-    padding-inline: clamp(2.1rem, 5vw, 2.45rem);
-  }
-
-  .home-preview-day-card__body > span,
-  .home-preview-day-card__body small {
-    color: var(--color-primary);
-  }
-
-  .home-preview-day-card__body strong {
-    color: var(--color-text);
-    font-size: clamp(1.05rem, 2.8vw, 1.2rem);
-    font-weight: 560;
-  }
-
-  .home-preview-day-card__status,
-  .home-preview-day-card__add {
-    margin-right: clamp(1.2rem, 3vw, 2rem);
-    white-space: nowrap;
-  }
-
-  .home-preview-day-card__status {
-    border-radius: 999px;
-    background: #e5f6ed;
-    color: #129349;
-    padding: 0.35rem 1rem;
-  }
-
-  .home-preview-day-card__add {
-    border: 1px solid var(--color-accent);
-    border-radius: var(--radius-lg);
-    color: var(--color-accent);
-    padding: 0.75rem 1.15rem;
-  }
-
-  .home-app-preview__auth {
+  .home-landing-hero {
     display: grid;
     justify-items: center;
-    padding-block: 0.75rem;
+    gap: 1.4rem;
+    border: 1px solid var(--panel-border);
+    border-radius: clamp(1.5rem, 4vw, 2.35rem);
+    background: var(--panel-background);
+    box-shadow: var(--shadow-sm);
+    padding: clamp(3.2rem, 8vw, 5.2rem) clamp(1.25rem, 4vw, 3rem);
+    text-align: center;
+  }
+
+  .home-landing-hero h1 {
+    max-width: 14ch;
+    margin: 0;
+    color: var(--color-text);
+    font-size: clamp(2.75rem, 8vw, 5.4rem);
+    font-weight: 620;
+    letter-spacing: -0.08em;
+    line-height: 0.95;
+  }
+
+  .home-landing-hero p {
+    max-width: 42rem;
+    margin: 0;
+    color: var(--color-muted);
+    font-size: clamp(1.1rem, 2.3vw, 1.5rem);
+    font-weight: 440;
+    letter-spacing: -0.035em;
+    line-height: 1.35;
+  }
+
+  .home-landing-hero__auth {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 0.75rem;
   }
 
   .home-landing-grid {
@@ -287,11 +124,12 @@ const previewCards = [
 
   .home-landing-card {
     display: grid;
+    gap: 1.15rem;
     border: 1px solid var(--panel-border);
-    border-radius: var(--radius-xl);
+    border-radius: clamp(1.2rem, 3vw, 1.9rem);
     background: var(--panel-background);
     box-shadow: var(--shadow-xs);
-    padding: 1rem;
+    padding: clamp(1.25rem, 3vw, 1.65rem);
   }
 
   .home-landing-card h2 {
@@ -303,44 +141,18 @@ const previewCards = [
     line-height: 1.05;
   }
 
-  @media (min-width: 768px) {
-    :global(.home-landing-container) {
-      padding-block: 0 clamp(2rem, 7vw, 5rem);
-    }
-
-    .home-landing-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+  .home-landing-card p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: clamp(0.98rem, 1.7vw, 1.08rem);
+    font-weight: 420;
+    letter-spacing: -0.025em;
+    line-height: 1.5;
   }
 
-  @media (max-width: 640px) {
-    .home-week-overview__grid {
+  @media (min-width: 768px) {
+    .home-landing-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .home-week-next {
-      grid-column: 1 / -1;
-      border-left: 0;
-      border-top: 1px solid var(--color-border);
-      padding-top: 1rem;
-    }
-
-    .home-preview-day-card {
-      grid-template-columns: clamp(5.5rem, 25vw, 6.4rem) minmax(0, 1fr) 3.5rem;
-      min-height: 8.25rem;
-    }
-
-    .home-preview-day-card__date {
-      padding: 0.95rem 0.85rem 0.95rem 1rem;
-    }
-
-    .home-preview-day-card__body {
-      padding-inline: 1.15rem;
-    }
-
-    .home-preview-day-card__status,
-    .home-preview-day-card__add {
-      display: none;
     }
   }
 </style>

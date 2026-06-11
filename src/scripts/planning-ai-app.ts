@@ -32,7 +32,6 @@ import {
 } from '../lib/menu/repository';
 import { serializeDay } from '../lib/menu/day-state';
 import type { DailyMenu, DailyOption, Dish, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
-import { getNetworkStatus } from '../lib/pwa/network-status';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-planning-ai-app]');
@@ -472,9 +471,6 @@ if (root) {
   }
 
   async function saveDay(dayKey: string, nextDay: DailyMenu, card?: HTMLElement) {
-    if (getNetworkStatus() !== 'online') {
-      throw new Error(labels.offlineReadOnly);
-    }
     if (!currentUser) return;
 
     const menuId = getMenuIdForDay(dayKey);
@@ -507,14 +503,11 @@ if (root) {
     getDayNumber,
     getWeekday: formatWeekday,
     getDateLabel: formatDate,
-    canWrite: () => getNetworkStatus() === 'online',
-    getWriteErrorMessage: () => labels.offlineReadOnly,
+    canWrite: () => true,
+    getWriteErrorMessage: () => labels.saveHint,
     onSaveDay: (dayKey, nextDay, card) => saveDay(dayKey, nextDay, card),
     onClearDay: async (dayKey) => {
-      if (getNetworkStatus() !== 'online' || !currentUser) {
-        saveFeedback.error(labels.offlineReadOnly);
-        return false;
-      }
+      if (!currentUser) return false;
 
       const menuId = getMenuIdForDay(dayKey);
       if (!menuId) return false;

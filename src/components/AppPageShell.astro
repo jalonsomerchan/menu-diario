@@ -9,13 +9,14 @@ interface Props {
   title: string;
   description: string;
   showHeader?: boolean;
+  showBreadcrumb?: boolean;
 }
 
-const { locale, title, description, showHeader = true } = Astro.props;
+const { locale, title, description, showHeader = true, showBreadcrumb = true } = Astro.props;
 ---
 
 <Container class="app-page-shell" size="page">
-  <Breadcrumb locale={locale} items={[{ label: title }]} />
+  {showBreadcrumb && <Breadcrumb locale={locale} items={[{ label: title }]} />}
   {showHeader && <PageHeader title={title} description={description} />}
   <slot />
 </Container>

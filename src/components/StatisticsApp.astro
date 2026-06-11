@@ -15,6 +15,8 @@ const labels = {
   guestSession: t('menu.guestSession'),
   permissionsError: t('menu.permissionsError'),
   loading: ts('loading'),
+  title: ts('title'),
+  description: ts('description'),
   range: ts('range'),
   range7: ts('range7'),
   range30: ts('range30'),
@@ -47,7 +49,7 @@ const labels = {
   insightPlanning: ts('insightPlanning'),
   insightVariety: ts('insightVariety'),
   insightEmpty: ts('insightEmpty'),
-  errorOffline: ts('errorOffline'),
+  errorLoad: ts('errorLoad'),
   homePath,
 };
 ---
@@ -57,10 +59,12 @@ const labels = {
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>
-    <section class="statistics-panel statistics-panel--filters" aria-labelledby="statistics-filters-title">
+    <section class="statistics-panel statistics-panel--filters app-panel" aria-labelledby="statistics-filters-title">
       <form class="statistics-filters" data-statistics-form>
-        <div>
-          <h2 id="statistics-filters-title">{labels.range}</h2>
+        <div class="app-page-intro__copy statistics-filters__intro">
+          <span class="app-page-intro__eyebrow">{labels.range}</span>
+          <h1 id="statistics-filters-title">{labels.title}</h1>
+          <p>{labels.description}</p>
           <p data-range-summary aria-live="polite"></p>
         </div>
         <div class="statistics-filters__presets" role="radiogroup" aria-label={labels.range}>

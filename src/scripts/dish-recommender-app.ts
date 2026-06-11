@@ -16,7 +16,6 @@ import { getGroupFoodIntolerancesForPrompt } from '../lib/menu/group-food-intole
 import { normalizeDay } from '../lib/menu/normalizers';
 import { ensureUserProfile, getOrCreateWeekMenus, updateMenuDay, watchUserMenus, watchUserProfile, watchWeekMenusByIds } from '../lib/menu/repository';
 import type { DailyMenu, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
-import { getNetworkStatus } from '../lib/pwa/network-status';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-dish-recommender-app]');
@@ -375,10 +374,6 @@ if (root) {
   async function saveDish(index: number) {
     const dish = recommendations[index];
     if (!dish || !currentUser) return;
-    if (getNetworkStatus() !== 'online') {
-      showStatus(labels.offlineReadOnly, true);
-      return;
-    }
     try {
       saveFeedback.saving();
       const services = await getFirebaseServices();
@@ -395,10 +390,6 @@ if (root) {
     const value = resultsContainer?.querySelector<HTMLSelectElement>(`[data-dish-assign-slot="${index}"]`)?.value ?? '';
     const [dayKey, meal] = value.split('::') as [string, MealSlot | undefined];
     if (!dayKey || !meal) return;
-    if (getNetworkStatus() !== 'online') {
-      showStatus(labels.offlineReadOnly, true);
-      return;
-    }
 
     try {
       saveFeedback.saving();

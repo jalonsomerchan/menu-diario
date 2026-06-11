@@ -38,10 +38,9 @@ describe('statistics feature smoke checks', () => {
     });
   });
 
-  it('wires statistics into localized routing, navigation and app shell', () => {
+  it('wires statistics into localized routing and navigation', () => {
     const localizedPage = readText('src/pages/[locale]/estadisticas.astro');
     const header = readText('src/components/Header.astro');
-    const serviceWorker = readText('src/pages/sw.js.ts');
 
     assert.match(localizedPage, /getStaticPaths/);
     assert.match(localizedPage, /locales/);
@@ -49,7 +48,6 @@ describe('statistics feature smoke checks', () => {
     assert.match(localizedPage, /<StatisticsApp/);
     assert.match(header, /getLocalizedPath\('\/estadisticas'/);
     assert.match(header, /useStatisticsTranslations/);
-    assert.match(serviceWorker, /estadisticas/);
   });
 
   it('keeps the dashboard hero independent from statistics shortcuts', () => {
