@@ -23,6 +23,27 @@ let authServicesPromise: Promise<FirebaseAuthServices> | undefined;
 let servicesPromise: Promise<FirebaseServices> | undefined;
 let appCheckPromise: Promise<unknown> | undefined;
 
+function createFirestoreInstance(app: any, firestoreModule: any) {
+  if (typeof firestoreModule.initializeFirestore !== 'function') {
+    return firestoreModule.getFirestore(app);
+  }
+
+  try {
+    // Auto-detect long polling prevents flaky Firestore Listen/channel failures
+    // on mobile browsers and restricted network stacks without forcing it everywhere.
+    return firestoreModule.initializeFirestore(app, {
+      experimentalAutoDetectLongPolling: true,
+      useFetchStreams: false,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/already (?:exists|been initialized|started)/i.test(message)) {
+      return firestoreModule.getFirestore(app);
+    }
+    throw error;
+  }
+}
+
 async function importFirebaseModule(name: FirebaseModuleName) {
   return import(/* @vite-ignore */ `https://www.gstatic.com/firebasejs/${firebaseVersion}/firebase-${name}.js`);
 }
@@ -72,7 +93,7 @@ export async function getFirebaseServices() {
 
       return {
         ...authServices,
-        db: firestoreModule.getFirestore(authServices.app),
+        db: createFirestoreInstance(authServices.app, firestoreModule),
         firestoreModule,
       };
     }

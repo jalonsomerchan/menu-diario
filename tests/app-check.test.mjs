@@ -32,6 +32,9 @@ describe('Firebase App Check configuration', () => {
     assert.match(firebaseClient, /getFirebaseAuthServices/);
     assert.match(firebaseClient, /void ensureFirebaseAppCheck\(\)/);
     assert.match(firebaseClient, /await ensureFirebaseAppCheck\(\)/);
+    assert.match(firebaseClient, /initializeFirestore/);
+    assert.match(firebaseClient, /experimentalAutoDetectLongPolling:\s*true/);
+    assert.match(firebaseClient, /useFetchStreams:\s*false/);
     assert.match(appCheck, /firebase-app-check\.js/);
     assert.match(appCheck, /ReCaptchaEnterpriseProvider/);
     assert.match(appCheck, /isTokenAutoRefreshEnabled/);

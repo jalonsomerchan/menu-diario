@@ -38,4 +38,12 @@ describe('dashboard refactor smoke checks', () => {
     assert.match(dashboardScript, /watchDailyOptions[\s\S]+scheduleDashboardRender\(\);/);
     assert.match(dashboardScript, /watchGroup[\s\S]+scheduleDashboardRender\(\);/);
   });
+
+  it('exposes shared translated error labels to the dashboard runtime', () => {
+    const dashboardComponent = readText('src/components/DashboardApp.astro');
+
+    assert.match(dashboardComponent, /'errors\.unavailable': t\('errors\.unavailable'\)/);
+    assert.match(dashboardComponent, /'errors\.generic': t\('errors\.generic'\)/);
+    assert.match(dashboardComponent, /'errors\.permissionDenied': t\('errors\.permissionDenied'\)/);
+  });
 });
