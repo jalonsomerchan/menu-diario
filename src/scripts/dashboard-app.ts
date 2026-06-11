@@ -53,6 +53,9 @@ if (root) {
   const nextDays = root.querySelector<HTMLElement>('[data-next-days]');
   const expiryBanner = root.querySelector<HTMLElement>('[data-expiry-banner]');
   const weekOverviewStorageKey = 'menu-diario-dashboard-week-overview-collapsed';
+  const weekdayFormatter = new Intl.DateTimeFormat(locale, { weekday: 'long' });
+  const dayMonthFormatter = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' });
+  const dayNumberFormatter = new Intl.DateTimeFormat(locale, { day: 'numeric' });
 
   let currentUser: FirebaseUser | null = null;
   let currentProfile: UserProfile | null = null;
@@ -70,6 +73,7 @@ if (root) {
   let unsubscribeGroup: (() => void) | undefined;
   let unsubscribeTuppers: (() => void) | undefined;
   let firstMenuLoad = true;
+  let renderQueued = false;
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -197,6 +201,17 @@ if (root) {
     return currentMenus.find((menu) => menu.weekStart === weekStart) ?? null;
   }
 
+  function scheduleDashboardRender() {
+    if (!currentMenu || renderQueued) return;
+
+    renderQueued = true;
+    window.requestAnimationFrame(() => {
+      renderQueued = false;
+      if (!currentMenu) return;
+      renderDashboard(currentMenu);
+    });
+  }
+
   function buildDisplayMenu(menus: WeekMenu[]) {
     const today = toIsoDate(new Date());
     const days = Object.fromEntries(
@@ -219,7 +234,7 @@ if (root) {
   }
 
   function formatWeekday(isoDate: string) {
-    return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(new Date(`${isoDate}T00:00:00`));
+    return weekdayFormatter.format(new Date(`${isoDate}T00:00:00`));
   }
 
   function capitalizeLabel(value: string) {
@@ -227,17 +242,15 @@ if (root) {
   }
 
   function formatDate(isoDate: string) {
-    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(new Date(`${isoDate}T00:00:00`));
+    return dayMonthFormatter.format(new Date(`${isoDate}T00:00:00`));
   }
 
   function formatShortDayMonth(isoDate: string) {
-    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' })
-      .format(new Date(`${isoDate}T00:00:00`))
-      .replace('.', '');
+    return dayMonthFormatter.format(new Date(`${isoDate}T00:00:00`)).replace('.', '');
   }
 
   function getDayNumber(isoDate: string) {
-    return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(new Date(`${isoDate}T00:00:00`));
+    return dayNumberFormatter.format(new Date(`${isoDate}T00:00:00`));
   }
 
   function applyTheme(theme: UserProfile['theme']) {
@@ -479,7 +492,6 @@ if (root) {
           user.uid,
           (nextDishes) => {
             dishes = nextDishes;
-            if (currentMenu) renderDashboard(currentMenu);
           },
           (error) => showStatus(formatError(error), true),
           false,
@@ -491,7 +503,7 @@ if (root) {
           { userId: user.uid, groupId: profile.groupId },
           (nextOptions) => {
             dailyOptions = nextOptions;
-            if (currentMenu) renderDashboard(currentMenu);
+            scheduleDashboardRender();
           },
           (error) => showStatus(formatError(error), true)
         );
@@ -503,14 +515,12 @@ if (root) {
             profile.groupId,
             (group) => {
               currentGroup = group;
-              if (currentMenu) renderDashboard(currentMenu);
+              scheduleDashboardRender();
             },
             (error) => showStatus(formatError(error), true)
           );
         }
-        if (currentMenu) {
-          renderDashboard(currentMenu);
-        }
+        scheduleDashboardRender();
 
         unsubscribeTuppers?.();
         unsubscribeTuppers = watchTuppers(

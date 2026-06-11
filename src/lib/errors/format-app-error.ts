@@ -22,15 +22,15 @@ const technicalErrorMap: Record<string, string> = {
 const fallbackLabels: ErrorLabelFallback[] = [
   { key: 'errors.firebaseMissingConfig', aliases: ['firebaseMissing', 'configMissing'] },
   { key: 'errors.appCheckUnavailable', aliases: ['aiAppCheck', 'appCheckUnavailable'] },
-  { key: 'errors.groupNotFound', aliases: ['notFoundMenu', 'notFound', 'permissionsError'] },
-  { key: 'errors.inviteNotFound', aliases: ['joinError', 'permissionsError'] },
+  { key: 'errors.groupNotFound', aliases: ['notFoundMenu', 'notFound', 'configMissing'] },
+  { key: 'errors.inviteNotFound', aliases: ['joinError', 'configMissing'] },
   { key: 'errors.dishInvalidName', aliases: ['invalid'] },
   { key: 'errors.dishDuplicate', aliases: ['duplicate'] },
   { key: 'errors.dishDuplicateGlobal', aliases: ['duplicateGlobal'] },
   { key: 'errors.dishNotEditable', aliases: ['notEditable'] },
   { key: 'errors.permissionDenied', aliases: ['permissionsError'] },
-  { key: 'errors.unavailable', aliases: ['genericError'] },
-  { key: 'errors.generic', aliases: ['genericError', 'permissionsError', 'configMissing'] },
+  { key: 'errors.unavailable', aliases: ['genericError', 'configMissing'] },
+  { key: 'errors.generic', aliases: ['genericError', 'configMissing'] },
 ];
 
 function extractErrorCode(error: unknown) {

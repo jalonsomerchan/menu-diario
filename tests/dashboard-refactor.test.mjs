@@ -28,4 +28,14 @@ describe('dashboard refactor smoke checks', () => {
     assert.match(dashboardScript, /try \{\s*await initializeAuthenticatedDashboard\(services, user\);/);
     assert.match(dashboardScript, /catch \(error\) \{\s*setVisible\(false\);\s*showStatus\(formatError\(error\), true\);/);
   });
+
+  it('batches dashboard rerenders and keeps catalog updates from repainting the whole screen', () => {
+    const dashboardScript = readText('src/scripts/dashboard-app.ts');
+
+    assert.match(dashboardScript, /function scheduleDashboardRender\(\)/);
+    assert.match(dashboardScript, /window\.requestAnimationFrame\(/);
+    assert.match(dashboardScript, /watchUserDishes\(\s*services,\s*user\.uid,\s*\(nextDishes\) => \{\s*dishes = nextDishes;\s*\}/);
+    assert.match(dashboardScript, /watchDailyOptions[\s\S]+scheduleDashboardRender\(\);/);
+    assert.match(dashboardScript, /watchGroup[\s\S]+scheduleDashboardRender\(\);/);
+  });
 });

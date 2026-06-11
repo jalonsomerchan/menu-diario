@@ -37,6 +37,7 @@ describe('app error formatter', () => {
     assert.match(source, /export function formatAppError/);
     assert.match(source, /findLabel\(labels, key\)/);
     assert.match(source, /findLabel\(labels, 'errors\.generic'\)/);
+    assert.doesNotMatch(source, /errors\.generic', aliases: \['genericError', 'permissionsError'/);
   });
 
   it('normalizes visible errors in the main data screens', () => {
