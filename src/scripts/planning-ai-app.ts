@@ -52,6 +52,7 @@ if (root) {
   const loading = root.querySelector<HTMLElement>('[data-loading]');
   const content = root.querySelector<HTMLElement>('[data-content]');
   const form = root.querySelector<HTMLFormElement>('[data-plan-form]');
+  const wizardNextButton = root.querySelector<HTMLButtonElement>('[data-plan-wizard-next]');
   const startInput = root.querySelector<HTMLInputElement>('[data-plan-start]');
   const endInput = root.querySelector<HTMLInputElement>('[data-plan-end]');
   const countInput = root.querySelector<HTMLInputElement>('[data-plan-count]');
@@ -74,6 +75,7 @@ if (root) {
   let hasGeneratedResults = false;
   let syncedMealsFromProfile = false;
   let syncedIntolerances = false;
+  let currentWizardStep = 0;
   let unsubscribeMenus: (() => void) | undefined;
   let unsubscribeProfile: (() => void) | undefined;
   let unsubscribeDishes: (() => void) | undefined;
@@ -111,9 +113,11 @@ if (root) {
   }
 
   function setBusy(isBusy: boolean) {
-    if (!submitButton) return;
-    submitButton.disabled = isBusy;
-    submitButton.setAttribute('aria-busy', String(isBusy));
+    [submitButton, wizardNextButton].forEach((button) => {
+      if (!button) return;
+      button.disabled = isBusy;
+      button.setAttribute('aria-busy', String(isBusy));
+    });
   }
 
   function formatError(error: unknown) {
@@ -552,6 +556,10 @@ if (root) {
     syncedIntolerances = true;
   }
 
+  function goToResultsStep() {
+    root.dispatchEvent(new CustomEvent('planning-ai-wizard:go', { detail: { step: 7 } }));
+  }
+
   applyDefaultRange();
   setSelectedCount(getSelectedCount());
 
@@ -563,6 +571,7 @@ if (root) {
       .then((services) => {
         root.addEventListener('planning-ai-wizard:step', async (event) => {
           const step = (event as CustomEvent<{ step: number }>).detail?.step;
+          currentWizardStep = typeof step === 'number' ? step : currentWizardStep;
           if (step === 2) {
             showAiStatus(labels.loadingSlots);
             await syncWizardRequest(services);
@@ -572,6 +581,18 @@ if (root) {
             await syncIntolerances(services);
           }
         });
+
+        wizardNextButton?.addEventListener(
+          'click',
+          (event) => {
+            if (currentWizardStep !== 6 || !form) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            goToResultsStep();
+            form.requestSubmit(submitButton ?? undefined);
+          },
+          { capture: true }
+        );
 
         form?.addEventListener('submit', async (event) => {
           event.preventDefault();
@@ -645,6 +666,7 @@ if (root) {
             });
             hasGeneratedResults = true;
             renderCurrentState();
+            goToResultsStep();
             showAiStatus(recommendations.length ? labels.generated : labels.resultsEmpty);
           } catch (error) {
             const state = getAiUiStateFromError(error);

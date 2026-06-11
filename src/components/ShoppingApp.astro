@@ -105,8 +105,7 @@ const labels = {
   wizardCancel: t('dashboard.cancel'),
   wizardSummaryTitle: t('planningAi.summaryTitle'),
   wizardSummaryDescription: t('shopping.draftDescription'),
-  wizardConfirmTitle: t('shopping.generate'),
-  wizardConfirmDescription: t('shopping.reviewDescription'),
+  wizardConfirmDescription: t('shopping.generateOnNext'),
   wizardRangeRequired: t('shopping.selectedDaysNone'),
   wizardMealsRequired: t('shopping.emptyPlannedMeals'),
   markToBuy: t('shopping.markToBuy'),
@@ -239,15 +238,7 @@ const labels = {
             <p>{labels.wizardSummaryDescription}</p>
           </div>
           <div class="planning-ai-request-summary shopping-wizard__summary" data-wizard-summary></div>
-
-          <section class="planning-ai-results-panel" aria-labelledby="shopping-generate-title">
-            <div class="planning-ai-section-heading">
-              <h3 id="shopping-generate-title">{labels.wizardConfirmTitle}</h3>
-              <p>{labels.wizardConfirmDescription}</p>
-            </div>
-            <div class="planning-ai-results-status shopping-ai-status" data-ai-status role="status" aria-live="polite"></div>
-            <button class="button button--primary planning-ai-submit" type="button" data-generate>{labels.generate}</button>
-          </section>
+          <p class="planning-ai-empty shopping-wizard__hint">{labels.wizardConfirmDescription}</p>
         </section>
 
         <section class="planning-ai-request-card" aria-labelledby="shopping-draft-title" data-wizard-step="results" hidden>
@@ -255,6 +246,7 @@ const labels = {
             <h3 id="shopping-draft-title">{labels.reviewTitle}</h3>
             <p>{labels.reviewDescription}</p>
           </div>
+          <div class="planning-ai-results-status shopping-ai-status" data-ai-status role="status" aria-live="polite"></div>
           <div class="shopping-toolbar">
             <button class="button button--ghost button--small" type="button" data-share>{labels.share}</button>
             <button class="button button--primary button--small" type="button" data-save>{labels.saveList}</button>
@@ -347,9 +339,16 @@ const labels = {
   .shopping-toolbar {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 0.65rem;
     align-items: center;
     justify-content: flex-end;
+  }
+
+  .shopping-wizard__hint {
+    padding: 0.75rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 6%);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 18%);
   }
 
   .shopping-range__day,

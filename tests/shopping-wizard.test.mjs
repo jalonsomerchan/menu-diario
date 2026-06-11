@@ -24,7 +24,7 @@ describe('shopping wizard smoke checks', () => {
     assert.match(component, /data-wizard-prev/);
     assert.match(component, /data-wizard-next/);
     assert.match(component, /data-wizard-cancel/);
-    assert.match(component, /data-generate/);
+    assert.match(component, /shopping-wizard__hint/);
   });
 
   it('uses the same visible format as the planning assistant', () => {
@@ -47,8 +47,9 @@ describe('shopping wizard smoke checks', () => {
     assert.match(script, /wizardSteps = \['range', 'meals', 'summary', 'results'\]/);
     assert.match(script, /currentWizardStep: WizardStep = 'range'/);
     assert.match(script, /validateWizardStep/);
-    assert.match(script, /goToWizardStep\('results'\)/);
-    assert.match(script, /currentWizardStep !== 'summary'/);
+    assert.match(script, /if \(currentWizardStep === 'summary'\)/);
+    assert.match(script, /goToWizardStep\('results'\);/);
+    assert.match(script, /generateWithAi\(\)/);
     assert.match(script, /data-wizard-next/);
     assert.match(script, /data-wizard-prev/);
     assert.match(script, /renderWizardSummary/);

@@ -42,7 +42,6 @@ if (root) {
   const aiStatus = root.querySelector<HTMLElement>('[data-ai-status]');
   const scopeLabel = root.querySelector<HTMLElement>('[data-scope-label]');
   const inventoryHint = root.querySelector<HTMLElement>('[data-inventory-hint]');
-  const generateButton = root.querySelector<HTMLButtonElement>('[data-generate]');
   const saveButton = root.querySelector<HTMLButtonElement>('[data-save]');
   const shareButton = root.querySelector<HTMLButtonElement>('[data-share]');
   const wizardError = root.querySelector<HTMLElement>('[data-wizard-error]');
@@ -466,13 +465,15 @@ if (root) {
     const hasToBuy = getToBuyItems(currentDraftItems).length > 0;
     const aiReady = hasFirebaseConfig() && isShoppingListAiAvailable(getAiFeatureFlags());
 
-    if (generateButton) {
-      generateButton.disabled = !aiReady || !currentUser || !hasSelectedDays || currentWizardStep !== 'summary';
-      generateButton.textContent = currentDraftItems.some((item) => item.source === 'ai') ? labels.regenerate : labels.generate;
-    }
-
     if (saveButton) saveButton.disabled = !currentUser || !hasItems || !hasSelectedDays;
     if (shareButton) shareButton.disabled = !hasToBuy || !hasSelectedDays || typeof navigator.share !== 'function';
+    if (wizardNext) {
+      wizardNext.textContent = currentWizardStep === 'summary' ? labels.generate : labels.wizardNext;
+      wizardNext.disabled =
+        currentWizardStep === 'results' ||
+        (currentWizardStep === 'range' && selectedDayKeys.length === 0) ||
+        (currentWizardStep === 'summary' && (!aiReady || !currentUser || !hasSelectedDays));
+    }
   }
 
   function hydrateDraft(items: ShoppingItem[]) {
@@ -519,7 +520,7 @@ if (root) {
     try {
       updateToolbarState();
       showAiStatus(labels.generating, false);
-      generateButton?.setAttribute('aria-busy', 'true');
+      wizardNext?.setAttribute('aria-busy', 'true');
       const response = await generateGeminiJson({
         userId: currentUser.uid,
         prompt: buildShoppingListPrompt(context),
@@ -529,7 +530,6 @@ if (root) {
       currentDraftItems = mergeShoppingDraftItems(currentDraftItems, aiItems);
       draftDirty = true;
       renderDraft();
-      goToWizardStep('results');
       updateToolbarState();
       showAiStatus(aiItems.length ? labels.updated : labels.noToBuyItems, false);
     } catch (error) {
@@ -537,7 +537,7 @@ if (root) {
       const key = getAiUiMessageKey(state);
       showAiStatus(key ? labels[key] ?? labels.invalidResponse : labels.invalidResponse, true);
     } finally {
-      generateButton?.removeAttribute('aria-busy');
+      wizardNext?.removeAttribute('aria-busy');
     }
   }
 
@@ -667,9 +667,6 @@ if (root) {
       if (!button || !list) return;
       openShoppingList(list);
     });
-    generateButton?.addEventListener('click', () => {
-      generateWithAi().catch((error) => showAiStatus(formatError(error), true));
-    });
     saveButton?.addEventListener('click', () => {
       saveCurrentList().catch((error) => showStatus(formatError(error), true));
     });
@@ -684,6 +681,11 @@ if (root) {
       const error = validateWizardStep(currentWizardStep);
       if (error) {
         showWizardError(error);
+        return;
+      }
+      if (currentWizardStep === 'summary') {
+        goToWizardStep('results');
+        generateWithAi().catch((error) => showAiStatus(formatError(error), true));
         return;
       }
       const index = wizardSteps.indexOf(currentWizardStep);

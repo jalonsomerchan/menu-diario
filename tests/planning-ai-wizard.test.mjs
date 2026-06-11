@@ -23,9 +23,9 @@ describe('AI planner wizard', () => {
     const dateRange = readText('src/scripts/planning-ai-date-range.ts');
     const wizardActionsBlock = cssBlock(component, '.planning-ai-wizard-actions');
 
-    assert.match(component, /Planificador con IA/);
-    assert.match(component, /Planifica tus próximas comidas con inteligencia artificial/);
-    assert.match(component, /planning-ai-panel-heading/);
+    assert.match(component, /Ideas rápidas para tu semana/);
+    assert.match(component, /Elige días, marca comidas y deja que la IA sugiera platos/);
+    assert.match(component, /app-page-intro/);
     assert.match(component, /data-plan-scroll-target/);
     assert.doesNotMatch(component, /planning-ai-hero app-panel/);
     assert.doesNotMatch(component, /section-heading section-heading--simple/);
@@ -33,6 +33,7 @@ describe('AI planner wizard', () => {
     assert.match(component, /data-plan-step=\"0\"/);
     assert.match(component, /data-plan-step=\"2\"/);
     assert.match(component, /data-plan-step=\"6\"/);
+    assert.match(component, /data-plan-step=\"7\"/);
     assert.match(component, /data-plan-date-range/);
     assert.match(component, /data-plan-start/);
     assert.match(component, /data-plan-end/);
@@ -44,7 +45,8 @@ describe('AI planner wizard', () => {
     assert.match(component, /data-plan-results/);
     assert.match(component, /planning-ai-results-panel/);
     assert.doesNotMatch(component, /planning-ai-panel--results/);
-    assert.match(component, /data-plan-step=\"6\"[\s\S]*data-plan-results/);
+    assert.match(component, /data-plan-step=\"6\"[\s\S]*data-plan-summary/);
+    assert.match(component, /data-plan-step=\"7\"[\s\S]*data-plan-results/);
     assert.match(component, /data-plan-step-indicator/);
     assert.match(component, /data-plan-wizard-back/);
     assert.match(component, /data-plan-wizard-next/);
@@ -67,6 +69,7 @@ describe('AI planner wizard', () => {
     assert.match(wizard, /selectedMeals\(\)\.length === 0/);
     assert.match(wizard, /selectedPendingSlots\(\)\.length === 0/);
     assert.match(wizard, /planning-ai-wizard:step/);
+    assert.match(wizard, /planning-ai-wizard:go/);
     assert.match(wizard, /scrollTarget\.scrollIntoView/);
     assert.match(wizard, /data-plan-scroll-target/);
     assert.match(wizard, /max-width: 719px/);
@@ -77,5 +80,7 @@ describe('AI planner wizard', () => {
     assert.match(planner, /data-plan-pending-slot/);
     assert.match(planner, /data-plan-intolerances/);
     assert.match(planner, /getGroupFoodIntolerancesForPrompt/);
+    assert.match(planner, /currentWizardStep === 6/);
+    assert.match(planner, /form\.requestSubmit/);
   });
 });

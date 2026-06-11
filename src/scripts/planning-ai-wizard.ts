@@ -64,7 +64,7 @@ if (form) {
     });
     if (back) back.disabled = index === 0;
     if (next) next.hidden = index === panels.length - 1;
-    if (submit) submit.hidden = index !== panels.length - 1;
+    if (submit) submit.hidden = true;
     notifyStep();
     if (focus) focusPanel();
     if (focus && previousIndex !== index) scrollWizardTop();
@@ -93,6 +93,11 @@ if (form) {
       }
       go(dotIndex, true);
     });
+  });
+  app?.addEventListener('planning-ai-wizard:go', (event) => {
+    const targetIndex = (event as CustomEvent<{ step?: number }>).detail?.step;
+    if (typeof targetIndex !== 'number') return;
+    go(targetIndex, true);
   });
   form.addEventListener('submit', validateBeforeSubmit, { capture: true });
   go(0);

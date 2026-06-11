@@ -12,17 +12,10 @@ const t = useTranslations(locale);
 const homePath = getLocalizedPath('/', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
 const dishesPath = getLocalizedPath('/mis-platos', locale);
-const headingCopy =
-  locale === 'es'
-    ? {
-        title: 'Planificador con IA',
-        description:
-          'Planifica tus próximas comidas con inteligencia artificial, obteniendo recomendaciones de nuevos platos y menús sanos y equilibrados',
-      }
-    : {
-        title: t('planningAi.title'),
-        description: t('planningAi.description'),
-      };
+const headingCopy = {
+  title: t('planningAi.title'),
+  description: t('planningAi.description'),
+};
 
 const labels = {
   configMissing: t('menu.configMissing'),
@@ -64,6 +57,7 @@ const labels = {
   pendingEmpty: t('planningAi.pendingEmpty'),
   resultsTitle: t('planningAi.resultsTitle'),
   resultsDescription: t('planningAi.resultsDescription'),
+  generateOnNext: t('planningAi.generateOnNext'),
   resultsEmpty: t('planningAi.resultsEmpty'),
   resultsNotGenerated: t('planningAi.resultsNotGenerated'),
   foodIntolerancesTitle: t('settings.foodIntolerancesTitle'),
@@ -139,6 +133,7 @@ const wizardSteps = [
   labels.recommendationCount,
   labels.mode,
   labels.summaryTitle,
+  labels.resultsTitle,
 ];
 ---
 
@@ -147,6 +142,18 @@ const wizardSteps = [
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>
+    <section class="planning-ai-intro app-page-intro app-panel" aria-labelledby="planning-ai-title">
+      <div class="app-page-intro__copy">
+        <span class="app-page-intro__eyebrow">{labels.eyebrow}</span>
+        <h1 id="planning-ai-title">{labels.title}</h1>
+        <p>{labels.description}</p>
+      </div>
+      <div class="app-page-intro__actions">
+        <a class="button button--ghost" href={configurePath}>{labels.openManual}</a>
+        <a class="button button--secondary" href={dishesPath}>{labels.manageDishes}</a>
+      </div>
+    </section>
+
     <section class="planning-ai-panel app-panel" aria-labelledby="planning-ai-form-title" data-plan-scroll-target>
       <h2 id="planning-ai-form-title" class="sr-only">{labels.title}</h2>
 
@@ -256,12 +263,15 @@ const wizardSteps = [
           </fieldset>
         </section>
 
-        <section class="planning-ai-request-card" aria-live="polite" data-plan-step="6" hidden>
+        <section class="planning-ai-request-card" aria-live="polite" data-plan-step="6" data-plan-generate-step="true" hidden>
           <div class="planning-ai-section-heading">
             <h3>{labels.summaryTitle}</h3>
+            <p>{labels.generateOnNext}</p>
           </div>
           <div class="planning-ai-request-summary" data-plan-summary></div>
+        </section>
 
+        <section class="planning-ai-request-card" aria-live="polite" data-plan-step="7" hidden>
           <section class="planning-ai-results-panel" aria-labelledby="planning-ai-results-title">
             <div class="planning-ai-section-heading">
               <h3 id="planning-ai-results-title">{labels.resultsTitle}</h3>
@@ -297,33 +307,13 @@ const wizardSteps = [
 <style is:global>
   .planning-ai-app {
     display: grid;
-    gap: 1rem;
+    gap: 0.9rem;
   }
 
   .planning-ai-panel {
     display: grid;
-    gap: var(--surface-gap);
+    gap: 0.9rem;
     background: var(--panel-background);
-  }
-
-  .planning-ai-panel-heading {
-    display: grid;
-    gap: 0.45rem;
-  }
-
-  .planning-ai-panel-heading h2 {
-    margin: 0;
-    font-size: clamp(1.8rem, 5vw, 2.6rem);
-    line-height: 1.05;
-    letter-spacing: -0.055em;
-  }
-
-  .planning-ai-panel-heading p {
-    max-width: 44rem;
-    margin: 0;
-    color: var(--color-muted);
-    font-size: clamp(1rem, 2vw, 1.1rem);
-    line-height: var(--surface-copy-line-height);
   }
 
   .planning-ai-form,
@@ -333,58 +323,66 @@ const wizardSteps = [
   .planning-ai-pending,
   .planning-ai-results {
     display: grid;
-    gap: 1rem;
+    gap: 0.85rem;
   }
 
   .planning-ai-wizard-progress {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 0.45rem;
+    display: flex;
+    gap: 0.5rem;
     margin: 0;
     padding: 0;
     list-style: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .planning-ai-wizard-progress::-webkit-scrollbar { display: none; }
+
+  .planning-ai-wizard-progress li {
+    flex: 0 0 7.5rem;
   }
 
   .planning-ai-wizard-step {
     display: grid;
-    gap: 0.3rem;
+    gap: 0.22rem;
     width: 100%;
-    min-height: 4.25rem;
+    min-height: 3.55rem;
     align-content: center;
-    padding: 0.6rem 0.45rem;
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
-    border-radius: var(--radius-lg);
-    background: color-mix(in srgb, var(--color-surface), transparent 3%);
+    padding: 0.7rem 0.6rem;
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 5%);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
     color: var(--color-muted);
     font: inherit;
-    text-align: center;
+    text-align: left;
+    box-shadow: none;
   }
 
   .planning-ai-wizard-step span {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.55rem;
-    height: 1.55rem;
-    justify-self: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    justify-self: start;
     border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--color-surface-soft), transparent 8%);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 5%);
     color: var(--color-text);
-    font-size: 0.8rem;
-    font-weight: 950;
+    font-size: 0.74rem;
+    font-weight: 900;
   }
 
   .planning-ai-wizard-step strong {
     overflow: hidden;
-    font-size: 0.72rem;
-    font-weight: 850;
-    line-height: 1.15;
-    text-overflow: ellipsis;
+    font-size: 0.76rem;
+    font-weight: 820;
+    line-height: 1.2;
+    text-wrap: balance;
   }
 
   .planning-ai-wizard-step[aria-current='step'] {
-    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 24%);
-    background: color-mix(in srgb, var(--color-primary-soft), transparent 18%);
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 30%);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 16%);
     color: var(--color-primary);
   }
 
@@ -397,7 +395,8 @@ const wizardSteps = [
     display: flex;
     gap: 0.65rem;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
+    padding-top: 0.15rem;
   }
 
   .planning-ai-wizard-actions .button {
@@ -408,19 +407,18 @@ const wizardSteps = [
   .planning-ai-section-card,
   .planning-ai-request-card {
     display: grid;
-    gap: 0.9rem;
+    gap: 0.8rem;
     padding: var(--surface-padding-tight);
     padding-bottom: max(var(--surface-padding-tight), 1rem);
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 4%);
     border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+    background: color-mix(in srgb, var(--color-surface), transparent 2%);
+    box-shadow: none;
   }
 
   .planning-ai-results-panel {
     display: grid;
-    gap: 0.9rem;
-    padding-top: 0.9rem;
-    border-top: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 6%);
+    gap: 0.8rem;
   }
 
   .planning-ai-section-heading {
@@ -430,7 +428,7 @@ const wizardSteps = [
 
   .planning-ai-section-heading h3 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.02rem;
     line-height: 1.1;
     letter-spacing: -0.03em;
   }
@@ -495,11 +493,11 @@ const wizardSteps = [
     gap: 0.5rem;
     min-height: 3rem;
     padding: 0.85rem 0.9rem;
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 5%);
     border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface), transparent 3%);
+    background: var(--color-surface);
     color: var(--color-text);
-    font-weight: 800;
+    font-weight: 760;
     text-align: center;
     transition:
       border-color var(--transition-base),
@@ -562,9 +560,9 @@ const wizardSteps = [
     min-height: auto;
     padding: var(--surface-padding-tight) var(--surface-padding);
     padding-bottom: max(var(--surface-padding-tight), 1rem);
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 8%);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 5%);
     border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+    background: var(--color-surface);
     transition:
       border-color var(--transition-base),
       background var(--transition-base),
@@ -585,11 +583,9 @@ const wizardSteps = [
 
   .planning-ai-mode-card:has(input:checked) {
     border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 20%);
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--color-primary-soft), transparent 38%), transparent),
-      var(--color-surface-raised);
-    box-shadow: 0 12px 28px rgb(15 23 42 / 0.08);
-    transform: translateY(-1px);
+    background: color-mix(in srgb, var(--color-primary-soft), transparent 18%);
+    box-shadow: none;
+    transform: none;
   }
 
   .planning-ai-empty {
@@ -625,13 +621,13 @@ const wizardSteps = [
   .planning-ai-pending-card,
   .planning-ai-result-card {
     display: grid;
-    gap: 0.85rem;
+    gap: 0.75rem;
     min-height: auto;
     padding: var(--surface-padding);
     padding-bottom: max(var(--surface-padding), 1rem);
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 10%);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 6%);
     border-radius: var(--radius-xl);
-    background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 24%);
   }
 
   .planning-ai-pending-card label {
@@ -685,9 +681,9 @@ const wizardSteps = [
     gap: 0.45rem;
     padding: var(--surface-padding-tight);
     padding-bottom: max(var(--surface-padding-tight), 1rem);
-    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 7%);
+    border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 4%);
     border-radius: var(--radius-lg);
-    background: color-mix(in srgb, var(--color-surface), transparent 5%);
+    background: var(--color-surface);
   }
 
   .planning-ai-dish-item header {
@@ -724,7 +720,7 @@ const wizardSteps = [
   .planning-ai-results-status {
     color: var(--color-muted);
     font-weight: 700;
-    min-height: 1.3rem;
+    min-height: 1.4rem;
   }
 
   .planning-ai-results-status[data-variant='error'] {
@@ -738,13 +734,6 @@ const wizardSteps = [
 
     .planning-ai-form__meals {
       grid-template-columns: 1fr;
-    }
-
-    .planning-ai-wizard-progress {
-      display: flex;
-      overflow-x: auto;
-      padding-bottom: 0.2rem;
-      scroll-snap-type: x mandatory;
     }
 
     .planning-ai-wizard-progress li {
