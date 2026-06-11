@@ -23,8 +23,8 @@ describe('AI planner wizard', () => {
     const dateRange = readText('src/scripts/planning-ai-date-range.ts');
     const wizardActionsBlock = cssBlock(component, '.planning-ai-wizard-actions');
 
-    assert.match(component, /Ideas rápidas para tu semana/);
-    assert.match(component, /Elige días, marca comidas y deja que la IA sugiera platos/);
+    assert.match(component, /title: t\('planningAi\.title'\)/);
+    assert.match(component, /description: t\('planningAi\.description'\)/);
     assert.match(component, /app-page-intro/);
     assert.match(component, /data-plan-scroll-target/);
     assert.doesNotMatch(component, /planning-ai-hero app-panel/);
@@ -80,7 +80,7 @@ describe('AI planner wizard', () => {
     assert.match(planner, /data-plan-pending-slot/);
     assert.match(planner, /data-plan-intolerances/);
     assert.match(planner, /getGroupFoodIntolerancesForPrompt/);
-    assert.match(planner, /currentWizardStep === 6/);
+    assert.match(planner, /currentWizardStep !== 6 \|\| !form/);
     assert.match(planner, /form\.requestSubmit/);
   });
 });

@@ -617,6 +617,7 @@ if (root) {
 
           recommendations = [];
           hasGeneratedResults = false;
+          renderCurrentState();
           showAiStatus(labels.loadingSlots);
           setBusy(true);
 
