@@ -91,7 +91,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
 
   function setHeading(dayKey: string) {
     if (title) {
-      title.textContent = formatModalTitle(dayKey);
+      title.textContent = options.labels.configureDay ?? title.textContent ?? formatModalTitle(dayKey);
     }
 
     if (dayNumber) {
@@ -99,7 +99,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     }
 
     if (subtitle) {
-      subtitle.textContent = options.labels.editDay ?? '';
+      subtitle.textContent = options.labels.editDayDescription ?? '';
     }
   }
 

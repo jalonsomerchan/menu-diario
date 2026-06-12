@@ -29,7 +29,7 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
         <p class="sr-only" data-day-edit-eyebrow>{eyebrow}</p>
         <span class="sr-only" data-day-edit-number></span>
         <h2 id="day-edit-modal-title" data-day-edit-title>{title}</h2>
-        <p id="day-edit-modal-description" class="sr-only" data-day-edit-subtitle>{subtitle}</p>
+        <p id="day-edit-modal-description" data-day-edit-subtitle>{subtitle}</p>
       </div>
       <button class="day-edit-modal__close" type="button" data-day-edit-cancel aria-label={cancelLabel}>
         <Icon name="mdi:close" aria-hidden="true" />

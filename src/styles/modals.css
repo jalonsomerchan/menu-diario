@@ -456,3 +456,792 @@
     }
   }
 }
+
+/* Mobile-first day editor redesign. Scoped here to win over the shared modal base. */
+.day-edit-modal {
+  width: min(100%, 30rem) !important;
+  height: min(100dvh, 56rem) !important;
+  max-height: 100dvh !important;
+  margin: auto auto 0 !important;
+  overflow: hidden !important;
+}
+
+.day-edit-modal::backdrop {
+  background: rgb(2 6 23 / 0.56) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.day-edit-modal__box {
+  height: 100% !important;
+  max-height: 100% !important;
+  border-color: color-mix(in srgb, var(--color-border), var(--color-text) 6%) !important;
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0 !important;
+  background: var(--color-surface) !important;
+  box-shadow: 0 -1rem 3rem rgb(15 23 42 / 0.18) !important;
+}
+
+.day-edit-modal__header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 3rem !important;
+  gap: 0.75rem !important;
+  min-height: auto !important;
+  border-bottom: 0 !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface), #fff 4%), var(--color-surface)) !important;
+  padding: 0.85rem 1.1rem 0.75rem !important;
+}
+
+.day-edit-modal__heading {
+  align-self: end !important;
+  gap: 0.35rem !important;
+}
+
+.day-edit-modal__heading h2 {
+  font-size: clamp(1.55rem, 7vw, 2rem) !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.04 !important;
+  white-space: normal !important;
+}
+
+.day-edit-modal__heading p:not(.sr-only) {
+  display: block !important;
+  margin: 0 !important;
+  color: var(--color-muted) !important;
+  font-size: 0.98rem !important;
+  font-weight: 560 !important;
+  line-height: 1.4 !important;
+}
+
+.day-edit-modal__close {
+  align-self: center !important;
+  width: 2.85rem !important;
+  height: 2.85rem !important;
+  border-color: var(--color-border) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  box-shadow: none !important;
+}
+
+.day-edit-modal__body {
+  display: block !important;
+  flex: 1 1 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  background: var(--color-surface) !important;
+  padding: 0 1.1rem 1.05rem !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.day-edit-modal .day-card--compact-editor {
+  display: grid !important;
+  gap: 0 !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.day-edit-modal .day-card__header {
+  display: grid !important;
+  grid-template-columns: 6rem minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  margin: 0.25rem 0 1.1rem !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-xl) !important;
+  background: color-mix(in srgb, var(--color-surface), var(--color-surface-soft) 32%) !important;
+  padding: 1rem !important;
+}
+
+.day-edit-modal .day-card__date-number {
+  display: block !important;
+  color: var(--color-text) !important;
+  font-size: clamp(3.2rem, 15vw, 4.25rem) !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.05em !important;
+  line-height: 0.9 !important;
+  text-align: center !important;
+}
+
+.day-edit-modal .day-card__title {
+  display: grid !important;
+  gap: 0.25rem !important;
+  min-width: 0 !important;
+  border-left: 1px solid var(--color-border) !important;
+  padding-left: 1rem !important;
+}
+
+.day-edit-modal .day-card__title h3 {
+  margin: 0 !important;
+  overflow: hidden !important;
+  color: var(--color-text) !important;
+  font-size: 1.05rem !important;
+  font-weight: 820 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.day-edit-modal .day-card__title p {
+  margin: 0 !important;
+  color: var(--color-muted) !important;
+  font-size: 0.92rem !important;
+  font-weight: 560 !important;
+  line-height: 1.25 !important;
+}
+
+.day-edit-modal .day-edit-card__content,
+.day-edit-modal .day-meals-block,
+.day-edit-modal .day-skipped-block {
+  display: grid !important;
+  gap: 0 !important;
+  min-height: 0 !important;
+}
+
+.day-edit-modal .day-edit-overview {
+  display: grid !important;
+  gap: 0.85rem !important;
+  margin: 0.15rem 0 0.95rem !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-xl) !important;
+  background: color-mix(in srgb, var(--color-surface), var(--color-surface-soft) 18%) !important;
+  padding: 0.9rem !important;
+}
+
+.day-edit-modal .day-edit-overview .day-card__header {
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.day-edit-modal .day-edit-overview__options .day-options {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.day-edit-modal .day-options--compact legend {
+  margin-bottom: 0.45rem !important;
+  font-size: 0.92rem !important;
+  font-weight: 760 !important;
+}
+
+.day-edit-modal .day-options--compact p {
+  display: none !important;
+}
+
+.day-edit-modal .day-edit-block {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.day-edit-modal .day-options {
+  order: 0 !important;
+  margin: 0 0 1.1rem !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-xl) !important;
+  background: color-mix(in srgb, var(--color-surface), var(--color-surface-soft) 26%) !important;
+  padding: 0.95rem !important;
+}
+
+.day-edit-modal .day-options legend {
+  float: none !important;
+  margin: 0 0 0.35rem !important;
+  padding: 0 !important;
+  color: var(--color-text) !important;
+  font-size: 1rem !important;
+  font-weight: 820 !important;
+  line-height: 1.2 !important;
+}
+
+.day-edit-modal .day-options p {
+  margin: 0 0 0.75rem !important;
+  color: var(--color-muted) !important;
+  font-size: 0.88rem !important;
+  font-weight: 560 !important;
+  line-height: 1.35 !important;
+}
+
+.day-edit-modal .day-options__grid {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 0.55rem !important;
+  margin-inline: -0.1rem !important;
+  overflow-x: auto !important;
+  overscroll-behavior-inline: contain !important;
+  padding: 0.1rem 0.1rem 0.25rem !important;
+  scroll-snap-type: x proximity !important;
+}
+
+.day-edit-modal .day-option-chip {
+  flex: 0 0 auto !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  min-width: max-content !important;
+  max-width: 82vw !important;
+  min-height: 3rem !important;
+  border-radius: var(--radius-md) !important;
+  background: color-mix(in srgb, var(--day-option-color, var(--color-primary)), transparent 91%) !important;
+  padding: 0.58rem 0.72rem !important;
+  scroll-snap-align: start !important;
+}
+
+.day-edit-modal .day-option-chip__icon {
+  display: inline-grid !important;
+  width: 1.8rem !important;
+  height: 1.8rem !important;
+  place-items: center !important;
+  border-radius: var(--radius-full) !important;
+  background: color-mix(in srgb, var(--day-option-color, var(--color-primary)), transparent 84%) !important;
+  font-size: 1rem !important;
+}
+
+.day-edit-modal .day-option-chip__body {
+  gap: 0 !important;
+}
+
+.day-edit-modal .day-option-chip__body span {
+  font-size: 0.9rem !important;
+  font-weight: 760 !important;
+  line-height: 1.15 !important;
+}
+
+.day-edit-modal .day-option-chip__body small {
+  display: none !important;
+}
+
+.day-edit-modal .meal-editor {
+  display: grid !important;
+  gap: 0.75rem !important;
+  border-top: 1px solid var(--color-border) !important;
+  padding: 1.15rem 0 !important;
+}
+
+.day-edit-modal .meal-editor:first-of-type {
+  padding-top: 0.2rem !important;
+}
+
+.day-edit-modal .meal-editor__header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  border-bottom: 0 !important;
+  padding: 0 !important;
+}
+
+.day-edit-modal .meal-editor__title h4,
+.day-edit-modal .meal-editor h4 {
+  margin: 0 !important;
+  background: transparent !important;
+  color: var(--color-text) !important;
+  padding: 0 !important;
+  font-size: 1.08rem !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.15 !important;
+  text-transform: none !important;
+}
+
+.day-edit-modal .meal-editor__add {
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 2.8rem !important;
+  min-height: 2.8rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.45rem !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  padding: 0 0.8rem !important;
+  box-shadow: none !important;
+  font-size: 0.95rem !important;
+  font-weight: 650 !important;
+}
+
+.day-edit-modal .meal-editor__add > span:first-child {
+  display: grid !important;
+  width: 1.4rem !important;
+  height: 1.4rem !important;
+  place-items: center !important;
+  color: var(--color-primary) !important;
+  font-size: 1.45rem !important;
+  line-height: 1 !important;
+}
+
+.day-edit-modal .meal-editor__add > span:last-child {
+  display: inline !important;
+}
+
+.day-edit-modal .plate-list {
+  display: grid !important;
+  gap: 0.58rem !important;
+}
+
+.day-edit-modal .plate-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 3rem !important;
+  align-items: stretch !important;
+  gap: 0.55rem !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.day-edit-modal .plate-row label {
+  min-width: 0 !important;
+}
+
+.day-edit-modal .dish-combobox {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 2.8rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--color-surface) !important;
+  box-shadow: none !important;
+}
+
+.day-edit-modal .dish-combobox input {
+  min-height: 3.2rem !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0.78rem 0.9rem !important;
+  color: var(--color-text) !important;
+  font-size: 1rem !important;
+  font-weight: 560 !important;
+}
+
+.day-edit-modal .dish-combobox__toggle {
+  min-width: 2.8rem !important;
+  border: 0 !important;
+  border-left: 1px solid var(--color-border) !important;
+  background: transparent !important;
+  color: var(--color-text) !important;
+}
+
+.day-edit-modal .plate-row .icon-button--danger {
+  width: 3rem !important;
+  height: auto !important;
+  min-height: 3.2rem !important;
+  border-radius: var(--radius-md) !important;
+  border-color: var(--color-border) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  box-shadow: none !important;
+}
+
+.day-edit-modal .meal-participants {
+  gap: 0.45rem !important;
+  margin-top: 0.1rem !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.day-edit-modal .meal-participants legend {
+  margin-bottom: 0.15rem !important;
+  color: var(--color-text) !important;
+  font-size: 0.92rem !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.day-edit-modal .meal-participants p {
+  display: none !important;
+}
+
+.day-edit-modal .meal-participants__grid {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 0.45rem !important;
+  overflow-x: auto !important;
+  padding-bottom: 0.2rem !important;
+}
+
+.day-edit-modal .meal-participant-chip {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: 11rem !important;
+  min-height: 2.75rem !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0.5rem 0.82rem !important;
+  font-size: 0.9rem !important;
+}
+
+.day-edit-modal .day-edit-notes {
+  border-top: 1px solid var(--color-border) !important;
+  padding-top: 1.1rem !important;
+}
+
+.day-edit-modal .day-edit-field {
+  color: var(--color-text) !important;
+  font-size: 1rem !important;
+  font-weight: 760 !important;
+}
+
+.day-edit-modal .day-edit-field textarea,
+.day-edit-modal .day-edit-field select {
+  width: 100% !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--color-surface) !important;
+}
+
+.day-edit-modal .day-edit-field textarea {
+  min-height: 5.4rem !important;
+  padding: 0.85rem !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+}
+
+.day-edit-modal .day-edit-toggle-card {
+  order: initial !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 0.8rem !important;
+  border-top: 1px solid var(--color-border) !important;
+  margin-top: 0.1rem !important;
+  padding: 1rem 0 !important;
+  color: var(--color-text) !important;
+  font-size: 1rem !important;
+  font-weight: 760 !important;
+}
+
+.day-edit-modal .day-edit-toggle-card input {
+  justify-self: end !important;
+  width: 2.85rem !important;
+  height: 1.65rem !important;
+  accent-color: var(--color-primary) !important;
+}
+
+.day-edit-modal .day-edit-block--skip {
+  display: grid !important;
+  gap: 0.85rem !important;
+  border-top: 1px solid var(--color-border) !important;
+  padding-top: 1rem !important;
+}
+
+.day-edit-modal__footer {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0.7rem !important;
+  border-top: 1px solid var(--color-border) !important;
+  background: color-mix(in srgb, var(--color-surface), transparent 2%) !important;
+  padding: 0.8rem 1.1rem calc(0.8rem + env(safe-area-inset-bottom)) !important;
+}
+
+.day-edit-modal__hint {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  color: var(--color-muted) !important;
+  font-size: 0.82rem !important;
+  font-weight: 650 !important;
+  line-height: 1.25 !important;
+  text-align: center !important;
+  white-space: normal !important;
+}
+
+.day-edit-modal__actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.65rem !important;
+  width: 100% !important;
+}
+
+.day-edit-modal__actions .button {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 3.45rem !important;
+  justify-content: center !important;
+  border-radius: var(--radius-md) !important;
+  font-size: 1rem !important;
+  font-weight: 760 !important;
+}
+
+.day-edit-modal__actions .button--primary {
+  grid-column: 1 / -1 !important;
+  order: -1 !important;
+  min-height: 3.75rem !important;
+  background: var(--color-primary) !important;
+  color: #fff !important;
+}
+
+.day-edit-modal__action-label {
+  display: inline !important;
+}
+
+@media (min-width: 560px) {
+  .day-edit-modal {
+    width: min(94vw, 48rem) !important;
+    height: min(92dvh, 56rem) !important;
+    margin: auto !important;
+  }
+
+  .day-edit-modal__box {
+    border-radius: var(--radius-2xl) !important;
+    box-shadow: 0 1.5rem 4.5rem rgb(15 23 42 / 0.22) !important;
+  }
+
+  .day-edit-modal__body {
+    padding-inline: 1.35rem !important;
+  }
+
+  .day-edit-modal__footer {
+    padding-inline: 1.35rem !important;
+  }
+}
+
+@media (min-width: 760px) {
+  .day-edit-modal {
+    width: min(92vw, 52rem) !important;
+  }
+
+  .day-edit-modal .day-card__header {
+    grid-template-columns: 7rem minmax(0, 1fr) !important;
+  }
+
+  .day-edit-modal .day-options__grid,
+  .day-edit-modal .meal-participants__grid {
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+  }
+
+  .day-edit-modal__actions {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* Tighten the real day editor against inherited app-card typography. */
+.day-edit-modal,
+.day-edit-modal * {
+  letter-spacing: 0 !important;
+}
+
+.day-edit-modal__heading h2 {
+  font-size: clamp(1.45rem, 7vw, 1.82rem) !important;
+  line-height: 1.05 !important;
+  font-weight: 820 !important;
+}
+
+.day-edit-modal__heading p:not(.sr-only) {
+  font-size: 0.92rem !important;
+  font-weight: 540 !important;
+}
+
+.day-edit-modal .day-card__header {
+  grid-template-columns: 5.15rem minmax(0, 1fr) !important;
+  gap: 0.78rem !important;
+  margin-bottom: 0.78rem !important;
+  padding: 0.78rem 0.9rem !important;
+}
+
+.day-edit-modal .day-card__date-number {
+  font-size: clamp(2.85rem, 12vw, 3.35rem) !important;
+  line-height: 0.95 !important;
+}
+
+.day-edit-modal .day-card__title {
+  padding-left: 0.78rem !important;
+}
+
+.day-edit-modal .day-card__title h3 {
+  font-size: 1.02rem !important;
+}
+
+.day-edit-modal .day-card__title p {
+  font-size: 0.88rem !important;
+}
+
+.day-edit-modal .day-options {
+  min-width: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 0 0.7rem !important;
+}
+
+.day-edit-modal .day-options legend {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 0 0.28rem !important;
+  font-size: 0.96rem !important;
+  font-weight: 780 !important;
+}
+
+.day-edit-modal .day-options p {
+  margin-bottom: 0.56rem !important;
+  font-size: 0.84rem !important;
+  line-height: 1.3 !important;
+}
+
+.day-edit-modal .day-options__grid {
+  flex-wrap: nowrap !important;
+  gap: 0.5rem !important;
+  padding-bottom: 0.12rem !important;
+}
+
+.day-edit-modal .day-option-chip {
+  position: relative !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  min-height: 2.55rem !important;
+  max-width: min(82vw, 18rem) !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid color-mix(in srgb, var(--day-option-color, var(--color-primary)), transparent 55%) !important;
+  background: color-mix(in srgb, var(--day-option-color, var(--color-primary)), transparent 92%) !important;
+  padding: 0.48rem 0.82rem !important;
+}
+
+.day-edit-modal .day-option-chip input {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  cursor: pointer !important;
+}
+
+.day-edit-modal .day-option-chip__icon {
+  display: inline-grid !important;
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  place-items: center !important;
+  border-radius: var(--radius-full) !important;
+  background: color-mix(in srgb, var(--day-option-color, var(--color-primary)), transparent 86%) !important;
+  color: transparent !important;
+  font-size: 0 !important;
+}
+
+.day-edit-modal .day-option-chip__body span {
+  overflow: hidden !important;
+  max-width: 12rem !important;
+  font-size: 0.86rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.day-edit-modal .day-option-chip:has(input:checked) {
+  background: color-mix(in srgb, var(--day-option-color, var(--color-primary)), transparent 88%) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--day-option-color, var(--color-primary)), transparent 68%) !important;
+}
+
+.day-edit-modal .day-option-chip:not(:has(input:checked)) {
+  opacity: 0.78 !important;
+}
+
+.day-edit-modal .day-option-chip:has(input:checked)::after {
+  content: '×';
+  position: absolute;
+  right: 0.62rem;
+  top: 50%;
+  color: color-mix(in srgb, var(--day-option-color, var(--color-primary)), var(--color-text) 30%);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.day-edit-modal .meal-editor {
+  gap: 0.6rem !important;
+  padding: 0.9rem 0 !important;
+}
+
+.day-edit-modal .meal-editor__title h4,
+.day-edit-modal .meal-editor h4 {
+  font-size: 0.96rem !important;
+  font-weight: 790 !important;
+}
+
+.day-edit-modal .meal-editor__add {
+  height: 2.45rem !important;
+  min-height: 2.45rem !important;
+  padding-inline: 0.72rem !important;
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+}
+
+.day-edit-modal .plate-row {
+  grid-template-columns: minmax(0, 1fr) 2.75rem !important;
+}
+
+.day-edit-modal .dish-combobox input {
+  min-height: 3rem !important;
+  font-size: 0.92rem !important;
+  font-weight: 620 !important;
+}
+
+.day-edit-modal .plate-row .icon-button--danger {
+  width: 2.75rem !important;
+  min-height: 3rem !important;
+  font-size: 1.2rem !important;
+}
+
+.day-edit-modal .meal-participants legend {
+  font-size: 0.8rem !important;
+  color: var(--color-muted) !important;
+}
+
+.day-edit-modal .meal-participant-chip {
+  max-width: 8.8rem !important;
+  min-height: 2.2rem !important;
+  border-style: solid !important;
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 72%) !important;
+  background: color-mix(in srgb, var(--color-surface), var(--color-primary-soft) 14%) !important;
+  padding: 0.34rem 0.62rem !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+}
+
+.day-edit-modal .meal-participant-chip:has(input:checked) {
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 38%) !important;
+  background: color-mix(in srgb, var(--color-primary-soft), transparent 22%) !important;
+  color: var(--color-primary) !important;
+  box-shadow: none !important;
+}
+
+.day-edit-modal .meal-participant-chip:has(input:checked)::after {
+  content: '×' !important;
+  display: grid !important;
+  width: 1rem !important;
+  height: 1rem !important;
+  place-items: center !important;
+  background: transparent !important;
+  color: var(--color-primary) !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  right: 0.42rem !important;
+}
+
+.day-edit-modal .meal-participant-chip:not(:has(input:checked)) {
+  opacity: 0.7 !important;
+}
+
+.day-edit-modal .meal-participant-chip__name {
+  max-width: 6.4rem !important;
+}
+
+.day-edit-modal__actions .button {
+  min-height: 3.15rem !important;
+}
+
+.day-edit-modal__actions .button--primary {
+  min-height: 3.35rem !important;
+  font-size: 0.98rem !important;
+}

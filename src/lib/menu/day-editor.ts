@@ -55,15 +55,15 @@ function renderSkipToggle(labels: DayEditorLabels, skipped: boolean) {
   `;
 }
 
-function renderDailyOptions(labels: DayEditorLabels, day: DailyMenu, dailyOptions: DailyOption[]) {
+function renderDailyOptions(labels: DayEditorLabels, day: DailyMenu, dailyOptions: DailyOption[], compact = false) {
   const options = getActiveDailyOptions(dailyOptions);
   if (!options.length) return '';
 
   const selectedIds = new Set(day.optionIds ?? []);
   return `
-    <fieldset class="day-options day-edit-block">
+    <fieldset class="day-options day-edit-block ${compact ? 'day-options--compact' : ''}">
       <legend>${escapeHtml(labels.dailyOptionsTitle)}</legend>
-      <p>${escapeHtml(labels.dailyOptionsDescription)}</p>
+      ${compact ? '' : `<p>${escapeHtml(labels.dailyOptionsDescription)}</p>`}
       <div class="day-options__grid">
         ${options
           .map((option) => `
@@ -152,8 +152,9 @@ function renderMeal(labels: DayEditorLabels, meal: MealSlot, mealData: MealEntry
         <div class="meal-editor__title">
           <h4>${escapeHtml(mealLabel(labels, meal))}</h4>
         </div>
-        <button class="icon-button icon-button--primary" type="button" data-add-plate="${meal}" aria-label="${escapeHtml(labels.addPlate)}">
+        <button class="icon-button icon-button--primary meal-editor__add" type="button" data-add-plate="${meal}" aria-label="${escapeHtml(labels.addPlate)}">
           <span aria-hidden="true">+</span>
+          <span>${escapeHtml(labels.addPlate)}</span>
         </button>
       </header>
       <div class="plate-list" data-plate-list="${meal}">
@@ -169,17 +170,27 @@ export function renderDayEditor(options: DayEditorOptions) {
   const skipped = Boolean(day.skipped);
   const skipToggle = renderSkipToggle(labels, skipped);
   const dailyOptionsHtml = renderDailyOptions(labels, day, dailyOptions);
+  const dailyOptionsCompactHtml = renderDailyOptions(labels, day, dailyOptions, true);
+  const overviewBlock = `
+    <section class="day-edit-overview">
+      <header class="day-card__header">
+        <div class="day-card__date-number">${escapeHtml(dayNumber)}</div>
+        <div class="day-card__title"><h3>${escapeHtml(weekday)}</h3>${dateLabel ? `<p>${escapeHtml(dateLabel)}</p>` : ''}</div>
+      </header>
+      ${dailyOptionsCompactHtml ? `<div class="day-edit-overview__options">${dailyOptionsCompactHtml}</div>` : ''}
+    </section>
+  `;
   const editorBody = skipped
     ? `
       <div class="day-skipped-block" data-day-skipped-block>
+        ${overviewBlock}
         ${skipToggle}
-        ${dailyOptionsHtml}
         ${renderReasonFields(labels, day.reason, day.skipNote)}
       </div>
     `
     : `
       <div class="day-meals-block" data-day-meals-block>
-        ${dailyOptionsHtml}
+        ${overviewBlock}
         ${enabledMeals.map((meal) => renderMeal(labels, meal, day.meals[meal] ?? emptyMeal(), dishes, participants)).join('')}
         <label class="day-edit-field day-edit-field--textarea day-edit-block day-edit-notes">${escapeHtml(labels.notes)}
           <textarea data-field="notes" rows="3">${escapeHtml(day.notes ?? '')}</textarea>
@@ -190,10 +201,6 @@ export function renderDayEditor(options: DayEditorOptions) {
 
   return `
     <article class="day-card day-card--editor ${compact ? 'day-card--compact-editor' : ''}" id="dia-${dayKey}" data-day="${dayKey}" data-day-mode="${skipped ? 'skipped' : 'meals'}">
-      <header class="day-card__header">
-        <div class="day-card__date-number">${escapeHtml(dayNumber)}</div>
-        <div class="day-card__title"><h3>${escapeHtml(weekday)}</h3>${dateLabel ? `<p>${escapeHtml(dateLabel)}</p>` : ''}</div>
-      </header>
       <div class="day-card__content day-edit-card__content">
         ${editorBody}
       </div>

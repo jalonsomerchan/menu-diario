@@ -30,10 +30,12 @@ const labels = {
   planningTitle: tp('title'),
   planningHint: tp('hint'),
   cancel: t('dashboard.cancel'),
-  save: t('dashboard.save'),
+  saveChanges: t('dashboard.saveChanges'),
   deleteDay: t('dashboard.deleteDay'),
   deleteMenu: t('dashboard.deleteMenu'),
   editDay: t('dashboard.editDay'),
+  configureDay: t('dashboard.configureDay'),
+  editDayDescription: t('dashboard.editDayDescription'),
   plannedStatus: t('dashboard.plannedStatus'),
   moreActions: t('dashboard.moreActions'),
   loadMoreDays: t('dashboard.nextSeven'),
@@ -102,9 +104,10 @@ const labels = {
 
   <DayEditModal
     eyebrow={labels.configureHint}
-    title={labels.configure}
+    title={labels.configureDay}
+    subtitle={labels.editDayDescription}
     cancelLabel={labels.cancel}
-    saveLabel={labels.save}
+    saveLabel={labels.saveChanges}
     clearLabel={labels.deleteDay}
     saveHint={labels.saveHint}
     savePendingLabel={labels.savePending}
