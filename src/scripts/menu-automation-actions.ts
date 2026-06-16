@@ -13,7 +13,11 @@ import { assignTupperToMeal, watchTuppers } from '../lib/tuppers/repository';
 import type { TupperItem } from '../lib/tuppers/types';
 import { useMenuAutomationTranslations } from '../i18n/menu-automation-actions';
 
-const actionHost = document.querySelector<HTMLElement>('[data-dashboard-app], [data-menu-app], [data-shopping-app], [data-tuppers-app]');
+document
+  .querySelectorAll<HTMLElement>('[data-dashboard-app] [data-menu-automation-actions]')
+  .forEach((panel) => panel.remove());
+
+const actionHost = document.querySelector<HTMLElement>('[data-menu-app], [data-shopping-app], [data-tuppers-app]');
 const dishHistoryHost = document.querySelector<HTMLElement>('[data-dishes-app]');
 
 if ((actionHost || dishHistoryHost) && hasFirebaseConfig()) {
@@ -22,7 +26,7 @@ if ((actionHost || dishHistoryHost) && hasFirebaseConfig()) {
   const t = useMenuAutomationTranslations(localeKey);
   const weekdayFormatter = new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short' });
   const statusTarget = document.querySelector<HTMLElement>(
-    '[data-dashboard-app] [data-status], [data-menu-app] [data-status], [data-shopping-app] [data-status], [data-tuppers-app] [data-status], [data-dishes-app] [data-status]'
+    '[data-menu-app] [data-status], [data-shopping-app] [data-status], [data-tuppers-app] [data-status], [data-dishes-app] [data-status]'
   );
 
   let currentUser: FirebaseUser | null = null;
