@@ -5,6 +5,9 @@ export const aiErrorCodes = [
   'quota-exhausted',
   'timeout',
   'invalid-response',
+  'network-error',
+  'server-error',
+  'auth-error',
   'request-failed',
 ] as const;
 
@@ -40,6 +43,12 @@ export function getAiErrorCode(error: unknown): AiErrorCode {
   }
 
   return 'request-failed';
+}
+
+export function getAiErrorStatus(error: unknown) {
+  if (!(error instanceof AiClientError)) return undefined;
+  const cause = (error as Error & { cause?: unknown }).cause;
+  return readDebugCause(cause).status;
 }
 
 export function getAiErrorDetail(error: unknown) {
