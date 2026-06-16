@@ -1,0 +1,122 @@
+.menu-automation-actions {
+  display: grid;
+  gap: 1rem;
+  margin-block: 1rem;
+}
+
+.menu-automation-actions__header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.menu-automation-actions__header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(1.05rem, 2.8vw, 1.35rem);
+  line-height: 1.15;
+}
+
+.menu-automation-actions__header p,
+.menu-automation-card p,
+.menu-dish-history__header p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.menu-automation-actions__grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.menu-automation-card {
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  padding: 1rem;
+  box-shadow: var(--shadow-xs);
+}
+
+.menu-automation-card h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.menu-automation-card__fields {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.menu-automation-card label,
+.menu-dish-history label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 560;
+}
+
+.menu-automation-card select,
+.menu-dish-history select {
+  min-height: 2.65rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+}
+
+.menu-automation-card select:focus-visible,
+.menu-dish-history select:focus-visible {
+  border-color: var(--color-primary);
+  outline: 3px solid var(--color-primary-soft);
+}
+
+.menu-dish-history {
+  display: grid;
+  gap: 1rem;
+  margin-block: 1rem;
+}
+
+.menu-dish-history__header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.menu-dish-history__header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+}
+
+.menu-dish-history__list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.menu-dish-history__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-soft);
+  padding: 0.75rem;
+}
+
+.menu-dish-history__item strong {
+  color: var(--color-text);
+}
+
+.menu-dish-history__item span {
+  color: var(--color-text-muted);
+}
+
+@media (min-width: 760px) {
+  .menu-automation-actions__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
