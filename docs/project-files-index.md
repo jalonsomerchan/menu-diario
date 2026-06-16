@@ -148,7 +148,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 
 ## Internacionalizacion
 
-- `src/i18n/ui.ts`: helpers principales de traduccion, locales y rutas localizadas.
+- `src/i18n/ui.ts`: helpers principales de traduccion y rutas localizadas.
 - `src/i18n/planning.ts`: textos y helpers de planificacion.
 - `src/i18n/statistics.ts`: textos y helpers de estadisticas.
 - `src/i18n/public-pages.ts`: textos de paginas publicas.
@@ -191,6 +191,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/scripts/dish-recommender-app.ts`: logica cliente del recomendador.
 - `src/scripts/dishes-app.ts`: logica cliente de platos.
 - `src/scripts/history-app.ts`: logica cliente del historico.
+- `src/scripts/meal-drag-and-drop-app.ts`: activa el arrastre de comidas entre dias en dashboard y planificador.
 - `src/scripts/menu-app.ts`: logica cliente principal del menu.
 - `src/scripts/planning-ai-app.ts`: logica del planificador IA.
 - `src/scripts/planning-ai-date-range.ts`: seleccion y calculo de rangos de fechas para planificacion IA.
@@ -211,7 +212,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/styles/day-edit-modal-layout.css`: layout del modal de edicion diaria.
 - `src/styles/dish-recommender.css`: estilos del recomendador de platos.
 - `src/styles/dishes.css`: estilos de platos.
-- `src/styles/history.css`: estilos del historico.
+- `src/styles/history.css`: estilos del historico y tarjetas de dias del dashboard/planificador.
 - `src/styles/meal-participants.css`: estilos de participantes.
 - `src/styles/mobile-bottom-nav.css`: estilos de navegacion movil inferior.
 - `src/styles/modals.css`: estilos comunes de modales.
