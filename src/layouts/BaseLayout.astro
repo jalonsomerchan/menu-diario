@@ -85,5 +85,10 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
     </main>
     <MobileBottomNav locale={locale} />
     <Footer locale={locale} />
+    <script>
+      if (document.querySelector('[data-dashboard-app], [data-configurator-app]')) {
+        import('../scripts/meal-drag-and-drop-app.ts');
+      }
+    </script>
   </body>
 </html>
