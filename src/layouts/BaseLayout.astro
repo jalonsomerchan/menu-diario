@@ -89,6 +89,10 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
       if (document.querySelector('[data-dashboard-app], [data-configurator-app]')) {
         import('../scripts/meal-drag-and-drop-app.ts');
       }
+
+      if (document.querySelector('[data-planning-ai-app], [data-dish-recommender-app], [data-shopping-app]')) {
+        import('../scripts/ai-wizard-feedback.ts');
+      }
     </script>
   </body>
 </html>
