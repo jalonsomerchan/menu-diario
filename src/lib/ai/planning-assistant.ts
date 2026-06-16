@@ -6,6 +6,7 @@ import type { DailyMenu, DailyOption, Dish, MealSlot } from '../menu/types';
 const maxPlanningMeals = 42;
 const maxCatalogDishes = 84;
 const maxTasteProfileDishes = 18;
+const maxRecentDishesToAvoid = 21;
 const maxSuggestedDishes = 5;
 const maxFoodIntolerancesPromptLength = 500;
 
@@ -69,6 +70,7 @@ export function buildPlanningAssistantPrompt(input: {
     .map((dish) => `- ${dish.name}`)
     .join('\n');
   const tasteProfile = getTasteProfile(input.dishes);
+  const recentDishes = describeRecentDishes(input.dishes);
   const foodIntolerances = describeFoodIntolerances(input.foodIntolerances);
 
   return [
@@ -78,6 +80,9 @@ export function buildPlanningAssistantPrompt(input: {
     `Return up to ${recommendationCount} dishes per slot.`,
     'Prioritize practical, varied, balanced dishes that make sense for everyday home planning.',
     'Avoid repeating the same dish across nearby slots when possible.',
+    recentDishes
+      ? 'Use the recently used saved dishes as avoidance context: avoid repeating them unless the catalog is too small or the constraints require it.'
+      : 'No recent saved dish usage was provided.',
     foodIntolerances
       ? 'Use the food restrictions as hard constraints and avoid dishes that conflict with them.'
       : 'No food restrictions were provided.',
@@ -87,6 +92,8 @@ export function buildPlanningAssistantPrompt(input: {
     pendingMeals || '- none',
     'Already planned meals in this range:',
     currentMeals || '- none',
+    'Recently used saved dishes to avoid before reusing:',
+    recentDishes || '- none',
     'Day planning conditions. Treat these as planning constraints: late arrival means prioritize quick meals, eating out means avoid planning that slot, kids day means family-friendly, training means nourishing, no-cook means cold/no-cook or very low effort.',
     describeDayOptions(input.days, input.pendingMeals, input.dailyOptions ?? []) || '- none',
     'Food restrictions:',
@@ -260,6 +267,18 @@ function getTasteProfile(dishes: Dish[]) {
         .join(' | ');
 
       return `- ${bits}`;
+    })
+    .join('\n');
+}
+
+function describeRecentDishes(dishes: Dish[]) {
+  return getVisibleDishes(dishes)
+    .filter((dish) => dish.lastUsedAt)
+    .sort((left, right) => (right.lastUsedAt?.getTime() ?? 0) - (left.lastUsedAt?.getTime() ?? 0))
+    .slice(0, maxRecentDishesToAvoid)
+    .map((dish) => {
+      const date = dish.lastUsedAt ? dish.lastUsedAt.toISOString().slice(0, 10) : '';
+      return date ? `- ${dish.name} | lastUsed:${date}` : `- ${dish.name}`;
     })
     .join('\n');
 }
