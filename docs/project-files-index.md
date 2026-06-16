@@ -155,6 +155,8 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/i18n/tuppers.ts`: textos de tuppers.
 - `src/i18n/shopping-actions.ts`: textos de acciones de compra.
 - `src/i18n/menu-automation-actions.ts`: textos de acciones rapidas del menu, compra automatica e historial de platos.
+- `src/i18n/initial-onboarding.ts`: textos del onboarding inicial de la aplicacion.
+- `src/i18n/shopping-whatsapp.ts`: textos de exportacion de compra a WhatsApp.
 - `src/i18n/dish-recommender.ts`: textos del recomendador de platos.
 - `src/i18n/footer-projects.ts`: textos y datos de proyectos del footer.
 - `src/i18n/translations/es.json`: traducciones base en espanol.
@@ -197,6 +199,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/scripts/dish-recommender-app.ts`: logica cliente del recomendador.
 - `src/scripts/dishes-app.ts`: logica cliente de platos.
 - `src/scripts/history-app.ts`: logica cliente del historico.
+- `src/scripts/initial-onboarding.ts`: muestra el onboarding inicial una sola vez en paginas privadas de la app.
 - `src/scripts/meal-drag-and-drop-app.ts`: activa el arrastre de comidas entre dias en dashboard y planificador.
 - `src/scripts/menu-app.ts`: logica cliente principal del menu.
 - `src/scripts/menu-automation-actions.ts`: panel de acciones rapidas para copiar semanas, reaprovechar tuppers, crear compra automatica e historial de platos.
@@ -208,6 +211,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/scripts/shopping-app.ts`: logica cliente de compra.
 - `src/scripts/shopping-list-actions.ts`: acciones adicionales para crear y borrar listas de compra desde la vista de compra.
 - `src/scripts/shopping-lists-app.ts`: logica de listas de compra.
+- `src/scripts/shopping-whatsapp-export.ts`: anade exportacion directa de la lista visible de compra a WhatsApp.
 - `src/scripts/shopping-wizard.ts`: asistente de compra.
 - `src/scripts/statistics-app.ts`: logica cliente de estadisticas.
 - `src/scripts/tuppers-app.ts`: logica cliente de tuppers.
@@ -220,6 +224,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/styles/dish-recommender.css`: estilos del recomendador de platos.
 - `src/styles/dishes.css`: estilos de platos.
 - `src/styles/history.css`: estilos del historico y tarjetas de dias del dashboard/planificador.
+- `src/styles/initial-onboarding.css`: estilos del onboarding inicial responsive.
 - `src/styles/menu-automation-actions.css`: estilos del panel de acciones rapidas del menu y del historial por plato.
 - `src/styles/meal-participants.css`: estilos de participantes.
 - `src/styles/mobile-bottom-nav.css`: estilos de navegacion movil inferior.
