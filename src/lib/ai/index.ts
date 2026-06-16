@@ -1,7 +1,7 @@
 export { aiClientLimits, aiGenerationConfig, aiModels, aiPromptConfig } from './config';
 export { generateAuthenticatedAiJson, generateGeminiJson } from './client';
 export { authenticatedAiApiEndpoint, generateAuthenticatedAiApiJson } from './authenticated-api-client';
-export { AiClientError, getAiErrorCode, logAiError } from './errors';
+export { AiClientError, getAiErrorCode, getAiErrorDetail, getAiErrorStatus, logAiError } from './errors';
 export { getAiFeatureFlags, isAiAvailable, isMenuSuggestionsAvailable, isShoppingListAiAvailable } from './flags';
 export { buildJsonPrompt, parseJsonObject, parseValidatedJson } from './json';
 export {
