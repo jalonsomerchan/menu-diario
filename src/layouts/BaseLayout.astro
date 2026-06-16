@@ -3,6 +3,7 @@ import '../styles/global.css';
 import '../styles/dishes.css';
 import '../styles/tuppers.css';
 import '../styles/menu-automation-actions.css';
+import '../styles/initial-onboarding.css';
 import '../styles/mobile-bottom-nav.css';
 import '../styles/modals.css';
 import '../styles/toasts.css';
@@ -10,7 +11,8 @@ import Header from '../components/Header.astro';
 import MobileBottomNav from '../components/MobileBottomNav.astro';
 import Footer from '../components/Footer.astro';
 import { defaultLocale, siteConfig, type Locale } from '../config/site';
-import { useTranslations } from '../i18n/ui';
+import { useInitialOnboardingTranslations } from '../i18n/initial-onboarding';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
 import { getAbsoluteUrl, stripBasePath, withBasePath } from '../utils/paths';
 
 interface Props {
@@ -27,12 +29,53 @@ const {
 } = Astro.props;
 
 const t = useTranslations(locale);
+const onboardingT = useInitialOnboardingTranslations(locale);
 const description = Astro.props.description ?? t('site.description');
 const pageTitle = title === siteConfig.name ? title : `${title} · ${siteConfig.name}`;
 const routePath = stripBasePath(Astro.url.pathname);
 const canonicalUrl = getAbsoluteUrl(withBasePath(routePath), siteConfig.url);
 const imageUrl = getAbsoluteUrl(withBasePath(image), siteConfig.url);
 const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
+const normalizedRoutePath = locale === defaultLocale ? routePath : routePath.replace(new RegExp(`^/${locale}(?=/|$)`), '') || '/';
+const privateAppSections = new Set([
+  'ajustes',
+  'compra',
+  'compras',
+  'configurar',
+  'dashboard',
+  'estadisticas',
+  'historico',
+  'mis-platos',
+  'planificacion',
+  'planificador',
+  'planificador-ai',
+  'platos',
+  'recomendador-platos',
+  'resumen-semanal',
+  'tuppers',
+]);
+const currentSection = normalizedRoutePath.replace(/^\//, '').split('/')[0] || '';
+const showInitialOnboarding = privateAppSections.has(currentSection);
+const onboardingLabels = {
+  title: onboardingT('title'),
+  description: onboardingT('description'),
+  stepMealsTitle: onboardingT('stepMealsTitle'),
+  stepMealsDescription: onboardingT('stepMealsDescription'),
+  stepDishesTitle: onboardingT('stepDishesTitle'),
+  stepDishesDescription: onboardingT('stepDishesDescription'),
+  stepTuppersTitle: onboardingT('stepTuppersTitle'),
+  stepTuppersDescription: onboardingT('stepTuppersDescription'),
+  primaryAction: onboardingT('primaryAction'),
+  secondaryAction: onboardingT('secondaryAction'),
+  tertiaryAction: onboardingT('tertiaryAction'),
+  dismiss: onboardingT('dismiss'),
+  finish: onboardingT('finish'),
+};
+const onboardingPaths = {
+  settings: getLocalizedPath('/ajustes', locale),
+  dishes: getLocalizedPath('/mis-platos', locale),
+  tuppers: getLocalizedPath('/tuppers', locale),
+};
 ---
 
 <!doctype html>
@@ -84,15 +127,24 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
     <main class="site-main">
       <slot />
     </main>
+    {showInitialOnboarding && <div data-initial-onboarding data-labels={JSON.stringify(onboardingLabels)} data-paths={JSON.stringify(onboardingPaths)} hidden></div>}
     <MobileBottomNav locale={locale} />
     <Footer locale={locale} />
     <script>
+      if (document.querySelector('[data-initial-onboarding]')) {
+        import('../scripts/initial-onboarding.ts');
+      }
+
       if (document.querySelector('[data-dashboard-app], [data-configurator-app]')) {
         import('../scripts/meal-drag-and-drop-app.ts');
       }
 
       if (document.querySelector('[data-planning-ai-app], [data-dish-recommender-app], [data-shopping-app]')) {
         import('../scripts/ai-wizard-feedback.ts');
+      }
+
+      if (document.querySelector('[data-shopping-app]')) {
+        import('../scripts/shopping-whatsapp-export.ts');
       }
 
       if (document.querySelector('[data-dashboard-app], [data-menu-app], [data-shopping-app], [data-tuppers-app], [data-dishes-app]')) {
