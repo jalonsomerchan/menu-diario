@@ -148,7 +148,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 
 ## Internacionalizacion
 
-- `src/i18n/ui.ts`: helpers principales de traduccion y rutas localizadas.
+- `src/i18n/ui.ts`: helpers principales de traduccion, locales y rutas localizadas.
 - `src/i18n/planning.ts`: textos y helpers de planificacion.
 - `src/i18n/statistics.ts`: textos y helpers de estadisticas.
 - `src/i18n/public-pages.ts`: textos de paginas publicas.
@@ -174,7 +174,9 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/lib/dishes/`: helpers, renderizado, importacion y repositorio de platos.
 - `src/lib/errors/`: tipos y formateo de errores de aplicacion.
 - `src/lib/firebase/`: inicializacion, autenticacion, cliente y App Check de Firebase.
-- `src/lib/menu/`: logica de menus, fechas, formularios, historico, grupos, invitaciones, participantes, estadisticas y repositorios.
+- `src/lib/menu/`: logica de menus, fechas, formularios, historico, grupos, invitaciones, participantes, estadisticas, repositorios y movimiento de comidas.
+- `src/lib/menu/meal-drag-and-drop.ts`: helpers puros para validar y preparar el movimiento de comidas entre dias.
+- `src/lib/menu/meal-dnd-dom.ts`: helpers DOM para preparar filas, origenes y estados visuales de arrastre.
 - `src/lib/notifications/`: utilidades de notificaciones del navegador.
 - `src/lib/public-sharing/`: metadatos para comparticion publica.
 - `src/lib/shopping/`: normalizacion, exportacion, tipos y repositorio de compra.
