@@ -32,7 +32,7 @@ export function buildMenuShoppingItems(
       return;
     }
 
-    meal.dishes.forEach((dish) => {
+    meal.dishes.filter((dish) => !isTupperDish(dish)).forEach((dish) => {
       items.push(
         normalizeShoppingItem(
           {
@@ -54,4 +54,8 @@ export function buildMenuShoppingItems(
   });
 
   return groupShoppingItems(items);
+}
+
+function isTupperDish(value: string) {
+  return /^tupper:\s*/i.test(value.trim());
 }
