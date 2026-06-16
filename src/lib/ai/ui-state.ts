@@ -31,6 +31,9 @@ const errorStateMap: Record<AiErrorCode, Exclude<AiUiState, 'idle' | 'loading'>>
   'quota-exhausted': 'quota-exhausted',
   timeout: 'error',
   'invalid-response': 'invalid-response',
+  'network-error': 'error',
+  'server-error': 'error',
+  'auth-error': 'error',
   'request-failed': 'error',
 };
 
