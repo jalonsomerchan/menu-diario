@@ -66,7 +66,7 @@ async function requestAuthenticatedAiApiText(input: {
       body: buildAuthenticatedAiApiBody(input),
     });
   } catch (error) {
-    throw new AiClientError('request-failed', 'Authenticated AI API network request failed.', {
+    throw new AiClientError('network-error', 'Authenticated AI API network request failed.', {
       retryable: true,
       cause: error,
     });
@@ -117,7 +117,7 @@ function appendOption(body: URLSearchParams, name: string, value: string | numbe
 
 function createHttpError(status: number, body: string) {
   if (status === 401 || status === 403) {
-    return new AiClientError('request-failed', 'Authenticated AI API rejected the Firebase token.', {
+    return new AiClientError('auth-error', 'Authenticated AI API rejected the Firebase token.', {
       retryable: false,
       cause: readErrorBody(status, body),
     });
@@ -131,7 +131,7 @@ function createHttpError(status: number, body: string) {
   }
 
   if (status >= 500) {
-    return new AiClientError('request-failed', 'Authenticated AI API failed.', {
+    return new AiClientError('server-error', 'Authenticated AI API failed.', {
       retryable: true,
       cause: readErrorBody(status, body),
     });
