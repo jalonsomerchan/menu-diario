@@ -235,6 +235,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/styles/toasts.css`: estilos de avisos/toasts.
 - `src/styles/tuppers.css`: estilos de tuppers.
 - `src/styles/weekly-summary.css`: estilos del resumen semanal.
+- `src/styles/wizard-scroll.css`: ajustes compartidos de scroll, acciones sticky y compatibilidad iOS Safari para wizards.
 
 ## Tests
 
@@ -253,4 +254,4 @@ Los tests viven en `tests/*.test.mjs` y usan `node:test`. Cada archivo cubre una
 - `tests/*group*.test.mjs`, `tests/invite-codes.test.mjs`: grupos, permisos e invitaciones.
 - `tests/*settings*.test.mjs`, `tests/user-preferences.test.mjs`: ajustes y preferencias.
 - `tests/ai*.test.mjs`: funciones de IA.
-- `tests/app-errors.test.mjs`, `tests/debounced-task-map.test.mjs`, `tests/mobile-bottom-nav.test.mjs`, `tests/footer-projects.test.mjs`, `tests/header-eurovision-style.test.mjs`, `tests/planner-dashboard-style.test.mjs`: utilidades y validaciones UI especificas.
+- `tests/app-errors.test.mjs`, `tests/debounced-task-map.test.mjs`, `tests/footer-projects.test.mjs`, `tests/header-eurovision-style.test.mjs`, `tests/mobile-bottom-nav.test.mjs`, `tests/planner-dashboard-style.test.mjs`: utilidades y validaciones UI especificas.

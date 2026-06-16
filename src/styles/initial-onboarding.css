@@ -1,17 +1,31 @@
 .initial-onboarding {
   position: fixed;
   inset: 50% auto auto 50%;
-  width: min(calc(100dvw - 1.25rem), 46rem);
+  width: min(calc(100vw - 1.25rem), 46rem);
   max-width: none;
-  max-height: calc(100dvh - 1.25rem);
+  max-height: calc(100vh - 1.25rem);
   margin: 0;
-  overflow: visible;
+  overflow: hidden;
   border: 0;
   border-radius: var(--radius-2xl);
   background: transparent;
   color: var(--color-text);
   padding: 0;
   transform: translate(-50%, -50%);
+}
+
+@supports (height: 100svh) {
+  .initial-onboarding {
+    width: min(calc(100svw - 1.25rem), 46rem);
+    max-height: calc(100svh - 1.25rem);
+  }
+}
+
+@supports (height: 100dvh) {
+  .initial-onboarding {
+    width: min(calc(100dvw - 1.25rem), 46rem);
+    max-height: calc(100dvh - 1.25rem);
+  }
 }
 
 .initial-onboarding::backdrop {
@@ -24,6 +38,7 @@
   gap: clamp(1rem, 3vw, 1.45rem);
   max-height: inherit;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 18%);
   border-radius: var(--radius-2xl);
@@ -191,10 +206,45 @@
   box-shadow: none;
 }
 
+@media (max-width: 540px) {
+  .initial-onboarding {
+    max-height: calc(100vh - max(1rem, env(safe-area-inset-top)) - max(1rem, env(safe-area-inset-bottom)));
+  }
+
+  .initial-onboarding__surface {
+    padding-bottom: calc(1.05rem + env(safe-area-inset-bottom));
+  }
+
+  .initial-onboarding__footer {
+    position: sticky;
+    bottom: 0;
+    margin-inline: calc(clamp(1.05rem, 4vw, 1.75rem) * -1);
+    margin-bottom: calc(clamp(1.05rem, 4vw, 1.75rem) * -1);
+    padding: 0.75rem clamp(1.05rem, 4vw, 1.75rem) calc(0.75rem + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--color-surface), transparent 4%);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+}
+
 @media (min-width: 720px) {
   .initial-onboarding {
-    width: min(calc(100dvw - 2rem), 48rem);
-    max-height: calc(100dvh - 2rem);
+    width: min(calc(100vw - 2rem), 48rem);
+    max-height: calc(100vh - 2rem);
+  }
+
+  @supports (height: 100svh) {
+    .initial-onboarding {
+      width: min(calc(100svw - 2rem), 48rem);
+      max-height: calc(100svh - 2rem);
+    }
+  }
+
+  @supports (height: 100dvh) {
+    .initial-onboarding {
+      width: min(calc(100dvw - 2rem), 48rem);
+      max-height: calc(100dvh - 2rem);
+    }
   }
 
   .initial-onboarding__surface {
