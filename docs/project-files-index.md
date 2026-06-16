@@ -154,6 +154,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/i18n/public-pages.ts`: textos de paginas publicas.
 - `src/i18n/tuppers.ts`: textos de tuppers.
 - `src/i18n/shopping-actions.ts`: textos de acciones de compra.
+- `src/i18n/menu-automation-actions.ts`: textos de acciones rapidas del menu, compra automatica e historial de platos.
 - `src/i18n/dish-recommender.ts`: textos del recomendador de platos.
 - `src/i18n/footer-projects.ts`: textos y datos de proyectos del footer.
 - `src/i18n/translations/es.json`: traducciones base en espanol.
@@ -172,14 +173,17 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 
 - `src/lib/ai/`: clientes, limites, errores, configuracion, recomendaciones y flujos de IA.
 - `src/lib/dishes/`: helpers, renderizado, importacion y repositorio de platos.
+- `src/lib/dishes/usage-history.ts`: construye el historial reciente de uso de un plato a partir de menus.
 - `src/lib/errors/`: tipos y formateo de errores de aplicacion.
 - `src/lib/firebase/`: inicializacion, autenticacion, cliente y App Check de Firebase.
 - `src/lib/menu/`: logica de menus, fechas, formularios, historico, grupos, invitaciones, participantes, estadisticas, repositorios y movimiento de comidas.
 - `src/lib/menu/meal-drag-and-drop.ts`: helpers puros para validar y preparar el movimiento de comidas entre dias.
 - `src/lib/menu/meal-dnd-dom.ts`: helpers DOM para preparar filas, origenes y estados visuales de arrastre.
+- `src/lib/menu/week-menu-actions.ts`: acciones reutilizables para leer y copiar semanas de menu.
 - `src/lib/notifications/`: utilidades de notificaciones del navegador.
 - `src/lib/public-sharing/`: metadatos para comparticion publica.
 - `src/lib/shopping/`: normalizacion, exportacion, tipos y repositorio de compra.
+- `src/lib/shopping/menu-list-generator.ts`: genera listas de compra deterministas desde menus planificados.
 - `src/lib/tuppers/`: asignacion, caducidad, estado, tipos y repositorio de tuppers.
 - `src/lib/ui/`: utilidades UI compartidas para dialogos, menus, HTML, feedback, bloqueo de scroll y tareas con debounce.
 
@@ -195,6 +199,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/scripts/history-app.ts`: logica cliente del historico.
 - `src/scripts/meal-drag-and-drop-app.ts`: activa el arrastre de comidas entre dias en dashboard y planificador.
 - `src/scripts/menu-app.ts`: logica cliente principal del menu.
+- `src/scripts/menu-automation-actions.ts`: panel de acciones rapidas para copiar semanas, reaprovechar tuppers, crear compra automatica e historial de platos.
 - `src/scripts/planning-ai-app.ts`: logica del planificador IA.
 - `src/scripts/planning-ai-date-range.ts`: seleccion y calculo de rangos de fechas para planificacion IA.
 - `src/scripts/planning-ai-wizard.ts`: asistente guiado de planificacion IA.
@@ -215,6 +220,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/styles/dish-recommender.css`: estilos del recomendador de platos.
 - `src/styles/dishes.css`: estilos de platos.
 - `src/styles/history.css`: estilos del historico y tarjetas de dias del dashboard/planificador.
+- `src/styles/meal-automation-actions.css`: estilos del panel de acciones rapidas del menu y del historial por plato.
 - `src/styles/meal-participants.css`: estilos de participantes.
 - `src/styles/mobile-bottom-nav.css`: estilos de navegacion movil inferior.
 - `src/styles/modals.css`: estilos comunes de modales.
