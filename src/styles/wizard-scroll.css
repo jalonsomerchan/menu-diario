@@ -1,28 +1,24 @@
 /* Ajustes compartidos para que los wizards con pasos no bloqueen el scroll en iOS Safari. */
-.planning-ai-app,
-.shopping-app.planning-ai-app,
+.planning-ai-app:not(.shopping-app),
 .dish-recommender-app {
   min-width: 0;
   overflow: visible;
 }
 
-.planning-ai-app .planning-ai-panel,
-.shopping-app .planning-ai-panel,
+.planning-ai-app:not(.shopping-app) .planning-ai-panel,
 .dish-recommender-app .planning-ai-panel {
   min-width: 0;
   overflow: visible;
 }
 
-.planning-ai-app .planning-ai-form,
-.shopping-app .planning-ai-form,
+.planning-ai-app:not(.shopping-app) .planning-ai-form,
 .dish-recommender-app .planning-ai-form {
   min-width: 0;
   min-height: 0;
   align-content: start;
 }
 
-.planning-ai-app .planning-ai-wizard-progress,
-.shopping-app .planning-ai-wizard-progress,
+.planning-ai-app:not(.shopping-app) .planning-ai-wizard-progress,
 .dish-recommender-app .planning-ai-wizard-progress {
   max-width: 100%;
   min-width: 0;
@@ -34,93 +30,77 @@
   padding: 0.1rem 0.1rem 0.55rem;
 }
 
-.planning-ai-app .planning-ai-wizard-progress li,
-.shopping-app .planning-ai-wizard-progress li,
+.planning-ai-app:not(.shopping-app) .planning-ai-wizard-progress li,
 .dish-recommender-app .planning-ai-wizard-progress li {
   min-width: 0;
 }
 
-.planning-ai-app .planning-ai-wizard-step,
-.shopping-app .planning-ai-wizard-step,
+.planning-ai-app:not(.shopping-app) .planning-ai-wizard-step,
 .dish-recommender-app .planning-ai-wizard-step {
   min-width: 0;
   box-shadow: 0 1px 0 color-mix(in srgb, #fff, transparent 88%);
 }
 
-.planning-ai-app .planning-ai-section-card,
-.planning-ai-app .planning-ai-request-card,
-.shopping-app .planning-ai-section-card,
-.shopping-app .planning-ai-request-card,
+.planning-ai-app:not(.shopping-app) .planning-ai-section-card,
+.planning-ai-app:not(.shopping-app) .planning-ai-request-card,
 .dish-recommender-app .planning-ai-section-card,
 .dish-recommender-app .planning-ai-request-card {
   min-width: 0;
   overflow: visible;
 }
 
-.planning-ai-app .planning-ai-section-heading,
-.shopping-app .planning-ai-section-heading,
+.planning-ai-app:not(.shopping-app) .planning-ai-section-heading,
 .dish-recommender-app .planning-ai-section-heading,
-.planning-ai-app .planning-ai-results,
-.shopping-app .planning-ai-results,
+.planning-ai-app:not(.shopping-app) .planning-ai-results,
 .dish-recommender-app .planning-ai-results {
   min-width: 0;
 }
 
-.planning-ai-app .planning-ai-wizard-actions,
-.shopping-app .planning-ai-wizard-actions,
+.planning-ai-app:not(.shopping-app) .planning-ai-wizard-actions,
 .dish-recommender-app .planning-ai-wizard-actions {
   min-width: 0;
 }
 
 @supports (-webkit-touch-callout: none) {
-  .planning-ai-app .planning-ai-form,
-  .shopping-app .planning-ai-form,
+  .planning-ai-app:not(.shopping-app) .planning-ai-form,
   .dish-recommender-app .planning-ai-form {
     padding-bottom: calc(env(safe-area-inset-bottom) + 0.6rem);
   }
 }
 
 @media (max-width: 640px) {
-  .planning-ai-app .planning-ai-panel,
-  .shopping-app .planning-ai-panel,
+  .planning-ai-app:not(.shopping-app) .planning-ai-panel,
   .dish-recommender-app .planning-ai-panel {
     gap: 0.75rem;
   }
 
-  .planning-ai-app .planning-ai-wizard-progress,
-  .shopping-app .planning-ai-wizard-progress,
+  .planning-ai-app:not(.shopping-app) .planning-ai-wizard-progress,
   .dish-recommender-app .planning-ai-wizard-progress {
     margin-inline: -0.15rem;
     padding-inline: 0.15rem;
     scroll-snap-type: x proximity;
   }
 
-  .planning-ai-app .planning-ai-wizard-progress li,
-  .shopping-app .planning-ai-wizard-progress li,
+  .planning-ai-app:not(.shopping-app) .planning-ai-wizard-progress li,
   .dish-recommender-app .planning-ai-wizard-progress li {
     flex-basis: min(8.35rem, 74vw) !important;
     scroll-snap-align: start;
   }
 
-  .planning-ai-app .planning-ai-wizard-step,
-  .shopping-app .planning-ai-wizard-step,
+  .planning-ai-app:not(.shopping-app) .planning-ai-wizard-step,
   .dish-recommender-app .planning-ai-wizard-step {
     min-height: 3.25rem;
     border-radius: var(--radius-2xl);
     background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
   }
 
-  .planning-ai-app .planning-ai-wizard-step[aria-current='step'],
-  .shopping-app .planning-ai-wizard-step[aria-current='step'],
-  .shopping-app [data-wizard-progress-step][aria-current='step'] .planning-ai-wizard-step,
+  .planning-ai-app:not(.shopping-app) .planning-ai-wizard-step[aria-current='step'],
   .dish-recommender-app .planning-ai-wizard-step[aria-current='step'] {
     box-shadow: 0 10px 22px color-mix(in srgb, var(--color-primary), transparent 86%);
   }
 
-  .planning-ai-app .planning-ai-section-card,
-  .planning-ai-app .planning-ai-request-card,
-  .shopping-app .planning-ai-section-card,
-  .shopping-app .planning-ai-request-card,
+  .planning-ai-app:not(.shopping-app) .planning-ai-section-card,
+  .planning-ai-app:not(.shopping-app) .planning-ai-request-card,
   .dish-recommender-app .planning-ai-section-card,
   .dish-recommender-app .planning-ai-request-card {
     gap: 0.75rem;
@@ -128,8 +108,7 @@
     padding: 0.95rem;
   }
 
-  .planning-ai-app .planning-ai-wizard-actions,
-  .shopping-app .planning-ai-wizard-actions,
+  .planning-ai-app:not(.shopping-app) .planning-ai-wizard-actions,
   .dish-recommender-app .planning-ai-wizard-actions {
     position: sticky;
     bottom: calc(env(safe-area-inset-bottom) + 0.55rem);
@@ -149,8 +128,7 @@
     backdrop-filter: blur(16px);
   }
 
-  .planning-ai-app .planning-ai-wizard-actions .button,
-  .shopping-app .planning-ai-wizard-actions .button,
+  .planning-ai-app:not(.shopping-app) .planning-ai-wizard-actions .button,
   .dish-recommender-app .planning-ai-wizard-actions .button {
     width: 100%;
     min-width: 0;
