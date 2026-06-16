@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import '../styles/dishes.css';
 import '../styles/tuppers.css';
+import '../styles/menu-automation-actions.css';
 import '../styles/mobile-bottom-nav.css';
 import '../styles/modals.css';
 import '../styles/toasts.css';
@@ -92,6 +93,10 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
 
       if (document.querySelector('[data-planning-ai-app], [data-dish-recommender-app], [data-shopping-app]')) {
         import('../scripts/ai-wizard-feedback.ts');
+      }
+
+      if (document.querySelector('[data-dashboard-app], [data-menu-app], [data-shopping-app], [data-tuppers-app], [data-dishes-app]')) {
+        import('../scripts/menu-automation-actions.ts');
       }
     </script>
   </body>
