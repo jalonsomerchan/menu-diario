@@ -2,7 +2,17 @@ import { formatAppError } from '../lib/errors';
 import { getFirebaseServices } from '../lib/firebase/client';
 import { hasFirebaseConfig } from '../lib/firebase/config';
 import { getWeekStartForDate, getWeekStartsForDates } from '../lib/menu/dates';
-import { emptyMeal, normalizeDay, normalizeMeal } from '../lib/menu/normalizers';
+import { canMoveMeal, createMovedMealDays, type MealDragSource } from '../lib/menu/meal-drag-and-drop';
+import {
+  clearDropTarget,
+  clearMealMoveClasses,
+  getDayKeyFromTarget,
+  getSourceFromRow,
+  getVisibleDayKeys,
+  prepareMealRows,
+  updateDropTarget,
+} from '../lib/menu/meal-dnd-dom';
+import { normalizeDay } from '../lib/menu/normalizers';
 import {
   ensureUserProfile,
   getOrCreateWeekMenus,
@@ -10,25 +20,9 @@ import {
   watchUserProfile,
   watchWeekMenusByIds,
 } from '../lib/menu/repository';
-import type { DailyMenu, FirebaseUser, MealEntry, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
+import type { DailyMenu, FirebaseUser, MealSlot, UserProfile, WeekMenu } from '../lib/menu/types';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
-type DragSource = {
-  dayKey: string;
-  meal: MealSlot;
-};
-
-type PointerDragState = {
-  pointerId: number;
-  row: HTMLElement;
-  source: DragSource;
-  startX: number;
-  startY: number;
-  holdTimer: number;
-  active: boolean;
-};
-
-const mealSlots: MealSlot[] = ['breakfast', 'lunch', 'dinner'];
 const root = document.querySelector<HTMLElement>('[data-dashboard-app], [data-configurator-app]');
 
 if (root && hasFirebaseConfig()) {
@@ -51,9 +45,8 @@ if (root && hasFirebaseConfig()) {
   let servicesRef: Awaited<ReturnType<typeof getFirebaseServices>> | null = null;
   let watchedWeekStartsKey = '';
   let syncTimer: number | undefined;
-  let dragSource: DragSource | null = null;
-  let keyboardSourceRow: HTMLElement | null = null;
-  let pointerState: PointerDragState | null = null;
+  let activeSource: MealDragSource | null = null;
+  let activeSourceRow: HTMLElement | null = null;
   let currentDropTargetDay = '';
 
   function showStatus(message: string, isError = false) {
@@ -69,24 +62,8 @@ if (root && hasFirebaseConfig()) {
     return formatAppError(error, labels);
   }
 
-  function isMealSlot(value: string | undefined): value is MealSlot {
-    return mealSlots.includes(value as MealSlot);
-  }
-
   function getEnabledMeals(): MealSlot[] {
     return currentProfile?.enabledMeals?.length ? currentProfile.enabledMeals : ['lunch'];
-  }
-
-  function getVisibleDayKeys() {
-    if (!daysContainer) return [];
-
-    return [
-      ...new Set(
-        Array.from(daysContainer.querySelectorAll<HTMLElement>('[data-day]'))
-          .map((card) => card.dataset.day)
-          .filter((dayKey): dayKey is string => Boolean(dayKey))
-      ),
-    ];
   }
 
   function getMenuForDay(dayKey: string) {
@@ -102,83 +79,8 @@ if (root && hasFirebaseConfig()) {
     return normalizeDay(getMenuForDay(dayKey)?.days?.[dayKey]);
   }
 
-  function cloneMeal(meal: Partial<MealEntry> | undefined): MealEntry {
-    const normalized = normalizeMeal(meal);
-    const copy: MealEntry = {
-      ...normalized,
-      items: [...normalized.items],
-    };
-
-    if (normalized.participantIds?.length) {
-      copy.participantIds = [...normalized.participantIds];
-    } else {
-      delete copy.participantIds;
-    }
-
-    return copy;
-  }
-
-  function isEmptyMeal(meal: MealEntry) {
-    return (
-      !meal.skipped &&
-      meal.items.filter(Boolean).length === 0 &&
-      !meal.note.trim() &&
-      !meal.participantIds?.length
-    );
-  }
-
-  function canMoveSource(source: DragSource) {
-    const sourceDay = getDay(source.dayKey);
-    if (sourceDay.skipped) return false;
-
-    return !isEmptyMeal(cloneMeal(sourceDay.meals[source.meal] ?? emptyMeal()));
-  }
-
-  function getSourceFromRow(row: HTMLElement | null): DragSource | null {
-    const dayKey = row?.closest<HTMLElement>('[data-day]')?.dataset.day;
-    const meal = row?.dataset.dragMeal;
-    if (!dayKey || !isMealSlot(meal)) return null;
-
-    return { dayKey, meal };
-  }
-
-  function getDayKeyFromTarget(target: EventTarget | null) {
-    return target instanceof HTMLElement ? target.closest<HTMLElement>('[data-day]')?.dataset.day ?? '' : '';
-  }
-
-  function getDayKeyAtPoint(clientX: number, clientY: number) {
-    return document.elementFromPoint(clientX, clientY)?.closest<HTMLElement>('[data-day]')?.dataset.day ?? '';
-  }
-
-  function clearDropTarget() {
-    if (!daysContainer || !currentDropTargetDay) return;
-    daysContainer
-      .querySelector<HTMLElement>(`[data-day="${CSS.escape(currentDropTargetDay)}"]`)
-      ?.classList.remove('history-card--meal-drop-target');
-    currentDropTargetDay = '';
-  }
-
-  function setDropTarget(dayKey: string, source = dragSource) {
-    if (!daysContainer) return;
-    if (!dayKey || source?.dayKey === dayKey) {
-      clearDropTarget();
-      return;
-    }
-
-    if (currentDropTargetDay === dayKey) return;
-    clearDropTarget();
-    currentDropTargetDay = dayKey;
-    daysContainer
-      .querySelector<HTMLElement>(`[data-day="${CSS.escape(dayKey)}"]`)
-      ?.classList.add('history-card--meal-drop-target');
-  }
-
-  function clearActiveDrag() {
-    clearDropTarget();
-    keyboardSourceRow?.classList.remove('day-meal-row--keyboard-source');
-    keyboardSourceRow = null;
-    dragSource = null;
-    daysContainer?.querySelectorAll('.day-meal-row--dragging').forEach((row) => row.classList.remove('day-meal-row--dragging'));
+  function canMoveSource(source: MealDragSource) {
+    return canMoveMeal(source, getDay(source.dayKey));
   }
 
   function updateLocalDay(dayKey: string, nextDay: DailyMenu) {
@@ -195,11 +97,32 @@ if (root && hasFirebaseConfig()) {
     );
   }
 
-  async function syncVisibleMenus() {
-    if (!servicesRef || !currentUser) return;
+  function clearActiveMove() {
+    if (!daysContainer) return;
 
-    const visibleDayKeys = getVisibleDayKeys();
-    const weekStarts = getWeekStartsForDates(visibleDayKeys);
+    activeSourceRow?.classList.remove('day-meal-row--keyboard-source');
+    activeSourceRow = null;
+    activeSource = null;
+    currentDropTargetDay = clearDropTarget(daysContainer, currentDropTargetDay);
+    clearMealMoveClasses(daysContainer);
+  }
+
+  function setActiveSource(source: MealDragSource, row: HTMLElement) {
+    clearActiveMove();
+    activeSource = source;
+    activeSourceRow = row;
+    row.classList.add('day-meal-row--keyboard-source');
+  }
+
+  function prepareVisibleRows() {
+    if (!daysContainer) return;
+    prepareMealRows(daysContainer, getEnabledMeals(), labels.editDay ?? labels.configureDay ?? '');
+  }
+
+  async function syncVisibleMenus() {
+    if (!servicesRef || !currentUser || !daysContainer) return;
+
+    const weekStarts = getWeekStartsForDates(getVisibleDayKeys(daysContainer));
     const nextWeekStartsKey = weekStarts.join('|');
     if (!weekStarts.length || nextWeekStartsKey === watchedWeekStartsKey) return;
 
@@ -211,7 +134,7 @@ if (root && hasFirebaseConfig()) {
       Object.values(currentMenuIdsByWeekStart),
       (menus) => {
         currentMenus = menus;
-        prepareDraggableMeals();
+        prepareVisibleRows();
       },
       (error) => showStatus(formatError(error), true)
     );
@@ -220,73 +143,30 @@ if (root && hasFirebaseConfig()) {
   function queueVisibleMenuSync() {
     window.clearTimeout(syncTimer);
     syncTimer = window.setTimeout(() => {
-      prepareDraggableMeals();
+      prepareVisibleRows();
       void syncVisibleMenus().catch((error) => showStatus(formatError(error), true));
     }, 80);
   }
 
-  function prepareDraggableMeals() {
-    if (!daysContainer || !currentProfile) return;
-
-    const enabledMeals = getEnabledMeals();
-    daysContainer.querySelectorAll<HTMLElement>('[data-day]').forEach((card) => {
-      card.querySelectorAll<HTMLElement>('.day-meal-row').forEach((row, index) => {
-        const meal = enabledMeals[index];
-        if (!meal) return;
-
-        row.dataset.dragMeal = meal;
-        row.draggable = true;
-        row.tabIndex = 0;
-        row.setAttribute('role', 'button');
-        row.setAttribute('aria-label', row.textContent?.trim().replace(/\s+/g, ' ') ?? labels.editDay ?? '');
-      });
-    });
-  }
-
-  async function ensureVisibleMenusReady() {
-    await syncVisibleMenus();
-  }
-
-  async function moveMealToDay(source: DragSource, targetDayKey: string) {
+  async function moveMealToDay(source: MealDragSource, targetDayKey: string) {
     if (!servicesRef || !currentUser || source.dayKey === targetDayKey) return;
 
-    await ensureVisibleMenusReady();
+    await syncVisibleMenus();
 
     const sourceMenuId = getMenuIdForDay(source.dayKey);
     const targetMenuId = getMenuIdForDay(targetDayKey);
     if (!sourceMenuId || !targetMenuId || !canMoveSource(source)) return;
 
-    const sourceDay = getDay(source.dayKey);
-    const targetDay = getDay(targetDayKey);
-    const sourceMeal = cloneMeal(sourceDay.meals[source.meal]);
-    const targetMeal = cloneMeal(targetDay.meals[source.meal] ?? emptyMeal());
-    const nextSourceDay = normalizeDay({
-      ...sourceDay,
-      meals: {
-        ...sourceDay.meals,
-        [source.meal]: targetMeal,
-      },
-    });
-    const nextTargetDay = normalizeDay({
-      ...targetDay,
-      skipped: false,
-      reason: '',
-      skipNote: '',
-      meals: {
-        ...targetDay.meals,
-        [source.meal]: sourceMeal,
-      },
-    });
-
+    const { sourceDay, targetDay } = createMovedMealDays(source, getDay(source.dayKey), getDay(targetDayKey));
     saveFeedback.saving();
 
     try {
       await Promise.all([
-        updateMenuDay(servicesRef, sourceMenuId, currentUser.uid, source.dayKey, nextSourceDay, currentProfile?.groupId),
-        updateMenuDay(servicesRef, targetMenuId, currentUser.uid, targetDayKey, nextTargetDay, currentProfile?.groupId),
+        updateMenuDay(servicesRef, sourceMenuId, currentUser.uid, source.dayKey, sourceDay, currentProfile?.groupId),
+        updateMenuDay(servicesRef, targetMenuId, currentUser.uid, targetDayKey, targetDay, currentProfile?.groupId),
       ]);
-      updateLocalDay(source.dayKey, nextSourceDay);
-      updateLocalDay(targetDayKey, nextTargetDay);
+      updateLocalDay(source.dayKey, sourceDay);
+      updateLocalDay(targetDayKey, targetDay);
       saveFeedback.saved();
     } catch (error) {
       showStatus(formatError(error), true);
@@ -301,172 +181,106 @@ if (root && hasFirebaseConfig()) {
       return;
     }
 
-    dragSource = source;
+    activeSource = source;
     row.classList.add('day-meal-row--dragging');
     event.dataTransfer?.setData('application/x-menu-meal', JSON.stringify(source));
     event.dataTransfer?.setData('text/plain', `${source.dayKey}:${source.meal}`);
     if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
   }
 
-  function getDragSourceFromDataTransfer(dataTransfer: DataTransfer | null) {
-    if (dragSource) return dragSource;
+  function getSourceFromTransfer(dataTransfer: DataTransfer | null) {
+    if (activeSource) return activeSource;
     const rawData = dataTransfer?.getData('application/x-menu-meal');
     if (!rawData) return null;
 
     try {
-      const parsed = JSON.parse(rawData) as Partial<DragSource>;
-      return parsed.dayKey && isMealSlot(parsed.meal) ? { dayKey: parsed.dayKey, meal: parsed.meal } : null;
+      return JSON.parse(rawData) as MealDragSource;
     } catch {
       return null;
     }
   }
 
   function handleDragOver(event: DragEvent) {
-    const source = getDragSourceFromDataTransfer(event.dataTransfer);
+    if (!daysContainer) return;
+    const source = getSourceFromTransfer(event.dataTransfer);
     const targetDayKey = getDayKeyFromTarget(event.target);
     if (!source || !targetDayKey || source.dayKey === targetDayKey) return;
 
     event.preventDefault();
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-    setDropTarget(targetDayKey, source);
-  }
-
-  function handleDragLeave(event: DragEvent) {
-    const targetDayKey = getDayKeyFromTarget(event.target);
-    const nextDayKey = getDayKeyFromTarget(event.relatedTarget);
-    if (targetDayKey && targetDayKey !== nextDayKey) clearDropTarget();
+    currentDropTargetDay = updateDropTarget(daysContainer, currentDropTargetDay, targetDayKey, source);
   }
 
   function handleDrop(event: DragEvent) {
-    const source = getDragSourceFromDataTransfer(event.dataTransfer);
+    const source = getSourceFromTransfer(event.dataTransfer);
     const targetDayKey = getDayKeyFromTarget(event.target);
     if (!source || !targetDayKey || source.dayKey === targetDayKey) return;
 
     event.preventDefault();
-    void moveMealToDay(source, targetDayKey).finally(clearActiveDrag);
+    void moveMealToDay(source, targetDayKey).finally(clearActiveMove);
   }
 
-  function handleDragEnd() {
-    clearActiveDrag();
+  function activateMealRow(row: HTMLElement) {
+    const source = getSourceFromRow(row);
+    if (!source) return;
+
+    if (!activeSource) {
+      if (canMoveSource(source)) setActiveSource(source, row);
+      return;
+    }
+
+    const targetDayKey = row.closest<HTMLElement>('[data-day]')?.dataset.day ?? '';
+    if (!targetDayKey || targetDayKey === activeSource.dayKey) {
+      clearActiveMove();
+      return;
+    }
+
+    const sourceToMove = activeSource;
+    void moveMealToDay(sourceToMove, targetDayKey).finally(clearActiveMove);
   }
 
-  function handleKeyboardMove(event: KeyboardEvent) {
+  function handlePointerActivation(event: MouseEvent) {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || target.closest('button,a,summary,details,input,textarea,select')) return;
+
+    const row = target.closest<HTMLElement>('[data-drag-meal]');
+    if (row) activateMealRow(row);
+  }
+
+  function handleKeyboardActivation(event: KeyboardEvent) {
     if (event.key === 'Escape') {
-      clearActiveDrag();
+      clearActiveMove();
       return;
     }
 
     if (event.key !== 'Enter' && event.key !== ' ') return;
 
     const row = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>('[data-drag-meal]') : null;
-    const source = getSourceFromRow(row);
-    if (!row || !source) return;
+    if (!row) return;
 
     event.preventDefault();
-
-    if (!dragSource) {
-      if (!canMoveSource(source)) return;
-      dragSource = source;
-      keyboardSourceRow = row;
-      row.classList.add('day-meal-row--keyboard-source');
-      return;
-    }
-
-    const targetDayKey = row.closest<HTMLElement>('[data-day]')?.dataset.day ?? '';
-    if (!targetDayKey || targetDayKey === dragSource.dayKey) {
-      clearActiveDrag();
-      return;
-    }
-
-    const sourceToMove = dragSource;
-    void moveMealToDay(sourceToMove, targetDayKey).finally(clearActiveDrag);
-  }
-
-  function beginPointerDrag(state: PointerDragState) {
-    if (pointerState !== state || !canMoveSource(state.source)) return;
-
-    state.active = true;
-    dragSource = state.source;
-    state.row.classList.add('day-meal-row--dragging');
-  }
-
-  function handlePointerDown(event: PointerEvent) {
-    if (event.pointerType === 'mouse') return;
-    const row = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>('[data-drag-meal]') : null;
-    const source = getSourceFromRow(row);
-    if (!row || !source || !canMoveSource(source)) return;
-
-    pointerState = {
-      pointerId: event.pointerId,
-      row,
-      source,
-      startX: event.clientX,
-      startY: event.clientY,
-      holdTimer: window.setTimeout(() => pointerState && beginPointerDrag(pointerState), 220),
-      active: false,
-    };
-    row.setPointerCapture?.(event.pointerId);
-  }
-
-  function handlePointerMove(event: PointerEvent) {
-    if (!pointerState || pointerState.pointerId !== event.pointerId) return;
-
-    const distance = Math.hypot(event.clientX - pointerState.startX, event.clientY - pointerState.startY);
-    if (!pointerState.active && distance > 10) {
-      window.clearTimeout(pointerState.holdTimer);
-      pointerState = null;
-      return;
-    }
-
-    if (!pointerState.active) return;
-
-    event.preventDefault();
-    setDropTarget(getDayKeyAtPoint(event.clientX, event.clientY), pointerState.source);
-  }
-
-  function clearPointerState() {
-    if (!pointerState) return;
-    window.clearTimeout(pointerState.holdTimer);
-    pointerState.row.classList.remove('day-meal-row--dragging');
-    pointerState = null;
-  }
-
-  function handlePointerUp(event: PointerEvent) {
-    if (!pointerState || pointerState.pointerId !== event.pointerId) return;
-
-    const state = pointerState;
-    const targetDayKey = state.active ? getDayKeyAtPoint(event.clientX, event.clientY) : '';
-    clearPointerState();
-
-    if (!state.active || !targetDayKey || targetDayKey === state.source.dayKey) {
-      clearActiveDrag();
-      return;
-    }
-
-    void moveMealToDay(state.source, targetDayKey).finally(clearActiveDrag);
+    activateMealRow(row);
   }
 
   if (daysContainer) {
-    prepareDraggableMeals();
+    prepareVisibleRows();
     daysContainer.addEventListener('dragstart', handleDragStart);
     daysContainer.addEventListener('dragover', handleDragOver);
-    daysContainer.addEventListener('dragleave', handleDragLeave);
-    daysContainer.addEventListener('drop', handleDrop);
-    daysContainer.addEventListener('dragend', handleDragEnd);
-    daysContainer.addEventListener('keydown', handleKeyboardMove);
-    daysContainer.addEventListener('pointerdown', handlePointerDown);
-    daysContainer.addEventListener('pointermove', handlePointerMove);
-    daysContainer.addEventListener('pointerup', handlePointerUp);
-    daysContainer.addEventListener('pointercancel', () => {
-      clearPointerState();
-      clearActiveDrag();
+    daysContainer.addEventListener('dragleave', (event) => {
+      if (!daysContainer) return;
+      if (getDayKeyFromTarget(event.target) !== getDayKeyFromTarget(event.relatedTarget)) {
+        currentDropTargetDay = clearDropTarget(daysContainer, currentDropTargetDay);
+      }
     });
-
+    daysContainer.addEventListener('drop', handleDrop);
+    daysContainer.addEventListener('dragend', clearActiveMove);
+    daysContainer.addEventListener('click', handlePointerActivation);
+    daysContainer.addEventListener('keydown', handleKeyboardActivation);
     new MutationObserver(queueVisibleMenuSync).observe(daysContainer, { childList: true, subtree: true });
   }
 
   getFirebaseServices()
-    .then(async (services) => {
+    .then((services) => {
       servicesRef = services;
       services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
         currentUser = user;
@@ -487,7 +301,6 @@ if (root && hasFirebaseConfig()) {
             labels.guestSession,
             (profile) => {
               currentProfile = profile;
-              prepareDraggableMeals();
               queueVisibleMenuSync();
             },
             (error) => showStatus(formatError(error), true)
