@@ -3,7 +3,7 @@ import { getFirebaseServices, hasFirebaseConfig } from '../firebase/client';
 import { getFirebaseConfig } from '../firebase/config';
 import { generateAuthenticatedAiApiJson } from './authenticated-api-client';
 import { aiGenerationConfig, aiPromptConfig } from './config';
-import { AiClientError, logAiError } from './errors';
+import { AiClientError, getAiErrorDetail, logAiError } from './errors';
 import { getAiFeatureFlags, isAiAvailable } from './flags';
 import { type JsonValidator } from './json';
 import { assertAiClientLimit, registerAiClientUse } from './limits';
@@ -52,7 +52,9 @@ export async function generateAuthenticatedAiJson<T>({ prompt, validator, userId
     return json;
   } catch (error) {
     logAiError(error, 'generateAuthenticatedAiJson');
-    throw normalizeAiError(error);
+    const normalizedError = normalizeAiError(error);
+    queueAiErrorDetail(normalizedError);
+    throw normalizedError;
   }
 }
 
@@ -88,4 +90,21 @@ function normalizeAiError(error: unknown) {
   }
 
   return new AiClientError('request-failed', 'AI request failed.', { cause: error, retryable: true });
+}
+
+function queueAiErrorDetail(error: unknown) {
+  const detail = getAiErrorDetail(error);
+  if (!detail || (error instanceof Error && detail === error.message)) return;
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  window.setTimeout(() => appendAiErrorDetail(detail), 0);
+}
+
+function appendAiErrorDetail(detail: string) {
+  document.querySelectorAll<HTMLElement>('[data-ai-status][data-variant="error"]').forEach((status) => {
+    const current = status.textContent?.trim() ?? '';
+    if (!current || current.includes(detail)) return;
+
+    status.textContent = `${current}: ${detail}`;
+  });
 }

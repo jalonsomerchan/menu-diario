@@ -19,6 +19,8 @@ if (wizard) {
   let currentIndex = getCurrentIndex();
   let lastResultsScrollSignature = '';
 
+  wizard.querySelectorAll<HTMLButtonElement>('[data-wizard-cancel]').forEach((button) => button.remove());
+
   function getCurrentIndex() {
     const visibleIndex = panels.findIndex((panel) => !panel.hidden);
     return visibleIndex >= 0 ? visibleIndex : 0;

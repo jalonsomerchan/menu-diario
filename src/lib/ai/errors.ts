@@ -42,6 +42,14 @@ export function getAiErrorCode(error: unknown): AiErrorCode {
   return 'request-failed';
 }
 
+export function getAiErrorDetail(error: unknown) {
+  const cause = error instanceof AiClientError ? (error as Error & { cause?: unknown }).cause : undefined;
+  const value = readReadableCause(cause) || (error instanceof Error ? error.message : String(error));
+  const normalized = value.replace(/\s+/g, ' ').trim();
+
+  return normalized.length > 240 ? `${normalized.slice(0, 239)}…` : normalized;
+}
+
 export function logAiError(error: unknown, context: string) {
   const code = getAiErrorCode(error);
   console.warn('[ai]', context, getAiErrorDebugContext(error, code));
@@ -63,6 +71,17 @@ function getAiErrorDebugContext(error: unknown, code: AiErrorCode) {
   }
 
   return { code, message: String(error) };
+}
+
+function readReadableCause(cause: unknown) {
+  if (!cause) return '';
+  if (cause instanceof Error) return cause.message;
+  if (typeof cause !== 'object') return String(cause);
+
+  const candidate = cause as Partial<AiErrorDebugCause>;
+  return [candidate.detalles, candidate.error, candidate.message, candidate.body].find(
+    (value) => typeof value === 'string' && value.trim().length > 0
+  ) ?? '';
 }
 
 function readDebugCause(cause: unknown): AiErrorDebugCause {
