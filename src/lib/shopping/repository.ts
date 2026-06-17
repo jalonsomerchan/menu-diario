@@ -91,8 +91,9 @@ export async function saveShoppingList(services: FirebaseServices, input: SaveSh
   const { db, firestoreModule } = services;
   const documentId = input.listId || firestoreModule.doc(firestoreModule.collection(db, shoppingListsCollection)).id;
   const documentRef = firestoreModule.doc(db, shoppingListsCollection, documentId);
-  const snapshot = await firestoreModule.getDoc(documentRef);
-  const existing = snapshot.exists() ? mapShoppingList(snapshot.id, snapshot.data()) : null;
+  const snapshot = input.listId ? await firestoreModule.getDoc(documentRef) : null;
+  const existingData = snapshot?.exists() ? snapshot.data() : null;
+  const existing = existingData && snapshot ? mapShoppingList(snapshot.id, existingData) : null;
   const nextItems = mergePersistedItems(existing?.items ?? [], input.items);
   const source = nextItems.some((item) => item.source === 'manual')
     ? nextItems.some((item) => item.source === 'ai')
@@ -112,7 +113,7 @@ export async function saveShoppingList(services: FirebaseServices, input: SaveSh
       rangeStart: input.rangeStart,
       rangeEnd: input.rangeEnd,
       items: serializeShoppingItems(nextItems),
-      createdAt: snapshot.exists() ? snapshot.data().createdAt ?? firestoreModule.serverTimestamp() : firestoreModule.serverTimestamp(),
+      createdAt: existingData?.createdAt ?? firestoreModule.serverTimestamp(),
       updatedAt: firestoreModule.serverTimestamp(),
       updatedBy: input.userId,
       archivedAt: input.status === 'archived' ? firestoreModule.serverTimestamp() : null,
