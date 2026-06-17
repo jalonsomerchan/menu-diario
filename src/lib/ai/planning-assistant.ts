@@ -33,7 +33,7 @@ export type PlanningRecommendation = {
 
 type PlanningRecommendationResponseDish = {
   name: string;
-  isNew: boolean;
+  isNew?: boolean;
 };
 
 type PlanningRecommendationResponseEntry = {
@@ -87,7 +87,7 @@ export function buildPlanningAssistantPrompt(input: {
       ? 'Use the food restrictions as hard constraints and avoid dishes that conflict with them.'
       : 'No food restrictions were provided.',
     getModeRules(input.mode, recommendationCount),
-    `Return JSON with shape {"recommendations":[{"dayKey":"YYYY-MM-DD","meal":"breakfast|lunch|dinner","dishes":[{"name":"Dish","isNew":true}],"reason":"short string"}]}.`,
+    `Return JSON with shape {"recommendations":[{"dayKey":"YYYY-MM-DD","meal":"breakfast|lunch|dinner","dishes":[{"name":"Dish","isNew":true}],"reason":"short string"}]}. For saved catalog dishes, isNew can be false or omitted.`,
     'Pending slots to plan:',
     pendingMeals || '- none',
     'Already planned meals in this range:',
@@ -124,7 +124,7 @@ export function isPlanningRecommendationResponse(value: unknown): value is Plann
           dish &&
           typeof dish === 'object' &&
           typeof (dish as Partial<PlanningRecommendationResponseDish>).name === 'string' &&
-          typeof (dish as Partial<PlanningRecommendationResponseDish>).isNew === 'boolean'
+          isOptionalBoolean((dish as Partial<PlanningRecommendationResponseDish>).isNew)
       ) &&
       typeof candidate.reason === 'string'
     );
@@ -317,11 +317,16 @@ function mapSuggestedDish(
 
   const ownMatch = ownByName.get(normalizedName);
   const mixedMatch = mixedByName.get(normalizedName);
+  const isKnownCatalogDish = knownNames.has(normalizedName);
 
   if (mode === 'own') return ownMatch ? mapCatalogDish(ownMatch) : null;
-  if (mode === 'new') return dish.isNew === true && !knownNames.has(normalizedName) ? mapNewDish(cleanName) : null;
-  if (dish.isNew === true) return knownNames.has(normalizedName) ? null : mapNewDish(cleanName);
-  return mixedMatch ? mapCatalogDish(mixedMatch) : null;
+  if (mode === 'new') {
+    return dish.isNew !== false && !isKnownCatalogDish ? mapNewDish(cleanName) : null;
+  }
+  if (dish.isNew === true) return isKnownCatalogDish ? null : mapNewDish(cleanName);
+  if (mixedMatch) return mapCatalogDish(mixedMatch);
+  if (dish.isNew === undefined && !isKnownCatalogDish) return mapNewDish(cleanName);
+  return null;
 }
 
 function getBalancedSuggestions(suggestions: PlanningRecommendationDish[], mode: PlanningRecommendationMode, limit: number) {
@@ -351,6 +356,10 @@ function clampRecommendationCount(value: number) {
 
 function isMealSlot(value: unknown): value is MealSlot {
   return value === 'breakfast' || value === 'lunch' || value === 'dinner';
+}
+
+function isOptionalBoolean(value: unknown) {
+  return value === undefined || typeof value === 'boolean';
 }
 
 function getSlotKey(dayKey: string, meal: MealSlot) {
