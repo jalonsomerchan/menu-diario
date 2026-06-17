@@ -1,0 +1,16 @@
+---
+import AppPageShell from '../components/AppPageShell.astro';
+import MoreAppPage from '../components/MoreAppPage.astro';
+import { defaultLocale, siteConfig } from '../config/site';
+import { useMorePageTranslations } from '../i18n/more-page';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const locale = defaultLocale;
+const tm = useMorePageTranslations(locale);
+---
+
+<BaseLayout title={`${tm('title')} · ${siteConfig.name}`} description={tm('description')} locale={locale}>
+  <AppPageShell locale={locale} title={tm('title')} description={tm('description')} showHeader={false}>
+    <MoreAppPage locale={locale} />
+  </AppPageShell>
+</BaseLayout>
