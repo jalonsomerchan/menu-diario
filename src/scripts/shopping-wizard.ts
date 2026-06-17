@@ -36,7 +36,7 @@ if (wizard) {
   function scrollActiveIndicator() {
     const indicator = indicators[currentIndex];
     if (!progress || !indicator) return;
-    const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
     window.requestAnimationFrame(() => {
       indicator.scrollIntoView({ behavior, block: 'nearest', inline: 'center' });
     });
