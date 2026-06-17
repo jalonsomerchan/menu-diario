@@ -5,6 +5,7 @@ import '../styles/tuppers.css';
 import '../styles/menu-automation-actions.css';
 import '../styles/initial-onboarding.css';
 import '../styles/wizard-scroll.css';
+import '../styles/ai-status-spinner.css';
 import '../styles/mobile-bottom-nav.css';
 import '../styles/modals.css';
 import '../styles/toasts.css';
@@ -142,6 +143,10 @@ const onboardingPaths = {
 
       if (document.querySelector('[data-dashboard-app], [data-configurator-app]')) {
         import('../scripts/meal-drag-and-drop-app.ts');
+      }
+
+      if (document.querySelector('[data-ai-status]')) {
+        import('../scripts/ai-status-spinner.ts');
       }
 
       if (document.querySelector('[data-planning-ai-app], [data-dish-recommender-app]')) {
