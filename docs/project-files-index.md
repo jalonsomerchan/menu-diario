@@ -101,6 +101,7 @@ No incluye artefactos locales o generados como `.env`, `.astro/`, `dist/`, `node
 - `src/components/HomeLanding.astro`: home publica del producto.
 - `src/components/MenuApp.astro`: aplicacion principal del menu.
 - `src/components/MobileBottomNav.astro`: navegacion inferior para movil.
+- `src/components/MoreAppPage.astro`: pagina hub de opciones para el acceso Mas del toolbar movil.
 - `src/components/PageHeader.astro`: encabezado reutilizable de paginas internas.
 - `src/components/PlanningAiApp.astro`: planificador con asistencia IA.
 - `src/components/PublicHowItWorksPage.astro`: pagina publica de funcionamiento.
@@ -130,6 +131,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/pages/faq.astro` y `src/pages/[locale]/faq.astro`: preguntas frecuentes.
 - `src/pages/historico.astro` y `src/pages/[locale]/historico.astro`: historico.
 - `src/pages/manual.astro` y `src/pages/[locale]/manual.astro`: manual o guia publica.
+- `src/pages/mas.astro` y `src/pages/[locale]/mas.astro`: pagina de Mas con todas las opciones de la app para movil.
 - `src/pages/mis-platos.astro` y `src/pages/[locale]/mis-platos.astro`: platos del usuario.
 - `src/pages/organizar-menu-semanal.astro` y `src/pages/[locale]/organizar-menu-semanal.astro`: pagina SEO sobre organizacion semanal.
 - `src/pages/planificacion.astro` y `src/pages/[locale]/planificacion.astro`: planificacion.
@@ -155,6 +157,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/i18n/tuppers.ts`: textos de tuppers.
 - `src/i18n/shopping-actions.ts`: textos de acciones de compra.
 - `src/i18n/menu-automation-actions.ts`: textos de acciones rapidas del menu, compra automatica e historial de platos.
+- `src/i18n/more-page.ts`: textos de la pagina Mas del toolbar movil.
 - `src/i18n/initial-onboarding.ts`: textos del onboarding inicial de la aplicacion.
 - `src/i18n/shopping-whatsapp.ts`: textos de exportacion de compra a WhatsApp.
 - `src/i18n/dish-recommender.ts`: textos del recomendador de platos.
