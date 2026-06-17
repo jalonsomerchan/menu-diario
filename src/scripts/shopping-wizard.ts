@@ -10,6 +10,7 @@ if (wizard) {
   const locale = document.documentElement.lang === 'en' ? 'en' : 'es';
   const ta = useShoppingActionTranslations(locale);
   const scrollTarget = wizard.closest<HTMLElement>('.planning-ai-panel') ?? wizard;
+  const progress = wizard.querySelector<HTMLElement>('[data-wizard-progress]');
   const panels = [...wizard.querySelectorAll<HTMLElement>('[data-wizard-step]')];
   const resultsPanel = wizard.querySelector<HTMLElement>('[data-wizard-step="results"]');
   const draft = wizard.querySelector<HTMLElement>('[data-draft]');
@@ -30,6 +31,15 @@ if (wizard) {
     const title = panels[currentIndex]?.querySelector<HTMLElement>('h3');
     title?.setAttribute('tabindex', '-1');
     title?.focus({ preventScroll: true });
+  }
+
+  function scrollActiveIndicator() {
+    const indicator = indicators[currentIndex];
+    if (!progress || !indicator) return;
+    const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    window.requestAnimationFrame(() => {
+      indicator.scrollIntoView({ behavior, block: 'nearest', inline: 'center' });
+    });
   }
 
   function scrollWizardTop() {
@@ -86,6 +96,7 @@ if (wizard) {
   function notifyStep(previousIndex: number, shouldFocus: boolean) {
     app?.dispatchEvent(new CustomEvent('shopping-wizard:step', { detail: { step: currentIndex } }));
     syncIndicators();
+    if (previousIndex !== currentIndex || shouldFocus) scrollActiveIndicator();
     if (panels[currentIndex] === resultsPanel) scrollResultsTop();
     if (!shouldFocus || previousIndex === currentIndex) return;
     focusPanel();
