@@ -233,6 +233,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/styles/menu-automation-actions.css`: estilos del panel de acciones rapidas del menu y del historial por plato.
 - `src/styles/meal-participants.css`: estilos de participantes.
 - `src/styles/mobile-bottom-nav.css`: estilos de navegacion movil inferior.
+- `src/styles/more-page.css`: estilos de la pagina Mas del toolbar movil.
 - `src/styles/modals.css`: estilos comunes de modales.
 - `src/styles/shopping-list-actions.css`: estilos de gestion y visualizacion de listas de compra.
 - `src/styles/shopping-planning-wizard.css`: estilos del asistente de compra/planificacion.
