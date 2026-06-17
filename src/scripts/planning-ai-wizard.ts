@@ -3,6 +3,7 @@ const form = document.querySelector<HTMLElement>('[data-plan-wizard]');
 if (form) {
   const app = form.closest<HTMLElement>('[data-planning-ai-app]');
   const scrollTarget = form.closest<HTMLElement>('[data-plan-scroll-target]') ?? form;
+  const progress = form.querySelector<HTMLElement>('.planning-ai-wizard-progress');
   const labels = JSON.parse(app?.dataset.labels ?? '{}') as Record<string, string>;
   const panels = [...form.querySelectorAll<HTMLElement>('[data-plan-step]')];
   const dots = [...form.querySelectorAll<HTMLButtonElement>('[data-plan-step-indicator]')];
@@ -17,6 +18,15 @@ if (form) {
     const title = panels[index]?.querySelector<HTMLElement>('h3');
     title?.setAttribute('tabindex', '-1');
     title?.focus({ preventScroll: true });
+  }
+
+  function scrollActiveStep() {
+    const dot = dots[index];
+    if (!progress || !dot) return;
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    window.requestAnimationFrame(() => {
+      dot.scrollIntoView({ behavior, block: 'nearest', inline: 'center' });
+    });
   }
 
   function scrollWizardTop() {
@@ -65,6 +75,7 @@ if (form) {
     if (back) back.disabled = index === 0;
     if (next) next.hidden = index === panels.length - 1;
     if (submit) submit.hidden = true;
+    if (previousIndex !== index || focus) scrollActiveStep();
     notifyStep();
     if (focus) focusPanel();
     if (focus && previousIndex !== index) scrollWizardTop();
