@@ -1,0 +1,342 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { Locale } from '../config/site';
+import { useDishRecommenderTranslations } from '../i18n/dish-recommender';
+import { useMorePageTranslations } from '../i18n/more-page';
+import { usePlanningTranslations } from '../i18n/planning';
+import { useStatisticsTranslations } from '../i18n/statistics';
+import { useTupperTranslations } from '../i18n/tuppers';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+type MoreItem = {
+  href: string;
+  icon: string;
+  label: string;
+  description: string;
+};
+
+type MoreGroup = {
+  title: string;
+  description: string;
+  items: MoreItem[];
+};
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const td = useDishRecommenderTranslations(locale);
+const tm = useMorePageTranslations(locale);
+const tp = usePlanningTranslations(locale);
+const ts = useStatisticsTranslations(locale);
+const tt = useTupperTranslations(locale);
+
+const groups: MoreGroup[] = [
+  {
+    title: tm('groupMain'),
+    description: tm('groupMainDescription'),
+    items: [
+      {
+        href: getLocalizedPath('/dashboard', locale),
+        icon: 'mdi:home-outline',
+        label: t('appNav.dashboard'),
+        description: tm('dashboardDescription'),
+      },
+      {
+        href: getLocalizedPath('/planificador', locale),
+        icon: 'mdi:calendar-edit',
+        label: t('appNav.planning'),
+        description: tm('plannerDescription'),
+      },
+      {
+        href: getLocalizedPath('/compras', locale),
+        icon: 'mdi:cart-outline',
+        label: t('appNav.shopping'),
+        description: tm('shoppingDescription'),
+      },
+    ],
+  },
+  {
+    title: tm('groupAi'),
+    description: tm('groupAiDescription'),
+    items: [
+      {
+        href: getLocalizedPath('/planificador-ai', locale),
+        icon: 'mdi:creation-outline',
+        label: tp('nav'),
+        description: tm('planningAiDescription'),
+      },
+      {
+        href: getLocalizedPath('/recomendador-platos', locale),
+        icon: 'mdi:chef-hat',
+        label: td('nav'),
+        description: tm('recommenderDescription'),
+      },
+      {
+        href: getLocalizedPath('/compra', locale),
+        icon: 'mdi:cart-plus',
+        label: tm('shoppingAiTitle'),
+        description: tm('shoppingAiDescription'),
+      },
+    ],
+  },
+  {
+    title: tm('groupManage'),
+    description: tm('groupManageDescription'),
+    items: [
+      {
+        href: getLocalizedPath('/mis-platos', locale),
+        icon: 'mdi:silverware-fork-knife',
+        label: t('appNav.dishes'),
+        description: tm('dishesDescription'),
+      },
+      {
+        href: getLocalizedPath('/tuppers', locale),
+        icon: 'mdi:food-takeout-box-outline',
+        label: tt('nav'),
+        description: tm('tuppersDescription'),
+      },
+      {
+        href: getLocalizedPath('/historico', locale),
+        icon: 'mdi:history',
+        label: t('appNav.history'),
+        description: tm('historyDescription'),
+      },
+    ],
+  },
+  {
+    title: tm('groupInsights'),
+    description: tm('groupInsightsDescription'),
+    items: [
+      {
+        href: getLocalizedPath('/resumen-semanal', locale),
+        icon: 'mdi:chart-box-outline',
+        label: t('appNav.summary'),
+        description: tm('summaryDescription'),
+      },
+      {
+        href: getLocalizedPath('/estadisticas', locale),
+        icon: 'mdi:chart-line',
+        label: ts('title'),
+        description: tm('statsDescription'),
+      },
+    ],
+  },
+  {
+    title: tm('groupAccount'),
+    description: tm('groupAccountDescription'),
+    items: [
+      {
+        href: getLocalizedPath('/ajustes', locale),
+        icon: 'mdi:cog-outline',
+        label: t('appNav.settings'),
+        description: tm('settingsDescription'),
+      },
+    ],
+  },
+];
+---
+
+<section class="more-page" aria-labelledby="more-page-title">
+  <div class="more-page__hero">
+    <span class="more-page__eyebrow">{tm('eyebrow')}</span>
+    <h1 id="more-page-title">{tm('title')}</h1>
+    <p>{tm('description')}</p>
+  </div>
+
+  <div class="more-page__groups">
+    {groups.map((group) => (
+      <section class="more-page__group" aria-labelledby={`more-group-${group.title.replace(/\s+/g, '-').toLowerCase()}`}>
+        <div class="more-page__group-head">
+          <h2 id={`more-group-${group.title.replace(/\s+/g, '-').toLowerCase()}`}>{group.title}</h2>
+          <p>{group.description}</p>
+        </div>
+        <div class="more-page__grid">
+          {group.items.map((item) => (
+            <a class="more-page__card" href={item.href}>
+              <span class="more-page__icon" aria-hidden="true">
+                <Icon name={item.icon} />
+              </span>
+              <span class="more-page__content">
+                <strong>{item.label}</strong>
+                <span>{item.description}</span>
+              </span>
+              <span class="more-page__action">
+                <span>{tm('open')}</span>
+                <Icon name="mdi:chevron-right" aria-hidden="true" />
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</section>
+
+<style>
+  .more-page {
+    display: grid;
+    gap: clamp(1.1rem, 3vw, 1.75rem);
+  }
+
+  .more-page__hero {
+    display: grid;
+    gap: 0.65rem;
+    padding: clamp(1.1rem, 4vw, 1.75rem);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    background:
+      radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 42%),
+      var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .more-page__eyebrow {
+    width: fit-content;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    padding: 0.35rem 0.75rem;
+    text-transform: uppercase;
+  }
+
+  .more-page__hero h1,
+  .more-page__group h2 {
+    margin: 0;
+    color: var(--color-text);
+    letter-spacing: -0.04em;
+  }
+
+  .more-page__hero h1 {
+    font-size: clamp(2rem, 8vw, 3rem);
+    line-height: 0.95;
+  }
+
+  .more-page__hero p,
+  .more-page__group p {
+    margin: 0;
+    color: var(--color-muted);
+    line-height: 1.55;
+  }
+
+  .more-page__groups {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .more-page__group {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .more-page__group-head {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .more-page__group h2 {
+    font-size: 1.1rem;
+  }
+
+  .more-page__grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .more-page__card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.85rem;
+    min-width: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+    color: inherit;
+    padding: 0.85rem;
+    text-decoration: none;
+    box-shadow: var(--shadow-xs);
+    transition:
+      border-color var(--transition-base),
+      box-shadow var(--transition-base),
+      transform var(--transition-base);
+  }
+
+  .more-page__card:hover,
+  .more-page__card:focus-visible {
+    border-color: color-mix(in srgb, var(--color-primary) 44%, var(--color-border));
+    box-shadow: var(--shadow-sm);
+    outline: 0;
+    transform: translateY(-1px);
+  }
+
+  .more-page__icon {
+    display: grid;
+    width: 2.7rem;
+    height: 2.7rem;
+    place-items: center;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-soft);
+    color: var(--color-primary);
+  }
+
+  .more-page__icon :global(svg) {
+    width: 1.45rem;
+    height: 1.45rem;
+  }
+
+  .more-page__content {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .more-page__content strong {
+    color: var(--color-text);
+    font-size: 0.98rem;
+    line-height: 1.2;
+  }
+
+  .more-page__content span {
+    color: var(--color-muted);
+    font-size: 0.86rem;
+    line-height: 1.35;
+  }
+
+  .more-page__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .more-page__action :global(svg) {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  @media (max-width: 459.98px) {
+    .more-page__card {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .more-page__action {
+      grid-column: 2;
+      justify-self: start;
+    }
+  }
+
+  @media (min-width: 760px) {
+    .more-page__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
