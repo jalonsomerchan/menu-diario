@@ -1,0 +1,46 @@
+---
+import PublicSeoPage from '../../components/PublicSeoPage.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { defaultLocale, locales, type Locale } from '../../config/site';
+import { publicSeoGrowthPageKeys } from '../../data/public-seo-growth-pages';
+import { getPublicSeoPage, type PublicSeoPageKey } from '../../data/public-seo-pages';
+import { isLocale } from '../../i18n/ui';
+
+interface Props {
+  pageKey: PublicSeoPageKey;
+}
+
+type StaticPath = {
+  params: { locale: Locale; publicSeoSlug: string };
+  props: Props;
+};
+
+export function getStaticPaths() {
+  const paths: StaticPath[] = [];
+
+  for (const locale of locales) {
+    if (locale === defaultLocale) {
+      continue;
+    }
+
+    for (const pageKey of publicSeoGrowthPageKeys) {
+      const page = getPublicSeoPage(locale, pageKey);
+      paths.push({
+        params: { locale, publicSeoSlug: page.slug },
+        props: { pageKey },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const localeParam = Astro.params.locale;
+const locale: Locale = isLocale(localeParam) ? localeParam : defaultLocale;
+const { pageKey } = Astro.props as Props;
+const page = getPublicSeoPage(locale, pageKey);
+---
+
+<BaseLayout title={page.title} description={page.description} locale={locale}>
+  <PublicSeoPage locale={locale} pageKey={pageKey} />
+</BaseLayout>

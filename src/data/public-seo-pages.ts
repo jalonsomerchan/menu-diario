@@ -1,6 +1,12 @@
 import type { Locale } from '../config/site';
+import { publicSeoGrowthPageKeys, publicSeoGrowthPages } from './public-seo-growth-pages';
 
-export type PublicSeoPageKey = 'manual' | 'privacy' | 'weeklyMenu' | 'mealPlanner';
+export type PublicSeoPageKey =
+  | 'manual'
+  | 'privacy'
+  | 'weeklyMenu'
+  | 'mealPlanner'
+  | (typeof publicSeoGrowthPageKeys)[number];
 
 export type PublicSeoSection = {
   title: string;
@@ -186,6 +192,7 @@ const publicSeoPages = {
         },
       ],
     },
+    ...publicSeoGrowthPages.es,
   },
   en: {
     manual: {
@@ -332,10 +339,11 @@ const publicSeoPages = {
         },
       ],
     },
+    ...publicSeoGrowthPages.en,
   },
 } as const satisfies Record<Locale, Record<PublicSeoPageKey, PublicSeoPage>>;
 
-export const publicSeoPageKeys = ['manual', 'weeklyMenu', 'mealPlanner', 'privacy'] as const satisfies PublicSeoPageKey[];
+export const publicSeoPageKeys = ['manual', 'weeklyMenu', 'mealPlanner', 'privacy', ...publicSeoGrowthPageKeys] as const satisfies readonly PublicSeoPageKey[];
 
 export function getPublicSeoPage(locale: Locale, key: PublicSeoPageKey): PublicSeoPage {
   return publicSeoPages[locale]?.[key] ?? publicSeoPages.es[key];
