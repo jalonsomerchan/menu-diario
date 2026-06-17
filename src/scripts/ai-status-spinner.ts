@@ -1,5 +1,7 @@
 const STATUS_SELECTOR = '[data-ai-status]';
 const LOADING_PATTERN = /(gener|cargando|prepar|analiz|loading|generat|prepar|analyz)/i;
+const observedStatuses = new WeakSet<HTMLElement>();
+const scheduledStatuses = new WeakSet<HTMLElement>();
 
 function getStatusText(element: HTMLElement) {
   const previousText = element.dataset.aiStatusText ?? '';
@@ -57,17 +59,28 @@ function decorateStatus(element: HTMLElement) {
   delete element.dataset.aiStatusRendering;
 }
 
-function decorateAllStatuses() {
-  document.querySelectorAll<HTMLElement>(STATUS_SELECTOR).forEach(decorateStatus);
+function scheduleDecorateStatus(element: HTMLElement) {
+  if (scheduledStatuses.has(element)) return;
+  scheduledStatuses.add(element);
+
+  window.requestAnimationFrame(() => {
+    scheduledStatuses.delete(element);
+    decorateStatus(element);
+  });
 }
 
-decorateAllStatuses();
+function observeStatus(element: HTMLElement) {
+  if (observedStatuses.has(element)) return;
+  observedStatuses.add(element);
+  decorateStatus(element);
 
-const observer = new MutationObserver(() => decorateAllStatuses());
-observer.observe(document.body, {
-  attributes: true,
-  attributeFilter: ['data-variant'],
-  childList: true,
-  characterData: true,
-  subtree: true,
-});
+  new MutationObserver(() => scheduleDecorateStatus(element)).observe(element, {
+    attributes: true,
+    attributeFilter: ['data-variant'],
+    childList: true,
+    characterData: true,
+    subtree: true,
+  });
+}
+
+document.querySelectorAll<HTMLElement>(STATUS_SELECTOR).forEach(observeStatus);
