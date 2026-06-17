@@ -72,6 +72,118 @@
   min-width: 0;
 }
 
+/* Resultado plano para el planificador IA: evita tarjetas anidadas de comidas y platos. */
+.planning-ai-app:not(.shopping-app) .planning-ai-results:has(.planning-ai-result-card) {
+  display: block !important;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 7%);
+  border-radius: var(--radius-2xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-result-card {
+  display: grid !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-result-card + .planning-ai-result-card {
+  border-top: 1px solid color-mix(in srgb, var(--color-border), transparent 8%);
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-result-card > header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  justify-content: space-between !important;
+  padding: 0.95rem 1rem !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
+  background: color-mix(in srgb, var(--color-surface-soft), transparent 36%);
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-result-card > header h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-dish-list {
+  display: grid !important;
+  gap: 0 !important;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-dish-item {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem !important;
+  padding: 0.85rem 1rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-dish-item + .planning-ai-dish-item {
+  border-top: 1px solid color-mix(in srgb, var(--color-border), transparent 16%) !important;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-dish-item > header {
+  display: grid !important;
+  min-width: 0;
+  gap: 0.38rem !important;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-dish-item strong {
+  font-size: 1rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-dish-meta {
+  gap: 0.4rem !important;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-dish-badge,
+.planning-ai-app:not(.shopping-app) .planning-ai-slot-badge {
+  min-height: 1.85rem;
+  padding: 0.28rem 0.62rem !important;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-dish-origin {
+  font-size: 0.82rem;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-dish-item > .button {
+  min-width: max-content;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-result-card > p {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border), transparent 16%);
+  background: color-mix(in srgb, var(--color-info-soft), transparent 56%);
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.planning-ai-app:not(.shopping-app) .planning-ai-result-card > footer {
+  display: flex !important;
+  justify-content: flex-end;
+  padding: 0.8rem 1rem 0.95rem !important;
+  border-top: 1px solid color-mix(in srgb, var(--color-border), transparent 16%);
+  background: color-mix(in srgb, var(--color-surface-soft), transparent 48%);
+}
+
 @supports (-webkit-touch-callout: none) {
   .planning-ai-app:not(.shopping-app) .planning-ai-form,
   .dish-recommender-app .planning-ai-form {
@@ -119,6 +231,28 @@
     gap: 0.75rem;
     border-radius: var(--radius-2xl);
     padding: 0.95rem;
+  }
+
+  .planning-ai-app:not(.shopping-app) .planning-ai-result-card > header {
+    align-items: flex-start !important;
+    padding: 0.85rem 0.85rem !important;
+  }
+
+  .planning-ai-app:not(.shopping-app) .planning-ai-dish-item {
+    grid-template-columns: 1fr;
+    gap: 0.65rem !important;
+    padding: 0.85rem !important;
+  }
+
+  .planning-ai-app:not(.shopping-app) .planning-ai-dish-item > .button,
+  .planning-ai-app:not(.shopping-app) .planning-ai-result-card > footer .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .planning-ai-app:not(.shopping-app) .planning-ai-result-card > p,
+  .planning-ai-app:not(.shopping-app) .planning-ai-result-card > footer {
+    padding-inline: 0.85rem !important;
   }
 
   .planning-ai-app:not(.shopping-app) .planning-ai-wizard-actions,
