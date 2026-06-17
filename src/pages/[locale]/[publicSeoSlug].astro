@@ -10,8 +10,13 @@ interface Props {
   pageKey: PublicSeoPageKey;
 }
 
+type StaticPath = {
+  params: { locale: Locale; publicSeoSlug: string };
+  props: Props;
+};
+
 export function getStaticPaths() {
-  const paths = [];
+  const paths: StaticPath[] = [];
 
   for (const locale of locales) {
     if (locale === defaultLocale) {
