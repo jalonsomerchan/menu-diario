@@ -27,8 +27,8 @@
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  scroll-padding-inline: max(0.85rem, env(safe-area-inset-left));
-  padding: 0.15rem max(0.65rem, env(safe-area-inset-right)) 0.55rem max(0.65rem, env(safe-area-inset-left));
+  scroll-padding-inline: 0.85rem;
+  padding: 0.15rem 0.65rem 0.55rem;
 }
 
 .planning-ai-app:not(.shopping-app) .planning-ai-wizard-progress li,
@@ -88,15 +88,15 @@
   .planning-ai-app:not(.shopping-app) .planning-ai-wizard-progress,
   .dish-recommender-app .planning-ai-wizard-progress {
     margin-inline: -0.35rem;
-    padding-inline: max(0.65rem, env(safe-area-inset-left));
+    padding-inline: 0.65rem;
     padding-bottom: 0.55rem;
-    scroll-padding-inline: max(0.85rem, env(safe-area-inset-left));
+    scroll-padding-inline: 0.85rem;
     scroll-snap-type: x proximity;
   }
 
   .planning-ai-app:not(.shopping-app) .planning-ai-wizard-progress li,
   .dish-recommender-app .planning-ai-wizard-progress li {
-    flex-basis: min(8.75rem, calc(100vw - 5rem)) !important;
+    flex-basis: clamp(7.2rem, 70vw, 8.75rem) !important;
     scroll-snap-align: center;
   }
 
