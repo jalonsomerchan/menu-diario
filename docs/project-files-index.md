@@ -192,6 +192,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 ## Scripts de cliente
 
 - `src/scripts/admin-global-dishes-app.ts`: comportamiento cliente de administracion de platos globales.
+- `src/scripts/ai-status-spinner.ts`: anade spinner reutilizable a estados de carga o generacion de IA.
 - `src/scripts/app-header.ts`: interacciones de cabecera.
 - `src/scripts/auth-gate.ts`: autenticacion en cliente para vistas protegidas.
 - `src/scripts/configurator-app.ts`: logica cliente de configuracion.
@@ -220,6 +221,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 ## Estilos
 
 - `src/styles/global.css`: tokens globales, reset, base visual y utilidades comunes.
+- `src/styles/ai-status-spinner.css`: estilos reutilizables para spinner en estados de carga de IA.
 - `src/styles/day-edit-modal-layout.css`: layout del modal de edicion diaria.
 - `src/styles/dish-recommender.css`: estilos del recomendador de platos.
 - `src/styles/dishes.css`: estilos de platos.
