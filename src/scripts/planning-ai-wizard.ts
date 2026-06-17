@@ -23,7 +23,7 @@ if (form) {
   function scrollActiveStep() {
     const dot = dots[index];
     if (!progress || !dot) return;
-    const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
     window.requestAnimationFrame(() => {
       dot.scrollIntoView({ behavior, block: 'nearest', inline: 'center' });
     });
