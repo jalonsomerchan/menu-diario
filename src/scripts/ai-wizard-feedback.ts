@@ -66,6 +66,8 @@ const copy = {
   },
 } as const;
 
+const scheduledSyncs = new WeakSet<HTMLElement>();
+
 function getLocale() {
   return document.documentElement.lang === 'en' ? 'en' : 'es';
 }
@@ -80,14 +82,6 @@ function readRootLabels(root: HTMLElement) {
   } catch {
     return {};
   }
-}
-
-function getFinalStepPanel(status: HTMLElement) {
-  return status.closest<HTMLElement>('[data-plan-step], [data-dish-step], [data-wizard-step]');
-}
-
-function isPanelVisible(panel: HTMLElement | null) {
-  return !panel || !panel.hidden;
 }
 
 function getRegenerateLabel(root: HTMLElement, submitButton: HTMLButtonElement | null) {
@@ -113,6 +107,16 @@ function requestFormSubmit(root: HTMLElement, config: RegenerateConfig) {
   window.requestAnimationFrame(() => nextButton?.click());
 }
 
+function scheduleButtonSync(root: HTMLElement, callback: () => void) {
+  if (scheduledSyncs.has(root)) return;
+  scheduledSyncs.add(root);
+
+  window.requestAnimationFrame(() => {
+    scheduledSyncs.delete(root);
+    callback();
+  });
+}
+
 function addRegenerateButton(root: HTMLElement, config: RegenerateConfig) {
   const status = root.querySelector<HTMLElement>('[data-ai-status]');
   if (!status || root.querySelector('[data-ai-regenerate]')) return;
@@ -123,23 +127,20 @@ function addRegenerateButton(root: HTMLElement, config: RegenerateConfig) {
   button.className = 'button button--secondary button--small';
   button.dataset.aiRegenerate = 'true';
   button.textContent = getRegenerateLabel(root, submitButton);
-  button.hidden = true;
   button.addEventListener('click', () => requestFormSubmit(root, config));
   status.insertAdjacentElement('afterend', button);
 
   const syncButton = () => {
-    const panel = getFinalStepPanel(status);
-    const isBusy = Boolean(root.querySelector('[aria-busy="true"]'));
-    button.hidden = !isPanelVisible(panel);
-    button.disabled = isBusy;
+    button.disabled = Boolean(root.querySelector('[aria-busy="true"]'));
   };
+  const scheduleSyncButton = () => scheduleButtonSync(root, syncButton);
 
   syncButton();
-  new MutationObserver(syncButton).observe(root, {
-    attributes: true,
-    childList: true,
-    subtree: true,
-    attributeFilter: ['hidden', 'aria-busy'],
+  root.querySelectorAll<HTMLElement>('[aria-busy], [data-plan-submit], [data-dish-submit]').forEach((control) => {
+    new MutationObserver(scheduleSyncButton).observe(control, {
+      attributes: true,
+      attributeFilter: ['aria-busy', 'disabled', 'hidden'],
+    });
   });
 }
 
@@ -172,8 +173,8 @@ function syncAiErrorStatus(status: HTMLElement) {
 }
 
 function watchAiStatus(status: HTMLElement) {
-  const sync = () => syncAiErrorStatus(status);
-  sync();
+  const sync = () => scheduleButtonSync(status, () => syncAiErrorStatus(status));
+  syncAiErrorStatus(status);
   new MutationObserver(sync).observe(status, {
     attributes: true,
     childList: true,
