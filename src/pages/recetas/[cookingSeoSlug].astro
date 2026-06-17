@@ -1,0 +1,25 @@
+---
+import PublicCookingSeoPage from '../../components/PublicCookingSeoPage.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { defaultLocale } from '../../config/site';
+import { getPublicCookingSeoPage, getPublicCookingSeoPages } from '../../data/public-cooking-seo-pages';
+
+interface Props {
+  slug: string;
+}
+
+export function getStaticPaths() {
+  return getPublicCookingSeoPages(defaultLocale).map((page) => ({
+    params: { cookingSeoSlug: page.slug },
+    props: { slug: page.slug },
+  }));
+}
+
+const locale = defaultLocale;
+const { slug } = Astro.props as Props;
+const page = getPublicCookingSeoPage(locale, slug);
+---
+
+<BaseLayout title={page.title} description={page.description} locale={locale}>
+  <PublicCookingSeoPage locale={locale} slug={slug} />
+</BaseLayout>
