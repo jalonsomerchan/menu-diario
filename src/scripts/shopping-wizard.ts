@@ -2,6 +2,7 @@ import { useShoppingActionTranslations } from '../i18n/shopping-actions';
 import './shopping-alexa-integration';
 import './shopping-list-actions';
 import '../styles/shopping-list-actions.css';
+import '../styles/shopping-ai-review.css';
 
 const wizard = document.querySelector<HTMLElement>('[data-shopping-wizard]');
 
