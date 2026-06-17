@@ -1,0 +1,101 @@
+---
+import Button from './Button.astro';
+import Breadcrumb from './Breadcrumb.astro';
+import Container from './Container.astro';
+import { type Locale } from '../config/site';
+import {
+  getCookingSeoIndexRoute,
+  getCookingSeoPageRoute,
+  getPublicCookingSeoPage,
+  getPublicCookingSeoRelatedPages,
+} from '../data/public-cooking-seo-pages';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+  slug: string;
+}
+
+const { locale, slug } = Astro.props;
+const t = useTranslations(locale);
+const page = getPublicCookingSeoPage(locale, slug);
+const relatedPages = getPublicCookingSeoRelatedPages(locale, slug);
+const indexPath = getLocalizedPath(getCookingSeoIndexRoute(locale), locale);
+const dashboardPath = getLocalizedPath('/dashboard', locale);
+const plannerPath = getLocalizedPath('/planificador', locale);
+---
+
+<Container class="public-cooking-seo" size="page">
+  <Breadcrumb
+    locale={locale}
+    rootItem={{ label: t('nav.home'), href: getLocalizedPath('/', locale) }}
+    items={[{ label: page.kind === 'recipe' ? t('appNav.dishes') : page.eyebrow, href: indexPath }, { label: page.navLabel }]}
+  />
+
+  <article class="cooking-seo-page">
+    <header class="cooking-seo-hero">
+      <div>
+        <p class="cooking-seo-eyebrow">{page.eyebrow}</p>
+        <h1>{page.title}</h1>
+        <p>{page.intro}</p>
+        <div class="cooking-seo-actions" aria-label={page.title}>
+          <Button href={dashboardPath}>{page.primaryCta}</Button>
+          <Button href={plannerPath} variant="secondary">{page.secondaryCta}</Button>
+        </div>
+      </div>
+      <aside aria-label={page.eyebrow}>
+        {page.highlights.map((highlight) => <span>{highlight}</span>)}
+      </aside>
+    </header>
+
+    <div class="cooking-seo-grid">
+      {page.ingredients.length > 0 && (
+        <section class="cooking-seo-card">
+          <p class="cooking-seo-eyebrow">{locale === 'en' ? 'Ingredients' : 'Ingredientes'}</p>
+          <h2>{locale === 'en' ? 'What you need' : 'Qué necesitas'}</h2>
+          <ul>
+            {page.ingredients.map((ingredient) => <li>{ingredient}</li>)}
+          </ul>
+        </section>
+      )}
+
+      <section class="cooking-seo-card">
+        <p class="cooking-seo-eyebrow">{page.kind === 'recipe' ? (locale === 'en' ? 'Steps' : 'Pasos') : (locale === 'en' ? 'Method' : 'Método')}</p>
+        <h2>{page.kind === 'recipe' ? (locale === 'en' ? 'How to prepare it' : 'Cómo prepararla') : (locale === 'en' ? 'How to apply it' : 'Cómo aplicarlo')}</h2>
+        <ol>
+          {page.steps.map((step) => <li>{step}</li>)}
+        </ol>
+      </section>
+
+      <section class="cooking-seo-card cooking-seo-card--accent">
+        <p class="cooking-seo-eyebrow">Menu Diario</p>
+        <h2>{locale === 'en' ? 'Use it in your weekly planner' : 'Úsalo en tu planificador semanal'}</h2>
+        <p>{page.appUse}</p>
+      </section>
+
+      <section class="cooking-seo-card">
+        <p class="cooking-seo-eyebrow">{locale === 'en' ? 'Practical tips' : 'Consejos prácticos'}</p>
+        <h2>{locale === 'en' ? 'Make it easier next time' : 'Hazlo más fácil la próxima vez'}</h2>
+        <ul>
+          {page.tips.map((tip) => <li>{tip}</li>)}
+        </ul>
+      </section>
+    </div>
+
+    <section class="cooking-seo-related" aria-labelledby="cooking-related-title">
+      <div>
+        <p class="cooking-seo-eyebrow">{locale === 'en' ? 'More ideas' : 'Más ideas'}</p>
+        <h2 id="cooking-related-title">{locale === 'en' ? 'Keep planning your week' : 'Sigue planificando tu semana'}</h2>
+      </div>
+      <div>
+        {relatedPages.map((related) => (
+          <a href={getLocalizedPath(getCookingSeoPageRoute(locale, related), locale)}>
+            <span>{related.eyebrow}</span>
+            <strong>{related.navLabel}</strong>
+            <small>{related.description}</small>
+          </a>
+        ))}
+      </div>
+    </section>
+  </article>
+</Container>
