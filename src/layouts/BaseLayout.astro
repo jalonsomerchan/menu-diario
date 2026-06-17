@@ -99,6 +99,10 @@ const onboardingPaths = {
         }
       })();
     </script>
+    <script is:inline>
+      var profile = window.profile || {};
+      window.profile = profile;
+    </script>
     <meta name="generator" content={Astro.generator} />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
@@ -140,7 +144,7 @@ const onboardingPaths = {
         import('../scripts/meal-drag-and-drop-app.ts');
       }
 
-      if (document.querySelector('[data-planning-ai-app], [data-dish-recommender-app], [data-shopping-app]')) {
+      if (document.querySelector('[data-planning-ai-app], [data-dish-recommender-app]')) {
         import('../scripts/ai-wizard-feedback.ts');
       }
 
@@ -148,7 +152,7 @@ const onboardingPaths = {
         import('../scripts/shopping-whatsapp-export.ts');
       }
 
-      if (document.querySelector('[data-menu-app], [data-shopping-app], [data-tuppers-app], [data-dishes-app]')) {
+      if (document.querySelector('[data-menu-app], [data-tuppers-app], [data-dishes-app]')) {
         import('../scripts/menu-automation-actions.ts');
       }
     </script>
