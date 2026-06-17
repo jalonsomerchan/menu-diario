@@ -20,7 +20,8 @@ describe('mobile bottom navigation', () => {
     assert.match(component, /getLocalizedPath\('\/dashboard'/);
     assert.match(component, /getLocalizedPath\('\/planificador'/);
     assert.match(component, /getLocalizedPath\('\/compras'/);
-    assert.match(component, /getLocalizedPath\('\/tuppers'/);
+    assert.match(component, /getLocalizedPath\('\/mas'/);
+    assert.match(component, /'\/tuppers'/);
     assert.match(component, /'\/planificador-ai'/);
     assert.match(component, /'\/configurar'/);
     assert.match(component, /'\/planificacion'/);

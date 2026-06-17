@@ -31,7 +31,7 @@ const items: NavItem[] = [
     href: getLocalizedPath('/planificador', locale),
     icon: 'mdi:calendar-edit',
     label: t('appNav.week'),
-    match: ['/planificador', '/planificador-ai', '/configurar', '/planificacion'],
+    match: ['/planificador', '/configurar', '/planificacion'],
   },
   {
     href: getLocalizedPath('/compras', locale),
@@ -40,10 +40,21 @@ const items: NavItem[] = [
     match: ['/compras'],
   },
   {
-    href: getLocalizedPath('/tuppers', locale),
+    href: getLocalizedPath('/mas', locale),
     icon: 'mdi:dots-horizontal',
     label: t('appNav.more'),
-    match: ['/ajustes', '/tuppers', '/mis-platos', '/historico', '/estadisticas', '/resumen-semanal', '/recomendador-platos', '/planificador-ai'],
+    match: [
+      '/mas',
+      '/ajustes',
+      '/compra',
+      '/tuppers',
+      '/mis-platos',
+      '/historico',
+      '/estadisticas',
+      '/resumen-semanal',
+      '/recomendador-platos',
+      '/planificador-ai',
+    ],
   },
 ];
 

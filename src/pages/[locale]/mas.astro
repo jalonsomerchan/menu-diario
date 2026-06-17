@@ -1,0 +1,24 @@
+---
+import AppPageShell from '../../components/AppPageShell.astro';
+import MoreAppPage from '../../components/MoreAppPage.astro';
+import { defaultLocale, locales, siteConfig, type Locale } from '../../config/site';
+import { useMorePageTranslations } from '../../i18n/more-page';
+import { isLocale } from '../../i18n/ui';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export function getStaticPaths() {
+  return locales
+    .filter((locale) => locale !== defaultLocale)
+    .map((locale) => ({ params: { locale } }));
+}
+
+const localeParam = Astro.params.locale;
+const locale: Locale = isLocale(localeParam) ? localeParam : defaultLocale;
+const tm = useMorePageTranslations(locale);
+---
+
+<BaseLayout title={`${tm('title')} · ${siteConfig.name}`} description={tm('description')} locale={locale}>
+  <AppPageShell locale={locale} title={tm('title')} description={tm('description')} showHeader={false}>
+    <MoreAppPage locale={locale} />
+  </AppPageShell>
+</BaseLayout>

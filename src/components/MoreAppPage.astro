@@ -1,0 +1,179 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { Locale } from '../config/site';
+import { useDishRecommenderTranslations } from '../i18n/dish-recommender';
+import { useMorePageTranslations } from '../i18n/more-page';
+import { usePlanningTranslations } from '../i18n/planning';
+import { useStatisticsTranslations } from '../i18n/statistics';
+import { useTupperTranslations } from '../i18n/tuppers';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+type MoreItem = {
+  href: string;
+  icon: string;
+  label: string;
+  description: string;
+};
+
+type MoreGroup = {
+  title: string;
+  description: string;
+  items: MoreItem[];
+};
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const td = useDishRecommenderTranslations(locale);
+const tm = useMorePageTranslations(locale);
+const tp = usePlanningTranslations(locale);
+const ts = useStatisticsTranslations(locale);
+const tt = useTupperTranslations(locale);
+
+const groups: MoreGroup[] = [
+  {
+    title: tm('groupMain'),
+    description: tm('groupMainDescription'),
+    items: [
+      {
+        href: getLocalizedPath('/dashboard', locale),
+        icon: 'mdi:home-outline',
+        label: t('appNav.dashboard'),
+        description: tm('dashboardDescription'),
+      },
+      {
+        href: getLocalizedPath('/planificador', locale),
+        icon: 'mdi:calendar-edit',
+        label: t('appNav.planning'),
+        description: tm('plannerDescription'),
+      },
+      {
+        href: getLocalizedPath('/compras', locale),
+        icon: 'mdi:cart-outline',
+        label: t('appNav.shopping'),
+        description: tm('shoppingDescription'),
+      },
+    ],
+  },
+  {
+    title: tm('groupAi'),
+    description: tm('groupAiDescription'),
+    items: [
+      {
+        href: getLocalizedPath('/planificador-ai', locale),
+        icon: 'mdi:creation-outline',
+        label: tp('nav'),
+        description: tm('planningAiDescription'),
+      },
+      {
+        href: getLocalizedPath('/recomendador-platos', locale),
+        icon: 'mdi:chef-hat',
+        label: td('nav'),
+        description: tm('recommenderDescription'),
+      },
+      {
+        href: getLocalizedPath('/compra', locale),
+        icon: 'mdi:cart-plus',
+        label: tm('shoppingAiTitle'),
+        description: tm('shoppingAiDescription'),
+      },
+    ],
+  },
+  {
+    title: tm('groupManage'),
+    description: tm('groupManageDescription'),
+    items: [
+      {
+        href: getLocalizedPath('/mis-platos', locale),
+        icon: 'mdi:silverware-fork-knife',
+        label: t('appNav.dishes'),
+        description: tm('dishesDescription'),
+      },
+      {
+        href: getLocalizedPath('/tuppers', locale),
+        icon: 'mdi:food-takeout-box-outline',
+        label: tt('nav'),
+        description: tm('tuppersDescription'),
+      },
+      {
+        href: getLocalizedPath('/historico', locale),
+        icon: 'mdi:history',
+        label: t('appNav.history'),
+        description: tm('historyDescription'),
+      },
+    ],
+  },
+  {
+    title: tm('groupInsights'),
+    description: tm('groupInsightsDescription'),
+    items: [
+      {
+        href: getLocalizedPath('/resumen-semanal', locale),
+        icon: 'mdi:chart-box-outline',
+        label: t('appNav.summary'),
+        description: tm('summaryDescription'),
+      },
+      {
+        href: getLocalizedPath('/estadisticas', locale),
+        icon: 'mdi:chart-line',
+        label: ts('title'),
+        description: tm('statsDescription'),
+      },
+    ],
+  },
+  {
+    title: tm('groupAccount'),
+    description: tm('groupAccountDescription'),
+    items: [
+      {
+        href: getLocalizedPath('/ajustes', locale),
+        icon: 'mdi:cog-outline',
+        label: t('appNav.settings'),
+        description: tm('settingsDescription'),
+      },
+    ],
+  },
+];
+---
+
+<section class="more-page" aria-labelledby="more-page-title">
+  <div class="more-page__hero">
+    <span class="more-page__eyebrow">{tm('eyebrow')}</span>
+    <h1 id="more-page-title">{tm('title')}</h1>
+    <p>{tm('description')}</p>
+  </div>
+
+  <div class="more-page__groups">
+    {groups.map((group) => {
+      const groupId = `more-group-${group.title.replace(/\s+/g, '-').toLowerCase()}`;
+      return (
+        <section class="more-page__group" aria-labelledby={groupId}>
+          <div class="more-page__group-head">
+            <h2 id={groupId}>{group.title}</h2>
+            <p>{group.description}</p>
+          </div>
+          <div class="more-page__grid">
+            {group.items.map((item) => (
+              <a class="more-page__card" href={item.href}>
+                <span class="more-page__icon" aria-hidden="true">
+                  <Icon name={item.icon} />
+                </span>
+                <span class="more-page__content">
+                  <strong>{item.label}</strong>
+                  <span>{item.description}</span>
+                </span>
+                <span class="more-page__action">
+                  <span>{tm('open')}</span>
+                  <Icon name="mdi:chevron-right" aria-hidden="true" />
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      );
+    })}
+  </div>
+</section>
