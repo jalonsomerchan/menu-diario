@@ -44,4 +44,29 @@ describe('public pages smoke checks', () => {
     assert.match(footer, /getLocalizedPath\('\/como-funciona'/);
     assert.match(footer, /public\.howItWorks\.nav/);
   });
+
+  it('keeps dynamic growth SEO routes available', () => {
+    [
+      'src/pages/[publicSeoSlug].astro',
+      'src/pages/[locale]/[publicSeoSlug].astro',
+      'src/data/public-seo-growth-pages.ts',
+    ].forEach((path) => {
+      assert.equal(existsSync(join(root, path)), true, `${path} should exist`);
+    });
+
+    const route = readText('src/pages/[publicSeoSlug].astro');
+    const localizedRoute = readText('src/pages/[locale]/[publicSeoSlug].astro');
+    const data = readText('src/data/public-seo-growth-pages.ts');
+
+    assert.match(data, /lista-compra-semanal/);
+    assert.match(data, /planificador-menu-ia/);
+    assert.match(data, /organizar-tuppers-comidas/);
+    assert.match(data, /batch-cooking-semanal/);
+    assert.match(data, /app-menu-semanal-familiar/);
+    assert.match(data, /menu-semanal-saludable/);
+    assert.match(route, /publicSeoGrowthPageKeys/);
+    assert.match(route, /getStaticPaths\(\)/);
+    assert.match(localizedRoute, /Astro\.params\.locale/);
+    assert.match(localizedRoute, /isLocale\(localeParam\)/);
+  });
 });
