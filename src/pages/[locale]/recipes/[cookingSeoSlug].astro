@@ -1,0 +1,34 @@
+---
+import PublicCookingSeoPage from '../../../components/PublicCookingSeoPage.astro';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { defaultLocale, locales, type Locale } from '../../../config/site';
+import { getPublicCookingSeoPage, getPublicCookingSeoPages } from '../../../data/public-cooking-seo-pages';
+import { isLocale } from '../../../i18n/ui';
+
+type StaticPath = {
+  params: { locale: Locale; cookingSeoSlug: string };
+  props: { slug: string };
+};
+
+export function getStaticPaths() {
+  const paths: StaticPath[] = [];
+  for (const locale of locales) {
+    if (locale === defaultLocale) {
+      continue;
+    }
+    for (const page of getPublicCookingSeoPages(locale)) {
+      paths.push({ params: { locale, cookingSeoSlug: page.slug }, props: { slug: page.slug } });
+    }
+  }
+  return paths;
+}
+
+const localeParam = Astro.params.locale;
+const locale: Locale = isLocale(localeParam) ? localeParam : defaultLocale;
+const { slug } = Astro.props as { slug: string };
+const page = getPublicCookingSeoPage(locale, slug);
+---
+
+<BaseLayout title={page.title} description={page.description} locale={locale}>
+  <PublicCookingSeoPage locale={locale} slug={slug} />
+</BaseLayout>
