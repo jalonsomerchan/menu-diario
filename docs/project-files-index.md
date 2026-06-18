@@ -155,6 +155,10 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/pages/robots.txt.ts`: robots dinamico con sitemap correcto.
 - `src/pages/sw.js.ts`: limpieza de service workers y caches antiguos para instalaciones previas.
 
+## Estilos
+
+- `src/styles/public-cooking-seo.css`: estilos del hub publico de recetas/consejos y sus paginas de detalle.
+
 ## Internacionalizacion
 
 - `src/i18n/ui.ts`: helpers principales de traduccion, locales y rutas localizadas.
