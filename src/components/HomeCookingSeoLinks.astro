@@ -1,0 +1,179 @@
+---
+import Button from './Button.astro';
+import { type Locale } from '../config/site';
+import {
+  getCookingSeoIndexMeta,
+  getCookingSeoIndexRoute,
+  getCookingSeoPageRoute,
+  getPublicCookingSeoPages,
+} from '../data/public-cooking-seo-pages';
+import { getLocalizedPath } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const meta = getCookingSeoIndexMeta(locale);
+const hubPath = getLocalizedPath(getCookingSeoIndexRoute(locale), locale);
+const pages = getPublicCookingSeoPages(locale);
+const featuredPages = [...pages.filter((page) => page.kind === 'recipe').slice(0, 3), ...pages.filter((page) => page.kind === 'tip').slice(0, 3)];
+const copy = locale === 'en'
+  ? {
+      eyebrow: 'Recipes and cooking advice',
+      title: 'Ideas to plan better before opening the app',
+      description: 'Browse public recipes and practical guides, then save your favourites in Menu Diario to build the weekly menu and shopping list.',
+      cta: 'See all recipes and tips',
+      secondaryCta: 'Start planning',
+      plannerPath: '/planificador',
+    }
+  : {
+      eyebrow: 'Recetas y consejos de cocina',
+      title: 'Ideas para planificar mejor antes de abrir la app',
+      description: 'Consulta recetas publicas y guias practicas, y despues guarda tus favoritas en Menu Diario para montar el menu semanal y la compra.',
+      cta: 'Ver todas las recetas y consejos',
+      secondaryCta: 'Empezar a planificar',
+      plannerPath: '/planificador',
+    };
+---
+
+<section class="home-cooking-seo" aria-labelledby="home-cooking-seo-title">
+  <div class="home-cooking-seo__header">
+    <p>{copy.eyebrow}</p>
+    <h2 id="home-cooking-seo-title">{copy.title}</h2>
+    <span>{copy.description}</span>
+  </div>
+
+  <div class="home-cooking-seo__actions" aria-label={meta.title}>
+    <Button href={hubPath}>{copy.cta}</Button>
+    <Button href={getLocalizedPath(copy.plannerPath, locale)} variant="secondary">{copy.secondaryCta}</Button>
+  </div>
+
+  <div class="home-cooking-seo__grid" aria-label={copy.cta}>
+    {featuredPages.map((page) => (
+      <a href={getLocalizedPath(getCookingSeoPageRoute(locale, page), locale)}>
+        <span>{page.eyebrow}</span>
+        <strong>{page.navLabel}</strong>
+        <small>{page.description}</small>
+      </a>
+    ))}
+  </div>
+</section>
+
+<style>
+  .home-cooking-seo {
+    display: grid;
+    gap: clamp(1.25rem, 4vw, 2rem);
+    margin-top: clamp(1.5rem, 5vw, 2rem);
+    border: 1px solid var(--panel-border);
+    border-radius: clamp(1.35rem, 3vw, 2rem);
+    background:
+      radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary), transparent 86%), transparent 42%),
+      var(--panel-background);
+    box-shadow: var(--shadow-xs);
+    padding: clamp(1.25rem, 4vw, 2rem);
+  }
+
+  .home-cooking-seo__header {
+    display: grid;
+    gap: 0.65rem;
+    max-width: 48rem;
+  }
+
+  .home-cooking-seo__header p,
+  .home-cooking-seo__header h2,
+  .home-cooking-seo__header span {
+    margin: 0;
+  }
+
+  .home-cooking-seo__header p {
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .home-cooking-seo__header h2 {
+    color: var(--color-text);
+    font-size: clamp(1.65rem, 4vw, 2.7rem);
+    font-weight: 760;
+    letter-spacing: -0.065em;
+    line-height: 1;
+  }
+
+  .home-cooking-seo__header span {
+    color: var(--color-muted);
+    font-size: clamp(0.98rem, 1.8vw, 1.12rem);
+    line-height: 1.55;
+  }
+
+  .home-cooking-seo__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .home-cooking-seo__grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .home-cooking-seo__grid a {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 1.1rem;
+    background: color-mix(in srgb, var(--color-surface), transparent 10%);
+    color: inherit;
+    padding: 1rem;
+    text-decoration: none;
+    transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .home-cooking-seo__grid a:hover,
+  .home-cooking-seo__grid a:focus-visible {
+    border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 45%);
+    box-shadow: var(--shadow-xs);
+    transform: translateY(-1px);
+  }
+
+  .home-cooking-seo__grid span {
+    color: var(--color-primary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .home-cooking-seo__grid strong {
+    color: var(--color-text);
+    font-size: 0.98rem;
+    line-height: 1.2;
+  }
+
+  .home-cooking-seo__grid small {
+    color: var(--color-muted);
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  @media (min-width: 760px) {
+    .home-cooking-seo {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.35fr);
+      align-items: start;
+    }
+
+    .home-cooking-seo__header,
+    .home-cooking-seo__actions {
+      grid-column: 1;
+    }
+
+    .home-cooking-seo__grid {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

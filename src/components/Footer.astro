@@ -1,6 +1,7 @@
 ---
 import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
+import { getCookingSeoIndexLabel, getCookingSeoIndexRoute } from '../data/public-cooking-seo-pages';
 import { getPublicSeoPages } from '../data/public-seo-pages';
 import { getFooterLabels } from '../i18n/footer-projects';
 import { usePublicPageCopy } from '../i18n/public-pages';
@@ -20,6 +21,7 @@ const publicLinks = [
   { href: getLocalizedPath('/como-funciona', locale), label: t('public.howItWorks.nav') },
   { href: getLocalizedPath('/acerca-de', locale), label: tp('footerAbout') },
   { href: getLocalizedPath('/faq', locale), label: tp('footerFaq') },
+  { href: getLocalizedPath(getCookingSeoIndexRoute(locale), locale), label: getCookingSeoIndexLabel(locale) },
   ...getPublicSeoPages(locale).map((page) => ({
     href: getLocalizedPath(`/${page.slug}`, locale),
     label: page.navLabel,

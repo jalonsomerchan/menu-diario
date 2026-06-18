@@ -44,6 +44,7 @@ No incluye artefactos locales o generados como `.env`, `.astro/`, `dist/`, `node
 - `docs/meal-participants.md`: gestion de participantes de comida.
 - `docs/navigation.md`: convenciones de navegacion.
 - `docs/project-files-index.md`: este indice de archivos y responsabilidades.
+- `docs/public-cooking-seo.md`: convenciones de las paginas publicas de recetas y consejos de cocina.
 - `docs/public-sharing.md`: documentacion de comparticion publica.
 - `docs/statistics.md`: estadisticas y calculos asociados.
 - `docs/template-usage.md`: guia para usar y modificar la base Astro.
@@ -55,6 +56,7 @@ No incluye artefactos locales o generados como `.env`, `.astro/`, `dist/`, `node
 
 - `data/global-dishes.seed.json`: datos semilla de platos globales.
 - `scripts/clean.mjs`: limpieza de artefactos generados por el proyecto.
+- `src/data/public-cooking-seo-pages.ts`: catalogo y generadores de las 100 paginas publicas de recetas y consejos.
 
 ## Archivos publicos
 
@@ -98,12 +100,15 @@ No incluye artefactos locales o generados como `.env`, `.astro/`, `dist/`, `node
 - `src/components/Footer.astro`: pie de pagina.
 - `src/components/Header.astro`: cabecera y navegacion principal.
 - `src/components/HistoryApp.astro`: interfaz del historico.
+- `src/components/HomeCookingSeoLinks.astro`: bloque de enlaces desde la home hacia recetas y consejos publicos.
 - `src/components/HomeLanding.astro`: home publica del producto.
 - `src/components/MenuApp.astro`: aplicacion principal del menu.
 - `src/components/MobileBottomNav.astro`: navegacion inferior para movil.
 - `src/components/MoreAppPage.astro`: pagina hub de opciones para el acceso Mas del toolbar movil.
 - `src/components/PageHeader.astro`: encabezado reutilizable de paginas internas.
 - `src/components/PlanningAiApp.astro`: planificador con asistencia IA.
+- `src/components/PublicCookingSeoIndexPage.astro`: hub publico de recetas y consejos.
+- `src/components/PublicCookingSeoPage.astro`: plantilla para recetas y consejos SEO publicos.
 - `src/components/PublicHowItWorksPage.astro`: pagina publica de funcionamiento.
 - `src/components/PublicSeoPage.astro`: plantilla para paginas SEO publicas.
 - `src/components/SettingsApp.astro`: ajustes de usuario y aplicacion.
@@ -140,6 +145,8 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/pages/planificador-comidas.astro` y `src/pages/[locale]/planificador-comidas.astro`: pagina SEO o funcional de planificador de comidas.
 - `src/pages/platos.astro` y `src/pages/[locale]/platos.astro`: catalogo o gestion de platos.
 - `src/pages/politica-privacidad.astro` y `src/pages/[locale]/politica-privacidad.astro`: politica de privacidad.
+- `src/pages/recetas.astro` y `src/pages/[locale]/recipes.astro`: hub publico de recetas y consejos de cocina.
+- `src/pages/recetas/[cookingSeoSlug].astro` y `src/pages/[locale]/recipes/[cookingSeoSlug].astro`: paginas publicas de detalle de recetas y consejos.
 - `src/pages/recomendador-platos.astro` y `src/pages/[locale]/recomendador-platos.astro`: recomendador de platos.
 - `src/pages/resumen-semanal.astro` y `src/pages/[locale]/resumen-semanal.astro`: resumen semanal.
 - `src/pages/tuppers.astro` y `src/pages/[locale]/tuppers.astro`: gestion de tuppers.
@@ -158,106 +165,3 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/i18n/shopping-actions.ts`: textos de acciones de compra.
 - `src/i18n/menu-automation-actions.ts`: textos de acciones rapidas del menu, compra automatica e historial de platos.
 - `src/i18n/more-page.ts`: textos de la pagina Mas del toolbar movil.
-- `src/i18n/initial-onboarding.ts`: textos del onboarding inicial de la aplicacion.
-- `src/i18n/shopping-whatsapp.ts`: textos de exportacion de compra a WhatsApp.
-- `src/i18n/dish-recommender.ts`: textos del recomendador de platos.
-- `src/i18n/footer-projects.ts`: textos y datos de proyectos del footer.
-- `src/i18n/translations/es.json`: traducciones base en espanol.
-- `src/i18n/translations/en.json`: traducciones base en ingles.
-- `src/i18n/translations/history/*.json`: traducciones del historico.
-- `src/i18n/translations/public/*.json`: traducciones de paginas publicas.
-- `src/i18n/translations/settings/*.json`: traducciones de ajustes.
-- `src/i18n/translations/statistics/*.json`: traducciones de estadisticas.
-
-## Datos de aplicacion
-
-- `src/data/dish-tags.ts`: etiquetas y metadatos de platos.
-- `src/data/public-seo-pages.ts`: definicion de paginas SEO publicas.
-
-## Librerias de dominio
-
-- `src/lib/ai/`: clientes, limites, errores, configuracion, recomendaciones y flujos de IA.
-- `src/lib/dishes/`: helpers, renderizado, importacion y repositorio de platos.
-- `src/lib/dishes/usage-history.ts`: construye el historial reciente de uso de un plato a partir de menus.
-- `src/lib/errors/`: tipos y formateo de errores de aplicacion.
-- `src/lib/firebase/`: inicializacion, autenticacion, cliente y App Check de Firebase.
-- `src/lib/menu/`: logica de menus, fechas, formularios, historico, grupos, invitaciones, participantes, estadisticas, repositorios y movimiento de comidas.
-- `src/lib/menu/meal-drag-and-drop.ts`: helpers puros para validar y preparar el movimiento de comidas entre dias.
-- `src/lib/menu/meal-dnd-dom.ts`: helpers DOM para preparar filas, origenes y estados visuales de arrastre.
-- `src/lib/menu/week-menu-actions.ts`: acciones reutilizables para leer y copiar semanas de menu.
-- `src/lib/notifications/`: utilidades de notificaciones del navegador.
-- `src/lib/public-sharing/`: metadatos para comparticion publica.
-- `src/lib/shopping/`: normalizacion, exportacion, tipos y repositorio de compra.
-- `src/lib/shopping/menu-list-generator.ts`: genera listas de compra deterministas desde menus planificados.
-- `src/lib/tuppers/`: asignacion, caducidad, estado, tipos y repositorio de tuppers.
-- `src/lib/ui/`: utilidades UI compartidas para dialogos, menus, HTML, feedback, bloqueo de scroll y tareas con debounce.
-
-## Scripts de cliente
-
-- `src/scripts/admin-global-dishes-app.ts`: comportamiento cliente de administracion de platos globales.
-- `src/scripts/ai-status-spinner.ts`: anade spinner reutilizable a estados de carga o generacion de IA.
-- `src/scripts/app-header.ts`: interacciones de cabecera.
-- `src/scripts/auth-gate.ts`: autenticacion en cliente para vistas protegidas.
-- `src/scripts/configurator-app.ts`: logica cliente de configuracion.
-- `src/scripts/dashboard-app.ts`: logica del dashboard.
-- `src/scripts/dish-recommender-app.ts`: logica cliente del recomendador.
-- `src/scripts/dishes-app.ts`: logica cliente de platos.
-- `src/scripts/history-app.ts`: logica cliente del historico.
-- `src/scripts/initial-onboarding.ts`: muestra el onboarding inicial una sola vez en paginas privadas de la app.
-- `src/scripts/meal-drag-and-drop-app.ts`: activa el arrastre de comidas entre dias en dashboard y planificador.
-- `src/scripts/menu-app.ts`: logica cliente principal del menu.
-- `src/scripts/menu-automation-actions.ts`: panel de acciones rapidas para copiar semanas, reaprovechar tuppers, crear compra automatica e historial de platos.
-- `src/scripts/planning-ai-app.ts`: logica del planificador IA.
-- `src/scripts/planning-ai-date-range.ts`: seleccion y calculo de rangos de fechas para planificacion IA.
-- `src/scripts/planning-ai-wizard.ts`: asistente guiado de planificacion IA.
-- `src/scripts/settings-app.ts`: logica de ajustes.
-- `src/scripts/shopping-alexa-integration.ts`: integracion de compra con Alexa.
-- `src/scripts/shopping-app.ts`: logica cliente de compra.
-- `src/scripts/shopping-list-actions.ts`: acciones adicionales para crear y borrar listas de compra desde la vista de compra.
-- `src/scripts/shopping-lists-app.ts`: logica de listas de compra.
-- `src/scripts/shopping-whatsapp-export.ts`: anade exportacion directa de la lista visible de compra a WhatsApp.
-- `src/scripts/shopping-wizard.ts`: asistente de compra.
-- `src/scripts/statistics-app.ts`: logica cliente de estadisticas.
-- `src/scripts/tuppers-app.ts`: logica cliente de tuppers.
-- `src/scripts/weekly-summary-app.ts`: logica del resumen semanal.
-
-## Estilos
-
-- `src/styles/global.css`: tokens globales, reset, base visual y utilidades comunes.
-- `src/styles/ai-status-spinner.css`: estilos reutilizables para spinner en estados de carga de IA.
-- `src/styles/day-edit-modal-layout.css`: layout del modal de edicion diaria.
-- `src/styles/dish-recommender.css`: estilos del recomendador de platos.
-- `src/styles/dishes.css`: estilos de platos.
-- `src/styles/history.css`: estilos del historico y tarjetas de dias del dashboard/planificador.
-- `src/styles/initial-onboarding.css`: estilos del onboarding inicial responsive.
-- `src/styles/menu-automation-actions.css`: estilos del panel de acciones rapidas del menu y del historial por plato.
-- `src/styles/meal-participants.css`: estilos de participantes.
-- `src/styles/mobile-bottom-nav.css`: estilos de navegacion movil inferior.
-- `src/styles/more-page.css`: estilos de la pagina Mas del toolbar movil.
-- `src/styles/modals.css`: estilos comunes de modales.
-- `src/styles/shopping-list-actions.css`: estilos de gestion y visualizacion de listas de compra.
-- `src/styles/shopping-planning-wizard.css`: estilos del asistente de compra/planificacion.
-- `src/styles/statistics.css`: estilos de estadisticas.
-- `src/styles/toasts.css`: estilos de avisos/toasts.
-- `src/styles/tuppers.css`: estilos de tuppers.
-- `src/styles/weekly-summary.css`: estilos del resumen semanal.
-- `src/styles/wizard-scroll.css`: ajustes compartidos de scroll, acciones sticky y compatibilidad iOS Safari para wizards.
-
-## Tests
-
-Los tests viven en `tests/*.test.mjs` y usan `node:test`. Cada archivo cubre una zona funcional concreta:
-
-- `tests/smoke.test.mjs`: comprobaciones basicas de estructura, scripts y traducciones.
-- `tests/*i18n*`, `tests/localized-pages-locale.test.mjs`: rutas e i18n.
-- `tests/public-*.test.mjs`: paginas publicas, SEO y comparticion.
-- `tests/*dishes*.test.mjs`: platos, renderizado, repositorio y recomendaciones.
-- `tests/*menu*.test.mjs`, `tests/day-*.test.mjs`, `tests/weekly-*.test.mjs`: menus, dias y resumen semanal.
-- `tests/*shopping*.test.mjs`: compra, listas, asistente y Alexa.
-- `tests/*planning*.test.mjs`: planificacion y asistencia IA.
-- `tests/*statistics*.test.mjs`: estadisticas.
-- `tests/*tuppers*.test.mjs`: tuppers.
-- `tests/*firebase*.test.mjs`, `tests/app-check.test.mjs`, `tests/firestore-rules.test.mjs`: Firebase, App Check y reglas.
-- `tests/*group*.test.mjs`, `tests/invite-codes.test.mjs`: grupos, permisos e invitaciones.
-- `tests/*settings*.test.mjs`, `tests/user-preferences.test.mjs`: ajustes y preferencias.
-- `tests/ai*.test.mjs`: funciones de IA.
-- `tests/app-errors.test.mjs`, `tests/debounced-task-map.test.mjs`, `tests/footer-projects.test.mjs`, `tests/header-eurovision-style.test.mjs`, `tests/mobile-bottom-nav.test.mjs`, `tests/planner-dashboard-style.test.mjs`: utilidades y validaciones UI especificas.

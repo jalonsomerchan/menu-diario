@@ -1,0 +1,71 @@
+---
+import Button from './Button.astro';
+import Breadcrumb from './Breadcrumb.astro';
+import Container from './Container.astro';
+import { type Locale } from '../config/site';
+import {
+  getCookingSeoIndexMeta,
+  getCookingSeoPageRoute,
+  getPublicCookingSeoPages,
+} from '../data/public-cooking-seo-pages';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const meta = getCookingSeoIndexMeta(locale);
+const pages = getPublicCookingSeoPages(locale);
+const recipes = pages.filter((page) => page.kind === 'recipe');
+const tips = pages.filter((page) => page.kind === 'tip');
+const dashboardPath = getLocalizedPath('/dashboard', locale);
+const plannerPath = getLocalizedPath('/planificador', locale);
+---
+
+<Container class="public-cooking-seo" size="page">
+  <Breadcrumb locale={locale} rootItem={{ label: t('nav.home'), href: getLocalizedPath('/', locale) }} items={[{ label: meta.title }]} />
+
+  <section class="cooking-seo-index-hero">
+    <p class="cooking-seo-eyebrow">{locale === 'en' ? 'Public cooking guides' : 'Guías públicas de cocina'}</p>
+    <h1>{meta.title}</h1>
+    <p>{meta.description}</p>
+    <div class="cooking-seo-actions" aria-label={meta.title}>
+      <Button href={dashboardPath}>{locale === 'en' ? 'Use Menu Diario' : 'Usar Menu Diario gratis'}</Button>
+      <Button href={plannerPath} variant="secondary">{locale === 'en' ? 'Open planner' : 'Ver planificador'}</Button>
+    </div>
+  </section>
+
+  <section class="cooking-seo-index-section" aria-labelledby="recipes-title">
+    <div class="cooking-seo-index-section__header">
+      <p class="cooking-seo-eyebrow">{locale === 'en' ? 'Recipes' : 'Recetas'}</p>
+      <h2 id="recipes-title">{locale === 'en' ? 'Recipe ideas for the weekly menu' : 'Ideas de recetas para el menú semanal'}</h2>
+    </div>
+    <div class="cooking-seo-index-grid">
+      {recipes.map((page) => (
+        <a href={getLocalizedPath(getCookingSeoPageRoute(locale, page), locale)}>
+          <span>{page.eyebrow}</span>
+          <strong>{page.navLabel}</strong>
+          <small>{page.description}</small>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="cooking-seo-index-section" aria-labelledby="tips-title">
+    <div class="cooking-seo-index-section__header">
+      <p class="cooking-seo-eyebrow">{locale === 'en' ? 'Cooking advice' : 'Consejos de cocina'}</p>
+      <h2 id="tips-title">{locale === 'en' ? 'Practical planning tips' : 'Consejos prácticos para organizarte mejor'}</h2>
+    </div>
+    <div class="cooking-seo-index-grid">
+      {tips.map((page) => (
+        <a href={getLocalizedPath(getCookingSeoPageRoute(locale, page), locale)}>
+          <span>{page.eyebrow}</span>
+          <strong>{page.navLabel}</strong>
+          <small>{page.description}</small>
+        </a>
+      ))}
+    </div>
+  </section>
+</Container>
