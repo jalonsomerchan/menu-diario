@@ -16,6 +16,9 @@ describe('public cooking SEO pages', () => {
     const localizedDetail = readText('src/pages/[locale]/recipes/[cookingSeoSlug].astro');
     const index = readText('src/components/PublicCookingSeoIndexPage.astro');
     const page = readText('src/components/PublicCookingSeoPage.astro');
+    const home = readText('src/components/HomeLanding.astro');
+    const homeLinks = readText('src/components/HomeCookingSeoLinks.astro');
+    const footer = readText('src/components/Footer.astro');
 
     assert.equal(existsSync(join(root, 'src/pages/recetas.astro')), true);
     assert.equal(existsSync(join(root, 'src/pages/[locale]/recipes.astro')), true);
@@ -26,5 +29,9 @@ describe('public cooking SEO pages', () => {
     assert.match(index, /getCookingSeoPageRoute/);
     assert.match(page, /getPublicCookingSeoRelatedPages/);
     assert.match(page, /Menu Diario/);
+    assert.match(home, /HomeCookingSeoLinks/);
+    assert.match(homeLinks, /getCookingSeoIndexRoute/);
+    assert.match(homeLinks, /getCookingSeoPageRoute/);
+    assert.match(footer, /getCookingSeoIndexRoute/);
   });
 });
