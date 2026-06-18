@@ -4,10 +4,11 @@ import Breadcrumb from './Breadcrumb.astro';
 import Container from './Container.astro';
 import { type Locale } from '../config/site';
 import {
+  getCookingRecipeIndexRoute,
   getCookingSeoIndexMeta,
   getCookingSeoPageRoute,
   getPublicCookingSeoPages,
-} from '../data/public-cooking-seo-pages';
+} from '../data/public-cooking-seo-catalog';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
 interface Props {
@@ -20,6 +21,8 @@ const meta = getCookingSeoIndexMeta(locale);
 const pages = getPublicCookingSeoPages(locale);
 const recipes = pages.filter((page) => page.kind === 'recipe');
 const tips = pages.filter((page) => page.kind === 'tip');
+const featuredRecipes = recipes.slice(0, 24);
+const recipeIndexPath = getLocalizedPath(getCookingRecipeIndexRoute(locale), locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
 const plannerPath = getLocalizedPath('/planificador', locale);
 ---
@@ -34,22 +37,29 @@ const plannerPath = getLocalizedPath('/planificador', locale);
     <div class="cooking-seo-actions" aria-label={meta.title}>
       <Button href={dashboardPath}>{locale === 'en' ? 'Use Menu Diario' : 'Usar Menu Diario gratis'}</Button>
       <Button href={plannerPath} variant="secondary">{locale === 'en' ? 'Open planner' : 'Ver planificador'}</Button>
+      <Button href={recipeIndexPath} variant="secondary">{locale === 'en' ? 'Open recipe index' : 'Ver indice de recetas'}</Button>
     </div>
   </section>
 
   <section class="cooking-seo-index-section" aria-labelledby="recipes-title">
     <div class="cooking-seo-index-section__header">
       <p class="cooking-seo-eyebrow">{locale === 'en' ? 'Recipes' : 'Recetas'}</p>
-      <h2 id="recipes-title">{locale === 'en' ? 'Recipe ideas for the weekly menu' : 'Ideas de recetas para el menú semanal'}</h2>
+      <h2 id="recipes-title">{locale === 'en' ? 'Featured recipe ideas for the weekly menu' : 'Ideas de recetas destacadas para el menú semanal'}</h2>
+      <p>{locale === 'en' ? `Explore ${recipes.length} recipe ideas in the full index.` : `Explora ${recipes.length} ideas de recetas en el indice completo.`}</p>
     </div>
     <div class="cooking-seo-index-grid">
-      {recipes.map((page) => (
+      {featuredRecipes.map((page) => (
         <a href={getLocalizedPath(getCookingSeoPageRoute(locale, page), locale)}>
           <span>{page.eyebrow}</span>
           <strong>{page.navLabel}</strong>
           <small>{page.description}</small>
         </a>
       ))}
+      <a class="cooking-seo-index-grid__more" href={recipeIndexPath}>
+        <span>{locale === 'en' ? 'Complete index' : 'Indice completo'}</span>
+        <strong>{locale === 'en' ? `See all ${recipes.length} recipes` : `Ver las ${recipes.length} recetas`}</strong>
+        <small>{locale === 'en' ? 'Browse the alphabetical recipe index with quick ideas for every week.' : 'Navega el indice alfabetico con ideas rapidas para cada semana.'}</small>
+      </a>
     </div>
   </section>
 

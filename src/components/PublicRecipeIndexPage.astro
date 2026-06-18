@@ -1,0 +1,114 @@
+---
+import '../styles/public-recipe-index.css';
+import Button from './Button.astro';
+import Breadcrumb from './Breadcrumb.astro';
+import Container from './Container.astro';
+import { type Locale } from '../config/site';
+import {
+  getCookingRecipeIndexMeta,
+  getCookingSeoIndexRoute,
+  getCookingSeoPageRoute,
+  getPublicCookingSeoRecipePages,
+} from '../data/public-cooking-seo-catalog';
+import { getLocalizedPath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const meta = getCookingRecipeIndexMeta(locale);
+const recipes = getPublicCookingSeoRecipePages(locale).sort((a, b) => a.navLabel.localeCompare(b.navLabel, locale));
+const recipesByLetter = recipes.reduce<Record<string, typeof recipes>>((groups, recipe) => {
+  const letter = recipe.navLabel[0]?.toUpperCase() ?? '#';
+  groups[letter] = [...(groups[letter] ?? []), recipe];
+  return groups;
+}, {});
+const letters = Object.keys(recipesByLetter).sort((a, b) => a.localeCompare(b, locale));
+const quickRecipes = recipes.filter((recipe) => Number(recipe.minutes ?? 99) <= 25).slice(0, 8);
+const easyRecipes = recipes.filter((recipe) => recipe.difficulty === 'facil').slice(0, 8);
+const hubPath = getLocalizedPath(getCookingSeoIndexRoute(locale), locale);
+const dashboardPath = getLocalizedPath('/dashboard', locale);
+const plannerPath = getLocalizedPath('/planificador', locale);
+---
+
+<Container class="public-cooking-seo" size="page">
+  <Breadcrumb
+    locale={locale}
+    rootItem={{ label: t('nav.home'), href: getLocalizedPath('/', locale) }}
+    items={[
+      { label: locale === 'en' ? 'Recipes and tips' : 'Recetas y consejos', href: hubPath },
+      { label: meta.title },
+    ]}
+  />
+
+  <section class="cooking-seo-index-hero cooking-seo-recipe-index-hero">
+    <p class="cooking-seo-eyebrow">{locale === 'en' ? 'Recipe index' : 'Indice de recetas'}</p>
+    <h1>{meta.title}</h1>
+    <p>{meta.description}</p>
+    <div class="cooking-seo-stats" aria-label={locale === 'en' ? 'Recipe index summary' : 'Resumen del indice de recetas'}>
+      <span><strong>{recipes.length}</strong>{locale === 'en' ? ' recipes' : ' recetas'}</span>
+      <span><strong>{quickRecipes.length}+</strong>{locale === 'en' ? ' quick ideas' : ' ideas rapidas'}</span>
+      <span><strong>{easyRecipes.length}+</strong>{locale === 'en' ? ' easy recipes' : ' recetas faciles'}</span>
+    </div>
+    <div class="cooking-seo-actions" aria-label={meta.title}>
+      <Button href={dashboardPath}>{locale === 'en' ? 'Use Menu Diario' : 'Usar Menu Diario gratis'}</Button>
+      <Button href={plannerPath} variant="secondary">{locale === 'en' ? 'Open planner' : 'Ver planificador'}</Button>
+    </div>
+  </section>
+
+  <section class="cooking-seo-index-section" aria-labelledby="recipe-shortcuts-title">
+    <div class="cooking-seo-index-section__header">
+      <p class="cooking-seo-eyebrow">{locale === 'en' ? 'Shortcuts' : 'Atajos'}</p>
+      <h2 id="recipe-shortcuts-title">{locale === 'en' ? 'Find recipes faster' : 'Encuentra recetas mas rapido'}</h2>
+    </div>
+    <div class="cooking-seo-highlight-grid">
+      <article>
+        <h3>{locale === 'en' ? 'Quick recipes' : 'Recetas rapidas'}</h3>
+        <div>
+          {quickRecipes.map((recipe) => (
+            <a href={getLocalizedPath(getCookingSeoPageRoute(locale, recipe), locale)}>{recipe.navLabel}</a>
+          ))}
+        </div>
+      </article>
+      <article>
+        <h3>{locale === 'en' ? 'Easy recipes' : 'Recetas faciles'}</h3>
+        <div>
+          {easyRecipes.map((recipe) => (
+            <a href={getLocalizedPath(getCookingSeoPageRoute(locale, recipe), locale)}>{recipe.navLabel}</a>
+          ))}
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <nav class="cooking-seo-letter-nav" aria-label={locale === 'en' ? 'Recipe letters' : 'Letras del indice de recetas'}>
+    {letters.map((letter) => (
+      <a href={`#recetas-${letter}`}>{letter}</a>
+    ))}
+  </nav>
+
+  <section class="cooking-seo-index-section" aria-labelledby="all-recipes-title">
+    <div class="cooking-seo-index-section__header">
+      <p class="cooking-seo-eyebrow">{locale === 'en' ? 'All recipes' : 'Todas las recetas'}</p>
+      <h2 id="all-recipes-title">{locale === 'en' ? 'Alphabetical recipe index' : 'Indice alfabetico de recetas'}</h2>
+    </div>
+
+    <div class="cooking-seo-letter-groups">
+      {letters.map((letter) => (
+        <article id={`recetas-${letter}`} class="cooking-seo-letter-group">
+          <h3>{letter}</h3>
+          <div>
+            {recipesByLetter[letter].map((recipe) => (
+              <a href={getLocalizedPath(getCookingSeoPageRoute(locale, recipe), locale)}>
+                <strong>{recipe.navLabel}</strong>
+                <span>{recipe.minutes ? `${recipe.minutes} min` : recipe.eyebrow}</span>
+              </a>
+            ))}
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+</Container>

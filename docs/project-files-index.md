@@ -2,7 +2,7 @@
 
 Este documento sirve como mapa rapido del repositorio. Debe actualizarse cuando se anadan, muevan, renombren o eliminen archivos relevantes.
 
-No incluye artefactos locales o generados como `.env`, `.astro/`, `dist/`, `node_modules/` o `.DS_Store`.
+No incluye artefactos locales o generados como `.env`, `.astro/`, `dist/`, `node_modules` o `.DS_Store`.
 
 ## Raiz del repositorio
 
@@ -56,7 +56,8 @@ No incluye artefactos locales o generados como `.env`, `.astro/`, `dist/`, `node
 
 - `data/global-dishes.seed.json`: datos semilla de platos globales.
 - `scripts/clean.mjs`: limpieza de artefactos generados por el proyecto.
-- `src/data/public-cooking-seo-pages.ts`: catalogo y generadores de las 100 paginas publicas de recetas y consejos.
+- `src/data/public-cooking-seo-pages.ts`: catalogo base y generadores de las primeras 100 paginas publicas de recetas y consejos.
+- `src/data/public-cooking-seo-catalog.ts`: catalogo extendido usado por rutas publicas, con 100 recetas adicionales e indice de recetas.
 
 ## Archivos publicos
 
@@ -109,6 +110,7 @@ No incluye artefactos locales o generados como `.env`, `.astro/`, `dist/`, `node
 - `src/components/PlanningAiApp.astro`: planificador con asistencia IA.
 - `src/components/PublicCookingSeoIndexPage.astro`: hub publico de recetas y consejos.
 - `src/components/PublicCookingSeoPage.astro`: plantilla para recetas y consejos SEO publicos.
+- `src/components/PublicRecipeIndexPage.astro`: indice alfabetico publico de recetas.
 - `src/components/PublicHowItWorksPage.astro`: pagina publica de funcionamiento.
 - `src/components/PublicSeoPage.astro`: plantilla para paginas SEO publicas.
 - `src/components/SettingsApp.astro`: ajustes de usuario y aplicacion.
@@ -146,6 +148,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/pages/platos.astro` y `src/pages/[locale]/platos.astro`: catalogo o gestion de platos.
 - `src/pages/politica-privacidad.astro` y `src/pages/[locale]/politica-privacidad.astro`: politica de privacidad.
 - `src/pages/recetas.astro` y `src/pages/[locale]/recipes.astro`: hub publico de recetas y consejos de cocina.
+- `src/pages/recetas/indice.astro` y `src/pages/[locale]/recipes/recipe-index.astro`: indice alfabetico publico de recetas.
 - `src/pages/recetas/[cookingSeoSlug].astro` y `src/pages/[locale]/recipes/[cookingSeoSlug].astro`: paginas publicas de detalle de recetas y consejos.
 - `src/pages/recomendador-platos.astro` y `src/pages/[locale]/recomendador-platos.astro`: recomendador de platos.
 - `src/pages/resumen-semanal.astro` y `src/pages/[locale]/resumen-semanal.astro`: resumen semanal.
@@ -158,6 +161,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 ## Estilos
 
 - `src/styles/public-cooking-seo.css`: estilos del hub publico de recetas/consejos y sus paginas de detalle.
+- `src/styles/public-recipe-index.css`: estilos especificos del indice publico de recetas.
 
 ## Internacionalizacion
 

@@ -1,0 +1,13 @@
+---
+import PublicRecipeIndexPage from '../../components/PublicRecipeIndexPage.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { defaultLocale } from '../../config/site';
+import { getCookingRecipeIndexMeta } from '../../data/public-cooking-seo-catalog';
+
+const locale = defaultLocale;
+const meta = getCookingRecipeIndexMeta(locale);
+---
+
+<BaseLayout title={meta.title} description={meta.description} locale={locale}>
+  <PublicRecipeIndexPage locale={locale} />
+</BaseLayout>
