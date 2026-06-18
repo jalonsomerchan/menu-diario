@@ -1,0 +1,268 @@
+.public-cooking-seo {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  padding-block: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.public-cooking-seo :is(h1, h2, p, ul, ol) {
+  margin: 0;
+}
+
+.cooking-seo-eyebrow {
+  color: var(--color-primary);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cooking-seo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.cooking-seo-page,
+.cooking-seo-index-section,
+.cooking-seo-index-hero {
+  display: grid;
+  gap: clamp(1.1rem, 3vw, 1.75rem);
+}
+
+.cooking-seo-hero,
+.cooking-seo-index-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+  border-radius: clamp(1.5rem, 4vw, 2.25rem);
+  background:
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--color-primary), transparent 80%), transparent 34%),
+    radial-gradient(circle at 90% 15%, color-mix(in srgb, var(--color-accent), transparent 84%), transparent 30%),
+    var(--panel-background);
+  box-shadow: var(--shadow-sm);
+  padding: clamp(1.25rem, 4vw, 2.35rem);
+}
+
+.cooking-seo-hero {
+  display: grid;
+  gap: clamp(1rem, 3vw, 1.5rem);
+}
+
+.cooking-seo-hero > div,
+.cooking-seo-index-hero {
+  align-items: start;
+}
+
+.cooking-seo-hero > div,
+.cooking-seo-index-hero {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.cooking-seo-hero h1,
+.cooking-seo-index-hero h1 {
+  max-width: 14ch;
+  color: var(--color-text);
+  font-size: clamp(2.15rem, 8vw, 4.6rem);
+  font-weight: 850;
+  letter-spacing: -0.075em;
+  line-height: 0.96;
+}
+
+.cooking-seo-hero p:not(.cooking-seo-eyebrow),
+.cooking-seo-index-hero > p:not(.cooking-seo-eyebrow) {
+  max-width: 48rem;
+  color: var(--color-muted);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.65;
+}
+
+.cooking-seo-hero aside {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-content: start;
+}
+
+.cooking-seo-hero aside span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.35rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary), var(--color-border) 45%);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary-soft), transparent 12%);
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 750;
+  line-height: 1.2;
+  padding: 0.55rem 0.8rem;
+}
+
+.cooking-seo-grid {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.cooking-seo-card,
+.cooking-seo-related,
+.cooking-seo-index-section {
+  border: 1px solid var(--panel-border);
+  border-radius: clamp(1.15rem, 3vw, 1.65rem);
+  background: var(--panel-background);
+  box-shadow: var(--shadow-xs);
+  padding: clamp(1.1rem, 3vw, 1.45rem);
+}
+
+.cooking-seo-card {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+}
+
+.cooking-seo-card--accent {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-primary-soft), transparent 8%), transparent 115%),
+    var(--panel-background);
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 55%);
+}
+
+.cooking-seo-card h2,
+.cooking-seo-related h2,
+.cooking-seo-index-section h2 {
+  color: var(--color-text);
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.cooking-seo-card p:not(.cooking-seo-eyebrow) {
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.cooking-seo-card :is(ul, ol) {
+  display: grid;
+  gap: 0.72rem;
+  padding: 0;
+  list-style: none;
+}
+
+.cooking-seo-card li {
+  position: relative;
+  display: grid;
+  gap: 0.2rem;
+  border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-surface-raised), transparent 6%);
+  color: var(--color-text);
+  line-height: 1.45;
+  padding: 0.82rem 0.92rem 0.82rem 2.35rem;
+}
+
+.cooking-seo-card li::before {
+  position: absolute;
+  top: 0.9rem;
+  left: 0.9rem;
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  box-shadow: 0 0 0 0.28rem var(--color-primary-soft);
+  content: '';
+}
+
+.cooking-seo-related {
+  display: grid;
+  gap: 1rem;
+}
+
+.cooking-seo-related > div:first-child,
+.cooking-seo-index-section__header {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.cooking-seo-related > div:last-child,
+.cooking-seo-index-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.cooking-seo-related a,
+.cooking-seo-index-grid a {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 1.05rem;
+  background: color-mix(in srgb, var(--color-surface-raised), transparent 3%);
+  color: inherit;
+  padding: 0.95rem;
+  text-decoration: none;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.cooking-seo-related a:hover,
+.cooking-seo-related a:focus-visible,
+.cooking-seo-index-grid a:hover,
+.cooking-seo-index-grid a:focus-visible {
+  border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.cooking-seo-related a span,
+.cooking-seo-index-grid a span {
+  color: var(--color-primary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.cooking-seo-related a strong,
+.cooking-seo-index-grid a strong {
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+}
+
+.cooking-seo-related a small,
+.cooking-seo-index-grid a small {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+@media (min-width: 760px) {
+  .cooking-seo-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.4fr);
+    align-items: end;
+  }
+
+  .cooking-seo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cooking-seo-card--accent {
+    grid-column: span 2;
+  }
+
+  .cooking-seo-related > div:last-child,
+  .cooking-seo-index-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1040px) {
+  .cooking-seo-related > div:last-child,
+  .cooking-seo-index-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
