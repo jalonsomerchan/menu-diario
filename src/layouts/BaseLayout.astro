@@ -87,7 +87,7 @@ const onboardingPaths = {
 <html lang={locale}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
     <script is:inline>
       (() => {
@@ -96,7 +96,7 @@ const onboardingPaths = {
           if (theme === 'light' || theme === 'dark') {
             document.documentElement.dataset.theme = theme;
           } else {
-            document.documentElement.dataset.theme = 'light';
+            document.documentElement.removeAttribute('data-theme');
           }
         } catch {
           document.documentElement.dataset.theme = 'light';
@@ -113,9 +113,9 @@ const onboardingPaths = {
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" type="image/svg+xml" href={withBasePath('favicon.svg')} />
     <link rel="icon" href={withBasePath('favicon.ico')} />
-    <link rel="apple-touch-icon" href={withBasePath('og-image.svg')} />
+    <link rel="apple-touch-icon" href={withBasePath('apple-touch-icon.png')} />
     <link rel="manifest" href={withBasePath('manifest.webmanifest')} />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#f7f9fc" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content={siteConfig.name} />

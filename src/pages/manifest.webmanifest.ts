@@ -15,8 +15,8 @@ export function GET() {
     display: 'standalone',
     display_override: ['standalone', 'minimal-ui', 'browser'],
     orientation: 'portrait-primary',
-    background_color: '#fff7ed',
-    theme_color: '#ea580c',
+    background_color: '#f7f9fc',
+    theme_color: '#2563f0',
     categories: ['food', 'productivity', 'lifestyle'],
     icons: [
       {
@@ -26,9 +26,9 @@ export function GET() {
         purpose: 'any maskable',
       },
       {
-        src: withBasePath('og-image.svg'),
+        src: withBasePath('web-app-manifest-512x512.png'),
         sizes: '512x512',
-        type: 'image/svg+xml',
+        type: 'image/png',
         purpose: 'any maskable',
       },
     ],

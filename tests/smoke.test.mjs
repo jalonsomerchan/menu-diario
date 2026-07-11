@@ -205,6 +205,9 @@ describe('project smoke checks', () => {
     assert.match(pathHelpers, /stripBasePath/);
     assert.match(pathHelpers, /getAbsoluteUrl/);
     assert.match(manifest, /start_url/);
+    assert.match(layout, /viewport-fit=cover/);
+    assert.match(layout, /apple-touch-icon.png/);
+    assert.match(manifest, /web-app-manifest-512x512.png/);
     assert.match(robots, /sitemap-index\.xml/);
   });
 
@@ -253,6 +256,7 @@ describe('project smoke checks', () => {
     assert.match(styles, /site-header__toggle/);
     assert.match(styles, /site-header\[data-menu-open='true'\]/);
     assert.match(styles, /site-header__more-panel/);
+    assert.match(styles, /prefers-reduced-motion/);
     pages.forEach((source) => {
       assert.doesNotMatch(source, /<AppHeader/);
       assert.doesNotMatch(source, /from ['\"].*AppHeader\.astro['\"]/);
