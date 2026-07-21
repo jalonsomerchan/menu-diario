@@ -3,7 +3,6 @@ import Container from './Container.astro';
 import { siteConfig, type Locale } from '../config/site';
 import { getCookingSeoIndexLabel, getCookingSeoIndexRoute } from '../data/public-cooking-seo-pages';
 import { getPublicSeoPages } from '../data/public-seo-pages';
-import { getFooterLabels } from '../i18n/footer-projects';
 import { usePublicPageCopy } from '../i18n/public-pages';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 
@@ -12,7 +11,6 @@ interface Props {
 }
 
 const { locale } = Astro.props;
-const labels = getFooterLabels(locale);
 const t = useTranslations(locale);
 const tp = usePublicPageCopy(locale);
 const currentYear = new Date().getFullYear();
@@ -36,7 +34,7 @@ const publicLinks = [
         <a href={getLocalizedPath('/', locale)} class="site-footer__logo">
           {siteConfig.name}
         </a>
-        <p>{labels.copy}</p>
+        <p>{t('site.description')}</p>
         <p class="site-footer__copyright">
           &copy; {currentYear} {siteConfig.name}.
         </p>

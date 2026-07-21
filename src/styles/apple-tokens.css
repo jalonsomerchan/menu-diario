@@ -1,0 +1,116 @@
+:root {
+  --container-page-max: 72rem;
+  --container-content-max: 62rem;
+  --container-narrow-max: 46rem;
+  --color-bg: #f5f5f7;
+  --color-bg-soft: #ececf0;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f0f0f4;
+  --color-surface-raised: #ffffff;
+  --color-text: #1d1d1f;
+  --color-text-muted: #515154;
+  --color-text-soft: #6e6e73;
+  --color-muted: #626267;
+  --color-border: rgb(29 29 31 / 0.12);
+  --color-border-strong: rgb(29 29 31 / 0.22);
+  --color-primary: #0071e3;
+  --color-primary-hover: #0077ed;
+  --color-primary-soft: #e6f2ff;
+  --color-primary-contrast: #ffffff;
+  --color-accent: #e85d2a;
+  --color-accent-soft: #fff0ea;
+  --color-success: #248a3d;
+  --color-success-soft: #eaf7ed;
+  --color-warning: #b45f06;
+  --color-warning-soft: #fff4df;
+  --color-danger: #d70015;
+  --color-danger-soft: #ffebed;
+  --radius-md: 0.75rem;
+  --radius-lg: 0.95rem;
+  --radius-xl: 1.2rem;
+  --radius-2xl: 1.6rem;
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.04), 0 0 0 1px rgb(255 255 255 / 0.55) inset;
+  --shadow-sm: 0 8px 24px rgb(0 0 0 / 0.07), 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-md: 0 18px 48px rgb(0 0 0 / 0.1), 0 2px 8px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 30px 80px rgb(0 0 0 / 0.16), 0 4px 14px rgb(0 0 0 / 0.06);
+  --panel-border: var(--color-border);
+  --panel-background: rgb(255 255 255 / 0.88);
+  --panel-background-strong: #ffffff;
+  --transition-instant: 100ms ease-out;
+  --transition-base: 180ms cubic-bezier(0.2, 0, 0, 1);
+  --transition-spring: 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --surface-padding: clamp(1rem, 2.8vw, 1.4rem);
+  --surface-padding-lg: clamp(1.25rem, 3.2vw, 1.8rem);
+  --mobile-nav-height: 4.8rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: #000000;
+    --color-bg-soft: #101012;
+    --color-surface: #1c1c1e;
+    --color-surface-soft: #2c2c2e;
+    --color-surface-raised: #242426;
+    --color-text: #f5f5f7;
+    --color-text-muted: #d1d1d6;
+    --color-text-soft: #aeaeb2;
+    --color-muted: #b3b3b8;
+    --color-border: rgb(255 255 255 / 0.12);
+    --color-border-strong: rgb(255 255 255 / 0.23);
+    --color-primary: #2997ff;
+    --color-primary-hover: #64b5ff;
+    --color-primary-soft: rgb(10 132 255 / 0.2);
+    --color-accent: #ff8a5b;
+    --color-accent-soft: rgb(255 107 53 / 0.18);
+    --color-success: #30d158;
+    --color-success-soft: rgb(48 209 88 / 0.17);
+    --color-warning: #ffd60a;
+    --color-warning-soft: rgb(255 214 10 / 0.16);
+    --color-danger: #ff453a;
+    --color-danger-soft: rgb(255 69 58 / 0.17);
+    --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-sm: 0 10px 30px rgb(0 0 0 / 0.35);
+    --shadow-md: 0 22px 60px rgb(0 0 0 / 0.48);
+    --shadow-lg: 0 34px 90px rgb(0 0 0 / 0.62);
+    --panel-background: rgb(28 28 30 / 0.9);
+    --panel-background-strong: #1c1c1e;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #000000;
+  --color-bg-soft: #101012;
+  --color-surface: #1c1c1e;
+  --color-surface-soft: #2c2c2e;
+  --color-surface-raised: #242426;
+  --color-text: #f5f5f7;
+  --color-text-muted: #d1d1d6;
+  --color-text-soft: #aeaeb2;
+  --color-muted: #b3b3b8;
+  --color-border: rgb(255 255 255 / 0.12);
+  --color-border-strong: rgb(255 255 255 / 0.23);
+  --color-primary: #2997ff;
+  --color-primary-hover: #64b5ff;
+  --color-primary-soft: rgb(10 132 255 / 0.2);
+  --color-accent: #ff8a5b;
+  --color-accent-soft: rgb(255 107 53 / 0.18);
+  --color-success: #30d158;
+  --color-success-soft: rgb(48 209 88 / 0.17);
+  --color-warning: #ffd60a;
+  --color-warning-soft: rgb(255 214 10 / 0.16);
+  --color-danger: #ff453a;
+  --color-danger-soft: rgb(255 69 58 / 0.17);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 10px 30px rgb(0 0 0 / 0.35);
+  --shadow-md: 0 22px 60px rgb(0 0 0 / 0.48);
+  --shadow-lg: 0 34px 90px rgb(0 0 0 / 0.62);
+  --panel-background: rgb(28 28 30 / 0.9);
+  --panel-background-strong: #1c1c1e;
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --color-border: color-mix(in srgb, var(--color-text), transparent 45%);
+    --color-border-strong: var(--color-text);
+  }
+}

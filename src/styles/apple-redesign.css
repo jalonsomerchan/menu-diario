@@ -1,0 +1,263 @@
+/* Apple-inspired interaction and material layer: calm, direct and platform-native. */
+
+html {
+  background: var(--color-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background:
+    radial-gradient(
+      circle at 8% 4%,
+      color-mix(in srgb, var(--color-primary), transparent 92%),
+      transparent 24rem
+    ),
+    radial-gradient(
+      circle at 92% 12%,
+      color-mix(in srgb, var(--color-accent), transparent 94%),
+      transparent 22rem
+    ),
+    var(--color-bg);
+  font-optical-sizing: auto;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-primary), transparent 72%);
+}
+
+.site-main {
+  min-height: calc(100dvh - 5rem);
+}
+
+.skip-link {
+  position: fixed;
+  top: max(0.75rem, env(safe-area-inset-top));
+  left: 1rem;
+  z-index: 110;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  padding: 0.7rem 1rem;
+  box-shadow: var(--shadow-md);
+  font-weight: 650;
+  text-decoration: none;
+  transform: translateY(-180%);
+  transition: transform var(--transition-base);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.container-shell {
+  padding-inline: clamp(1rem, 4vw, 2rem);
+}
+
+.button,
+.google-signin-button,
+.icon-button,
+button,
+summary,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.button {
+  min-height: 2.9rem;
+  border-radius: 999px;
+  padding-inline: 1.15rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  transition:
+    transform var(--transition-instant),
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.button--primary {
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--color-primary), transparent 78%);
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:active,
+.icon-button:active,
+button:active {
+  transform: scale(0.97);
+  transition-duration: 100ms;
+}
+
+.button--secondary,
+.button--ghost {
+  border-color: var(--color-border);
+  background: color-mix(in srgb, var(--color-surface), transparent 8%);
+}
+
+.site-main
+  :is(
+    .app-panel,
+    .settings-card,
+    .auth-card,
+    .menu-app__auth,
+    .menu-app__workspace,
+    .dashboard-header,
+    .today-card,
+    .next-day-card,
+    .menu-list,
+    .day-card,
+    .dish-card,
+    .dishes-hero,
+    .dishes-form-card,
+    .dishes-empty,
+    .weekly-summary-hero,
+    .weekly-summary-panel,
+    .planning-ai-panel,
+    .planning-ai-mode-card,
+    .shopping-saved-panel,
+    .shopping-saved-card,
+    .shopping-review-group,
+    .shopping-item,
+    .tupper-card,
+    .statistics-kpi,
+    .statistics-panel,
+    .admin-dishes-panel,
+    .admin-dishes-hero,
+    .dish-recommender-panel,
+    .dish-recommender-card
+  ) {
+  border-color: var(--color-border);
+  border-radius: var(--radius-2xl);
+  background: var(--panel-background-strong);
+  box-shadow: var(--shadow-xs);
+}
+
+.site-main
+  :is(
+    .app-panel,
+    .settings-card,
+    .today-card,
+    .day-card,
+    .dish-card,
+    .shopping-item,
+    .tupper-card
+  ) {
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-spring);
+}
+
+@media (hover: hover) {
+  .site-main :is(.day-card, .dish-card, .shopping-item, .tupper-card):hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+  }
+}
+
+.app-page-shell {
+  padding-block: clamp(1.1rem, 3vw, 2rem) clamp(2.5rem, 6vw, 5rem);
+}
+
+.page-header__title,
+.app-page-intro h1,
+.app-page-intro h2 {
+  font-weight: 700;
+  letter-spacing: -0.05em;
+}
+
+.page-header__description,
+.app-page-intro p {
+  color: var(--color-muted);
+  line-height: 1.58;
+}
+
+.app-page-intro {
+  margin-bottom: 0.8rem;
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--color-primary), transparent 88%),
+      transparent 17rem
+    ),
+    var(--panel-background-strong);
+  box-shadow: var(--shadow-xs);
+}
+
+.menu-app__status {
+  border-radius: var(--radius-xl);
+  box-shadow: none;
+}
+
+:is(input, select, textarea):not([type='checkbox']):not([type='radio']) {
+  border-color: var(--color-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-surface-raised), transparent 2%);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.035);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background var(--transition-base);
+}
+
+:is(input, select, textarea):focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary), transparent 82%);
+}
+
+.app-dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+  backdrop-filter: blur(12px) saturate(120%);
+}
+
+.app-dialog__surface {
+  border-color: var(--color-border-strong);
+  border-radius: 1.8rem;
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-lg);
+}
+
+.app-dialog[open] .app-dialog__surface {
+  animation: materialize 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes materialize {
+  from {
+    opacity: 0;
+    transform: translateY(0.8rem) scale(0.985);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .site-main :is(.app-panel, .settings-card, .day-card, .dish-card, .tupper-card) {
+    border-radius: 1.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-dialog[open] .app-dialog__surface {
+    animation: fade-in 150ms ease-out both;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

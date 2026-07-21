@@ -160,6 +160,9 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 
 ## Estilos
 
+- `src/styles/apple-tokens.css`: tokens de color, radios, sombras y movimiento del rediseño, incluidos dark mode y contraste alto.
+- `src/styles/apple-redesign.css`: capa visual global inspirada en principios de Apple para superficies, respuesta táctil, tipografía y formularios.
+- `src/styles/apple-chrome.css`: materiales adaptativos para el footer y la navegación inferior móvil.
 - `src/styles/public-cooking-seo.css`: estilos del hub publico de recetas/consejos y sus paginas de detalle.
 - `src/styles/public-recipe-index.css`: estilos especificos del indice publico de recetas.
 

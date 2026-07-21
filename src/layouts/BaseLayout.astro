@@ -11,6 +11,9 @@ import '../styles/more-page.css';
 import '../styles/public-cooking-seo.css';
 import '../styles/modals.css';
 import '../styles/toasts.css';
+import '../styles/apple-tokens.css';
+import '../styles/apple-redesign.css';
+import '../styles/apple-chrome.css';
 import Header from '../components/Header.astro';
 import MobileBottomNav from '../components/MobileBottomNav.astro';
 import Footer from '../components/Footer.astro';
@@ -115,7 +118,7 @@ const onboardingPaths = {
     <link rel="icon" href={withBasePath('favicon.ico')} />
     <link rel="apple-touch-icon" href={withBasePath('apple-touch-icon.png')} />
     <link rel="manifest" href={withBasePath('manifest.webmanifest')} />
-    <meta name="theme-color" content="#f7f9fc" />
+    <meta name="theme-color" content="#f5f5f7" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content={siteConfig.name} />
@@ -131,9 +134,10 @@ const onboardingPaths = {
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
   </head>
-  <body>
+  <body class:list={{ 'private-app': showInitialOnboarding }}>
+    <a class="skip-link" href="#main-content">{t('a11y.skipToContent')}</a>
     <Header locale={locale} />
-    <main class="site-main">
+    <main id="main-content" class="site-main" tabindex="-1">
       <slot />
     </main>
     {showInitialOnboarding && <div data-initial-onboarding data-labels={JSON.stringify(onboardingLabels)} data-paths={JSON.stringify(onboardingPaths)} hidden></div>}

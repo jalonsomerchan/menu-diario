@@ -55,6 +55,11 @@ describe('app header', () => {
     assert.match(script, /data-site-menu-panel/);
     assert.match(script, /closest\('a'\)/);
     assert.match(script, /themeSelects/);
+    assert.ok(
+      script.indexOf("themeSelect.addEventListener('change'") <
+        script.indexOf('if (root && hasFirebaseConfig())'),
+      'theme controls should work before authentication is available'
+    );
     assert.match(script, /logoutButtons/);
     assert.match(script, /adminLinks/);
   });

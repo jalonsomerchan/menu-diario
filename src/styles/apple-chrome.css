@@ -1,0 +1,63 @@
+.site-footer {
+  display: block;
+  border-top-color: var(--color-border);
+  background: color-mix(in srgb, var(--color-surface), transparent 35%);
+  backdrop-filter: blur(24px) saturate(150%);
+}
+
+.private-app .site-footer {
+  display: none;
+}
+
+.mobile-bottom-nav {
+  right: 0.7rem;
+  bottom: max(0.65rem, env(safe-area-inset-bottom));
+  left: 0.7rem;
+  overflow: hidden;
+  max-width: 34rem;
+  margin-inline: auto;
+  border: 1px solid color-mix(in srgb, var(--color-border), white 8%);
+  border-radius: 1.55rem;
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  box-shadow:
+    0 14px 44px rgb(0 0 0 / 0.18),
+    0 1px 0 rgb(255 255 255 / 0.3) inset;
+  backdrop-filter: blur(28px) saturate(180%);
+}
+
+.mobile-bottom-nav__list {
+  gap: 0.15rem;
+  padding: 0.35rem;
+}
+
+.mobile-bottom-nav__link {
+  min-height: 3.85rem;
+  border-radius: 1.15rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.mobile-bottom-nav__link::before {
+  top: 0.25rem;
+  width: 3rem;
+  height: 1.8rem;
+  border-radius: 0.9rem;
+}
+
+.mobile-bottom-nav__link svg {
+  width: 1.55rem;
+  height: 1.55rem;
+}
+
+.mobile-bottom-nav__link:active {
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .site-header.app-header,
+  .mobile-bottom-nav,
+  .site-footer {
+    background: var(--color-surface);
+    backdrop-filter: none;
+  }
+}

@@ -7,6 +7,43 @@ import type { FirebaseUser, ThemePreference } from '../lib/menu/types';
 const root = document.querySelector<HTMLElement>('[data-site-header]');
 const themes: ThemePreference[] = ['system', 'light', 'dark'];
 const themeStorageKey = 'menu-diario-theme';
+const themeSelects = root
+  ? [...root.querySelectorAll<HTMLSelectElement>('[data-global-theme]')]
+  : [];
+
+function rememberTheme(theme: ThemePreference) {
+  try {
+    if (theme === 'system') {
+      window.localStorage.removeItem(themeStorageKey);
+    } else {
+      window.localStorage.setItem(themeStorageKey, theme);
+    }
+  } catch {
+    // Storage can be disabled in private contexts; the live theme still applies.
+  }
+}
+
+function applyTheme(theme: ThemePreference) {
+  if (theme === 'system') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.dataset.theme = theme;
+  }
+
+  rememberTheme(theme);
+  themeSelects.forEach((themeSelect) => {
+    themeSelect.value = theme;
+  });
+}
+
+const initialTheme = document.documentElement.dataset.theme;
+themeSelects.forEach((themeSelect) => {
+  themeSelect.value = initialTheme === 'light' || initialTheme === 'dark' ? initialTheme : 'system';
+  themeSelect.addEventListener('change', () => {
+    if (!themes.includes(themeSelect.value as ThemePreference)) return;
+    applyTheme(themeSelect.value as ThemePreference);
+  });
+});
 
 if (root) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
@@ -54,41 +91,27 @@ if (root) {
 if (root && hasFirebaseConfig()) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
   const guestLabel = labels.guestSession ?? 'Guest session';
-  const themeSelects = [...root.querySelectorAll<HTMLSelectElement>('[data-global-theme]')];
   const logoutButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-global-logout]')];
   const adminLinks = [...root.querySelectorAll<HTMLAnchorElement>('[data-admin-link]')];
 
-  function rememberTheme(theme: ThemePreference) {
-    try {
-      if (theme === 'system') {
-        window.localStorage.removeItem(themeStorageKey);
-      } else {
-        window.localStorage.setItem(themeStorageKey, theme);
-      }
-    } catch {
-      // Storage can be disabled in private contexts; the live theme still applies.
-    }
-  }
-
-  function applyTheme(theme: ThemePreference) {
-    if (theme === 'system') {
-      document.documentElement.removeAttribute('data-theme');
-    } else {
-      document.documentElement.dataset.theme = theme;
-    }
-
-    rememberTheme(theme);
-    themeSelects.forEach((themeSelect) => {
-      themeSelect.value = theme;
-    });
-  }
-
   getFirebaseAuthServices().then((services) => {
+    let currentUser: FirebaseUser | null = null;
+
     logoutButtons.forEach((logoutButton) => {
       logoutButton.addEventListener('click', () => closeSession());
     });
 
+    themeSelects.forEach((themeSelect) => {
+      themeSelect.addEventListener('change', async () => {
+        if (!currentUser || !themes.includes(themeSelect.value as ThemePreference)) return;
+        await updateUserPreferences(services, currentUser.uid, {
+          theme: themeSelect.value as ThemePreference,
+        });
+      });
+    });
+
     services.authModule.onAuthStateChanged(services.auth, async (user: FirebaseUser | null) => {
+      currentUser = user;
       logoutButtons.forEach((logoutButton) => logoutButton.toggleAttribute('hidden', !user));
       adminLinks.forEach((adminLink) => adminLink.toggleAttribute('hidden', !user));
       if (!user) return;
@@ -103,16 +126,6 @@ if (root && hasFirebaseConfig()) {
         (profile) => applyTheme(profile.theme),
         () => undefined
       );
-
-      themeSelects.forEach((themeSelect) => {
-        themeSelect.addEventListener('change', async () => {
-          if (!themes.includes(themeSelect.value as ThemePreference)) return;
-          const theme = themeSelect.value as ThemePreference;
-          applyTheme(theme);
-          await updateUserPreferences(services, user.uid, { theme });
-        });
-      });
-
       window.addEventListener('beforeunload', () => unsubscribe());
     });
   });
