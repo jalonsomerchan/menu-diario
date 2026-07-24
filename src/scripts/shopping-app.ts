@@ -20,6 +20,7 @@ import { saveShoppingList, watchShoppingLists } from '../lib/shopping/repository
 import type { ShoppingItem, ShoppingListDocument, ShoppingScope } from '../lib/shopping/types';
 import { watchTuppers } from '../lib/tuppers/repository';
 import type { TupperItem } from '../lib/tuppers/types';
+import { createConfirmDialog } from '../lib/ui/confirm-dialog';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-shopping-app]');
@@ -48,6 +49,8 @@ if (root) {
   const wizardSummary = root.querySelector<HTMLElement>('[data-wizard-summary]');
   const wizardPrev = root.querySelector<HTMLButtonElement>('[data-wizard-prev]');
   const wizardNext = root.querySelector<HTMLButtonElement>('[data-wizard-next]');
+  const confirmDialogElement = root.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
+  const confirmDialog = confirmDialogElement ? createConfirmDialog(confirmDialogElement) : null;
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -312,7 +315,7 @@ if (root) {
         const dayLabel = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(date);
 
         return `
-          <button class="shopping-range__day" type="button" data-day-key="${escapeHtml(dayKey)}" data-selected="${selectedDayKeys.includes(dayKey)}">
+          <button class="shopping-range__day" type="button" data-day-key="${escapeHtml(dayKey)}" data-selected="${selectedDayKeys.includes(dayKey)}" aria-pressed="${selectedDayKeys.includes(dayKey)}">
             <strong>${escapeHtml(dayLabel)}</strong>
             <span>${escapeHtml(weekday)}</span>
           </button>
@@ -394,6 +397,7 @@ if (root) {
         data-set-status="${value}"
         data-selected="${item.status === value}"
         data-status="${value}"
+        aria-pressed="${item.status === value}"
       >
         ${escapeHtml(label)}
       </button>
@@ -511,10 +515,20 @@ if (root) {
 
     const hasAiItems = currentDraftItems.some((item) => item.source === 'ai');
     const hasManualItems = currentDraftItems.some((item) => item.source === 'manual');
-    if (hasAiItems && (!hasManualItems || window.confirm(labels.regenerateConfirm))) {
+    if (hasAiItems && hasManualItems) {
+      const confirmed = await confirmDialog?.open({
+        title: labels.regenerateConfirmTitle,
+        description: labels.regenerateConfirm,
+        confirmLabel: labels.regenerate,
+        cancelLabel: labels.confirmCancel,
+        confirmVariant: 'primary',
+        returnFocusTo: wizardNext,
+      });
+      if (!confirmed) return;
+    }
+
+    if (hasAiItems) {
       showAiStatus(labels.generating, false);
-    } else if (hasAiItems) {
-      return;
     }
 
     try {

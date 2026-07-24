@@ -64,6 +64,7 @@ describe('shopping wizard smoke checks', () => {
     assert.match(script, /shopping-wizard:step/);
     assert.match(script, /focusPanel/);
     assert.match(script, /scrollWizardTop/);
+    assert.match(script, /prefers-reduced-motion: reduce/);
     assert.match(script, /MutationObserver/);
   });
 });

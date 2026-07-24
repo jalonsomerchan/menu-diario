@@ -212,7 +212,6 @@ describe('project smoke checks', () => {
     const layout = readText('src/layouts/BaseLayout.astro');
     const header = readText('src/components/Header.astro');
     const headerScript = readText('src/scripts/app-header.ts');
-    const styles = readText('src/styles/global.css');
     const pages = [
       'src/pages/index.astro',
       'src/pages/dashboard.astro',
@@ -250,9 +249,9 @@ describe('project smoke checks', () => {
     assert.match(headerScript, /Escape/);
     assert.match(headerScript, /closest\('a'\)/);
     assert.match(headerScript, /data-global-theme/);
-    assert.match(styles, /site-header__toggle/);
-    assert.match(styles, /site-header\[data-menu-open='true'\]/);
-    assert.match(styles, /site-header__more-panel/);
+    assert.match(header, /\.mobile-menu > summary/);
+    assert.match(header, /\.app-header\[data-menu-open='true'\] > \.mobile-menu__scrim/);
+    assert.match(header, /\.nav-dropdown__list/);
     pages.forEach((source) => {
       assert.doesNotMatch(source, /<AppHeader/);
       assert.doesNotMatch(source, /from ['\"].*AppHeader\.astro['\"]/);
@@ -396,6 +395,7 @@ describe('project smoke checks', () => {
     const settingsScript = readText('src/scripts/settings-app.ts');
     const historyScript = readText('src/scripts/history-app.ts');
     const headerScript = readText('src/scripts/app-header.ts');
+    const header = readText('src/components/Header.astro');
     const dates = readText('src/lib/menu/dates.ts');
     const dishesScript = readText('src/scripts/dishes-app.ts');
     const tuppersScript = readText('src/scripts/tuppers-app.ts');
@@ -473,7 +473,7 @@ describe('project smoke checks', () => {
     assert.match(historyScript, /currentProfile\?\.groupId/);
     assert.match(headerScript, /data-site-menu-toggle/);
     assert.match(headerScript, /data-global-theme/);
-    assert.match(styles, /site-header__toggle/);
+    assert.match(header, /\.mobile-menu > summary/);
     assert.match(styles, /day-actions/);
     assert.match(styles, /dish-suggestions/);
     assert.match(dishStyles, /dish-row/);

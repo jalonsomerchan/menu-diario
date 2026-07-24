@@ -1,8 +1,10 @@
 ---
 import { Icon } from 'astro-icon/components';
 import type { Locale } from '../config/site';
+import { useTupperTranslations } from '../i18n/tuppers';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
 import { stripBasePath } from '../utils/paths';
+import '../styles/mobile-bottom-nav.css';
 
 interface Props {
   locale: Locale;
@@ -17,6 +19,7 @@ type NavItem = {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
+const tt = useTupperTranslations(locale);
 const currentPath = stripBasePath(Astro.url.pathname).replace(/\/$/, '') || '/';
 const shoppingLabel = t('appNav.shopping');
 
@@ -41,9 +44,9 @@ const items: NavItem[] = [
   },
   {
     href: getLocalizedPath('/tuppers', locale),
-    icon: 'mdi:dots-horizontal',
-    label: t('appNav.more'),
-    match: ['/ajustes', '/tuppers', '/mis-platos', '/historico', '/estadisticas', '/resumen-semanal', '/recomendador-platos', '/planificador-ai'],
+    icon: 'mdi:food-takeout-box-outline',
+    label: tt('nav'),
+    match: ['/tuppers'],
   },
 ];
 
@@ -52,7 +55,7 @@ function isActive(item: NavItem) {
 }
 ---
 
-<nav class="mobile-bottom-nav" aria-label={t('nav.main')}>
+<nav class="mobile-bottom-nav" aria-label={t('appNav.bottomNavigation')}>
   <ul class="mobile-bottom-nav__list">
     {items.map((item) => {
       const active = isActive(item);

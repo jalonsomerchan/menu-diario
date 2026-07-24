@@ -12,18 +12,34 @@ function readText(path) {
 describe('day edit modal unsaved changes protection', () => {
   it('confirms before closing dirty day edits from cancel actions and Escape', () => {
     const source = readText('src/lib/menu/day-edit-modal.ts');
+    const component = readText('src/components/DayEditModal.astro');
 
     assert.match(source, /let allowNextClose = false/);
-    assert.match(source, /const discardChangesMessage = options\.labels\.discardChangesConfirm \?\? options\.labels\.savePending/);
+    assert.match(source, /import \{ createConfirmDialog \} from '\.\.\/ui\/confirm-dialog'/);
+    assert.match(source, /const discardConfirmation = confirmDialog \? createConfirmDialog\(confirmDialog\) : null/);
     assert.match(source, /function hasUnsavedChanges\(\)/);
     assert.match(source, /readDayDraft\(card, options\.getEnabledMeals\(\), draftDay(?:, getParticipants\(\))?\)/);
     assert.match(source, /serializeDay\(currentDraft\) !== options\.getSavedDayState\(activeDayKey\)/);
-    assert.match(source, /function requestCloseWithConfirmation\(\)/);
-    assert.match(source, /window\.confirm\(discardChangesMessage\)/);
-    assert.match(source, /requestCloseWithConfirmation\(\);\n\s+return;\n\s+}\n\n\s+const clearAction/);
+    assert.match(source, /async function requestCloseWithConfirmation\(returnFocusTo\?: HTMLElement \| null\)/);
+    assert.match(source, /await discardConfirmation\?\.open\(\{/);
+    assert.match(source, /title: options\.labels\.discardChangesTitle/);
+    assert.match(source, /confirmVariant: 'danger'/);
+    assert.match(source, /await requestCloseWithConfirmation\(cancelButton\)/);
     assert.match(source, /modal\.addEventListener\('cancel'/);
     assert.match(source, /event\.preventDefault\(\)/);
-    assert.match(source, /allowNextClose = true;\n\s+modal\.close\(\)/);
+    assert.match(source, /void requestCloseWithConfirmation\(\s*document\.activeElement instanceof HTMLElement/);
+    assert.doesNotMatch(source, /window\.confirm/);
+    assert.match(component, /<ConfirmDialog/);
+    assert.match(component, /dialogId="day-edit-discard-confirm"/);
+  });
+
+  it('resets a previous confirmation before reopening so Escape remains a cancellation', () => {
+    const source = readText('src/lib/ui/confirm-dialog.ts');
+
+    assert.match(source, /const handleCancel = \(\) => \{\n\s+dialog\.returnValue = 'cancel';\n\s+};/);
+    assert.match(source, /dialog\.addEventListener\('cancel', handleCancel\)/);
+    assert.match(source, /dialog\.returnValue = 'cancel';\n\s+dialog\.showModal\(\)/);
+    assert.match(source, /dialog\.removeEventListener\('cancel', handleCancel\)/);
   });
 
   it('locks body scrolling while the day edit modal is open and releases it on close', () => {

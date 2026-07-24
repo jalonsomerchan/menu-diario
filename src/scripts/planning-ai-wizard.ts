@@ -11,6 +11,8 @@ if (form) {
   const submit = form.querySelector<HTMLButtonElement>('[data-plan-submit]');
   const start = form.querySelector<HTMLInputElement>('[data-plan-start]');
   const end = form.querySelector<HTMLInputElement>('[data-plan-end]');
+  const dateRangeField = form.querySelector<HTMLElement>('.planning-ai-date-range-field');
+  const rangeError = form.querySelector<HTMLElement>('[data-plan-range-error]');
   let index = 0;
 
   function focusPanel() {
@@ -21,7 +23,25 @@ if (form) {
 
   function scrollWizardTop() {
     if (!window.matchMedia('(max-width: 719px)').matches) return;
-    scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    scrollTarget.scrollIntoView({ behavior, block: 'start' });
+  }
+
+  function visibleDateRangeControl() {
+    return [...(dateRangeField?.querySelectorAll<HTMLInputElement>('input') ?? [])]
+      .find((input) => input.type !== 'hidden' && !input.hidden);
+  }
+
+  function setRangeError(message = '', shouldFocus = true) {
+    const control = visibleDateRangeControl();
+    control?.setAttribute('aria-describedby', 'planning-ai-date-range-error');
+    if (message) control?.setAttribute('aria-invalid', 'true');
+    else control?.removeAttribute('aria-invalid');
+    if (rangeError) {
+      rangeError.textContent = message;
+      rangeError.hidden = !message;
+    }
+    if (message && shouldFocus) control?.focus();
   }
 
   function selectedMeals() {
@@ -32,17 +52,19 @@ if (form) {
     return [...form.querySelectorAll<HTMLInputElement>('[data-plan-pending-slot]')].filter((input) => input.checked);
   }
 
-  function validate(panelIndex: number) {
+  function validate(panelIndex: number, shouldFocus = true) {
     if (panelIndex === 0 && (!start?.value || !end?.value || start.value > end.value)) {
-      start?.focus();
-      return labels.invalidRange || 'Invalid range';
+      const message = labels.invalidRange || 'Invalid range';
+      setRangeError(message, shouldFocus);
+      return message;
     }
+    if (panelIndex === 0) setRangeError();
     if (panelIndex === 1 && selectedMeals().length === 0) {
-      form.querySelector<HTMLInputElement>('[data-plan-meal]')?.focus();
+      if (shouldFocus) form.querySelector<HTMLInputElement>('[data-plan-meal]')?.focus();
       return labels.meals || 'Meals';
     }
     if (panelIndex === 2 && selectedPendingSlots().length === 0) {
-      form.querySelector<HTMLInputElement>('[data-plan-pending-slot]')?.focus();
+      if (shouldFocus) form.querySelector<HTMLInputElement>('[data-plan-pending-slot]')?.focus();
       return labels.pendingEmpty || 'Pending slots';
     }
     return '';
@@ -72,10 +94,15 @@ if (form) {
 
   function validateBeforeSubmit(event: Event) {
     for (let panelIndex = 0; panelIndex < panels.length - 1; panelIndex += 1) {
-      if (validate(panelIndex)) {
+      if (validate(panelIndex, false)) {
         event.preventDefault();
         event.stopImmediatePropagation();
         go(panelIndex, true);
+        window.requestAnimationFrame(() => {
+          if (panelIndex === 0) visibleDateRangeControl()?.focus();
+          else if (panelIndex === 1) form.querySelector<HTMLInputElement>('[data-plan-meal]')?.focus();
+          else if (panelIndex === 2) form.querySelector<HTMLInputElement>('[data-plan-pending-slot]')?.focus();
+        });
         return;
       }
     }
@@ -99,6 +126,8 @@ if (form) {
     if (typeof targetIndex !== 'number') return;
     go(targetIndex, true);
   });
+  start?.addEventListener('input', () => setRangeError());
+  end?.addEventListener('input', () => setRangeError());
   form.addEventListener('submit', validateBeforeSubmit, { capture: true });
   go(0);
 }

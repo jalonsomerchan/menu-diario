@@ -7,7 +7,7 @@ import { useTranslations } from '../i18n/ui';
 
 const locale = defaultLocale;
 const t = useTranslations(locale);
-const title = 'Compras con IA';
+const title = t('shopping.title');
 ---
 
 <BaseLayout title={`${title} · ${siteConfig.name}`} description={t('shopping.description')} locale={locale}>

@@ -10,7 +10,7 @@ const tp = usePlanningTranslations(locale);
 ---
 
 <BaseLayout title={`${tp('title')} · ${siteConfig.name}`} description={tp('description')} locale={locale}>
-  <AppPageShell locale={locale} title={tp('title')} description={tp('description')}>
+  <AppPageShell locale={locale} title={tp('title')} description={tp('description')} showHeader={false}>
     <PlanningAiApp locale={locale} />
   </AppPageShell>
 </BaseLayout>

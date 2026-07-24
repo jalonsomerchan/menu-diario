@@ -4,6 +4,7 @@ import DishEditDialog from './DishEditDialog.astro';
 import { quickDishTags } from '../data/dish-tags';
 import type { Locale } from '../config/site';
 import { getLocalizedPath, useTranslations, type TranslationKey } from '../i18n/ui';
+import '../styles/dishes.css';
 
 interface Props {
   locale: Locale;
@@ -119,7 +120,7 @@ const labels = {
 ---
 
 <section class="dishes-app" data-dishes-app data-labels={JSON.stringify(labels)}>
-  <div class="menu-app__status" data-status aria-live="polite" hidden></div>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" aria-atomic="true" hidden></div>
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div class="dishes-app__content" data-content hidden>

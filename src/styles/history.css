@@ -3,7 +3,7 @@
 .history-search label { display: grid; gap: 0.4rem; min-width: 0; color: var(--color-muted); font-size: 0.86rem; font-weight: 850; }
 .history-search span { display: inline-flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-width: 0; }
 .history-search input, .history-search select { width: 100%; min-height: var(--form-control-min-height); border: 1px solid var(--color-border); border-radius: var(--radius-xl); background: var(--color-surface-raised); color: var(--color-text); padding: var(--form-control-padding-block) var(--form-control-padding-inline); line-height: 1.5; }
-.history-search input:focus, .history-search select:focus { outline: 0; border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+.history-search input:focus, .history-search select:focus { border-color: var(--color-primary); outline: 3px solid var(--color-focus-ring); outline-offset: 1px; box-shadow: none; }
 .history-search__wide { grid-column: 1 / -1; }
 .history-filter-panel { position: relative; min-width: 0; }
 .history-filter-panel summary { list-style: none; width: 100%; }
@@ -36,10 +36,10 @@
 .day-card-primary-action { display: inline-flex; width: 2.5rem; height: 2.5rem; align-items: center; justify-content: center; gap: 0.3rem; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--color-primary); font-size: 1.4rem; font-weight: 650; line-height: 1; }
 .day-card-primary-action--add { width: auto; min-width: 7rem; border: 1px solid var(--color-accent); border-radius: var(--radius-lg); color: var(--color-accent); padding: 0 0.85rem; font-size: 0.96rem; }
 .day-card-primary-action__label { font-size: 0.96rem; font-weight: 500; }
-.day-card-primary-action:hover, .day-card-primary-action:focus-visible { background: var(--color-primary-soft); outline: 0; }
+.day-card-primary-action:hover, .day-card-primary-action:focus-visible { background: var(--color-primary-soft); }
 .day-card-primary-action--add:hover, .day-card-primary-action--add:focus-visible { background: var(--color-accent-soft); }
-.day-status-pill { display: inline-flex; align-items: center; gap: 0.38rem; min-height: 1.85rem; border-radius: var(--radius-full); background: #e5f6ed; color: #129349; padding: 0.16rem 0.82rem; font-size: 0.84rem; font-weight: 600; white-space: nowrap; }
-.day-status-pill span { display: grid; width: 1.1rem; height: 1.1rem; place-items: center; border-radius: var(--radius-full); background: #129349; color: #fff; font-size: 0.72rem; font-weight: 800; }
+.day-status-pill { display: inline-flex; align-items: center; gap: 0.38rem; min-height: 1.85rem; border-radius: var(--radius-full); background: var(--color-success-soft); color: var(--color-success); padding: 0.16rem 0.82rem; font-size: 0.84rem; font-weight: 600; white-space: nowrap; }
+.day-status-pill span { display: grid; width: 1.1rem; height: 1.1rem; place-items: center; border-radius: var(--radius-full); background: var(--color-success); color: var(--color-on-success, #fff); font-size: 0.72rem; font-weight: 800; }
 .day-actions[data-day-actions] { display: grid; place-items: center; align-self: center; flex: 0 0 auto; }
 .day-actions[data-day-actions] summary { width: 1.9rem; height: 1.9rem; border: 0; background: transparent; color: var(--color-muted); box-shadow: none; font-size: 1.35rem; }
 .day-actions[data-day-actions] div { min-width: 10rem; }

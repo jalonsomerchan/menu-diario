@@ -32,7 +32,8 @@ if (wizard) {
 
   function scrollWizardTop() {
     if (!window.matchMedia('(max-width: 719px)').matches) return;
-    scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    scrollTarget.scrollIntoView({ behavior, block: 'start' });
   }
 
   function getResultsSignature() {
@@ -65,7 +66,10 @@ if (wizard) {
       const doNotBuyLabel = ta('doNotBuy');
       if (button.textContent !== doNotBuyLabel) button.textContent = doNotBuyLabel;
       const item = button.closest<HTMLElement>('[data-item-id]');
-      if (item?.dataset.status && item.dataset.status !== 'to-buy') button.dataset.selected = 'true';
+      if (item?.dataset.status && item.dataset.status !== 'to-buy') {
+        button.dataset.selected = 'true';
+        button.setAttribute('aria-pressed', 'true');
+      }
     });
   }
 

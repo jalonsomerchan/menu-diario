@@ -290,7 +290,10 @@ if (root) {
       const title = panels[currentStep]?.querySelector<HTMLElement>('h2');
       title?.setAttribute('tabindex', '-1');
       title?.focus({ preventScroll: true });
-      if (window.matchMedia('(max-width: 719px)').matches) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (window.matchMedia('(max-width: 719px)').matches) {
+        const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+        scrollTarget.scrollIntoView({ behavior, block: 'start' });
+      }
     }
   }
 

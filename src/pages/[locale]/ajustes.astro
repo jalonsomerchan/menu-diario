@@ -15,7 +15,7 @@ const t = useTranslations(locale);
 ---
 
 <BaseLayout title={`${t('dashboard.settings')} · ${siteConfig.name}`} description={t('settings.description')} locale={locale}>
-  <AppPageShell locale={locale} title={t('settings.title')} description={t('settings.description')}>
+  <AppPageShell locale={locale} title={t('settings.title')} description={t('settings.description')} showHeader={false}>
     <SettingsApp locale={locale} />
   </AppPageShell>
 </BaseLayout>

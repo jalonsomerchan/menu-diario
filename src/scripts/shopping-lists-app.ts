@@ -6,6 +6,7 @@ import { buildShoppingListText } from '../lib/shopping/export';
 import { createManualShoppingItemId, getToBuyItems, groupShoppingItems, normalizeShoppingItem } from '../lib/shopping/normalize';
 import { deleteShoppingList, saveShoppingList, updateShoppingListStatus, watchShoppingLists } from '../lib/shopping/repository';
 import type { ShoppingItem, ShoppingListDocument, ShoppingScope } from '../lib/shopping/types';
+import { createConfirmDialog } from '../lib/ui/confirm-dialog';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 import '../styles/shopping-lists-modern.css';
 
@@ -28,6 +29,8 @@ if (root) {
   const shareButton = root.querySelector<HTMLButtonElement>('[data-share]');
   const completeButton = root.querySelector<HTMLButtonElement>('[data-complete]');
   const deleteActiveButton = root.querySelector<HTMLButtonElement>('[data-delete-active]');
+  const confirmDialogElement = root.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
+  const confirmDialog = confirmDialogElement ? createConfirmDialog(confirmDialogElement) : null;
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
@@ -121,7 +124,7 @@ if (root) {
 
   function renderStatusButton(item: ShoppingItem, value: ShoppingItem['status'], label: string) {
     return `
-      <button class="shopping-status__button" type="button" data-set-status="${value}" data-selected="${item.status === value}" data-status="${value}">
+      <button class="shopping-status__button" type="button" data-set-status="${value}" data-selected="${item.status === value}" data-status="${value}" aria-pressed="${item.status === value}">
         ${escapeHtml(label)}
       </button>
     `;
@@ -317,9 +320,16 @@ if (root) {
     }
   }
 
-  async function deleteCurrentList(listId: string) {
+  async function deleteCurrentList(listId: string, returnFocusTo?: HTMLElement | null) {
     if (!currentUser) return;
-    const confirmed = window.confirm(labels.deleteListConfirm);
+    const confirmed = await confirmDialog?.open({
+      title: labels.deleteListConfirmTitle,
+      description: labels.deleteListConfirm,
+      confirmLabel: labels.deleteList,
+      cancelLabel: labels.confirmCancel,
+      confirmVariant: 'danger',
+      returnFocusTo,
+    });
     if (!confirmed) return;
 
     try {
@@ -410,7 +420,7 @@ if (root) {
     savedLists?.addEventListener('click', (event) => {
       const deleteButton = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-delete-list]');
       if (deleteButton?.dataset.deleteList) {
-        deleteCurrentList(deleteButton.dataset.deleteList).catch((error) => showStatus(formatError(error), true));
+        deleteCurrentList(deleteButton.dataset.deleteList, deleteButton).catch((error) => showStatus(formatError(error), true));
         return;
       }
 
@@ -461,7 +471,7 @@ if (root) {
     });
     deleteActiveButton?.addEventListener('click', () => {
       if (!activeList?.id) return;
-      deleteCurrentList(activeList.id).catch((error) => showStatus(formatError(error), true));
+      deleteCurrentList(activeList.id, deleteActiveButton).catch((error) => showStatus(formatError(error), true));
     });
     shareButton?.addEventListener('click', () => {
       shareCurrentList().catch((error) => showStatus(formatError(error), true));

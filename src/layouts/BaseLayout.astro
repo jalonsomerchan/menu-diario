@@ -1,10 +1,5 @@
 ---
 import '../styles/global.css';
-import '../styles/dishes.css';
-import '../styles/tuppers.css';
-import '../styles/mobile-bottom-nav.css';
-import '../styles/modals.css';
-import '../styles/toasts.css';
 import Header from '../components/Header.astro';
 import MobileBottomNav from '../components/MobileBottomNav.astro';
 import Footer from '../components/Footer.astro';
@@ -29,6 +24,22 @@ const t = useTranslations(locale);
 const description = Astro.props.description ?? t('site.description');
 const pageTitle = title === siteConfig.name ? title : `${title} · ${siteConfig.name}`;
 const routePath = stripBasePath(Astro.url.pathname);
+const localeRelativePath = locale !== defaultLocale && routePath.startsWith(`/${locale}`)
+  ? routePath.slice(locale.length + 1) || '/'
+  : routePath;
+const publicPaths = [
+  '/',
+  '/404',
+  '/acerca-de',
+  '/como-funciona',
+  '/faq',
+  '/manual',
+  '/organizar-menu-semanal',
+  '/planificador-comidas',
+  '/politica-privacidad',
+];
+const normalizedPagePath = localeRelativePath.replace(/\/$/, '') || '/';
+const isPublicPage = publicPaths.includes(normalizedPagePath);
 const canonicalUrl = getAbsoluteUrl(withBasePath(routePath), siteConfig.url);
 const imageUrl = getAbsoluteUrl(withBasePath(image), siteConfig.url);
 const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
@@ -39,6 +50,7 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
+    <meta name="theme-color" content="#f5f5f7" data-theme-color />
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
     <script is:inline>
       (() => {
@@ -47,10 +59,21 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
           if (theme === 'light' || theme === 'dark') {
             document.documentElement.dataset.theme = theme;
           } else {
-            document.documentElement.dataset.theme = 'light';
+            document.documentElement.removeAttribute('data-theme');
           }
+
+          const effectiveTheme =
+            theme === 'light' || theme === 'dark'
+              ? theme
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.querySelector('[data-theme-color]')?.setAttribute(
+            'content',
+            effectiveTheme === 'dark' ? '#0b0b0d' : '#f5f5f7'
+          );
         } catch {
-          document.documentElement.dataset.theme = 'light';
+          document.documentElement.removeAttribute('data-theme');
         }
       })();
     </script>
@@ -62,7 +85,7 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
     <link rel="icon" href={withBasePath('favicon.ico')} />
     <link rel="apple-touch-icon" href={withBasePath('og-image.svg')} />
     <link rel="manifest" href={withBasePath('manifest.webmanifest')} />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content={siteConfig.name} />
@@ -79,11 +102,12 @@ const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
     <meta name="twitter:image" content={imageUrl} />
   </head>
   <body>
+    <a class="skip-link" href="#main-content">{t('accessibility.skipToContent')}</a>
     <Header locale={locale} />
-    <main class="site-main">
+    <main id="main-content" class="site-main" tabindex="-1">
       <slot />
     </main>
-    <MobileBottomNav locale={locale} />
-    <Footer locale={locale} />
+    {!isPublicPage && <MobileBottomNav locale={locale} />}
+    {isPublicPage && <Footer locale={locale} />}
   </body>
 </html>

@@ -212,6 +212,7 @@ Las rutas de idioma por defecto viven directamente en `src/pages/`. Las equivale
 - `src/styles/dish-recommender.css`: estilos del recomendador de platos.
 - `src/styles/dishes.css`: estilos de platos.
 - `src/styles/history.css`: estilos del historico.
+- `src/styles/home-landing.css`: estilos visuales y responsive de la portada publica.
 - `src/styles/meal-participants.css`: estilos de participantes.
 - `src/styles/mobile-bottom-nav.css`: estilos de navegacion movil inferior.
 - `src/styles/modals.css`: estilos comunes de modales.

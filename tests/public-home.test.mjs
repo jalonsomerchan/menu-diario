@@ -16,22 +16,24 @@ describe('public home page', () => {
     const landing = readText('src/components/HomeLanding.astro');
     const authGate = readText('src/components/AuthGate.astro');
     const authScript = readText('src/scripts/auth-gate.ts');
+    const translations = readText('src/i18n/translations/es.json');
 
     assert.match(rootHome, /<HomeLanding locale=\{locale\} \/>/);
     assert.match(localizedHome, /<HomeLanding locale=\{locale\} \/>/);
-    assert.match(landing, /Bienvenido a Menu Diario/);
-    assert.match(landing, /Tu app para planificar comidas con tu familia o grupo/);
     assert.match(landing, /home-landing-hero/);
     assert.match(landing, /home-landing-grid/);
-    assert.match(landing, /Toda la semana en una sola vista/);
-    assert.match(landing, /Pensado para decidir en grupo/);
-    assert.match(landing, /IA y platos guardados cuando hagan falta/);
+    assert.match(landing, /home\.landingTitle/);
+    assert.match(landing, /home\.landingCardWeekTitle/);
+    assert.match(translations, /Bienvenido a Menu Diario/);
+    assert.match(translations, /Toda la semana en una sola vista/);
+    assert.match(translations, /Pensado para decidir en grupo/);
+    assert.match(translations, /IA y platos guardados cuando hagan falta/);
     assert.match(landing, /showGuest=\{false\}/);
     assert.doesNotMatch(landing, /siteConfig\.repositoryUrl/);
 
     assert.match(authGate, /auth-session-loading/);
     assert.match(authGate, /data-auth-session-loading/);
-    assert.match(authGate, /Iniciando sesión/);
+    assert.match(authGate, /auth\.checkingSession/);
     assert.match(authGate, /google-signin-button/);
     assert.match(authGate, /data-google-login hidden/);
     assert.match(authGate, /viewBox=\"0 0 48 48\"/);

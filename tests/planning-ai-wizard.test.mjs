@@ -35,6 +35,9 @@ describe('AI planner wizard', () => {
     assert.match(component, /data-plan-step=\"6\"/);
     assert.match(component, /data-plan-step=\"7\"/);
     assert.match(component, /data-plan-date-range/);
+    assert.match(component, /aria-describedby="planning-ai-date-range-error"/);
+    assert.match(component, /data-plan-range-error/);
+    assert.match(component, /role="alert"/);
     assert.match(component, /data-plan-start/);
     assert.match(component, /data-plan-end/);
     assert.match(component, /planning-ai-date-range\.ts/);
@@ -71,6 +74,9 @@ describe('AI planner wizard', () => {
     assert.match(wizard, /planning-ai-wizard:step/);
     assert.match(wizard, /planning-ai-wizard:go/);
     assert.match(wizard, /scrollTarget\.scrollIntoView/);
+    assert.match(wizard, /prefers-reduced-motion: reduce/);
+    assert.match(wizard, /visibleDateRangeControl/);
+    assert.match(wizard, /aria-invalid/);
     assert.match(wizard, /data-plan-scroll-target/);
     assert.match(wizard, /max-width: 719px/);
     assert.match(wizard, /aria-current', 'step'/);

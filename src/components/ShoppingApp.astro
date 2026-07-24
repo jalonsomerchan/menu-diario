@@ -1,6 +1,7 @@
 ---
 import type { Locale } from '../config/site';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
+import ConfirmDialog from './ConfirmDialog.astro';
 import '../styles/shopping-planning-wizard.css';
 
 interface Props {
@@ -11,30 +12,17 @@ const { locale } = Astro.props;
 const t = useTranslations(locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
 const configurePath = getLocalizedPath('/configurar', locale);
-const savedShoppingListLabels =
-  locale === 'en'
-    ? {
-        savedListsTitle: 'Saved shopping lists',
-        savedListsDescription: 'Open a saved list or start a new one from your upcoming menu.',
-        savedListsEmpty: 'You do not have saved shopping lists yet.',
-        newList: 'New list',
-        openList: 'Open list',
-        activeList: 'Current list',
-        listItemsCountSingle: '1 item pending',
-        listItemsCountPlural: '{count} items pending',
-        listDateRange: '{start} - {end}',
-      }
-    : {
-        savedListsTitle: 'Listas de la compra guardadas',
-        savedListsDescription: 'Abre una lista guardada o empieza una nueva desde tu próximo menú.',
-        savedListsEmpty: 'Todavía no tienes listas de la compra guardadas.',
-        newList: 'Nueva lista',
-        openList: 'Abrir lista',
-        activeList: 'Lista actual',
-        listItemsCountSingle: '1 pendiente',
-        listItemsCountPlural: '{count} pendientes',
-        listDateRange: '{start} - {end}',
-      };
+const savedShoppingListLabels = {
+  savedListsTitle: t('shoppingLists.title'),
+  savedListsDescription: t('shoppingLists.description'),
+  savedListsEmpty: t('shoppingLists.empty'),
+  newList: t('shoppingLists.createManual'),
+  openList: t('shoppingLists.openList'),
+  activeList: t('shoppingLists.activeList'),
+  listItemsCountSingle: t('shoppingLists.itemsCountSingle'),
+  listItemsCountPlural: t('shoppingLists.itemsCountPlural'),
+  listDateRange: '{start} – {end}',
+};
 
 const labels = {
   title: t('shopping.title'),
@@ -80,7 +68,9 @@ const labels = {
   draftDescription: t('shopping.draftDescription'),
   generate: t('shopping.generate'),
   regenerate: t('shopping.regenerate'),
+  regenerateConfirmTitle: t('shopping.regenerateConfirmTitle'),
   regenerateConfirm: t('shopping.regenerateConfirm'),
+  confirmCancel: t('dashboard.cancel'),
   addManualItem: t('shopping.addManualItem'),
   saveList: t('shopping.saveList'),
   copy: t('shopping.copy'),
@@ -131,6 +121,10 @@ const labels = {
   groupScope: t('shopping.groupScope'),
   userScope: t('shopping.userScope'),
   ...savedShoppingListLabels,
+  deleteList: t('shoppingLists.deleteList'),
+  deleteListConfirmTitle: t('shoppingLists.deleteListConfirmTitle'),
+  deleteListConfirm: t('shoppingLists.deleteListConfirm'),
+  deletedList: t('shoppingLists.deletedList'),
   aiDisabled: t('ai.disabled'),
   aiMissingConfig: t('ai.missingConfig'),
   aiLoading: t('ai.loading'),
@@ -262,6 +256,12 @@ const labels = {
       </div>
     </section>
   </div>
+
+  <ConfirmDialog
+    dialogId="shopping-action-confirm"
+    cancelLabel={labels.confirmCancel}
+    confirmLabel={labels.regenerate}
+  />
 </section>
 
 <style is:global>

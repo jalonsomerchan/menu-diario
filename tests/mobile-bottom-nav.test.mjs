@@ -16,16 +16,16 @@ describe('mobile bottom navigation', () => {
     const styles = readText('src/styles/mobile-bottom-nav.css');
 
     assert.match(layout, /MobileBottomNav/);
-    assert.match(layout, /mobile-bottom-nav\.css/);
+    assert.match(component, /mobile-bottom-nav\.css/);
     assert.match(component, /getLocalizedPath\('\/dashboard'/);
     assert.match(component, /getLocalizedPath\('\/planificador'/);
     assert.match(component, /getLocalizedPath\('\/compras'/);
     assert.match(component, /getLocalizedPath\('\/tuppers'/);
-    assert.match(component, /'\/planificador-ai'/);
-    assert.match(component, /'\/configurar'/);
-    assert.match(component, /'\/planificacion'/);
+    assert.match(component, /food-takeout-box-outline/);
+    assert.match(component, /appNav\.bottomNavigation/);
     assert.match(component, /appNav\.week/);
     assert.match(component, /aria-current/);
+    assert.doesNotMatch(component, /label:\s*t\('appNav\.more'\)/);
     assert.match(styles, /repeat\(4, minmax\(0, 1fr\)\)/);
     assert.match(styles, /env\(safe-area-inset-bottom\)/);
     assert.match(styles, /@media \(min-width: 768px\)/);

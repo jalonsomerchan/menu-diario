@@ -18,7 +18,7 @@ const description = ts('description');
 ---
 
 <BaseLayout title={`${title} · ${siteConfig.name}`} description={description} locale={locale}>
-  <AppPageShell locale={locale} title={title} description={description}>
+  <AppPageShell locale={locale} title={title} description={description} showHeader={false}>
     <StatisticsApp locale={locale} />
   </AppPageShell>
 </BaseLayout>

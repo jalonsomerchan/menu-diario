@@ -7,6 +7,7 @@ import { usePlanningTranslations } from '../i18n/planning';
 import { useStatisticsTranslations } from '../i18n/statistics';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { getAlternateLocales, getLocalizedEquivalentPath, getLocalizedPath, useTranslations } from '../i18n/ui';
+import { stripBasePath } from '../utils/paths';
 
 interface Props {
   locale: Locale;
@@ -35,9 +36,18 @@ const historyPath = getLocalizedPath('/historico', locale);
 const settingsPath = getLocalizedPath('/ajustes', locale);
 const alternateLocales = getAlternateLocales(locale);
 const panelId = 'site-navigation-panel';
-const shoppingLabels = locale === 'en'
-  ? { shopping: 'Shopping', shoppingAi: 'AI shopping' }
-  : { shopping: 'Compras', shoppingAi: 'Compras con IA' };
+const normalizeNavigationPath = (path: string) => {
+  if (path === '/platos') return '/mis-platos';
+  if (path === `/${locale}/platos`) return `/${locale}/mis-platos`;
+  return path;
+};
+const currentPath = normalizeNavigationPath(stripBasePath(Astro.url.pathname).replace(/\/$/, '') || '/');
+const isCurrentHref = (href: string) => {
+  const itemPath = normalizeNavigationPath(
+    stripBasePath(new URL(href, Astro.url).pathname).replace(/\/$/, '') || '/'
+  );
+  return itemPath === currentPath;
+};
 const labels = {
   guestSession: t('menu.guestSession'),
   openMenu: t('appNav.openMenu'),
@@ -51,8 +61,8 @@ const primaryItems = [
 ] as const;
 
 const moreItems = [
-  { href: shoppingListsPath, icon: 'mdi:cart-outline', label: shoppingLabels.shopping },
-  { href: shoppingAiPath, icon: 'mdi:creation-outline', label: shoppingLabels.shoppingAi },
+  { href: shoppingListsPath, icon: 'mdi:cart-outline', label: t('appNav.shoppingLists') },
+  { href: shoppingAiPath, icon: 'mdi:creation-outline', label: t('appNav.shoppingAi') },
   { href: tuppersPath, icon: 'mdi:food-takeout-box-outline', label: tt('nav') },
   { href: dishesPath, icon: 'mdi:silverware-fork-knife', label: t('appNav.dishes') },
   { href: planningPath, icon: 'mdi:creation-outline', label: tp('nav') },
@@ -77,20 +87,20 @@ const moreItems = [
 
     <nav aria-label={t('nav.main')} class="main-nav main-nav--desktop">
       {primaryItems.map((item) => (
-        <a href={item.href}>
+        <a class:list={{ 'is-current': isCurrentHref(item.href) }} href={item.href} aria-current={isCurrentHref(item.href) ? 'page' : undefined}>
           <Icon name={item.icon} aria-hidden="true" />
           <span>{item.label}</span>
         </a>
       ))}
 
-      <details class="nav-dropdown site-header__more">
+      <details class:list={['nav-dropdown', 'site-header__more', { 'has-current': moreItems.some((item) => isCurrentHref(item.href)) }]}>
         <summary>
           <Icon name="mdi:dots-horizontal-circle-outline" aria-hidden="true" />
           <span>{t('appNav.more')}</span>
         </summary>
         <div class="nav-dropdown__list site-header__more-panel">
           {moreItems.map((item) => (
-            <a href={item.href}>
+            <a class:list={{ 'is-current': isCurrentHref(item.href) }} href={item.href} aria-current={isCurrentHref(item.href) ? 'page' : undefined}>
               <Icon name={item.icon} aria-hidden="true" />
               <span>{item.label}</span>
             </a>
@@ -147,18 +157,18 @@ const moreItems = [
         </div>
         <nav aria-label={t('nav.main')} class="mobile-menu__nav">
           {primaryItems.map((item) => (
-            <a href={item.href}>
+            <a class:list={{ 'is-current': isCurrentHref(item.href) }} href={item.href} aria-current={isCurrentHref(item.href) ? 'page' : undefined}>
               <span>
                 <Icon name={item.icon} aria-hidden="true" />
                 {item.label}
               </span>
             </a>
           ))}
-          <details class="mobile-menu__section">
+          <details class:list={['mobile-menu__section', { 'has-current': moreItems.some((item) => isCurrentHref(item.href)) }]}>
             <summary>{t('appNav.more')}</summary>
             <div>
               {moreItems.map((item) => (
-                <a href={item.href}>
+                <a class:list={{ 'is-current': isCurrentHref(item.href) }} href={item.href} aria-current={isCurrentHref(item.href) ? 'page' : undefined}>
                   <span>
                     <Icon name={item.icon} aria-hidden="true" />
                     {item.label}
@@ -194,6 +204,7 @@ const moreItems = [
       </div>
     </details>
   </Container>
+  <button class="mobile-menu__scrim" type="button" data-site-menu-scrim tabindex="-1" aria-hidden="true"></button>
 </header>
 
 <style is:global>
@@ -223,7 +234,7 @@ const moreItems = [
     gap: clamp(0.7rem, 2.1vw, 1rem);
     min-width: 0;
     color: var(--color-text);
-    font-weight: 760;
+    font-weight: 700;
     letter-spacing: -0.025em;
     text-decoration: none;
   }
@@ -257,7 +268,7 @@ const moreItems = [
     max-width: 58vw;
     color: var(--color-text);
     font-size: clamp(1.15rem, 4vw, 1.7rem);
-    font-weight: 560;
+    font-weight: 600;
     line-height: 1.1;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -337,7 +348,7 @@ const moreItems = [
     padding-inline: 0.25rem;
     color: var(--color-text);
     font-size: clamp(0.92rem, 2vw, 1.18rem);
-    font-weight: 650;
+    font-weight: 600;
   }
 
   .locale-menu summary svg {
@@ -425,7 +436,7 @@ const moreItems = [
     padding: 0.625rem 0.75rem;
     font: inherit;
     font-size: 0.875rem;
-    font-weight: 650;
+    font-weight: 600;
     text-align: left;
     text-decoration: none;
     transition: background var(--transition-base), color var(--transition-base);
@@ -572,7 +583,7 @@ const moreItems = [
     padding: 0.625rem 0.75rem;
     font: inherit;
     font-size: 0.875rem;
-    font-weight: 650;
+    font-weight: 600;
     list-style: none;
     text-align: left;
     text-decoration: none;
@@ -684,8 +695,8 @@ const moreItems = [
       display: flex;
     }
 
-    .main-nav--desktop > a:not(.settings-shortcut),
-    .main-nav--desktop > .site-header__more {
+    .main-nav.main-nav--desktop > a:not(.settings-shortcut),
+    .main-nav.main-nav--desktop > .site-header__more {
       display: inline-flex;
     }
 
@@ -709,6 +720,192 @@ const moreItems = [
 
   :root[data-theme='dark'] .app-header {
     background: color-mix(in srgb, var(--color-surface) 84%, transparent);
+  }
+
+  /* Floating, source-anchored chrome inspired by native Apple navigation. */
+  .app-header {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+
+  .header-inner {
+    position: relative;
+    z-index: 2;
+    min-height: 3.9rem;
+    width: min(calc(100% - 1rem), var(--container-page-max));
+    border: 1px solid var(--panel-border);
+    border-radius: calc(var(--radius-2xl) + 0.25rem);
+    background: var(--material-thin);
+    padding-block: 0.5rem;
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(24px) saturate(175%);
+  }
+
+  .site-brand {
+    gap: 0.7rem;
+  }
+
+  .site-brand__mark {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(145deg, color-mix(in srgb, var(--color-primary), #fff 16%), var(--color-primary));
+    color: #fff;
+    box-shadow: 0 7px 18px color-mix(in srgb, var(--color-primary), transparent 68%);
+  }
+
+  .site-brand__mark svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .site-brand__text {
+    font-size: clamp(1rem, 3.5vw, 1.18rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+  }
+
+  .main-nav--desktop {
+    display: none;
+  }
+
+  .main-nav > a,
+  .nav-dropdown summary,
+  .locale-menu summary {
+    min-height: 2.45rem;
+    padding: 0.42rem 0.72rem;
+    font-weight: 600;
+  }
+
+  .main-nav > a:active,
+  .nav-dropdown summary:active,
+  .locale-menu summary:active,
+  .mobile-menu > summary:active {
+    transform: scale(0.94);
+    transition-duration: var(--transition-fast);
+  }
+
+  .main-nav > a.is-current,
+  .nav-dropdown.has-current > summary,
+  .mobile-menu__panel a.is-current,
+  .mobile-menu__section.has-current > summary {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+
+  .locale-menu__list,
+  .nav-dropdown__list,
+  .mobile-menu__panel {
+    border-color: var(--panel-border);
+    border-radius: var(--radius-xl);
+    background: var(--material-thick);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(30px) saturate(170%);
+    transform-origin: top right;
+  }
+
+  .mobile-menu > summary {
+    position: relative;
+    z-index: 3;
+    border-color: var(--color-border);
+    background: color-mix(in srgb, var(--color-surface-soft), transparent 10%);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff, transparent 78%);
+  }
+
+  .mobile-menu__panel {
+    z-index: 2;
+    width: min(22rem, calc(100vw - 2rem));
+    padding: 0.8rem;
+  }
+
+  .mobile-menu__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    display: none;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+    background: var(--color-scrim);
+    padding: 0;
+    backdrop-filter: blur(6px);
+  }
+
+  .app-header[data-menu-open='true'] > .mobile-menu__scrim {
+    display: block;
+  }
+
+  :global(html.is-navigation-open) {
+    overflow: hidden;
+  }
+
+  .mobile-menu > summary span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+  }
+
+  .mobile-menu > summary span:nth-child(1) {
+    transform: translate(-50%, calc(-50% - 6px));
+  }
+
+  .mobile-menu > summary span:nth-child(2) {
+    transform: translate(-50%, -50%);
+  }
+
+  .mobile-menu > summary span:nth-child(3) {
+    transform: translate(-50%, calc(-50% + 6px));
+  }
+
+  .mobile-menu[open] > summary span:nth-child(1) {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  .mobile-menu[open] > summary span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu[open] > summary span:nth-child(3) {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
+  @media (min-width: 1024px) {
+    .header-inner {
+      min-height: 4.2rem;
+      padding-block: 0.55rem;
+    }
+
+    .main-nav--desktop {
+      display: flex;
+    }
+
+    .main-nav--desktop > a:not(.settings-shortcut),
+    .main-nav--desktop > .site-header__more {
+      display: inline-flex;
+    }
+
+    .mobile-menu {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .header-inner,
+    .locale-menu__list,
+    .nav-dropdown__list,
+    .mobile-menu__panel {
+      background: var(--color-surface);
+      backdrop-filter: none;
+    }
+
+    .mobile-menu__scrim {
+      backdrop-filter: none;
+    }
   }
 </style>
 

@@ -4,6 +4,7 @@ import { renderDayEditor, renderPlateRow } from './day-editor';
 import { normalizeDay } from './normalizers';
 import { serializeDay } from './day-state';
 import { lockBodyScroll } from '../ui/body-scroll-lock';
+import { createConfirmDialog } from '../ui/confirm-dialog';
 import type { DailyMenu, DailyOption, Dish, MealSlot, MenuParticipant } from './types';
 
 type DayEditModalLabels = Record<string, string>;
@@ -40,9 +41,10 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   const saveButton = options.root.querySelector<HTMLButtonElement>('[data-day-edit-save]');
   const saveState = options.root.querySelector<HTMLElement>('[data-day-edit-save-state]');
   const clearButton = options.root.querySelector<HTMLButtonElement>('[data-day-edit-clear]');
+  const confirmDialog = options.root.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
   const defaultSaveState = saveState?.textContent ?? '';
   const pendingSaveState = saveState?.dataset.pendingLabel ?? options.labels.savePending ?? defaultSaveState;
-  const discardChangesMessage = options.labels.discardChangesConfirm ?? options.labels.savePending ?? pendingSaveState;
+  const discardConfirmation = confirmDialog ? createConfirmDialog(confirmDialog) : null;
   let activeDayKey = '';
   let draftDay = normalizeDay(undefined);
   let returnFocusTo: HTMLElement | null = null;
@@ -153,14 +155,23 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
     return serializeDay(currentDraft) !== options.getSavedDayState(activeDayKey);
   }
 
-  function requestCloseWithConfirmation() {
+  async function requestCloseWithConfirmation(returnFocusTo?: HTMLElement | null) {
     if (!hasUnsavedChanges()) {
       allowNextClose = true;
       modal.close('cancel');
       return;
     }
 
-    if (window.confirm(discardChangesMessage)) {
+    const confirmed = await discardConfirmation?.open({
+      title: options.labels.discardChangesTitle,
+      description: options.labels.discardChangesDescription,
+      confirmLabel: options.labels.discardChangesAction,
+      cancelLabel: options.labels.cancel,
+      confirmVariant: 'danger',
+      returnFocusTo,
+    });
+
+    if (confirmed) {
       allowNextClose = true;
       modal.close('discard');
     }
@@ -300,7 +311,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
 
     const cancelButton = target.closest<HTMLButtonElement>('[data-day-edit-cancel], [data-day-edit-cancel-footer]');
     if (cancelButton) {
-      requestCloseWithConfirmation();
+      await requestCloseWithConfirmation(cancelButton);
       return;
     }
 
@@ -361,7 +372,7 @@ export function createDayEditModalController(options: DayEditModalControllerOpti
   modal.addEventListener('cancel', (event) => {
     if (allowNextClose || !hasUnsavedChanges()) return;
     event.preventDefault();
-    requestCloseWithConfirmation();
+    void requestCloseWithConfirmation(document.activeElement instanceof HTMLElement ? document.activeElement : null);
   });
 
   modal.addEventListener('close', () => {

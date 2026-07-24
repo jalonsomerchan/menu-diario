@@ -1,35 +1,31 @@
 import { getFirebaseServices } from '../lib/firebase/client';
 import { deleteShoppingList } from '../lib/shopping/repository';
+import { createConfirmDialog } from '../lib/ui/confirm-dialog';
 import { createSaveFeedback } from '../lib/ui/save-feedback';
 
 const root = document.querySelector<HTMLElement>('[data-shopping-app]');
 
 if (root) {
   const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
-  const locale = document.documentElement.lang === 'en' ? 'en' : 'es';
   const status = root.querySelector<HTMLElement>('[data-status]');
   const savedLists = root.querySelector<HTMLElement>('[data-saved-lists]');
   const newListButton = root.querySelector<HTMLButtonElement>('[data-new-list]');
+  const confirmDialogElement = root.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
+  const confirmDialog = confirmDialogElement ? createConfirmDialog(confirmDialogElement) : null;
   const saveFeedback = createSaveFeedback(status, {
     pending: labels.savePending,
     saving: labels.saveSaving,
     saved: labels.saveSaved,
   });
 
-  const copy =
-    locale === 'en'
-      ? {
-          deleteList: 'Delete',
-          deleteConfirm: 'Delete this shopping list? This action cannot be undone.',
-          deleted: 'Shopping list deleted.',
-          newList: labels.newList || 'New list',
-        }
-      : {
-          deleteList: 'Borrar',
-          deleteConfirm: '¿Borrar esta lista de la compra? Esta acción no se puede deshacer.',
-          deleted: 'Lista de la compra borrada.',
-          newList: labels.newList || 'Nueva lista',
-        };
+  const copy = {
+    deleteList: labels.deleteList,
+    deleteConfirmTitle: labels.deleteListConfirmTitle,
+    deleteConfirm: labels.deleteListConfirm,
+    confirmCancel: labels.confirmCancel,
+    deleted: labels.deletedList,
+    newList: labels.newList,
+  };
 
   function getPermissionSafeMessage(error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -88,7 +84,14 @@ if (root) {
     const listId = deleteButton?.dataset.deleteList;
     if (!deleteButton || !listId) return;
 
-    const confirmed = window.confirm(copy.deleteConfirm);
+    const confirmed = await confirmDialog?.open({
+      title: copy.deleteConfirmTitle,
+      description: copy.deleteConfirm,
+      confirmLabel: copy.deleteList,
+      cancelLabel: copy.confirmCancel,
+      confirmVariant: 'danger',
+      returnFocusTo: deleteButton,
+    });
     if (!confirmed) return;
 
     try {

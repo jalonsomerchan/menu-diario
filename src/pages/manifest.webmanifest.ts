@@ -15,8 +15,8 @@ export function GET() {
     display: 'standalone',
     display_override: ['standalone', 'minimal-ui', 'browser'],
     orientation: 'portrait-primary',
-    background_color: '#fff7ed',
-    theme_color: '#ea580c',
+    background_color: '#f5f5f7',
+    theme_color: '#0071e3',
     categories: ['food', 'productivity', 'lifestyle'],
     icons: [
       {

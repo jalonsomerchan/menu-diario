@@ -12,12 +12,15 @@ function readText(path) {
 describe('public footer', () => {
   it('shows only public pages in the footer', () => {
     const footer = readText('src/components/Footer.astro');
+    const layout = readText('src/layouts/BaseLayout.astro');
 
     assert.match(footer, /site-footer__brand/);
     assert.match(footer, /site-footer__public-pages/);
     assert.match(footer, /getPublicSeoPages/);
     assert.match(footer, /getLocalizedPath\('\/'/);
     assert.match(footer, /getLocalizedPath\('\/como-funciona'/);
+    assert.match(layout, /'\/404'/);
+    assert.match(layout, /isPublicPage && <Footer/);
     assert.match(footer, /getLocalizedPath\('\/acerca-de'/);
     assert.match(footer, /getLocalizedPath\('\/faq'/);
     assert.match(footer, /page\.navLabel/);

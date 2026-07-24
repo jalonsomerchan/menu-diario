@@ -1,5 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
+import ConfirmDialog from './ConfirmDialog.astro';
 import '../styles/day-edit-modal-layout.css';
 import '../styles/meal-participants.css';
 
@@ -57,6 +58,12 @@ const { eyebrow, title, subtitle = '', cancelLabel, saveLabel, clearLabel, saveH
     </footer>
   </form>
 </dialog>
+
+<ConfirmDialog
+  dialogId="day-edit-discard-confirm"
+  cancelLabel={cancelLabel}
+  confirmLabel={clearLabel}
+/>
 
 <style is:global>
   .day-edit-modal {

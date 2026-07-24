@@ -14,7 +14,7 @@ export function getStaticPaths() {
 const localeParam = Astro.params.locale;
 const locale: Locale = isLocale(localeParam) ? localeParam : defaultLocale;
 const t = useTranslations(locale);
-const title = locale === 'en' ? 'AI shopping' : 'Compras con IA';
+const title = t('shopping.title');
 ---
 
 <BaseLayout title={`${title} · ${siteConfig.name}`} description={t('shopping.description')} locale={locale}>

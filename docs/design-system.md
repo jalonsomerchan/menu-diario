@@ -846,6 +846,44 @@ Evitar:
 - Carruseles automáticos.
 - Efectos que bloqueen interacción.
 
+### 9.5 Materiales, profundidad y respuesta física
+
+Aplicar una jerarquía sobria inspirada en las interfaces de Apple:
+
+- Reservar la translucidez y `backdrop-filter` para chrome flotante —cabeceras, navegación, menús— y diálogos. No apilar superficies translúcidas.
+- Usar fondos sólidos en tarjetas, formularios y paneles de contenido para preservar legibilidad, contraste y rendimiento.
+- Comunicar profundidad con pocos niveles: fondo, contenido y capa flotante. Bordes sutiles y sombras suaves deben explicar la jerarquía, no decorar cada bloque.
+- Las tarjetas no interactivas no deben elevarse al pasar el puntero. El movimiento se reserva para controles que realmente respondan a una acción.
+- Todo control táctil debe ofrecer un área activa mínima de `44 × 44px` (`2.75rem`).
+- Dar feedback inmediato de presión con `:active`, mediante una escala breve y discreta, sin retrasar la acción ni bloquear nuevas entradas.
+- Con `prefers-reduced-motion: reduce`, sustituir desplazamientos, escalados y efectos elásticos por cambios estáticos o fundidos breves.
+- Con `prefers-reduced-transparency: reduce`, convertir los materiales en superficies sólidas y eliminar el desenfoque.
+
+```css
+.interactive-control {
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+}
+
+.interactive-control:active {
+  transform: scale(0.97);
+  transition: transform 100ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interactive-control:active {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .floating-material {
+    background: var(--color-surface);
+    backdrop-filter: none;
+  }
+}
+```
+
 ---
 
 ## 10. Imágenes

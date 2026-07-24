@@ -53,6 +53,7 @@ describe('dish recommender smoke checks', () => {
     assert.match(script, /RenderResultsOptions/);
     assert.match(script, /preserveScrollAfterRender/);
     assert.match(script, /window\.scrollTo\(window\.scrollX, scrollY\)/);
+    assert.match(script, /prefers-reduced-motion: reduce/);
     assert.match(script, /renderResults\(\{ preserveScroll: append \}\)/);
     assert.match(script, /renderLoading/);
     assert.match(script, /showEmptyResults = false/);

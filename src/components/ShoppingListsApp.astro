@@ -1,6 +1,7 @@
 ---
 import type { Locale } from '../config/site';
 import { getLocalizedPath, useTranslations } from '../i18n/ui';
+import ConfirmDialog from './ConfirmDialog.astro';
 
 interface Props {
   locale: Locale;
@@ -53,7 +54,9 @@ const labels = {
   markCompleted: t('shoppingLists.markCompleted'),
   reopenList: t('shoppingLists.reopenList'),
   deleteList: t('shoppingLists.deleteList'),
+  deleteListConfirmTitle: t('shoppingLists.deleteListConfirmTitle'),
   deleteListConfirm: t('shoppingLists.deleteListConfirm'),
+  confirmCancel: t('dashboard.cancel'),
   deletedList: t('shoppingLists.deletedList'),
   createdList: t('shoppingLists.createdList'),
   completedList: t('shoppingLists.completedList'),
@@ -134,6 +137,12 @@ const labels = {
       <div class="planning-ai-results shopping-draft" data-detail></div>
     </section>
   </div>
+
+  <ConfirmDialog
+    dialogId="shopping-lists-delete-confirm"
+    cancelLabel={labels.confirmCancel}
+    confirmLabel={labels.deleteList}
+  />
 </section>
 
 <style is:global>

@@ -4,6 +4,7 @@ import Container from './Container.astro';
 import AuthGate from './AuthGate.astro';
 import { siteConfig, type Locale } from '../config/site';
 import { useTranslations } from '../i18n/ui';
+import '../styles/home-landing.css';
 
 interface Props {
   locale: Locale;
@@ -11,59 +12,63 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = useTranslations(locale);
-const copy =
-  locale === 'es'
-    ? {
-        title: 'Bienvenido a Menu Diario',
-        subtitle: 'Tu app para planificar comidas con tu familia o grupo',
-        cards: [
-          {
-            title: 'Toda la semana en una sola vista',
-            description: 'Centraliza desayunos, comidas, cenas, notas y participantes para no depender de mensajes sueltos.',
-          },
-          {
-            title: 'Pensado para decidir en grupo',
-            description: 'Comparte cambios al momento y mantén claro quién come cada día sin duplicar conversaciones.',
-          },
-          {
-            title: 'IA y platos guardados cuando hagan falta',
-            description: 'Reutiliza tus platos habituales o pide ideas rápidas cuando haya huecos sin planificar.',
-          },
-        ],
-      }
-    : {
-        title: 'Welcome to Menu Diario',
-        subtitle: 'Your app for planning meals with your family or group',
-        cards: [
-          {
-            title: 'The whole week in one view',
-            description: 'Centralize breakfasts, lunches, dinners, notes and participants without relying on loose messages.',
-          },
-          {
-            title: 'Built for group decisions',
-            description: 'Share changes instantly and keep clear who is eating each day without duplicate conversations.',
-          },
-          {
-            title: 'AI and saved dishes when needed',
-            description: 'Reuse your regular dishes or ask for quick ideas when there are empty planning slots.',
-          },
-        ],
-      };
+const copy = {
+  title: t('home.landingTitle'),
+  subtitle: t('home.landingSubtitle'),
+  cards: [
+    {
+      title: t('home.landingCardWeekTitle'),
+      description: t('home.landingCardWeekDescription'),
+    },
+    {
+      title: t('home.landingCardGroupTitle'),
+      description: t('home.landingCardGroupDescription'),
+    },
+    {
+      title: t('home.landingCardIdeasTitle'),
+      description: t('home.landingCardIdeasDescription'),
+    },
+  ],
+};
 ---
 
 <BaseLayout title={siteConfig.name} description={t('site.description')} locale={locale}>
   <Container class="home-landing-container" size="page">
     <section class="home-landing-hero" aria-labelledby="home-title">
-      <h1 id="home-title">{copy.title}</h1>
-      <p>{copy.subtitle}</p>
-      <div class="home-landing-hero__auth" id="login">
-        <AuthGate locale={locale} showGuest={false} />
+      <div class="home-landing-hero__copy">
+        <p class="home-landing-hero__eyebrow">{t('home.eyebrow')}</p>
+        <h1 id="home-title">{copy.title}</h1>
+        <p class="home-landing-hero__subtitle">{copy.subtitle}</p>
+        <div class="home-landing-hero__auth" id="login">
+          <AuthGate locale={locale} showGuest={false} />
+        </div>
+      </div>
+
+      <div class="home-landing-preview" aria-hidden="true">
+        <div class="home-landing-preview__chrome">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="home-landing-preview__week">
+          {Array.from({ length: 7 }, (_, index) => (
+            <span class:list={{ 'is-selected': index === 2 }}></span>
+          ))}
+        </div>
+        <div class="home-landing-preview__meal home-landing-preview__meal--primary">
+          <span></span>
+          <div><i></i><i></i></div>
+        </div>
+        <div class="home-landing-preview__meal home-landing-preview__meal--secondary">
+          <span></span>
+          <div><i></i><i></i></div>
+        </div>
+        <div class="home-landing-preview__status"><span></span></div>
       </div>
     </section>
 
     <section class="home-landing-grid" aria-label={t('home.eyebrow')}>
-      {copy.cards.map((card) => (
+      {copy.cards.map((card, index) => (
         <article class="home-landing-card">
+          <span class="home-landing-card__index" aria-hidden="true">{index + 1}</span>
           <h2>{card.title}</h2>
           <p>{card.description}</p>
         </article>
@@ -71,88 +76,3 @@ const copy =
     </section>
   </Container>
 </BaseLayout>
-
-<style>
-  .home-landing-container {
-    padding-block: clamp(3rem, 9vw, 6rem);
-  }
-
-  .home-landing-hero {
-    display: grid;
-    justify-items: center;
-    gap: 1.4rem;
-    border: 1px solid var(--panel-border);
-    border-radius: clamp(1.5rem, 4vw, 2.35rem);
-    background: var(--panel-background);
-    box-shadow: var(--shadow-sm);
-    padding: clamp(3.2rem, 8vw, 5.2rem) clamp(1.25rem, 4vw, 3rem);
-    text-align: center;
-  }
-
-  .home-landing-hero h1 {
-    max-width: 14ch;
-    margin: 0;
-    color: var(--color-text);
-    font-size: clamp(2.75rem, 8vw, 5.4rem);
-    font-weight: 620;
-    letter-spacing: -0.08em;
-    line-height: 0.95;
-  }
-
-  .home-landing-hero p {
-    max-width: 42rem;
-    margin: 0;
-    color: var(--color-muted);
-    font-size: clamp(1.1rem, 2.3vw, 1.5rem);
-    font-weight: 440;
-    letter-spacing: -0.035em;
-    line-height: 1.35;
-  }
-
-  .home-landing-hero__auth {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin-top: 0.75rem;
-  }
-
-  .home-landing-grid {
-    display: grid;
-    gap: 1rem;
-    margin-top: clamp(1.5rem, 5vw, 2rem);
-  }
-
-  .home-landing-card {
-    display: grid;
-    gap: 1.15rem;
-    border: 1px solid var(--panel-border);
-    border-radius: clamp(1.2rem, 3vw, 1.9rem);
-    background: var(--panel-background);
-    box-shadow: var(--shadow-xs);
-    padding: clamp(1.25rem, 3vw, 1.65rem);
-  }
-
-  .home-landing-card h2 {
-    margin: 0;
-    color: var(--color-text);
-    font-size: clamp(1.2rem, 2.5vw, 1.55rem);
-    font-weight: 760;
-    letter-spacing: -0.06em;
-    line-height: 1.05;
-  }
-
-  .home-landing-card p {
-    margin: 0;
-    color: var(--color-muted);
-    font-size: clamp(0.98rem, 1.7vw, 1.08rem);
-    font-weight: 420;
-    letter-spacing: -0.025em;
-    line-height: 1.5;
-  }
-
-  @media (min-width: 768px) {
-    .home-landing-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-</style>

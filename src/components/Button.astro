@@ -2,16 +2,15 @@
 const {
   href,
   variant = 'primary',
+  size = 'default',
   class: className = '',
   ...attrs
 } = Astro.props;
 
 const classes = [
   'button',
-  'button--small',
-  variant === 'secondary'
-    ? 'button--secondary'
-    : 'button--primary',
+  size === 'small' && 'button--small',
+  `button--${variant}`,
   className,
 ];
 ---

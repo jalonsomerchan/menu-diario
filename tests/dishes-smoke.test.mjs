@@ -82,7 +82,6 @@ describe('dishes page smoke checks', () => {
     const dishesApp = readText('src/components/DishesApp.astro');
     const editorDialog = readText('src/components/DishEditDialog.astro');
     const dishesScript = readText('src/scripts/dishes-app.ts');
-    const layout = readText('src/layouts/BaseLayout.astro');
 
     assert.match(defaultRoute, /<DishesApp/);
     assert.doesNotMatch(defaultRoute, /<AppHeader/);
@@ -113,7 +112,7 @@ describe('dishes page smoke checks', () => {
     assert.match(dishesScript, /data-toggle-favorite/);
     assert.match(dishesScript, /showModal/);
     assert.match(dishesScript, /data-edit-dish/);
-    assert.match(layout, /styles\/dishes\.css/);
+    assert.match(dishesApp, /styles\/dishes\.css/);
   });
 
   it('keeps dishes data, docs and styles ready for management', () => {

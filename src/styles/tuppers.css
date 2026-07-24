@@ -32,7 +32,7 @@
 .tuppers-form textarea { resize: vertical; }
 
 .tupper-filters { display: flex; flex-wrap: wrap; gap: 0.55rem; margin: 0 0 0.95rem; }
-.tupper-filters button { flex: 1 1 9.5rem; min-height: 2.45rem; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 5%); border-radius: var(--radius-full); background: color-mix(in srgb, var(--color-surface), transparent 3%); color: var(--color-text); padding: 0.48rem 0.75rem; font-size: 0.84rem; font-weight: 850; text-align: center; box-shadow: var(--shadow-xs); }
+.tupper-filters button { flex: 1 1 9.5rem; min-height: 2.75rem; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 5%); border-radius: var(--radius-full); background: color-mix(in srgb, var(--color-surface), transparent 3%); color: var(--color-text); padding: 0.48rem 0.75rem; font-size: 0.84rem; font-weight: 850; text-align: center; box-shadow: var(--shadow-xs); }
 .tupper-filters button[aria-pressed='true'] { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 35%); background: var(--color-primary-soft); color: var(--color-primary); }
 
 .tupper-list { display: grid; gap: 0.9rem; }
@@ -56,7 +56,7 @@
 .tupper-card__menu[open] summary { border-color: color-mix(in srgb, var(--color-primary), var(--color-border) 42%); background: var(--color-primary-soft); color: var(--color-primary); }
 .tupper-card__menu summary:active { transform: scale(0.96); }
 .tupper-card__menu-list { position: absolute; top: calc(100% + 0.45rem); right: 0; display: grid; min-width: 12.5rem; overflow: hidden; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text) 8%); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-md); padding: 0.3rem; }
-.tupper-card__menu-list button { width: 100%; min-height: 2.35rem; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--color-text); padding: 0.58rem 0.72rem; font-size: 0.88rem; font-weight: 820; line-height: 1.15; text-align: left; transition: background var(--transition-base), color var(--transition-base); }
+.tupper-card__menu-list button { width: 100%; min-height: 2.75rem; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--color-text); padding: 0.58rem 0.72rem; font-size: 0.88rem; font-weight: 820; line-height: 1.15; text-align: left; transition: background var(--transition-base), color var(--transition-base); }
 .tupper-card__menu-list button:hover,
 .tupper-card__menu-list button:focus-visible { background: var(--color-surface-soft); color: var(--color-primary); outline: 0; }
 .tupper-card__menu-list button[data-action='discard'],
@@ -72,7 +72,7 @@
 .tupper-card__notes { border-radius: var(--radius-md); border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%); background: color-mix(in srgb, var(--color-surface-soft), transparent 18%); padding: 0.72rem 0.78rem; overflow-wrap: anywhere; }
 .tupper-assign { display: grid; gap: 0.55rem; border: 1px solid color-mix(in srgb, var(--color-border), var(--color-primary) 12%); border-radius: var(--radius-md); background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface-soft), var(--color-primary-soft) 12%), color-mix(in srgb, var(--color-surface-soft), transparent 4%)); padding: clamp(0.68rem, 2.6vw, 0.88rem); padding-bottom: max(clamp(0.68rem, 2.6vw, 0.88rem), 0.78rem); }
 .tupper-assign label { display: grid; gap: 0.32rem; color: var(--color-muted); font-size: 0.82rem; font-weight: 850; min-width: 0; }
-.tupper-assign .button { width: 100%; min-height: 2.35rem; }
+.tupper-assign .button { width: 100%; min-height: 2.75rem; }
 .tuppers-create-dialog__surface {
   width: min(100%, 44rem);
   max-height: min(92dvh, 56rem);

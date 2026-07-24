@@ -3,6 +3,7 @@ import ConfirmDialog from './ConfirmDialog.astro';
 import type { Locale } from '../config/site';
 import { useTupperTranslations } from '../i18n/tuppers';
 import { useTranslations } from '../i18n/ui';
+import '../styles/tuppers.css';
 
 interface Props {
   locale: Locale;
@@ -94,7 +95,7 @@ const labels = {
 ---
 
 <section class="tuppers-app" data-tuppers-app data-labels={JSON.stringify(labels)}>
-  <div class="menu-app__status" data-status hidden aria-live="polite"></div>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" aria-atomic="true" hidden></div>
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
 
   <div data-content hidden>

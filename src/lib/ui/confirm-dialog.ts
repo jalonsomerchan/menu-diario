@@ -42,9 +42,14 @@ export function createConfirmDialog(dialog: HTMLDialogElement) {
 
         const handleClose = () => {
           dialog.removeEventListener('click', handleBackdropClick);
+          dialog.removeEventListener('cancel', handleCancel);
           closeButton?.removeEventListener('click', handleCloseButton);
           returnFocusTo?.focus();
           resolve(dialog.returnValue === 'confirm');
+        };
+
+        const handleCancel = () => {
+          dialog.returnValue = 'cancel';
         };
 
         const handleBackdropClick = (event: MouseEvent) => {
@@ -55,7 +60,9 @@ export function createConfirmDialog(dialog: HTMLDialogElement) {
 
         dialog.addEventListener('close', handleClose, { once: true });
         dialog.addEventListener('click', handleBackdropClick);
+        dialog.addEventListener('cancel', handleCancel);
         closeButton?.addEventListener('click', handleCloseButton, { once: true });
+        dialog.returnValue = 'cancel';
         dialog.showModal();
 
         requestAnimationFrame(() => {

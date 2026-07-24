@@ -65,14 +65,26 @@
 @media (min-width: 640px) {
   .menu-app__status {
     right: max(1.25rem, env(safe-area-inset-right));
-    bottom: calc(1.25rem + env(safe-area-inset-bottom));
     left: auto;
     margin: 0;
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .menu-app__status {
     bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .menu-app__status {
+    background: var(--color-surface-raised);
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-app__status {
+    animation: none;
   }
 }

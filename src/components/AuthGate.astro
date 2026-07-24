@@ -11,20 +11,19 @@ const { locale, showGuest = true } = Astro.props;
 const t = useTranslations(locale);
 const dashboardPath = getLocalizedPath('/dashboard', locale);
 const settingsPath = getLocalizedPath('/ajustes', locale);
-const checkingSessionLabel = locale === 'es' ? 'Iniciando sesión...' : 'Checking session...';
 
 const labels = {
   configMissing: t('menu.configMissing'),
   signInGoogle: t('menu.signInGoogle'),
   signInGuest: t('menu.signInGuest'),
-  checkingSession: checkingSessionLabel,
+  checkingSession: t('auth.checkingSession'),
   dashboardPath,
   settingsPath,
 };
 ---
 
 <section class="auth-card auth-card--compact" data-auth-gate data-labels={JSON.stringify(labels)}>
-  <div class="menu-app__status" data-auth-status hidden></div>
+  <div class="menu-app__status" data-auth-status role="status" aria-live="polite" aria-atomic="true" hidden></div>
   <div class="menu-app__auth-actions menu-app__auth-actions--home">
     <div class="auth-session-loading" data-auth-session-loading role="status" aria-live="polite" aria-busy="true">
       <span aria-hidden="true"></span>
@@ -56,7 +55,7 @@ const labels = {
   .menu-app__auth-actions--home {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0.65rem;
   }
 
@@ -66,17 +65,17 @@ const labels = {
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    min-height: 3rem;
+    min-height: 3.15rem;
     width: auto;
     border: 1px solid #dadce0;
-    border-radius: 999px;
+    border-radius: var(--radius-lg);
     background: #fff;
     color: #3c4043;
     padding: 0.7rem 1.15rem;
-    box-shadow: 0 1px 2px rgb(60 64 67 / 0.12), 0 1px 3px rgb(60 64 67 / 0.08);
+    box-shadow: var(--shadow-sm);
     font-size: 0.95rem;
-    font-weight: 750;
-    letter-spacing: -0.02em;
+    font-weight: 600;
+    letter-spacing: -0.012em;
     transition:
       background var(--transition-base),
       border-color var(--transition-base),
@@ -106,7 +105,8 @@ const labels = {
   }
 
   .google-signin-button:active {
-    transform: translateY(1px);
+    transform: scale(0.97);
+    transition-duration: var(--transition-fast);
   }
 
   .google-signin-button svg {

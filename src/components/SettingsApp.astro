@@ -104,7 +104,7 @@ const labels = {
 ---
 
 <section class="settings-app" data-settings-app data-labels={JSON.stringify(labels)}>
-  <div class="menu-app__status" data-status hidden></div>
+  <div class="menu-app__status" data-status role="status" aria-live="polite" aria-atomic="true" hidden></div>
   <div class="dashboard-app__loading" data-loading>{labels.loading}</div>
   <div class="settings-app__content" data-content hidden>
     <section class="settings-intro app-page-intro app-panel" aria-labelledby="settings-title">

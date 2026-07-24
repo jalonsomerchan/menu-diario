@@ -10,7 +10,7 @@ const t = useTranslations(locale);
 ---
 
 <BaseLayout title={`${t('summary.title')} · ${siteConfig.name}`} description={t('summary.description')} locale={locale}>
-  <AppPageShell locale={locale} title={t('summary.title')} description={t('summary.description')}>
+  <AppPageShell locale={locale} title={t('summary.title')} description={t('summary.description')} showHeader={false}>
     <WeeklySummaryApp locale={locale} />
   </AppPageShell>
 </BaseLayout>
